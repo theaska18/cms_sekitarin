@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'Tidak ada properti yang cocok dengan filter ini.
 $lang['property_no_results_hint'] = 'Coba kode atau nama lain, atau hapus filter untuk melihat semua properti.';
 $lang['property_unavailable'] = 'Data properti sementara tidak tersedia.';
 $lang['property_write_disabled'] = 'Tambah, ubah, dan hapus dinonaktifkan. Fitur ini hanya tersedia di lingkungan development dengan sesi admin aktif dan perlindungan CSRF.';
+$lang['property_access_denied'] = 'Anda tidak memiliki akses ke menu Properti ini.';
 $lang['property_total'] = 'Properti yang sesuai';
 $lang['property_page'] = 'Halaman';
 $lang['property_page_of'] = 'dari';

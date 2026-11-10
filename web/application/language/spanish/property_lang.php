@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'Ninguna propiedad coincide con estos filtros.';
 $lang['property_no_results_hint'] = 'Pruebe con otro código o nombre, o borre los filtros para ver todas las propiedades.';
 $lang['property_unavailable'] = 'Los datos de propiedades no están disponibles temporalmente.';
 $lang['property_write_disabled'] = 'Añadir, editar y eliminar están desactivados. Solo están disponibles en desarrollo con una sesión de administrador activa y protección CSRF.';
+$lang['property_access_denied'] = 'No tienes acceso a este menú de propiedades.';
 $lang['property_total'] = 'Propiedades coincidentes';
 $lang['property_page'] = 'Página';
 $lang['property_page_of'] = 'de';

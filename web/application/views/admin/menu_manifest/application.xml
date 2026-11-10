@@ -15,6 +15,8 @@
           status="active">
         <access code="app_role_add" name="Add" />
         <access code="app_role_update"  name="Update"/>
+        <access code="app_role_delete" name="Delete" />
+        <access code="app_role_menu_access" name="Menu Access" />
     </menu>
 
     <menu code="app_user"
@@ -26,6 +28,9 @@
           status="active">
         <access code="app_user_add" name="Add" />
         <access code="app_user_update" name="Update" />
+        <access code="app_user_change_password" name="Change Password" />
+        <access code="app_user_block" name="Block User" />
+        <access code="app_user_delete" name="Delete" />
     </menu>
 
 </menu-group>

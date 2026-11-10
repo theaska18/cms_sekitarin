@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'Keine Eigenschaften entsprechen diesen Filtern.'
 $lang['property_no_results_hint'] = 'Versuchen Sie einen anderen Code oder Namen oder löschen Sie die Filter, um alle Eigenschaften zu sehen.';
 $lang['property_unavailable'] = 'Die Eigenschaftsdaten sind vorübergehend nicht verfügbar.';
 $lang['property_write_disabled'] = 'Hinzufügen, Bearbeiten und Löschen sind deaktiviert. Diese Aktionen sind nur in der Entwicklungsumgebung mit aktiver Admin-Sitzung und CSRF-Schutz verfügbar.';
+$lang['property_access_denied'] = 'Du hast keinen Zugriff auf dieses Eigenschaftenmenü.';
 $lang['property_total'] = 'Passende Eigenschaften';
 $lang['property_page'] = 'Seite';
 $lang['property_page_of'] = 'von';

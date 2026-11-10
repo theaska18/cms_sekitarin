@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'Aucune propriété ne correspond à ces filtres.
 $lang['property_no_results_hint'] = 'Essayez un autre code ou nom, ou effacez les filtres pour voir toutes les propriétés.';
 $lang['property_unavailable'] = 'Les données des propriétés sont temporairement indisponibles.';
 $lang['property_write_disabled'] = 'L’ajout, la modification et la suppression sont désactivés. Ils ne sont disponibles qu’en développement avec une session admin et la protection CSRF.';
+$lang['property_access_denied'] = 'Vous n’avez pas accès à ce menu de propriétés.';
 $lang['property_total'] = 'Propriétés correspondantes';
 $lang['property_page'] = 'Page';
 $lang['property_page_of'] = 'sur';

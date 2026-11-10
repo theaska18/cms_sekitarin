@@ -26,6 +26,7 @@ $lang['property_no_results'] = '이 필터와 일치하는 속성이 없습니�
 $lang['property_no_results_hint'] = '다른 코드나 이름을 검색하거나 필터를 지워 모든 속성을 확인하세요.';
 $lang['property_unavailable'] = '속성 데이터를 일시적으로 사용할 수 없습니다.';
 $lang['property_write_disabled'] = '추가, 편집 및 삭제 기능이 비활성화되어 있습니다. 개발 환경에서 관리자 세션과 CSRF 보호가 활성화된 경우에만 사용할 수 있습니다.';
+$lang['property_access_denied'] = '이 속성 메뉴에 접근할 권한이 없습니다.';
 $lang['property_total'] = '검색된 속성';
 $lang['property_page'] = '페이지';
 $lang['property_page_of'] = '/';

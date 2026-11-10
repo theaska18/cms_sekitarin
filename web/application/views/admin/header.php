@@ -69,7 +69,7 @@ $menu_icons = array(
             </form>
             <div class="relative shrink-0">
                 <button id="admin-profile-toggle" type="button" class="inline-flex min-h-10 items-center gap-1 rounded-lg px-1 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:min-h-11 sm:gap-2 sm:px-2" aria-label="<?php echo html_escape($current_user['display_name']); ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu">
-                    <img src="/assets/images/avatar-placeholder.svg" alt="" aria-hidden="true" class="h-9 w-9 rounded-full border border-slate-200 bg-slate-100 object-cover">
+                    <img src="<?php echo html_escape(!empty($current_user['profile_image']) ? $current_user['profile_image'] : '/assets/images/avatar-placeholder.svg'); ?>" alt="" aria-hidden="true" class="h-9 w-9 rounded-full border border-slate-200 bg-slate-100 object-cover">
                     <span class="sr-only sm:not-sr-only sm:text-sm sm:font-semibold sm:text-slate-800"><?php echo html_escape($current_user['display_name']); ?></span>
                 </button>
                 <div id="admin-profile-menu" role="menu" hidden class="absolute <?php echo $is_rtl ? 'left-0' : 'right-0'; ?> top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-slate-700 shadow-xl" aria-labelledby="admin-profile-toggle">

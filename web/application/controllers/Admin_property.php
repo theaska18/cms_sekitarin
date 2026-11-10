@@ -8,6 +8,13 @@ class Admin_property extends Admin
 {
     public function property_index()
     {
+        if (!$this->has_admin_menu_code('sys_property')) {
+            $this->render_property_access_denied('admin/property/index', '/admin/system/property');
+            return;
+        }
+        $can_add = $this->has_admin_access_code('sys_property_add');
+        $can_update = $this->has_admin_access_code('sys_property_update');
+        $can_delete = $this->has_admin_access_code('sys_property_delete');
         $store = $this->property_store();
         $filters = array(
             'search' => $this->property_filter($this->input->get('search', TRUE)),
@@ -53,6 +60,9 @@ class Admin_property extends Admin
                 'property_records' => $property_records,
                 'backend_available' => $backend_available,
                 'write_available' => $this->property_write_available($store),
+                'can_add' => $can_add,
+                'can_update' => $can_update,
+                'can_delete' => $can_delete,
                 'status_key' => is_string($status) ? $status : '',
             )
         );
@@ -60,6 +70,10 @@ class Admin_property extends Admin
 
     public function property_new()
     {
+        if (!$this->has_admin_access_code('sys_property_add')) {
+            $this->render_property_access_denied('admin/property/form', '/admin/system/property/new');
+            return;
+        }
         $store = $this->property_store();
         $backend_available = $store !== NULL && $store->schema_available();
         $write_available = $this->property_write_available($store);
@@ -99,6 +113,10 @@ class Admin_property extends Admin
 
     public function property_change($property_code)
     {
+        if (!$this->has_admin_access_code('sys_property_update')) {
+            $this->render_property_access_denied('admin/property/form', '/admin/system/property/change');
+            return;
+        }
         if (!$this->is_valid_property_code($property_code)) {
             show_404();
             return;
@@ -161,6 +179,10 @@ class Admin_property extends Admin
             show_404();
             return;
         }
+        if (!$this->has_admin_access_code('sys_property_delete')) {
+            $this->render_property_access_denied('admin/property/index', '/admin/system/property');
+            return;
+        }
         $store = $this->property_store();
         if (!$this->property_write_available($store)) {
             show_error('Property writes are unavailable.', 503);
@@ -175,6 +197,12 @@ class Admin_property extends Admin
         $result = $store->delete($property_code);
         $this->session->set_flashdata('admin_property_status', $result === 'deleted' ? 'deleted' : ($result === 'not_found' ? 'not_found' : 'delete_error'));
         redirect('/admin/system/property', 'location', 303);
+    }
+
+    private function render_property_access_denied($view, $path)
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin($view, 'property', $path, array('access_denied' => TRUE));
     }
 
     private function property_store()

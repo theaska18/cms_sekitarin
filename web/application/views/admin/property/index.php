@@ -1,6 +1,16 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+if (!empty($access_denied)) {
+    ?>
+    <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-8 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 lg:px-8">
+        <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-900">
+            <?= html_escape($labels['property_access_denied']) ?>
+        </div>
+    </main>
+    <?php return; ?>
+<?php }
+
 $property_title = $labels['property_heading'];
 $status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error', 'invalid');
 $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
@@ -32,16 +42,18 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($property_title) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['property_intro']) ?></p>
         </div>
-        <?php if ($write_available): ?>
-            <a href="/admin/system/property/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                <?= html_escape($labels['property_add']) ?>
-            </a>
-        <?php else: ?>
-            <span class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500" aria-disabled="true">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                <?= html_escape($labels['property_add']) ?>
-            </span>
+        <?php if ($can_add): ?>
+            <?php if ($write_available): ?>
+                <a href="/admin/system/property/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
+                    <?= html_escape($labels['property_add']) ?>
+                </a>
+            <?php else: ?>
+                <span class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500" aria-disabled="true">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
+                    <?= html_escape($labels['property_add']) ?>
+                </span>
+            <?php endif; ?>
         <?php endif; ?>
     </header>
 
@@ -109,20 +121,24 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
                             <?php $property_code = (string) $property['property_code']; $action_menu_id = 'property-actions-menu-' . (int) $action_menu_index++; ?>
                             <tr class="transition hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-1 py-3 text-left sm:px-3 sm:py-4">
-                                    <?php if ($write_available): ?>
+                                    <?php if ($write_available && ($can_update || $can_delete)): ?>
                                         <div class="relative inline-flex">
                                             <button type="button" data-property-actions-toggle aria-label="<?= html_escape($labels['property_actions']) ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="<?= html_escape($action_menu_id) ?>" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                                                 <svg data-property-actions-icon viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>
                                             </button>
                                             <div id="<?= html_escape($action_menu_id) ?>" data-property-actions-menu hidden role="menu" class="fixed z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
-                                                <a href="/admin/system/property/change/<?= html_escape(rawurlencode($property_code)) ?>" data-property-edit-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
-                                                    <svg data-property-edit-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>
-                                                    <?= html_escape($labels['property_edit']) ?>
-                                                </a>
-                                                <button type="button" data-property-delete-open="1" data-property-code="<?= html_escape($property_code) ?>" data-property-name="<?= html_escape($property['property_name']) ?>" aria-haspopup="dialog" aria-controls="property-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
-                                                    <svg data-property-delete-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>
-                                                    <?= html_escape($labels['property_delete']) ?>
-                                                </button>
+                                                <?php if ($can_update): ?>
+                                                    <a href="/admin/system/property/change/<?= html_escape(rawurlencode($property_code)) ?>" data-property-edit-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                                        <svg data-property-edit-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>
+                                                        <?= html_escape($labels['property_edit']) ?>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if ($can_delete): ?>
+                                                    <button type="button" data-property-delete-open="1" data-property-code="<?= html_escape($property_code) ?>" data-property-name="<?= html_escape($property['property_name']) ?>" aria-haspopup="dialog" aria-controls="property-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
+                                                        <svg data-property-delete-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>
+                                                        <?= html_escape($labels['property_delete']) ?>
+                                                    </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     <?php else: ?>

@@ -9,6 +9,9 @@ $parameter_errors = is_array($parameter_errors) ? $parameter_errors : array();
 $title_key = $is_new ? 'parameter_form_new' : 'parameter_form_edit';
 $parameter_title = $labels[$title_key];
 ?>
+<?php if ($form_access_denied): $access_message_key = isset($form_access_message_key, $labels[$form_access_message_key]) ? $form_access_message_key : 'parameter_no_access'; ?>
+<main class="mx-auto min-w-0 w-full max-w-7xl px-0 py-6 sm:px-6 lg:px-8"><div role="status" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><?= html_escape($labels[$access_message_key]) ?></div></main>
+<?php return; endif; ?>
 <main class="mx-auto min-w-0 w-full max-w-7xl px-0 py-6 sm:px-6 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <ol class="flex flex-wrap items-center gap-2">
@@ -21,6 +24,7 @@ $parameter_title = $labels[$title_key];
         <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($parameter_title) ?></h1>
         <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['parameter_form_intro']) ?></p>
     </header>
+    <?php if ($delete_denied): ?><div role="status" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><?= html_escape($labels['parameter_delete_denied']) ?></div><?php endif; ?>
     <?php if (!$backend_available): ?>
         <div role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p class="font-semibold"><?= html_escape($labels['parameter_unavailable']) ?></p></div>
     <?php endif; ?>

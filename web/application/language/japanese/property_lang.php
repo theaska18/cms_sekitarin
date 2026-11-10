@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'この絞り込み条件に一致するプロパ
 $lang['property_no_results_hint'] = '別のコードや名前を試すか、絞り込みを解除してすべてのプロパティを表示してください。';
 $lang['property_unavailable'] = 'プロパティデータは一時的に利用できません。';
 $lang['property_write_disabled'] = '追加、編集、削除は無効です。管理者セッションと CSRF 保護が有効な開発環境でのみ利用できます。';
+$lang['property_access_denied'] = 'このプロパティメニューへのアクセス権限がありません。';
 $lang['property_total'] = '該当するプロパティ';
 $lang['property_page'] = 'ページ';
 $lang['property_page_of'] = '/';

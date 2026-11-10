@@ -1,6 +1,16 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+if (!empty($access_denied)) {
+    ?>
+    <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 lg:px-8">
+        <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm font-medium text-rose-900">
+            <?= html_escape($labels['property_access_denied']) ?>
+        </div>
+    </main>
+    <?php return; ?>
+<?php }
+
 $is_new = $property_mode === 'new';
 $title_key = $is_new ? 'property_form_new' : 'property_form_edit';
 $property_title = $labels[$title_key];

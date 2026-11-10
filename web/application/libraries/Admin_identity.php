@@ -1,9 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-/**
- * Single configured development admin identity; never provisions credentials.
- */
+/** Authenticates an administrator against the tenant-scoped application user table. */
 class Admin_identity
 {
     const SESSION_KEY = 'admin_user';
@@ -18,85 +16,114 @@ class Admin_identity
 
     public function authentication_enabled()
     {
-        return defined('ENVIRONMENT') && ENVIRONMENT === 'development';
+        return TRUE;
     }
 
     public function authenticate($username, $password)
     {
-        if (!$this->authentication_enabled()
-            || !is_string($username)
-            || !is_string($password)
-            || $username === ''
-            || strlen($username) > 254
-            || strlen($password) > 4096
-            || strpos($username, "\0") !== FALSE
-            || strpos($password, "\0") !== FALSE) {
+        if (!is_string($username) || !is_string($password)
+            || $username === '' || strlen($username) > 254 || strlen($password) > 4096
+            || strpos($username, "\0") !== FALSE || strpos($password, "\0") !== FALSE) {
             return FALSE;
         }
 
-        $configured_username = getenv('CMS_ADMIN_USERNAME');
-        $password_hash = getenv('CMS_ADMIN_PASSWORD_HASH');
-        if (!is_string($configured_username)
-            || $configured_username === ''
-            || !is_string($password_hash)
-            || $password_hash === ''
-            || !hash_equals($configured_username, $username)
-            || !password_verify($password, $password_hash)) {
+        $this->CI->load->database();
+        $query = $this->CI->db->select('u.user_id, u.username, u.tenant_id, u.full_name, u.role_id, u.employee_id, u.password')
+            ->from('app_user u')
+            ->join('app_role r', 'r.role_id = u.role_id AND r.tenant_id = u.tenant_id', 'inner')
+            ->where('u.username', $username)
+            ->where('u.block_flag', 0)
+            ->where('r.active_flag', 1)
+            ->limit(2)
+            ->get();
+        if ($query === FALSE || $query->num_rows() !== 1) {
             return FALSE;
         }
 
-        $display_name = getenv('CMS_ADMIN_NAME');
-        if (!is_string($display_name) || trim($display_name) === '') {
-            $display_name = 'Asep Kamaludin';
+        $row = $query->row_array();
+        if (!isset($row['password'], $row['username'], $row['full_name'], $row['tenant_id'], $row['role_id'])
+            || !password_verify($password, (string) $row['password'])) {
+            return FALSE;
+        }
+        $tenant_id = (int) $row['tenant_id'];
+        $role_id = (int) $row['role_id'];
+        if ($tenant_id < 1 || $role_id < 1 || trim((string) $row['username']) === '' || trim((string) $row['full_name']) === '') {
+            return FALSE;
         }
 
         $user = array(
-            'username' => $configured_username,
-            'display_name' => trim($display_name),
-            'credential_fingerprint' => hash('sha256', $password_hash),
+            'username' => (string) $row['username'],
+            'tenant_id' => $tenant_id,
+            'role_id' => $role_id,
+            'full_name' => trim((string) $row['full_name']),
+            // Retain the view-facing name while the rest of the admin area migrates.
+            'display_name' => trim((string) $row['full_name']),
         );
+        if (isset($row['employee_id']) && (int) $row['employee_id'] > 0) {
+            $user['employee_id'] = (int) $row['employee_id'];
+            $image = $this->employee_image($user['employee_id'], $tenant_id);
+            if ($image !== NULL) {
+                $user['profile_image'] = $image;
+            }
+        }
 
-        // Rotate before writing any authenticated identity to the session.
         $this->CI->session->sess_regenerate(TRUE);
         $this->CI->session->set_userdata(self::SESSION_KEY, $user);
 
-        return array(
-            'username' => $user['username'],
-            'display_name' => $user['display_name'],
-        );
+        return $user;
     }
 
     public function current_user()
     {
-        if (!$this->authentication_enabled()) {
-            return NULL;
-        }
-
         $user = $this->CI->session->userdata(self::SESSION_KEY);
         if (!is_array($user)
-            || !isset($user['username'], $user['display_name'])
-            || !is_string($user['username'])
-            || !is_string($user['display_name'])
-            || $user['username'] === ''
-            || trim($user['display_name']) === '') {
+            || !isset($user['username'], $user['tenant_id'], $user['role_id'], $user['full_name'])
+            || !is_string($user['username']) || !is_string($user['full_name'])
+            || $user['username'] === '' || trim($user['full_name']) === ''
+            || !is_numeric($user['tenant_id']) || (int) $user['tenant_id'] < 1
+            || !is_numeric($user['role_id']) || (int) $user['role_id'] < 1) {
             return NULL;
         }
+        $user['display_name'] = $user['full_name'];
+        return $user;
+    }
 
-        $configured_username = getenv('CMS_ADMIN_USERNAME');
-        $password_hash = getenv('CMS_ADMIN_PASSWORD_HASH');
-        if (!is_string($configured_username) || $configured_username === ''
-            || !is_string($password_hash) || $password_hash === ''
-            || !hash_equals($configured_username, $user['username'])
-            || !isset($user['credential_fingerprint'])
-            || !is_string($user['credential_fingerprint'])
-            || !hash_equals(hash('sha256', $password_hash), $user['credential_fingerprint'])) {
+    private function employee_image($employee_id, $tenant_id)
+    {
+        $fields = $this->CI->db->field_data('hr_employee');
+        $has_image = FALSE;
+        foreach ((array) $fields as $field) {
+            if (isset($field->name) && $field->name === 'image') {
+                $has_image = TRUE;
+                break;
+            }
+        }
+        if (!$has_image) {
             return NULL;
         }
-
-        return array(
-            'username' => $user['username'],
-            'display_name' => $user['display_name'],
-        );
+        $query = $this->CI->db->select('image')->from('hr_employee')
+            ->where('employee_id', (int) $employee_id)->where('tenant_id', (int) $tenant_id)
+            ->limit(2)->get();
+        if ($query === FALSE || $query->num_rows() !== 1) {
+            return NULL;
+        }
+        $path = trim((string) $query->row()->image);
+        if ($path === '' || strpos($path, "\0") !== FALSE || strpos($path, ':') !== FALSE
+            || preg_match('#(^|[\\/])\.\.?([\\/]|$)#', $path) || preg_match('#[\\\\]#', $path)
+            || strpos($path, '/') === 0) {
+            return NULL;
+        }
+        $root = realpath(FCPATH);
+        $file = realpath(FCPATH . $path);
+        if ($root === FALSE || $file === FALSE || !is_file($file)
+            || strpos($file, $root . DIRECTORY_SEPARATOR) !== 0) {
+            return NULL;
+        }
+        $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!in_array($extension, array('jpg', 'jpeg', 'png', 'gif', 'webp'), TRUE)) {
+            return NULL;
+        }
+        return base_url(str_replace(DIRECTORY_SEPARATOR, '/', $path));
     }
 
     public function logout()

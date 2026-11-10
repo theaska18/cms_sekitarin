@@ -31,6 +31,26 @@ class AdminPropertyContractTests(unittest.TestCase):
         cls.form_view = PROPERTY_FORM_VIEW.read_text(encoding="utf-8") if PROPERTY_FORM_VIEW.exists() else ""
         cls.store = PROPERTY_STORE.read_text(encoding="utf-8") if PROPERTY_STORE.exists() else ""
 
+    def test_property_access_permissions_gate_routes_and_visible_actions(self):
+        for access_code in ("sys_property", "sys_property_add", "sys_property_update", "sys_property_delete"):
+            self.assertIn(access_code, self.property_controller)
+        self.assertIn("has_admin_access_code", self.property_controller)
+        self.assertIn("access_denied", self.property_controller)
+        self.assertIn("$can_add", self.view)
+        self.assertIn("$can_update", self.view)
+        self.assertIn("$can_delete", self.view)
+        self.assertIn("$write_available && ($can_update || $can_delete)", self.view)
+        self.assertIn("if ($can_update)", self.view)
+        self.assertIn("if ($can_delete)", self.view)
+        self.assertIn("property_access_denied", self.view)
+        self.assertIn("property_access_denied", self.form_view)
+        self.assertIn("$this->current_user['access_codes']", self.admin_controller)
+        self.assertIn("$this->has_admin_menu_code('sys_property')", self.property_controller)
+        self.assertNotIn("$this->has_admin_access_code('sys_property')", self.property_controller)
+        self.assertIn("$this->has_admin_access_code('sys_property_add')", self.property_controller)
+        self.assertIn("$this->has_admin_access_code('sys_property_update')", self.property_controller)
+        self.assertIn("$this->has_admin_access_code('sys_property_delete')", self.property_controller)
+
     def test_property_routes_use_the_dedicated_controller(self):
         expected = {
             "admin/system/property": "admin_property/property_index",

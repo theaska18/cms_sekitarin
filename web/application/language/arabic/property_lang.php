@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'لا توجد خصائص تطابق عوامل �
 $lang['property_no_results_hint'] = 'جرّب رمزًا أو اسمًا آخر، أو امسح عوامل التصفية لعرض كل الخصائص.';
 $lang['property_unavailable'] = 'بيانات الخصائص غير متاحة مؤقتًا.';
 $lang['property_write_disabled'] = 'إضافة الخصائص وتعديلها وحذفها معطّل. تتوفر هذه الإجراءات في بيئة التطوير فقط مع جلسة مسؤول فعالة وحماية CSRF.';
+$lang['property_access_denied'] = 'ليس لديك صلاحية الوصول إلى قائمة الخصائص هذه.';
 $lang['property_total'] = 'الخصائص المطابقة';
 $lang['property_page'] = 'الصفحة';
 $lang['property_page_of'] = 'من';

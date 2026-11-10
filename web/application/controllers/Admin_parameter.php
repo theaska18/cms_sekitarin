@@ -8,13 +8,18 @@ class Admin_parameter extends Admin
 {
     public function parameter_index()
     {
+        $menu_access = $this->has_admin_menu_code('sys_parameter');
+        $add_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_add');
+        $update_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_update');
+        $delete_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_delete');
+        $actions_available = $update_allowed || $delete_allowed;
         $filters = array('search' => $this->parameter_filter($this->input->get('search', TRUE)));
         $per_page = $this->parameter_page_size();
         $page = $this->parameter_page_number();
         $sort = $this->parameter_sort_field($this->input->get('sort', TRUE));
         $direction = $this->parameter_sort_direction($this->input->get('direction', TRUE));
-        $store = $this->parameter_store();
-        $backend_available = $store !== NULL && $store->schema_available();
+        $store = $menu_access ? $this->parameter_store() : NULL;
+        $backend_available = $menu_access && $store !== NULL && $store->schema_available();
         $total_records = 0;
         $parameter_records = array();
         if ($backend_available) {
@@ -44,6 +49,11 @@ class Admin_parameter extends Admin
             'page_count' => max(1, (int) ceil($total_records / $per_page)),
             'total_records' => $total_records,
             'parameter_records' => $parameter_records,
+            'menu_access' => $menu_access,
+            'add_allowed' => $add_allowed,
+            'update_allowed' => $update_allowed,
+            'delete_allowed' => $delete_allowed,
+            'actions_available' => $actions_available,
             'backend_available' => $backend_available,
             'write_available' => $this->parameter_write_available($store),
             'status_key' => (string) $this->session->flashdata('admin_parameter_status'),
@@ -52,6 +62,12 @@ class Admin_parameter extends Admin
 
     public function parameter_new()
     {
+        $menu_access = $this->has_admin_menu_code('sys_parameter');
+        $form_access_denied = !$menu_access || $this->has_admin_access_code('sys_parameter_add');
+        if ($form_access_denied) {
+            $this->render_form('new', '', array(), array($this->empty_option()), array(), FALSE, FALSE, NULL, TRUE, $menu_access ? 'parameter_add_denied' : 'parameter_no_access');
+            return;
+        }
         $store = $this->parameter_store();
         $backend_available = $store !== NULL && $store->schema_available();
         $write_available = $this->parameter_write_available($store);
@@ -75,13 +91,20 @@ class Admin_parameter extends Admin
                 $errors[] = 'save_error';
             }
         }
-        $this->render_form('new', '', $record, $options, $errors, $backend_available, $write_available, $store);
+        $this->render_form('new', '', $record, $options, $errors, $backend_available, $write_available, $store, FALSE, '', FALSE);
     }
 
     public function parameter_change($parameter_code)
     {
         if (!$this->is_valid_code($parameter_code)) {
             show_404();
+            return;
+        }
+        $menu_access = $this->has_admin_menu_code('sys_parameter');
+        $form_access_denied = !$menu_access || $this->has_admin_access_code('sys_parameter_update');
+        $delete_denied = $menu_access && $this->has_admin_access_code('sys_parameter_delete');
+        if ($form_access_denied) {
+            $this->render_form('edit', $parameter_code, array(), array($this->empty_option()), array(), FALSE, FALSE, NULL, TRUE, $menu_access ? 'parameter_update_denied' : 'parameter_no_access', $delete_denied);
             return;
         }
         $store = $this->parameter_store();
@@ -117,11 +140,15 @@ class Admin_parameter extends Admin
             $record = array_merge($record, $values);
             $options = $submitted_options ? $submitted_options : array($this->empty_option());
         }
-        $this->render_form('edit', $parameter_code, $record, $options, $errors, $backend_available, $write_available, $store);
+        $this->render_form('edit', $parameter_code, $record, $options, $errors, $backend_available, $write_available, $store, FALSE, '', $delete_denied);
     }
 
     public function parameter_delete()
     {
+        if (!$this->has_admin_menu_code('sys_parameter') || $this->has_admin_access_code('sys_parameter_delete')) {
+            show_error('You do not have access to Parameters.', 403);
+            return;
+        }
         if ($this->input->method(TRUE) !== 'POST') {
             show_404();
             return;
@@ -141,7 +168,7 @@ class Admin_parameter extends Admin
         redirect('/admin/system/parameter', 'location', 303);
     }
 
-    private function render_form($mode, $parameter_code, $record, $options, $errors, $backend_available, $write_available, $store)
+    private function render_form($mode, $parameter_code, $record, $options, $errors, $backend_available, $write_available, $store, $form_access_denied = FALSE, $form_access_message_key = '', $delete_denied = FALSE)
     {
         $path = $mode === 'new' ? '/admin/system/parameter/new' : '/admin/system/parameter/change/' . rawurlencode($parameter_code);
         $this->render_admin('admin/parameter/form', 'parameter', $path, array(
@@ -153,6 +180,9 @@ class Admin_parameter extends Admin
             'parameter_fields' => $store ? $store->fields() : array(),
             'backend_available' => $backend_available,
             'write_available' => $write_available,
+            'form_access_denied' => $form_access_denied,
+            'form_access_message_key' => $form_access_message_key,
+            'delete_denied' => $delete_denied,
         ));
     }
 

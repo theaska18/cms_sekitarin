@@ -15,6 +15,7 @@
           status="active">
         <access code="sys_property_add" name="Add" />
         <access code="sys_property_update"  name="Update"/>
+        <access code="sys_property_delete" name="Delete" />
     </menu>
 
     <menu code="sys_parameter"
@@ -26,6 +27,7 @@
           status="active">
         <access code="sys_parameter_add" name="Add" />
         <access code="sys_parameter_update"  name="Update"/>
+        <access code="sys_parameter_delete" name="Delete" />
     </menu>
     <menu code="sys_tenant"
           name="Tenant"
@@ -37,6 +39,7 @@
         <access code="sys_tenant_add" name="Add" />
         <access code="sys_tenant_update" name="Update" />
         <access code="sys_tenant_menu_access" name="Menu Access" />
+        <access code="sys_tenant_menu_delete" name="Delete" />
     </menu>
 
     <menu code="sys_sequence"
@@ -48,6 +51,7 @@
           status="active">
         <access code="sys_sequence_add" name="Add" />
         <access code="sys_sequence_update"  name="Update"/>
+        <access code="sys_sequence_delete" name="Delete" />
     </menu>
 
 </menu-group>

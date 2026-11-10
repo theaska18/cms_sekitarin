@@ -26,6 +26,7 @@ $lang['property_no_results'] = '没有属性符合这些筛选条件。';
 $lang['property_no_results_hint'] = '请尝试其他代码或名称，或清除筛选条件以查看所有属性。';
 $lang['property_unavailable'] = '属性数据暂时不可用。';
 $lang['property_write_disabled'] = '添加、编辑和删除功能已禁用。仅在开发环境、管理员会话有效且启用 CSRF 防护时可用。';
+$lang['property_access_denied'] = '您无权访问此属性菜单。';
 $lang['property_total'] = '符合条件的属性';
 $lang['property_page'] = '页';
 $lang['property_page_of'] = '/';

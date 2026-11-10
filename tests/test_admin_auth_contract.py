@@ -20,15 +20,21 @@ class AdminAuthContractTests(unittest.TestCase):
         self.assertIn("$config['csrf_protection'] = TRUE;", config)
         self.assertIn("'session'", autoload)
 
-    def test_authentication_is_development_only_and_uses_environment_hash(self):
+    def test_authentication_uses_app_user_and_stores_tenant_identity(self):
         identity = (APP / "libraries" / "Admin_identity.php").read_text()
-        self.assertIn("ENVIRONMENT === 'development'", identity)
-        self.assertIn("CMS_ADMIN_PASSWORD_HASH", identity)
+        self.assertIn("from('app_user u')", identity)
+        self.assertIn("join('app_role r'", identity)
+        self.assertIn("u.password", identity)
         self.assertIn("password_verify(", identity)
         self.assertIn("2592000", identity)
         self.assertIn("sess_regenerate(TRUE)", identity)
+        self.assertIn("'username' =>", identity)
+        self.assertIn("'tenant_id' =>", identity)
+        self.assertIn("'full_name' =>", identity)
+        self.assertNotIn("CMS_ADMIN_PASSWORD_HASH", identity)
+        self.assertNotIn("ADMIN_USERNAME", identity)
+        self.assertNotIn("ADMIN_PASSWORD", identity)
         self.assertIn("sess_destroy()", identity)
-        self.assertNotIn("password_hash('12345678'", identity)
 
     def test_every_admin_controller_entry_is_guarded_and_login_is_csrf_protected(self):
         admin = (APP / "controllers" / "Admin.php").read_text()
@@ -76,7 +82,10 @@ class AdminAuthContractTests(unittest.TestCase):
         identity = (APP / "libraries" / "Admin_identity.php").read_text()
         self.assertIn("current_user", header)
         self.assertIn("display_name", header)
-        self.assertIn("Asep Kamaludin", identity)
+        self.assertIn("full_name", identity)
+        self.assertIn("employee_id", identity)
+        self.assertIn("image", identity)
+        self.assertIn("profile_image", header)
 
     def test_login_password_toggle_is_accessible_and_supports_nine_locales(self):
         login = (APP / "views" / "auth" / "login.php").read_text()

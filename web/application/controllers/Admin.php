@@ -4,6 +4,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Admin extends CI_Controller
 {
     protected $current_user;
+    private $admin_menu_groups_loaded = FALSE;
+    private $admin_menu_groups_cache = array();
 
     private $admin_languages = array(
         'english' => array('label' => 'English', 'flag' => '🇬🇧', 'html_lang' => 'en', 'direction' => 'ltr'),
@@ -156,8 +158,20 @@ class Admin extends CI_Controller
 
     private function load_admin_menu_groups()
     {
+        if ($this->admin_menu_groups_loaded) {
+            return $this->admin_menu_groups_cache;
+        }
+
         $this->load->library('admin_menu_manifest');
         $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
+        $this->load->database();
+        $this->load->library('tenant_menu_access_store');
+        $this->load->library('role_menu_access_store');
+        $tenant_state = $this->tenant_menu_access_store->state($this->current_user['tenant_id']);
+        $role_state = $this->role_menu_access_store->state($this->current_user['role_id']);
+        $permissions_available = is_array($tenant_state) && is_array($role_state);
+        $allowed_menus = array();
+        $allowed_access = array();
         $render_groups = array();
 
         foreach ($groups as $group) {
@@ -170,9 +184,24 @@ class Admin extends CI_Controller
 
             $render_items = array();
             foreach ($group['items'] as $item) {
-                if (strtoupper(trim($item['code'])) === 'DASHBOARD' || $item['route'] === '/admin') {
+                $menu_code = (string) $item['code'];
+                if (!$permissions_available || !isset($tenant_state[$menu_code], $role_state[$menu_code])) {
                     continue;
                 }
+                if (strtoupper(trim($menu_code)) === 'DASHBOARD' || $item['route'] === '/admin') {
+                    continue;
+                }
+
+                $item_accesses = array();
+                foreach ($item['accesses'] as $access) {
+                    $access_code = (string) $access['access_code'];
+                    if (isset($tenant_state[$menu_code][$access_code], $role_state[$menu_code][$access_code])) {
+                        $item_accesses[] = $access;
+                        $allowed_access[$access_code] = TRUE;
+                    }
+                }
+                $item['accesses'] = $item_accesses;
+                $allowed_menus[$menu_code] = TRUE;
 
                 $item_key = $item['label_key'];
                 $item_translation = preg_match('/^admin_[a-z0-9_]+$/', $item_key)
@@ -190,7 +219,57 @@ class Admin extends CI_Controller
             $render_groups[] = $group;
         }
 
+        $this->current_user['menu_codes'] = array_keys($allowed_menus);
+        $this->current_user['access_codes'] = array_keys($allowed_access);
+        $this->session->set_userdata('admin_user', $this->current_user);
+
+        $session_user = $this->session->userdata('admin_user');
+        $session_menu_codes = array();
+        if (is_array($session_user) && isset($session_user['menu_codes']) && is_array($session_user['menu_codes'])) {
+            foreach ($session_user['menu_codes'] as $session_menu_code) {
+                if (is_string($session_menu_code) && $session_menu_code !== '') {
+                    $session_menu_codes[$session_menu_code] = TRUE;
+                }
+            }
+        }
+
+        $session_render_groups = array();
+        foreach ($render_groups as $group) {
+            $session_render_items = array();
+            foreach ($group['items'] as $item) {
+                $menu_code = isset($item['code']) ? (string) $item['code'] : '';
+                if ($menu_code !== '' && isset($session_menu_codes[$menu_code])) {
+                    $session_render_items[] = $item;
+                }
+            }
+            if (count($session_render_items) > 0) {
+                $group['items'] = $session_render_items;
+                $session_render_groups[] = $group;
+            }
+        }
+
+        $render_groups = $session_render_groups;
+        $this->admin_menu_groups_cache = $render_groups;
+        $this->admin_menu_groups_loaded = TRUE;
         return $render_groups;
+    }
+
+    protected function has_admin_menu_code($menu_code)
+    {
+        $this->load_admin_menu_groups();
+        $menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? $this->current_user['menu_codes']
+            : array();
+        return in_array((string) $menu_code, $menu_codes, TRUE);
+    }
+
+    protected function has_admin_access_code($access_code)
+    {
+        $this->load_admin_menu_groups();
+        $access_codes = isset($this->current_user['access_codes']) && is_array($this->current_user['access_codes'])
+            ? $this->current_user['access_codes']
+            : array();
+        return in_array((string) $access_code, $access_codes, TRUE);
     }
 
     protected function render_admin($view, $title_key, $current_path, $extra_data = array())
@@ -248,7 +327,7 @@ class Admin extends CI_Controller
                 'page_of', 'from_data', 'previous', 'next', 'per_page', 'created', 'saved', 'deleted', 'not_found',
                 'save_error', 'delete_error', 'invalid', 'name_required', 'form_new', 'form_edit',
                 'form_intro', 'description_label', 'value_label', 'code_help', 'back', 'save', 'actions',
-                'search_label'
+                'search_label', 'access_denied'
             );
             foreach ($property_keys as $key) {
                 $labels['property_' . $key] = $this->lang->line('property_' . $key);
@@ -279,7 +358,7 @@ class Admin extends CI_Controller
                 'option_code_label', 'option_name_label', 'active_label', 'option_add', 'option_remove',
                 'option_minimum', 'option_duplicate', 'code_duplicate', 'option_drag', 'option_move_up', 'option_move_down', 'invalid', 'name_required',
                 'save_error', 'delete_error', 'created', 'saved', 'deleted', 'not_found',
-                'confirm_title', 'confirm_body', 'confirm_delete', 'write_disabled'
+                'confirm_title', 'confirm_body', 'confirm_delete', 'write_disabled', 'no_access', 'add_denied', 'update_denied', 'delete_denied'
             );
             foreach ($parameter_keys as $key) {
                 $labels['parameter_' . $key] = $this->lang->line('parameter_' . $key);
@@ -337,6 +416,7 @@ class Admin extends CI_Controller
                 $labels['user_' . $key] = $this->lang->line('user_' . $key);
             }
         }
+        $menu_groups = $this->load_admin_menu_groups();
         $data = array(
             'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
             'page_title' => $labels[$title_key],
@@ -350,7 +430,7 @@ class Admin extends CI_Controller
             'current_user' => $this->current_user,
             'csrf_token_name' => $this->security->get_csrf_token_name(),
             'csrf_hash' => $this->security->get_csrf_hash(),
-            'menu_groups' => $this->load_admin_menu_groups(),
+            'menu_groups' => $menu_groups,
         );
         $data = array_merge($data, $extra_data);
         $this->load->view('admin/header', $data);

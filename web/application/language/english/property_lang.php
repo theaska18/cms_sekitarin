@@ -26,6 +26,7 @@ $lang['property_no_results'] = 'No properties match these filters.';
 $lang['property_no_results_hint'] = 'Try a different code or name, or clear the filters to see all properties.';
 $lang['property_unavailable'] = 'Property data is temporarily unavailable.';
 $lang['property_write_disabled'] = 'Adding, editing, and deleting are disabled. They are available only in development with an active admin session and CSRF protection.';
+$lang['property_access_denied'] = 'You do not have access to this Property menu.';
 $lang['property_total'] = 'Matching properties';
 $lang['property_page'] = 'Page';
 $lang['property_page_of'] = 'of';
