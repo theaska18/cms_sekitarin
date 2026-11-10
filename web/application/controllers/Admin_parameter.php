@@ -9,9 +9,9 @@ class Admin_parameter extends Admin
     public function parameter_index()
     {
         $menu_access = $this->has_admin_menu_code('sys_parameter');
-        $add_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_add');
-        $update_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_update');
-        $delete_allowed = $menu_access && !$this->has_admin_access_code('sys_parameter_delete');
+        $add_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_add');
+        $update_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_update');
+        $delete_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_delete');
         $actions_available = $update_allowed || $delete_allowed;
         $filters = array('search' => $this->parameter_filter($this->input->get('search', TRUE)));
         $per_page = $this->parameter_page_size();
@@ -63,7 +63,7 @@ class Admin_parameter extends Admin
     public function parameter_new()
     {
         $menu_access = $this->has_admin_menu_code('sys_parameter');
-        $form_access_denied = !$menu_access || $this->has_admin_access_code('sys_parameter_add');
+        $form_access_denied = !$menu_access || !$this->has_admin_access_code('sys_parameter_add');
         if ($form_access_denied) {
             $this->render_form('new', '', array(), array($this->empty_option()), array(), FALSE, FALSE, NULL, TRUE, $menu_access ? 'parameter_add_denied' : 'parameter_no_access');
             return;
@@ -101,8 +101,8 @@ class Admin_parameter extends Admin
             return;
         }
         $menu_access = $this->has_admin_menu_code('sys_parameter');
-        $form_access_denied = !$menu_access || $this->has_admin_access_code('sys_parameter_update');
-        $delete_denied = $menu_access && $this->has_admin_access_code('sys_parameter_delete');
+        $form_access_denied = !$menu_access || !$this->has_admin_access_code('sys_parameter_update');
+        $delete_denied = $menu_access && !$this->has_admin_access_code('sys_parameter_delete');
         if ($form_access_denied) {
             $this->render_form('edit', $parameter_code, array(), array($this->empty_option()), array(), FALSE, FALSE, NULL, TRUE, $menu_access ? 'parameter_update_denied' : 'parameter_no_access', $delete_denied);
             return;
@@ -145,7 +145,7 @@ class Admin_parameter extends Admin
 
     public function parameter_delete()
     {
-        if (!$this->has_admin_menu_code('sys_parameter') || $this->has_admin_access_code('sys_parameter_delete')) {
+        if (!$this->has_admin_menu_code('sys_parameter') || !$this->has_admin_access_code('sys_parameter_delete')) {
             show_error('You do not have access to Parameters.', 403);
             return;
         }

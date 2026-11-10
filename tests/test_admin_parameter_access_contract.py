@@ -27,6 +27,16 @@ class AdminParameterAccessContractTests(unittest.TestCase):
         self.assertIn("$delete_denied", CONTROLLER)
         self.assertIn("$actions_available = $update_allowed || $delete_allowed", CONTROLLER)
 
+    def test_access_codes_grant_parameter_actions(self):
+        # Access codes are effective grants populated by Admin::load_admin_menu_groups().
+        self.assertIn("$add_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_add');", CONTROLLER)
+        self.assertIn("$update_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_update');", CONTROLLER)
+        self.assertIn("$delete_allowed = $menu_access && $this->has_admin_access_code('sys_parameter_delete');", CONTROLLER)
+        self.assertIn("$form_access_denied = !$menu_access || !$this->has_admin_access_code('sys_parameter_add');", CONTROLLER)
+        self.assertIn("$form_access_denied = !$menu_access || !$this->has_admin_access_code('sys_parameter_update');", CONTROLLER)
+        self.assertIn("$delete_denied = $menu_access && !$this->has_admin_access_code('sys_parameter_delete');", CONTROLLER)
+        self.assertIn("if (!$this->has_admin_menu_code('sys_parameter') || !$this->has_admin_access_code('sys_parameter_delete'))", CONTROLLER)
+
     def test_list_view_hides_list_and_individual_actions_without_access(self):
         self.assertIn("$menu_access", LIST_VIEW)
         self.assertIn("$add_allowed", LIST_VIEW)
