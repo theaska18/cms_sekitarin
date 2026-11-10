@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// Traducciones del menú de inquilinos.
+$lang['tenant_heading'] = 'inquilinos';
+$lang['tenant_intro'] = 'Administra los datos de contacto y vencimientos de los inquilinos.';
+$lang['tenant_search_hint'] = 'Buscar inquilinos por código o nombre.';
+$lang['tenant_filter_code_hint'] = 'Buscar por código de inquilino';
+$lang['tenant_filter_name_hint'] = 'Buscar por nombre de inquilino';
+$lang['tenant_code_label'] = 'Código del inquilino';
+$lang['tenant_name_label'] = 'Nombre del inquilino';
+$lang['tenant_address_label'] = 'Dirección';
+$lang['tenant_filter_code'] = 'Filtrar por código';
+$lang['tenant_filter_name'] = 'Filtrar por nombre';
+$lang['tenant_filter'] = 'Aplicar filtros';
+$lang['tenant_reset'] = 'Borrar filtros';
+$lang['tenant_add'] = 'Añadir';
+$lang['tenant_edit'] = 'Editar';
+$lang['tenant_menu_access'] = 'Acceso al menú';
+$lang['tenant_delete'] = 'Eliminar';
+$lang['tenant_cancel'] = 'Cancelar';
+$lang['tenant_confirm_title'] = '¿Eliminar esta inquilino?';
+$lang['tenant_confirm_body'] = 'La inquilino seleccionada se eliminará permanentemente. Esta acción no se puede deshacer.';
+$lang['tenant_confirm_delete'] = 'Eliminar inquilino';
+$lang['tenant_empty'] = 'Todavía no se ha añadido ninguna inquilino.';
+$lang['tenant_empty_hint'] = 'Las inquilinos disponibles en el CMS aparecerán aquí cuando se añadan.';
+$lang['tenant_no_results'] = 'Ninguna inquilino coincide con estos filtros.';
+$lang['tenant_no_results_hint'] = 'Pruebe con otro código o nombre, o borre los filtros para ver todas las inquilinos.';
+$lang['tenant_unavailable'] = 'Los datos de inquilinos no están disponibles temporalmente.';
+$lang['tenant_write_disabled'] = 'Añadir, editar y eliminar están desactivados. Solo están disponibles en desarrollo con una sesión de administrador activa y protección CSRF.';
+$lang['tenant_total'] = 'Inquilinos coincidentes';
+$lang['tenant_page'] = 'Página';
+$lang['tenant_page_of'] = 'de';
+$lang['tenant_from_data'] = 'de un total de %s datos';
+$lang['tenant_previous'] = 'Anterior';
+$lang['tenant_next'] = 'Siguiente';
+$lang['tenant_per_page'] = 'Filas por página';
+$lang['tenant_created'] = 'Inquilino creada correctamente.';
+$lang['tenant_saved'] = 'Cambios guardados.';
+$lang['tenant_deleted'] = 'Inquilino eliminada.';
+$lang['tenant_not_found'] = 'No se encontró la inquilino.';
+$lang['tenant_save_error'] = 'No se pudo guardar la inquilino. Revise los datos e inténtelo de nuevo.';
+$lang['tenant_delete_error'] = 'No se pudo eliminar la inquilino. Puede haber datos relacionados que lo impidan.';
+$lang['tenant_invalid'] = 'El código o los datos de la inquilino no son válidos.';
+$lang['tenant_name_required'] = 'El nombre de la inquilino es obligatorio.';
+$lang['tenant_form_new'] = 'inquilino';
+$lang['tenant_form_edit'] = 'inquilino';
+$lang['tenant_form_intro'] = 'Administra los datos de contacto y vencimientos de los inquilinos.';
+$lang['tenant_description_label'] = 'Descripción';
+$lang['tenant_value_label'] = 'Valor';
+$lang['tenant_code_help'] = 'Código del inquilino';
+$lang['tenant_back'] = 'Volver';
+$lang['tenant_save'] = 'Guardar';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'inquilino';
+
+$lang['tenant_email_label'] = 'Correo electrónico';
+$lang['tenant_phone_label'] = 'Número de teléfono';
+$lang['tenant_due_on_label'] = 'Fecha de vencimiento';
+$lang['tenant_due_flag_label'] = 'Activar fecha de vencimiento';
+$lang['tenant_due_on_required'] = 'La fecha de vencimiento es obligatoria si esta opción está activada.';
+$lang['tenant_email_address_label'] = 'Correo electrónico';
+$lang['tenant_phone_number_label'] = 'Número de teléfono';
+
+$lang['email_address_label'] = 'Correo electrónico';
+$lang['phone_number_label'] = 'Número de teléfono';
+$lang['due_on_label'] = 'Fecha de vencimiento';

@@ -1,0 +1,20 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="hr"
+            name="Human Resource"
+            label_key="admin_hr"
+            version="1.0.0"
+            sort_order="3">
+
+    <menu code="hr_employee"
+          name="Employee"
+          label_key="admin_employee"
+          icon="users"
+          route="/admin/hr/employee"
+          sort_order="1"
+          status="active">
+        <access code="hr_employee_add" name="Add" />
+        <access code="hr_employee_update" name="Update"/>
+    </menu>
+
+</menu-group>

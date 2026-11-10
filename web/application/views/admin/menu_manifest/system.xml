@@ -1,0 +1,53 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="system"
+            name="System"
+            label_key="admin_system"
+            version="1.0.0"
+            sort_order="2">
+
+    <menu code="sys_property"
+          name="Property"
+          label_key="admin_property"
+          icon="sliders-horizontal"
+          route="/admin/system/property"
+          sort_order="1"
+          status="active">
+        <access code="sys_property_add" name="Add" />
+        <access code="sys_property_update"  name="Update"/>
+    </menu>
+
+    <menu code="sys_parameter"
+          name="Parameter"
+          label_key="admin_parameter"
+          icon="menu"
+          route="/admin/system/parameter"
+          sort_order="2"
+          status="active">
+        <access code="sys_parameter_add" name="Add" />
+        <access code="sys_parameter_update"  name="Update"/>
+    </menu>
+    <menu code="sys_tenant"
+          name="Tenant"
+          label_key="admin_tenant"
+          icon="building"
+          route="/admin/system/tenant"
+          sort_order="3"
+          status="active">
+        <access code="sys_tenant_add" name="Add" />
+        <access code="sys_tenant_update" name="Update" />
+        <access code="sys_tenant_menu_access" name="Menu Access" />
+    </menu>
+
+    <menu code="sys_sequence"
+          name="Sequence"
+          label_key="admin_sequence"
+          icon="list-ordered"
+          route="/admin/system/sequence"
+          sort_order="4"
+          status="active">
+        <access code="sys_sequence_add" name="Add" />
+        <access code="sys_sequence_update"  name="Update"/>
+    </menu>
+
+</menu-group>

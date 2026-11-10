@@ -1,0 +1,9 @@
+<IfModule authz_core_module>
+	<RequireAny>
+		Require expr %{REQUEST_URI} =~ m#^/system/(property|menu|sequence)$#
+		Require all denied
+	</RequireAny>
+</IfModule>
+<IfModule !authz_core_module>
+	Deny from all
+</IfModule>

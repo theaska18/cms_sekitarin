@@ -1,0 +1,31 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="application"
+            name="Application"
+            label_key="admin_application"
+            version="1.0.0"
+            sort_order="3">
+
+    <menu code="app_role"
+          name="Role"
+          label_key="admin_role"
+          icon="shield-check"
+          route="/admin/application/role"
+          sort_order="2"
+          status="active">
+        <access code="app_role_add" name="Add" />
+        <access code="app_role_update"  name="Update"/>
+    </menu>
+
+    <menu code="app_user"
+          name="User"
+          label_key="admin_user"
+          icon="user-round"
+          route="/admin/application/user"
+          sort_order="3"
+          status="active">
+        <access code="app_user_add" name="Add" />
+        <access code="app_user_update" name="Update" />
+    </menu>
+
+</menu-group>

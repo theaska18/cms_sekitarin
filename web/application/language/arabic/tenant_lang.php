@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// ترجمات قائمة المستأجرون.
+$lang['tenant_heading'] = 'المستأجرون';
+$lang['tenant_intro'] = 'إدارة بيانات الاتصال وتواريخ استحقاق المستأجرين.';
+$lang['tenant_search_hint'] = 'ابحث عن المستأجرين بالرمز أو الاسم.';
+$lang['tenant_filter_code_hint'] = 'ابحث برمز المستأجر';
+$lang['tenant_filter_name_hint'] = 'ابحث باسم المستأجر';
+$lang['tenant_code_label'] = 'رمز المستأجر';
+$lang['tenant_name_label'] = 'اسم المستأجر';
+$lang['tenant_address_label'] = 'العنوان';
+$lang['tenant_filter_code'] = 'التصفية حسب الرمز';
+$lang['tenant_filter_name'] = 'التصفية حسب الاسم';
+$lang['tenant_filter'] = 'تطبيق عوامل التصفية';
+$lang['tenant_reset'] = 'مسح عوامل التصفية';
+$lang['tenant_add'] = 'إضافة';
+$lang['tenant_edit'] = 'تعديل';
+$lang['tenant_menu_access'] = 'صلاحية القوائم';
+$lang['tenant_delete'] = 'حذف';
+$lang['tenant_cancel'] = 'إلغاء';
+$lang['tenant_confirm_title'] = 'هل تريد حذف هذه المستأجر؟';
+$lang['tenant_confirm_body'] = 'سيتم حذف المستأجر المحددة نهائيًا. لا يمكن التراجع عن هذا الإجراء.';
+$lang['tenant_confirm_delete'] = 'حذف المستأجر';
+$lang['tenant_empty'] = 'لم تتم إضافة أي مستأجرون بعد.';
+$lang['tenant_empty_hint'] = 'ستظهر مستأجرون نظام إدارة المحتوى هنا بعد إضافتها.';
+$lang['tenant_no_results'] = 'لا توجد مستأجرون تطابق عوامل التصفية هذه.';
+$lang['tenant_no_results_hint'] = 'جرّب رمزًا أو اسمًا آخر، أو امسح عوامل التصفية لعرض كل المستأجرون.';
+$lang['tenant_unavailable'] = 'بيانات المستأجرون غير متاحة مؤقتًا.';
+$lang['tenant_write_disabled'] = 'إضافة المستأجرون وتعديلها وحذفها معطّل. تتوفر هذه الإجراءات في بيئة التطوير فقط مع جلسة مسؤول فعالة وحماية CSRF.';
+$lang['tenant_total'] = 'المستأجرون المطابقة';
+$lang['tenant_page'] = 'الصفحة';
+$lang['tenant_page_of'] = 'من';
+$lang['tenant_from_data'] = 'من إجمالي %s سجلًا';
+$lang['tenant_previous'] = 'السابق';
+$lang['tenant_next'] = 'التالي';
+$lang['tenant_per_page'] = 'الصفوف لكل صفحة';
+$lang['tenant_created'] = 'تم إنشاء المستأجر.';
+$lang['tenant_saved'] = 'تم حفظ التغييرات.';
+$lang['tenant_deleted'] = 'تم حذف المستأجر.';
+$lang['tenant_not_found'] = 'لم يتم العثور على المستأجر.';
+$lang['tenant_save_error'] = 'تعذر حفظ المستأجر. تحقق من البيانات وحاول مرة أخرى.';
+$lang['tenant_delete_error'] = 'تعذر حذف المستأجر. قد تمنع بيانات مرتبطة حذفها.';
+$lang['tenant_invalid'] = 'رمز المستأجر أو بياناتها غير صالحة.';
+$lang['tenant_name_required'] = 'اسم المستأجر مطلوب.';
+$lang['tenant_form_new'] = 'مستأجر';
+$lang['tenant_form_edit'] = 'مستأجر';
+$lang['tenant_form_intro'] = 'إدارة بيانات الاتصال وتواريخ استحقاق المستأجرين.';
+$lang['tenant_description_label'] = 'الوصف';
+$lang['tenant_value_label'] = 'القيمة';
+$lang['tenant_code_help'] = 'رمز المستأجر';
+$lang['tenant_back'] = 'رجوع';
+$lang['tenant_save'] = 'حفظ';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'مستأجر';
+
+$lang['tenant_email_label'] = 'البريد الإلكتروني';
+$lang['tenant_phone_label'] = 'رقم الهاتف';
+$lang['tenant_due_on_label'] = 'تاريخ الاستحقاق';
+$lang['tenant_due_flag_label'] = 'تفعيل تاريخ الاستحقاق';
+$lang['tenant_due_on_required'] = 'تاريخ الاستحقاق مطلوب عند تفعيل هذا الخيار.';
+$lang['tenant_email_address_label'] = 'البريد الإلكتروني';
+$lang['tenant_phone_number_label'] = 'رقم الهاتف';
+
+$lang['email_address_label'] = 'البريد الإلكتروني';
+$lang['phone_number_label'] = 'رقم الهاتف';
+$lang['due_on_label'] = 'تاريخ الاستحقاق';

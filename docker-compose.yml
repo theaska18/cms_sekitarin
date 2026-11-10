@@ -1,0 +1,56 @@
+services:
+  cms-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cms_app
+    depends_on:
+      cms-db:
+        condition: service_healthy
+    ports:
+      - "8086:80"
+    restart: unless-stopped
+    environment:
+      CI_ENV: ${CI_ENV:-development}
+      CI_BASE_URL: ${CI_BASE_URL:-http://localhost:8086/}
+      WEB_NAME: ${WEB_NAME:-CMS}
+      CMS_DB_HOST: ${CMS_DB_HOST:-cms-db}
+      CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb}
+      CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
+      CMS_DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
+      TIME_ZONE: ${TIME_ZONE:-utc}
+      CMS_ADMIN_USERNAME: ${CMS_ADMIN_USERNAME:-}
+      CMS_ADMIN_PASSWORD_HASH: ${CMS_ADMIN_PASSWORD_HASH:-}
+      CMS_ADMIN_NAME: ${CMS_ADMIN_NAME:-}
+    volumes:
+      - ./web:/var/www/html
+      - ./assets:/var/www/html/assets
+      - app_cache:/var/www/html/application/cache
+      - app_logs:/var/www/html/application/logs
+
+  cms-db:
+    image: mysql:8.0
+    container_name: cms_db
+    restart: unless-stopped
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${CMS_DB_ROOT_PASSWORD:?Set CMS_DB_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${CMS_DB_NAME:-cmsdb}
+      MYSQL_USER: ${CMS_DB_USER:-cmsuser}
+      MYSQL_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'mysqladmin ping --protocol=tcp --host=127.0.0.1 --user=root --password="$${MYSQL_ROOT_PASSWORD}" --silent'
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  app_cache:
+  app_logs:
+  db_data:

@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// Tenant menu translations.
+$lang['tenant_heading'] = 'Tenants';
+$lang['tenant_intro'] = 'Manage tenant contact details and due dates.';
+$lang['tenant_search_hint'] = 'Search tenants by code or name.';
+$lang['tenant_filter_code_hint'] = 'Search by tenant code';
+$lang['tenant_filter_name_hint'] = 'Search by tenant name';
+$lang['tenant_code_label'] = 'Tenant code';
+$lang['tenant_name_label'] = 'Tenant name';
+$lang['tenant_address_label'] = 'Address';
+$lang['tenant_filter_code'] = 'Filter by code';
+$lang['tenant_filter_name'] = 'Filter by name';
+$lang['tenant_filter'] = 'Apply filters';
+$lang['tenant_reset'] = 'Clear filters';
+$lang['tenant_add'] = 'Add';
+$lang['tenant_edit'] = 'Edit';
+$lang['tenant_menu_access'] = 'Menu Access';
+$lang['tenant_delete'] = 'Delete';
+$lang['tenant_cancel'] = 'Cancel';
+$lang['tenant_confirm_title'] = 'Delete this tenant?';
+$lang['tenant_confirm_body'] = 'This permanently removes the selected tenant. This action cannot be undone.';
+$lang['tenant_confirm_delete'] = 'Delete tenant';
+$lang['tenant_empty'] = 'No tenants have been added yet.';
+$lang['tenant_empty_hint'] = 'Shared CMS tenants will appear here once they have been added.';
+$lang['tenant_no_results'] = 'No tenants match these filters.';
+$lang['tenant_no_results_hint'] = 'Try a different code or name, or clear the filters to see all tenants.';
+$lang['tenant_unavailable'] = 'Tenant data is temporarily unavailable.';
+$lang['tenant_write_disabled'] = 'Adding, editing, and deleting are disabled. They are available only in development with an active admin session and CSRF protection.';
+$lang['tenant_total'] = 'Matching tenants';
+$lang['tenant_page'] = 'Page';
+$lang['tenant_page_of'] = 'of';
+$lang['tenant_from_data'] = 'from %s data';
+$lang['tenant_previous'] = 'Previous';
+$lang['tenant_next'] = 'Next';
+$lang['tenant_per_page'] = 'Rows per page';
+$lang['tenant_created'] = 'Tenant created successfully.';
+$lang['tenant_saved'] = 'Tenant changes saved.';
+$lang['tenant_deleted'] = 'Tenant deleted successfully.';
+$lang['tenant_not_found'] = 'The tenant could not be found.';
+$lang['tenant_save_error'] = 'The tenant could not be saved. Check the information and try again.';
+$lang['tenant_delete_error'] = 'The tenant could not be deleted. Related data may prevent its removal.';
+$lang['tenant_invalid'] = 'The tenant code or information is invalid.';
+$lang['tenant_name_required'] = 'Enter a tenant name.';
+$lang['tenant_form_new'] = 'Add a tenant';
+$lang['tenant_form_edit'] = 'Edit tenant';
+$lang['tenant_form_intro'] = 'Manage tenant contact details and due dates.';
+$lang['tenant_description_label'] = 'Description';
+$lang['tenant_value_label'] = 'Value';
+$lang['tenant_code_help'] = 'Tenant code';
+$lang['tenant_back'] = 'Back';
+$lang['tenant_save'] = 'Save';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'Search tenants';
+
+$lang['tenant_email_label'] = 'Tenant email address';
+$lang['tenant_phone_label'] = 'Tenant phone number';
+$lang['tenant_due_on_label'] = 'Due date';
+$lang['tenant_due_flag_label'] = 'Enable due date';
+$lang['tenant_due_on_required'] = 'A due date is required when this option is enabled.';
+$lang['tenant_email_address_label'] = 'Tenant email address';
+$lang['tenant_phone_number_label'] = 'Tenant phone number';
+
+$lang['email_address_label'] = 'Tenant email address';
+$lang['phone_number_label'] = 'Tenant phone number';
+$lang['due_on_label'] = 'Due date';

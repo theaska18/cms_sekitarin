@@ -1,0 +1,190 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/** Narrow, schema-checked data access for the sys_property admin screen. */
+class Property_store
+{
+    private $db;
+    private $columns = array();
+    private $schema_checked = FALSE;
+    private $schema_valid = FALSE;
+
+    public function __construct($db = NULL)
+    {
+        if ($db === NULL) {
+            $CI =& get_instance();
+            $db = $CI->db;
+        }
+        $this->db = $db;
+    }
+
+    /** Require the known key/name columns and a primary key before any access. */
+    public function schema_available()
+    {
+        if ($this->schema_checked) {
+            return $this->schema_valid;
+        }
+        $this->schema_checked = TRUE;
+        $fields = $this->db->field_data('sys_property');
+        if (!is_array($fields) || !$fields) {
+            return FALSE;
+        }
+        foreach ($fields as $field) {
+            if (isset($field->name)) {
+                $this->columns[$field->name] = $field;
+            }
+        }
+        $this->schema_valid = isset($this->columns['property_code'], $this->columns['property_name'])
+            && !empty($this->columns['property_code']->primary_key);
+        return $this->schema_valid;
+    }
+
+    public function fields()
+    {
+        if (!$this->schema_available()) {
+            return array();
+        }
+        $result = array();
+        foreach (array('property_code', 'property_name', 'description', 'value') as $name) {
+            if (isset($this->columns[$name])) {
+                $field = $this->columns[$name];
+                $result[$name] = array(
+                    'name' => $name,
+                    'max_length' => isset($field->max_length) ? (int) $field->max_length : 0,
+                );
+            }
+        }
+        return $result;
+    }
+
+    public function count($filters)
+    {
+        if (!$this->schema_available()) {
+            return FALSE;
+        }
+        $this->db->from('sys_property');
+        $this->apply_filters($filters);
+        $count = $this->db->count_all_results();
+        return $count === FALSE ? FALSE : (int) $count;
+    }
+
+    public function page($filters, $limit, $offset, $sort = 'property_code', $direction = 'ASC')
+    {
+        if (!$this->schema_available()) {
+            return FALSE;
+        }
+        $query = $this->db->select('property_code, property_name')
+            ->from('sys_property');
+        $this->apply_filters($filters);
+        $sort_column = $sort === 'property_name' ? 'property_name' : 'property_code';
+        $sort_direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
+        $query = $this->db->order_by($sort_column, $sort_direction);
+        if ($sort_column === 'property_name') {
+            $query->order_by('property_code', 'ASC');
+        }
+        $query = $query->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))
+            ->get();
+        return $query === FALSE ? FALSE : $query->result_array();
+    }
+
+    public function find($property_code)
+    {
+        if (!$this->schema_available()) {
+            return FALSE;
+        }
+        $property_code = strtolower($property_code);
+        $select = implode(', ', array_keys($this->fields()));
+        $query = $this->db->select($select)
+            ->where('property_code', $property_code)
+            ->limit(1)
+            ->get('sys_property');
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        return $query->num_rows() ? $query->row_array() : NULL;
+    }
+
+    public function insert($data)
+    {
+        if (!$this->schema_available()) {
+            return FALSE;
+        }
+        $allowed = $this->writable_data($data, TRUE);
+        if (!isset($allowed['property_code'], $allowed['property_name'])) {
+            return FALSE;
+        }
+        return $this->db->insert('sys_property', $allowed) === TRUE;
+    }
+
+    /** Returns updated, unchanged, not_found, or error. */
+    public function update($property_code, $data)
+    {
+        if (!$this->schema_available()) {
+            return 'error';
+        }
+        $allowed = $this->writable_data($data, FALSE);
+        if (!$allowed) {
+            return 'error';
+        }
+        $property_code = strtolower($property_code);
+        $ok = $this->db->where('property_code', $property_code)
+            ->update('sys_property', $allowed);
+        if ($ok !== TRUE) {
+            return 'error';
+        }
+        if ((int) $this->db->affected_rows() > 0) {
+            return 'updated';
+        }
+        $existing = $this->find($property_code);
+        return $existing === FALSE ? 'error' : ($existing === NULL ? 'not_found' : 'unchanged');
+    }
+
+    /** Returns deleted, not_found, or error; predicate is the primary key only. */
+    public function delete($property_code)
+    {
+        if (!$this->schema_available()) {
+            return 'error';
+        }
+        $property_code = strtolower($property_code);
+        $ok = $this->db->where('property_code', $property_code)->delete('sys_property');
+        if ($ok !== TRUE) {
+            return 'error';
+        }
+        $affected = (int) $this->db->affected_rows();
+        if ($affected === 1) {
+            return 'deleted';
+        }
+        return $affected === 0 ? 'not_found' : 'error';
+    }
+
+    private function writable_data($data, $include_code)
+    {
+        $allowed_names = $include_code
+            ? array('property_code', 'property_name', 'description', 'value')
+            : array('property_name', 'description', 'value');
+        $result = array();
+        foreach ($allowed_names as $name) {
+            if (isset($this->columns[$name]) && array_key_exists($name, $data)) {
+                $value = $data[$name];
+                if ($name === 'property_code') {
+                    if (!is_string($value)) {
+                        return array();
+                    }
+                    $value = strtolower(preg_replace('/\s+/', '', $value));
+                }
+                $result[$name] = $value;
+            }
+        }
+        return $result;
+    }
+
+    private function apply_filters($filters)
+    {
+        if (isset($filters['search']) && $filters['search'] !== '') {
+            $this->db->group_start()
+                ->like('property_code', $filters['search'])
+                ->or_like('property_name', $filters['search'])
+                ->group_end();
+        }
+    }
+}

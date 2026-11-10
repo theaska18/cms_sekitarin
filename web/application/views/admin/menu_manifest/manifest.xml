@@ -1,0 +1,23 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-manifest version="1.0.0">
+
+    <group code="system"
+           file="system.xml"
+           version="1.0.0"
+           sort_order="0"
+           required="true" />
+
+    <group code="application"
+           file="application.xml"
+           version="1.0.0"
+           sort_order="1"
+           required="true" />
+
+       <group code="hr"
+           file="hr.xml"
+           version="1.0.0"
+           sort_order="1"
+           required="true" />
+
+</menu-manifest>

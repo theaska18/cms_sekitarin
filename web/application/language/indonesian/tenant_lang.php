@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// Terjemahan menu tenant.
+$lang['tenant_heading'] = 'Tenant';
+$lang['tenant_intro'] = 'Kelola informasi kontak dan tanggal jatuh tempo tenant.';
+$lang['tenant_search_hint'] = 'Cari tenant berdasarkan kode atau nama.';
+$lang['tenant_filter_code_hint'] = 'Cari berdasarkan kode tenant';
+$lang['tenant_filter_name_hint'] = 'Cari berdasarkan nama tenant';
+$lang['tenant_code_label'] = 'Kode tenant';
+$lang['tenant_name_label'] = 'Nama tenant';
+$lang['tenant_address_label'] = 'Alamat';
+$lang['tenant_filter_code'] = 'Filter berdasarkan kode';
+$lang['tenant_filter_name'] = 'Filter berdasarkan nama';
+$lang['tenant_filter'] = 'Terapkan filter';
+$lang['tenant_reset'] = 'Hapus filter';
+$lang['tenant_add'] = 'Tambah';
+$lang['tenant_edit'] = 'Ubah';
+$lang['tenant_menu_access'] = 'Menu Access';
+$lang['tenant_delete'] = 'Hapus';
+$lang['tenant_cancel'] = 'Batal';
+$lang['tenant_confirm_title'] = 'Hapus tenant ini?';
+$lang['tenant_confirm_body'] = 'Tenant yang dipilih akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.';
+$lang['tenant_confirm_delete'] = 'Hapus tenant';
+$lang['tenant_empty'] = 'Belum ada tenant yang ditambahkan.';
+$lang['tenant_empty_hint'] = 'Tenant CMS yang tersedia akan muncul di sini setelah ditambahkan.';
+$lang['tenant_no_results'] = 'Tidak ada tenant yang cocok dengan filter ini.';
+$lang['tenant_no_results_hint'] = 'Coba kode atau nama lain, atau hapus filter untuk melihat semua tenant.';
+$lang['tenant_unavailable'] = 'Data tenant sementara tidak tersedia.';
+$lang['tenant_write_disabled'] = 'Tambah, ubah, dan hapus dinonaktifkan. Fitur ini hanya tersedia di lingkungan development dengan sesi admin aktif dan perlindungan CSRF.';
+$lang['tenant_total'] = 'Tenant yang sesuai';
+$lang['tenant_page'] = 'Halaman';
+$lang['tenant_page_of'] = 'dari';
+$lang['tenant_from_data'] = 'dengan total %s data';
+$lang['tenant_previous'] = 'Sebelumnya';
+$lang['tenant_next'] = 'Berikutnya';
+$lang['tenant_per_page'] = 'Baris per halaman';
+$lang['tenant_created'] = 'Tenant berhasil ditambahkan.';
+$lang['tenant_saved'] = 'Perubahan tenant berhasil disimpan.';
+$lang['tenant_deleted'] = 'Tenant berhasil dihapus.';
+$lang['tenant_not_found'] = 'Tenant tidak ditemukan.';
+$lang['tenant_save_error'] = 'Tenant tidak dapat disimpan. Periksa data lalu coba lagi.';
+$lang['tenant_delete_error'] = 'Tenant tidak dapat dihapus. Data terkait mungkin mencegah penghapusan.';
+$lang['tenant_invalid'] = 'Kode atau informasi tenant tidak valid.';
+$lang['tenant_name_required'] = 'Nama tenant wajib diisi.';
+$lang['tenant_form_new'] = 'Tambah tenant';
+$lang['tenant_form_edit'] = 'Ubah tenant';
+$lang['tenant_form_intro'] = 'Kelola informasi kontak dan tanggal jatuh tempo tenant.';
+$lang['tenant_description_label'] = 'Deskripsi';
+$lang['tenant_value_label'] = 'Nilai';
+$lang['tenant_code_help'] = 'Kode tenant';
+$lang['tenant_back'] = 'Kembali';
+$lang['tenant_save'] = 'Simpan';
+$lang['tenant_actions'] = 'Tindakan';
+$lang['tenant_search_label'] = 'Cari tenant';
+
+$lang['tenant_email_label'] = 'Alamat email';
+$lang['tenant_phone_label'] = 'Nomor telepon';
+$lang['tenant_due_on_label'] = 'Tanggal jatuh tempo';
+$lang['tenant_due_flag_label'] = 'Aktifkan tanggal jatuh tempo';
+$lang['tenant_due_on_required'] = 'Tanggal jatuh tempo wajib diisi jika diaktifkan.';
+$lang['tenant_email_address_label'] = 'Alamat email';
+$lang['tenant_phone_number_label'] = 'Nomor telepon';
+
+$lang['email_address_label'] = 'Alamat email';
+$lang['phone_number_label'] = 'Nomor telepon';
+$lang['due_on_label'] = 'Tanggal jatuh tempo';

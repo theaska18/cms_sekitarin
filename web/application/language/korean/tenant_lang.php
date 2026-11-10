@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// 테넌트 메뉴 번역.
+$lang['tenant_heading'] = '테넌트';
+$lang['tenant_intro'] = '테넌트 연락처와 만기일을 관리합니다.';
+$lang['tenant_search_hint'] = '코드 또는 이름으로 테넌트를 검색합니다.';
+$lang['tenant_filter_code_hint'] = '테넌트 코드로 검색';
+$lang['tenant_filter_name_hint'] = '테넌트 이름으로 검색';
+$lang['tenant_code_label'] = '테넌트 코드';
+$lang['tenant_name_label'] = '테넌트 이름';
+$lang['tenant_address_label'] = '주소';
+$lang['tenant_filter_code'] = '코드로 필터링';
+$lang['tenant_filter_name'] = '이름으로 필터링';
+$lang['tenant_filter'] = '필터 적용';
+$lang['tenant_reset'] = '필터 지우기';
+$lang['tenant_add'] = '추가';
+$lang['tenant_edit'] = '편집';
+$lang['tenant_menu_access'] = '메뉴 접근';
+$lang['tenant_delete'] = '삭제';
+$lang['tenant_cancel'] = '취소';
+$lang['tenant_confirm_title'] = '이 테넌트을 삭제할까요?';
+$lang['tenant_confirm_body'] = '선택한 테넌트이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.';
+$lang['tenant_confirm_delete'] = '테넌트 삭제';
+$lang['tenant_empty'] = '아직 추가된 테넌트이 없습니다.';
+$lang['tenant_empty_hint'] = 'CMS에서 사용할 수 있는 테넌트이 추가되면 여기에 표시됩니다.';
+$lang['tenant_no_results'] = '이 필터와 일치하는 테넌트이 없습니다.';
+$lang['tenant_no_results_hint'] = '다른 코드나 이름을 검색하거나 필터를 지워 모든 테넌트을 확인하세요.';
+$lang['tenant_unavailable'] = '테넌트 데이터를 일시적으로 사용할 수 없습니다.';
+$lang['tenant_write_disabled'] = '추가, 편집 및 삭제 기능이 비활성화되어 있습니다. 개발 환경에서 관리자 세션과 CSRF 보호가 활성화된 경우에만 사용할 수 있습니다.';
+$lang['tenant_total'] = '검색된 테넌트';
+$lang['tenant_page'] = '페이지';
+$lang['tenant_page_of'] = '/';
+$lang['tenant_from_data'] = '(총 %s개 데이터)';
+$lang['tenant_previous'] = '이전';
+$lang['tenant_next'] = '다음';
+$lang['tenant_per_page'] = '페이지당 행 수';
+$lang['tenant_created'] = '테넌트이 생성되었습니다.';
+$lang['tenant_saved'] = '테넌트 변경 사항이 저장되었습니다.';
+$lang['tenant_deleted'] = '테넌트이 삭제되었습니다.';
+$lang['tenant_not_found'] = '테넌트을 찾을 수 없습니다.';
+$lang['tenant_save_error'] = '테넌트을 저장할 수 없습니다. 정보를 확인하고 다시 시도하세요.';
+$lang['tenant_delete_error'] = '테넌트을 삭제할 수 없습니다. 관련 데이터가 삭제를 막고 있을 수 있습니다.';
+$lang['tenant_invalid'] = '테넌트 코드 또는 정보가 올바르지 않습니다.';
+$lang['tenant_name_required'] = '테넌트 이름을 입력하세요.';
+$lang['tenant_form_new'] = '테넌트';
+$lang['tenant_form_edit'] = '테넌트';
+$lang['tenant_form_intro'] = '테넌트 연락처와 만기일을 관리합니다.';
+$lang['tenant_description_label'] = '설명';
+$lang['tenant_value_label'] = '값';
+$lang['tenant_code_help'] = '테넌트 코드';
+$lang['tenant_back'] = '뒤로';
+$lang['tenant_save'] = '저장';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = '테넌트';
+
+$lang['tenant_email_label'] = '이메일 주소';
+$lang['tenant_phone_label'] = '전화번호';
+$lang['tenant_due_on_label'] = '만기일';
+$lang['tenant_due_flag_label'] = '만기일 사용';
+$lang['tenant_due_on_required'] = '이 옵션을 사용하면 만기일을 입력해야 합니다.';
+$lang['tenant_email_address_label'] = '이메일 주소';
+$lang['tenant_phone_number_label'] = '전화번호';
+
+$lang['email_address_label'] = '이메일 주소';
+$lang['phone_number_label'] = '전화번호';
+$lang['due_on_label'] = '만기일';

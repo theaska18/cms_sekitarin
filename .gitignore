@@ -1,0 +1,31 @@
+# Local environment files and secrets; keep the checked-in template
+.env
+.env.*
+!.env.example
+
+# Frontend dependencies
+/node_modules/
+
+# Python-generated caches and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local task/debug scratch files
+/.admin_ui_task_*.py
+/.task-scope-audit.txt
+/.task_scope.py
+/.task_scope.txt
+
+# Generated verification logs (keep reports and screenshots)
+/artifacts/**/*.log
+
+# Local login screenshot contains a prefilled account name
+/screenshots/Screenshot 2026-11-07 at 05.08.28.png
+
+# OS metadata
+.DS_Store
+Thumbs.db

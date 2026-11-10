@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// テナントメニューの翻訳。
+$lang['tenant_heading'] = 'テナント';
+$lang['tenant_intro'] = 'テナントの連絡先と支払期日を管理します。';
+$lang['tenant_search_hint'] = 'コードまたは名前でテナントを検索します。';
+$lang['tenant_filter_code_hint'] = 'テナントコードで検索';
+$lang['tenant_filter_name_hint'] = 'テナント名で検索';
+$lang['tenant_code_label'] = 'テナントコード';
+$lang['tenant_name_label'] = 'テナント名';
+$lang['tenant_address_label'] = '住所';
+$lang['tenant_filter_code'] = 'コードで絞り込む';
+$lang['tenant_filter_name'] = '名前で絞り込む';
+$lang['tenant_filter'] = '絞り込みを適用';
+$lang['tenant_reset'] = '絞り込みをクリア';
+$lang['tenant_add'] = '追加';
+$lang['tenant_edit'] = '編集';
+$lang['tenant_menu_access'] = 'メニューアクセス';
+$lang['tenant_delete'] = '削除';
+$lang['tenant_cancel'] = 'キャンセル';
+$lang['tenant_confirm_title'] = 'このテナントを削除しますか？';
+$lang['tenant_confirm_body'] = '選択したテナントは完全に削除されます。この操作は取り消せません。';
+$lang['tenant_confirm_delete'] = 'テナントを削除';
+$lang['tenant_empty'] = 'テナントはまだ追加されていません。';
+$lang['tenant_empty_hint'] = 'CMSで利用可能なテナントが追加されると、ここに表示されます。';
+$lang['tenant_no_results'] = 'この絞り込み条件に一致するテナントはありません。';
+$lang['tenant_no_results_hint'] = '別のコードや名前を試すか、絞り込みを解除してすべてのテナントを表示してください。';
+$lang['tenant_unavailable'] = 'テナントデータは一時的に利用できません。';
+$lang['tenant_write_disabled'] = '追加、編集、削除は無効です。管理者セッションと CSRF 保護が有効な開発環境でのみ利用できます。';
+$lang['tenant_total'] = '該当するテナント';
+$lang['tenant_page'] = 'ページ';
+$lang['tenant_page_of'] = '/';
+$lang['tenant_from_data'] = '（全 %s 件）';
+$lang['tenant_previous'] = '前へ';
+$lang['tenant_next'] = '次へ';
+$lang['tenant_per_page'] = '1ページあたりの行数';
+$lang['tenant_created'] = 'テナントを作成しました。';
+$lang['tenant_saved'] = '変更を保存しました。';
+$lang['tenant_deleted'] = 'テナントを削除しました。';
+$lang['tenant_not_found'] = 'テナントが見つかりません。';
+$lang['tenant_save_error'] = 'テナントを保存できません。内容を確認して再試行してください。';
+$lang['tenant_delete_error'] = 'テナントを削除できません。関連データが原因の可能性があります。';
+$lang['tenant_invalid'] = 'テナントコードまたは入力内容が無効です。';
+$lang['tenant_name_required'] = 'テナント名を入力してください。';
+$lang['tenant_form_new'] = 'テナント';
+$lang['tenant_form_edit'] = 'テナント';
+$lang['tenant_form_intro'] = 'テナントの連絡先と支払期日を管理します。';
+$lang['tenant_description_label'] = '説明';
+$lang['tenant_value_label'] = '値';
+$lang['tenant_code_help'] = 'テナントコード';
+$lang['tenant_back'] = '戻る';
+$lang['tenant_save'] = '保存';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'テナント';
+
+$lang['tenant_email_label'] = 'メールアドレス';
+$lang['tenant_phone_label'] = '電話番号';
+$lang['tenant_due_on_label'] = '支払期日';
+$lang['tenant_due_flag_label'] = '期日を有効にする';
+$lang['tenant_due_on_required'] = 'このオプションを有効にする場合、期日の入力が必須です。';
+$lang['tenant_email_address_label'] = 'メールアドレス';
+$lang['tenant_phone_number_label'] = '電話番号';
+
+$lang['email_address_label'] = 'メールアドレス';
+$lang['phone_number_label'] = '電話番号';
+$lang['due_on_label'] = '支払期日';

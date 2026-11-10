@@ -1,0 +1,320 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        isolation: isolate;
+        background-color: #080d1b;
+    }
+
+    .site-header__inner {
+        min-height: 4.5rem;
+    }
+
+    .site-brand {
+        min-height: 44px;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .site-brand:focus-visible {
+        outline: 2px solid #67e8f9;
+        outline-offset: 3px;
+    }
+
+    .site-navigation {
+        z-index: 51;
+        background-color: #080d1b;
+    }
+
+    .menu-toggle:focus-visible {
+        outline: 2px solid #67e8f9;
+        outline-offset: 3px;
+    }
+
+    .site-nav-link {
+        display: flex;
+        min-height: 44px;
+        align-items: center;
+        border-radius: 9999px;
+        padding: 0.625rem 0.875rem;
+        color: #cbd5e1;
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.25rem;
+        text-decoration: none;
+        transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+    }
+
+    .site-nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .site-nav-link:focus-visible,
+    .footer-link:focus-visible {
+        outline: 2px solid #67e8f9;
+        outline-offset: 3px;
+    }
+
+    .site-nav-link.is-current {
+        background-color: rgba(103, 232, 249, 0.12);
+        color: #67e8f9;
+        box-shadow: inset 0 0 0 1px rgba(103, 232, 249, 0.22);
+    }
+
+    .site-nav-link--cta {
+        color: #e9d5ff;
+        box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.45);
+    }
+
+    .site-footer {
+        position: relative;
+        background-color: #080d1b;
+    }
+
+    .site-footer__inner {
+        min-height: 5rem;
+    }
+
+    .footer-link {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        border-radius: 0.5rem;
+        color: #a1a1aa;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 160ms ease, background-color 160ms ease;
+    }
+
+    .footer-link:hover {
+        color: #67e8f9;
+    }
+
+    .page-hero {
+        background-color: #0b1123;
+        background-image: radial-gradient(ellipse at 15% 5%, rgba(34, 211, 238, 0.12), transparent 48%), linear-gradient(135deg, #0b1123 0%, #10152a 55%, #141027 100%);
+    }
+
+    .feature-card,
+    .value-card,
+    .contact-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.25rem;
+        background: linear-gradient(145deg, rgba(19, 28, 49, 0.96), rgba(12, 18, 34, 0.98));
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+    }
+
+    .feature-card {
+        padding: 1.75rem;
+        transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(103, 232, 249, 0.3);
+        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.26);
+    }
+
+    .value-card {
+        padding: 1rem;
+        border-radius: 1rem;
+        background-color: rgba(255, 255, 255, 0.025);
+        box-shadow: none;
+    }
+
+    .contact-card {
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .feature-card,
+        .site-nav-link,
+        .footer-link {
+            transition: none;
+        }
+
+        .feature-card:hover {
+            transform: none;
+        }
+    }
+
+
+    /* Admin-only light sticky header. Solid fallback preserves contrast without backdrop-filter. */
+    .admin-topbar {
+        isolation: isolate;
+        background-color: #ffffff;
+        color: #0f172a;
+        transition: background-color 180ms ease, backdrop-filter 180ms ease, -webkit-backdrop-filter 180ms ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .admin-topbar {
+            transition: none;
+        }
+    }
+
+    .admin-language-options {
+        box-sizing: border-box;
+        width: min(20rem, calc(100vw - 1rem));
+        max-height: min(24rem, calc(100vh - 5rem));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    #admin-sidebar {
+        overscroll-behavior: contain;
+    }
+
+    .admin-menu-link {
+        min-width: 0;
+        text-decoration: none;
+    }
+
+    .admin-menu-label {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .admin-menu-icon {
+        color: #64748b;
+    }
+
+    .admin-menu-link[aria-current="page"] .admin-menu-icon {
+        color: currentColor;
+    }
+
+    .admin-sidebar-filter-icon {
+        inset-inline-start: 0.75rem;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .admin-sidebar-filter {
+        padding-inline-start: 2.5rem;
+        padding-inline-end: 0.75rem;
+    }
+
+    .admin-sidebar-filter-wrap:focus-within .admin-sidebar-filter-icon {
+        color: #047857;
+    }
+
+    @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+        .admin-topbar {
+            background-color: rgba(255, 255, 255, 0.58);
+            backdrop-filter: blur(18px) saturate(150%);
+            -webkit-backdrop-filter: blur(18px) saturate(150%);
+        }
+
+    }
+
+    .parameter-option-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .parameter-option-table {
+        min-width: 50rem;
+    }
+
+    .parameter-option-mobile-label {
+        display: none;
+    }
+
+    .parameter-option-code-input,
+    .parameter-option-name-input {
+        box-sizing: border-box;
+        min-width: 0;
+    }
+
+    @media (max-width: 639px) {
+        .parameter-option-table-wrapper {
+            overflow: visible;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .parameter-option-table {
+            display: block;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .parameter-option-table thead {
+            display: none;
+        }
+
+        .parameter-option-table tbody {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .parameter-option-table tr[data-option-row] {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.25rem 0.5rem;
+            min-width: 0;
+            padding: 0.625rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            background: #fff;
+        }
+
+        .parameter-option-table tr[data-option-row] > td {
+            box-sizing: border-box;
+            min-width: 0;
+            padding: 0.25rem;
+        }
+
+        .parameter-option-order-cell,
+        .parameter-option-code-cell,
+        .parameter-option-name-cell {
+            grid-column: 1 / -1;
+        }
+
+        .parameter-option-order-cell {
+            justify-self: start;
+        }
+
+        .parameter-option-active-cell {
+            grid-column: 1;
+            justify-self: start;
+        }
+
+        .parameter-option-remove-cell {
+            grid-column: 2;
+            justify-self: end;
+            align-self: center;
+        }
+
+        .parameter-option-table .parameter-option-mobile-label {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.25rem;
+        }
+
+        .parameter-option-active-cell > label {
+            justify-content: flex-start;
+            gap: 0.5rem;
+            padding-inline: 0;
+        }
+
+        .parameter-option-active-cell .parameter-option-mobile-label {
+            margin: 0;
+        }
+    }
+}
+
+/* Tailwind display utilities can override the browser's native [hidden] rule. */
+#admin-language-toggle[hidden],
+#admin-language-options[hidden],
+#admin-sidebar [hidden] {
+    display: none !important;
+}

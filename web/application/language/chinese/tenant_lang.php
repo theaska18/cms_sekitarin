@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// 租户菜单翻译。
+$lang['tenant_heading'] = '租户';
+$lang['tenant_intro'] = '管理租户联系方式和到期日期。';
+$lang['tenant_search_hint'] = '按代码或名称搜索租户。';
+$lang['tenant_filter_code_hint'] = '按租户代码搜索';
+$lang['tenant_filter_name_hint'] = '按租户名称搜索';
+$lang['tenant_code_label'] = '租户代码';
+$lang['tenant_name_label'] = '租户名称';
+$lang['tenant_address_label'] = '地址';
+$lang['tenant_filter_code'] = '按代码筛选';
+$lang['tenant_filter_name'] = '按名称筛选';
+$lang['tenant_filter'] = '应用筛选';
+$lang['tenant_reset'] = '清除筛选';
+$lang['tenant_add'] = '添加';
+$lang['tenant_edit'] = '编辑';
+$lang['tenant_menu_access'] = '菜单访问';
+$lang['tenant_delete'] = '删除';
+$lang['tenant_cancel'] = '取消';
+$lang['tenant_confirm_title'] = '删除此租户？';
+$lang['tenant_confirm_body'] = '所选租户将被永久删除，此操作无法撤销。';
+$lang['tenant_confirm_delete'] = '删除租户';
+$lang['tenant_empty'] = '尚未添加任何租户。';
+$lang['tenant_empty_hint'] = '添加到 CMS 的租户将在此处显示。';
+$lang['tenant_no_results'] = '没有租户符合这些筛选条件。';
+$lang['tenant_no_results_hint'] = '请尝试其他代码或名称，或清除筛选条件以查看所有租户。';
+$lang['tenant_unavailable'] = '租户数据暂时不可用。';
+$lang['tenant_write_disabled'] = '添加、编辑和删除功能已禁用。仅在开发环境、管理员会话有效且启用 CSRF 防护时可用。';
+$lang['tenant_total'] = '符合条件的租户';
+$lang['tenant_page'] = '页';
+$lang['tenant_page_of'] = '/';
+$lang['tenant_from_data'] = '共 %s 条数据';
+$lang['tenant_previous'] = '上一页';
+$lang['tenant_next'] = '下一页';
+$lang['tenant_per_page'] = '每页行数';
+$lang['tenant_created'] = '租户已创建。';
+$lang['tenant_saved'] = '租户更改已保存。';
+$lang['tenant_deleted'] = '租户已删除。';
+$lang['tenant_not_found'] = '未找到该租户。';
+$lang['tenant_save_error'] = '无法保存租户。请检查信息后重试。';
+$lang['tenant_delete_error'] = '无法删除租户。相关数据可能阻止删除。';
+$lang['tenant_invalid'] = '租户代码或信息无效。';
+$lang['tenant_name_required'] = '请填写租户名称。';
+$lang['tenant_form_new'] = '租户';
+$lang['tenant_form_edit'] = '租户';
+$lang['tenant_form_intro'] = '管理租户联系方式和到期日期。';
+$lang['tenant_description_label'] = '描述';
+$lang['tenant_value_label'] = '值';
+$lang['tenant_code_help'] = '租户代码';
+$lang['tenant_back'] = '返回';
+$lang['tenant_save'] = '保存';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = '租户';
+
+$lang['tenant_email_label'] = '电子邮箱';
+$lang['tenant_phone_label'] = '电话号码';
+$lang['tenant_due_on_label'] = '到期日期';
+$lang['tenant_due_flag_label'] = '启用到期日期';
+$lang['tenant_due_on_required'] = '启用此选项时必须填写到期日期。';
+$lang['tenant_email_address_label'] = '电子邮箱';
+$lang['tenant_phone_number_label'] = '电话号码';
+
+$lang['email_address_label'] = '电子邮箱';
+$lang['phone_number_label'] = '电话号码';
+$lang['due_on_label'] = '到期日期';

@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// Traductions du menu des locataires.
+$lang['tenant_heading'] = 'locataires';
+$lang['tenant_intro'] = 'Gérer les coordonnées et les dates d’échéance des locataires.';
+$lang['tenant_search_hint'] = 'Rechercher par code ou nom du locataire.';
+$lang['tenant_filter_code_hint'] = 'Rechercher par code de locataire';
+$lang['tenant_filter_name_hint'] = 'Rechercher par nom de locataire';
+$lang['tenant_code_label'] = 'Code du locataire';
+$lang['tenant_name_label'] = 'Nom du locataire';
+$lang['tenant_address_label'] = 'Adresse';
+$lang['tenant_filter_code'] = 'Filtrer par code';
+$lang['tenant_filter_name'] = 'Filtrer par nom';
+$lang['tenant_filter'] = 'Appliquer les filtres';
+$lang['tenant_reset'] = 'Effacer les filtres';
+$lang['tenant_add'] = 'Ajouter';
+$lang['tenant_edit'] = 'Modifier';
+$lang['tenant_menu_access'] = 'Accès aux menus';
+$lang['tenant_delete'] = 'Supprimer';
+$lang['tenant_cancel'] = 'Annuler';
+$lang['tenant_confirm_title'] = 'Supprimer cette locataire ?';
+$lang['tenant_confirm_body'] = 'La locataire sélectionnée sera supprimée définitivement. Cette action est irréversible.';
+$lang['tenant_confirm_delete'] = 'Supprimer la locataire';
+$lang['tenant_empty'] = 'Aucune locataire n’a encore été ajoutée.';
+$lang['tenant_empty_hint'] = 'Les locataires CMS disponibles apparaîtront ici une fois ajoutées.';
+$lang['tenant_no_results'] = 'Aucune locataire ne correspond à ces filtres.';
+$lang['tenant_no_results_hint'] = 'Essayez un autre code ou nom, ou effacez les filtres pour voir toutes les locataires.';
+$lang['tenant_unavailable'] = 'Les données des locataires sont temporairement indisponibles.';
+$lang['tenant_write_disabled'] = 'L’ajout, la modification et la suppression sont désactivés. Ils ne sont disponibles qu’en développement avec une session admin et la protection CSRF.';
+$lang['tenant_total'] = 'Locataires correspondantes';
+$lang['tenant_page'] = 'Page';
+$lang['tenant_page_of'] = 'sur';
+$lang['tenant_from_data'] = 'sur un total de %s données';
+$lang['tenant_previous'] = 'Précédent';
+$lang['tenant_next'] = 'Suivant';
+$lang['tenant_per_page'] = 'Lignes par page';
+$lang['tenant_created'] = 'Locataire créée.';
+$lang['tenant_saved'] = 'Modifications enregistrées.';
+$lang['tenant_deleted'] = 'Locataire supprimée.';
+$lang['tenant_not_found'] = 'Locataire introuvable.';
+$lang['tenant_save_error'] = 'Impossible d’enregistrer la locataire. Vérifiez les données et réessayez.';
+$lang['tenant_delete_error'] = 'Impossible de supprimer la locataire. Des données associées peuvent empêcher sa suppression.';
+$lang['tenant_invalid'] = 'Le code ou les données de la locataire ne sont pas valides.';
+$lang['tenant_name_required'] = 'Le nom de la locataire est obligatoire.';
+$lang['tenant_form_new'] = 'locataire';
+$lang['tenant_form_edit'] = 'locataire';
+$lang['tenant_form_intro'] = 'Gérer les coordonnées et les dates d’échéance des locataires.';
+$lang['tenant_description_label'] = 'Description';
+$lang['tenant_value_label'] = 'Valeur';
+$lang['tenant_code_help'] = 'Code du locataire';
+$lang['tenant_back'] = 'Retour';
+$lang['tenant_save'] = 'Enregistrer';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'locataire';
+
+$lang['tenant_email_label'] = 'Adresse e-mail';
+$lang['tenant_phone_label'] = 'Numéro de téléphone';
+$lang['tenant_due_on_label'] = 'Date d’échéance';
+$lang['tenant_due_flag_label'] = 'Activer la date d’échéance';
+$lang['tenant_due_on_required'] = 'Une date d’échéance est obligatoire lorsque cette option est activée.';
+$lang['tenant_email_address_label'] = 'Adresse e-mail';
+$lang['tenant_phone_number_label'] = 'Numéro de téléphone';
+
+$lang['email_address_label'] = 'Adresse e-mail';
+$lang['phone_number_label'] = 'Numéro de téléphone';
+$lang['due_on_label'] = 'Date d’échéance';

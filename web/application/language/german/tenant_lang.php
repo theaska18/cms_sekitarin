@@ -1,0 +1,67 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+// Übersetzungen für das Mandanten-Menü.
+$lang['tenant_heading'] = 'Mandanten';
+$lang['tenant_intro'] = 'Kontaktdaten und Fälligkeitstermine der Mandanten verwalten.';
+$lang['tenant_search_hint'] = 'Mandanten nach Code oder Name suchen.';
+$lang['tenant_filter_code_hint'] = 'Nach Mandantscode suchen';
+$lang['tenant_filter_name_hint'] = 'Nach Mandantsnamen suchen';
+$lang['tenant_code_label'] = 'Mandantencode';
+$lang['tenant_name_label'] = 'Mandantenname';
+$lang['tenant_address_label'] = 'Adresse';
+$lang['tenant_filter_code'] = 'Nach Code filtern';
+$lang['tenant_filter_name'] = 'Nach Namen filtern';
+$lang['tenant_filter'] = 'Filter anwenden';
+$lang['tenant_reset'] = 'Filter zurücksetzen';
+$lang['tenant_add'] = 'Hinzufügen';
+$lang['tenant_edit'] = 'Bearbeiten';
+$lang['tenant_menu_access'] = 'Menüzugriff';
+$lang['tenant_delete'] = 'Löschen';
+$lang['tenant_cancel'] = 'Abbrechen';
+$lang['tenant_confirm_title'] = 'Diese Mandant löschen?';
+$lang['tenant_confirm_body'] = 'Die ausgewählte Mandant wird dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.';
+$lang['tenant_confirm_delete'] = 'Mandant löschen';
+$lang['tenant_empty'] = 'Es wurden noch keine Mandanten hinzugefügt.';
+$lang['tenant_empty_hint'] = 'Verfügbare CMS-Mandanten werden hier angezeigt, sobald sie hinzugefügt wurden.';
+$lang['tenant_no_results'] = 'Keine Mandanten entsprechen diesen Filtern.';
+$lang['tenant_no_results_hint'] = 'Versuchen Sie einen anderen Code oder Namen oder löschen Sie die Filter, um alle Mandanten zu sehen.';
+$lang['tenant_unavailable'] = 'Die Mandantsdaten sind vorübergehend nicht verfügbar.';
+$lang['tenant_write_disabled'] = 'Hinzufügen, Bearbeiten und Löschen sind deaktiviert. Diese Aktionen sind nur in der Entwicklungsumgebung mit aktiver Admin-Sitzung und CSRF-Schutz verfügbar.';
+$lang['tenant_total'] = 'Passende Mandanten';
+$lang['tenant_page'] = 'Seite';
+$lang['tenant_page_of'] = 'von';
+$lang['tenant_from_data'] = 'bei insgesamt %s Datensätzen';
+$lang['tenant_previous'] = 'Zurück';
+$lang['tenant_next'] = 'Weiter';
+$lang['tenant_per_page'] = 'Zeilen pro Seite';
+$lang['tenant_created'] = 'Mandant erstellt.';
+$lang['tenant_saved'] = 'Änderungen gespeichert.';
+$lang['tenant_deleted'] = 'Mandant gelöscht.';
+$lang['tenant_not_found'] = 'Mandant nicht gefunden.';
+$lang['tenant_save_error'] = 'Mandant konnte nicht gespeichert werden. Prüfen Sie die Angaben und versuchen Sie es erneut.';
+$lang['tenant_delete_error'] = 'Mandant konnte nicht gelöscht werden. Zugehörige Daten verhindern möglicherweise die Löschung.';
+$lang['tenant_invalid'] = 'Mandantscode oder Angaben sind ungültig.';
+$lang['tenant_name_required'] = 'Der Mandantsname ist erforderlich.';
+$lang['tenant_form_new'] = 'Mandant';
+$lang['tenant_form_edit'] = 'Mandant';
+$lang['tenant_form_intro'] = 'Kontaktdaten und Fälligkeitstermine der Mandanten verwalten.';
+$lang['tenant_description_label'] = 'Beschreibung';
+$lang['tenant_value_label'] = 'Wert';
+$lang['tenant_code_help'] = 'Mandantencode';
+$lang['tenant_back'] = 'Zurück';
+$lang['tenant_save'] = 'Speichern';
+$lang['tenant_actions'] = 'Actions';
+$lang['tenant_search_label'] = 'Mandant';
+
+$lang['tenant_email_label'] = 'E-Mail-Adresse';
+$lang['tenant_phone_label'] = 'Telefonnummer';
+$lang['tenant_due_on_label'] = 'Fälligkeitsdatum';
+$lang['tenant_due_flag_label'] = 'Fälligkeitsdatum aktivieren';
+$lang['tenant_due_on_required'] = 'Bei aktivierter Option ist ein Fälligkeitsdatum erforderlich.';
+$lang['tenant_email_address_label'] = 'E-Mail-Adresse';
+$lang['tenant_phone_number_label'] = 'Telefonnummer';
+
+$lang['email_address_label'] = 'E-Mail-Adresse';
+$lang['phone_number_label'] = 'Telefonnummer';
+$lang['due_on_label'] = 'Fälligkeitsdatum';
