@@ -63,6 +63,39 @@ class AdminSettingProfileContractTests(unittest.TestCase):
         self.assertIn("requestSubmit()", setting_view)
         theme_css = (ROOT / "assets/css/admin-theme.css").read_text()
         self.assertIn('html[data-theme="dark"]', theme_css)
+        self.assertIn(".admin-topbar { background-color:", theme_css)
+        self.assertIn("#admin-profile-menu [role=\"menuitem\"]:hover", theme_css)
+        self.assertIn("#admin-sidebar [aria-current=\"page\"]", theme_css)
+        self.assertIn("#admin-app-shell h1", theme_css)
+        self.assertIn('#admin-app-shell [aria-labelledby="welcome-heading"]', theme_css)
+        self.assertIn('background-image: none !important', theme_css)
+        self.assertIn('background-color: #1e293b !important', theme_css)
+        self.assertIn('color: #e2e8f0 !important', theme_css)
+        self.assertIn('#admin-app-shell [aria-labelledby="welcome-heading"] h2', theme_css)
+        self.assertIn("#admin-profile-toggle span { color:", theme_css)
+        self.assertIn("table tbody tr:hover { background-color:", theme_css)
+        self.assertIn("table thead th:hover *", theme_css)
+        self.assertIn("[role=\"menu\"] [role=\"menuitem\"]:hover", theme_css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell a[rel="prev"]', theme_css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell a[rel="next"]', theme_css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell a[rel="prev"]:hover', theme_css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell a[rel="next"]:hover', theme_css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell a.admin-back-link', theme_css)
+        self.assertIn('a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"]:hover', theme_css)
+        self.assertIn('span[aria-disabled="true"][data-user-page]', theme_css)
+        for view_path in (
+            "web/application/views/admin/property/form.php",
+            "web/application/views/admin/property/form_unavailable.php",
+            "web/application/views/admin/parameter/form.php",
+            "web/application/views/admin/employee/form.php",
+            "web/application/views/admin/tenant/form.php",
+            "web/application/views/admin/sequence/form.php",
+            "web/application/views/admin/user/form.php",
+            "web/application/views/admin/user/password.php",
+            "web/application/views/admin/role/form.php",
+            "web/application/views/admin/tenant/menu.php",
+        ):
+            self.assertIn('class="admin-back-link inline-flex min-h-11', (ROOT / view_path).read_text(), view_path)
         self.assertIn("admin-theme.css?v=", (ROOT / "web/application/views/admin/header.php").read_text())
 
     def test_logout_is_post_only_csrf_protected_and_expires_session(self):

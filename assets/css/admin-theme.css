@@ -16,3 +16,92 @@ html[data-theme="dark"] #admin-app-shell .ring-emerald-100 { --tw-ring-color: #0
 html[data-theme="dark"] #admin-app-shell .bg-rose-50 { background-color: #4c0519 !important; }
 html[data-theme="dark"] #admin-app-shell .text-rose-900 { color: #fecdd3 !important; }
 html[data-theme="dark"] footer { color: #cbd5e1; }
+
+/* Keep the top navigation and its popovers opaque in dark mode. */
+html[data-theme="dark"] #admin-app-shell .admin-topbar { background-color: #111827 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+html[data-theme="dark"] #admin-app-shell .admin-topbar button,
+html[data-theme="dark"] #admin-app-shell .admin-topbar a { color: #e5e7eb !important; }
+html[data-theme="dark"] #admin-app-shell .admin-topbar button:hover,
+html[data-theme="dark"] #admin-app-shell .admin-topbar a:hover,
+html[data-theme="dark"] #admin-app-shell .admin-topbar button:focus-visible,
+html[data-theme="dark"] #admin-app-shell .admin-topbar a:focus-visible { color: #ffffff !important; background-color: #374151 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-language-options,
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu { background-color: #111827 !important; color: #e5e7eb !important; border-color: #374151 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"],
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"] { color: #e5e7eb !important; }
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"]:hover,
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"]:focus-visible,
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:hover,
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:focus-visible { background-color: #374151 !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"] { background-color: #064e3b !important; color: #d1fae5 !important; border-color: #047857 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"]:hover,
+html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"]:focus-visible { background-color: #065f46 !important; color: #ffffff !important; }
+
+/* Ensure hover and selected navigation labels remain high-contrast. */
+html[data-theme="dark"] #admin-app-shell #admin-sidebar a:hover,
+html[data-theme="dark"] #admin-app-shell #admin-sidebar button:hover,
+html[data-theme="dark"] #admin-app-shell #admin-sidebar a:focus-visible,
+html[data-theme="dark"] #admin-app-shell #admin-sidebar button:focus-visible { background-color: #374151 !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell #admin-sidebar [aria-current="page"] { background-color: #064e3b !important; color: #d1fae5 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-sidebar [aria-current="page"]:hover,
+html[data-theme="dark"] #admin-app-shell #admin-sidebar [aria-current="page"]:focus-visible { background-color: #065f46 !important; color: #ffffff !important; }
+
+/* Darken page-title utilities only in light mode; dark mode uses accessible light text. */
+html[data-theme="dark"] #admin-app-shell h1,
+html[data-theme="dark"] #admin-app-shell h1[class*="text-"] { color: #f8fafc !important; }
+
+/* Profile identity and popover stay legible without light-theme utility colors. */
+html[data-theme="dark"] #admin-app-shell #admin-profile-toggle,
+html[data-theme="dark"] #admin-app-shell #admin-profile-toggle span { color: #f1f5f9 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:not(:hover):not(:focus-visible) { background-color: transparent !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:hover,
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:focus-visible,
+html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:focus { background-color: #334155 !important; color: #ffffff !important; }
+
+/* Keep the dashboard welcome panel subdued in dark mode. */
+html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] { background-image: none !important; background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] > div[aria-hidden="true"] { border-color: #334155 !important; }
+html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] p { color: #cbd5e1 !important; }
+html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] h2 { color: #f8fafc !important; }
+html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] a { color: #ffffff !important; }
+
+html[data-theme="dark"] #admin-app-shell a[rel="prev"],
+html[data-theme="dark"] #admin-app-shell a[rel="next"],
+html[data-theme="dark"] #admin-app-shell span[aria-disabled="true"][data-user-page] { background-color: #1e293b !important; border-color: #475569 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell a[rel="prev"]:hover,
+html[data-theme="dark"] #admin-app-shell a[rel="next"]:hover,
+html[data-theme="dark"] #admin-app-shell a[rel="prev"]:focus-visible,
+html[data-theme="dark"] #admin-app-shell a[rel="next"]:focus-visible { background-color: #334155 !important; border-color: #64748b !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell a[rel="prev"]:focus-visible,
+html[data-theme="dark"] #admin-app-shell a[rel="next"]:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+html[data-theme="dark"] #admin-app-shell a.admin-back-link,
+html[data-theme="dark"] #admin-app-shell a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"] { background-color: #1e293b !important; border-color: #475569 !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell a.admin-back-link:hover,
+html[data-theme="dark"] #admin-app-shell a.admin-back-link:focus-visible,
+html[data-theme="dark"] #admin-app-shell a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"]:hover,
+html[data-theme="dark"] #admin-app-shell a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"]:focus-visible { background-color: #334155 !important; border-color: #64748b !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell a.admin-back-link:focus-visible,
+html[data-theme="dark"] #admin-app-shell a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"]:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+html[data-theme="dark"] #admin-app-shell a.admin-back-link svg,
+html[data-theme="dark"] #admin-app-shell a[href*="/admin/"][class*="border-slate-300"][class*="min-h-11"] svg { color: inherit !important; }
+/* Tame bright Tailwind hover utilities for data rows, table headers and action menus. */
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover { background-color: #1e293b !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell table thead,
+html[data-theme="dark"] #admin-app-shell table thead tr,
+html[data-theme="dark"] #admin-app-shell table thead th { background-color: #1e293b !important; color: #cbd5e1 !important; }
+html[data-theme="dark"] #admin-app-shell table thead th:hover,
+html[data-theme="dark"] #admin-app-shell table thead th:hover * { background-color: #334155 !important; color: #f8fafc !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover td,
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover th { color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover td a,
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover td button { color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell [role="menu"] { background-color: #111827 !important; color: #e2e8f0 !important; border-color: #475569 !important; }
+html[data-theme="dark"] #admin-app-shell [role="menu"] [role="menuitem"]:hover,
+html[data-theme="dark"] #admin-app-shell [role="menu"] [role="menuitem"]:focus-visible,
+html[data-theme="dark"] #admin-app-shell [role="menu"] [role="menuitem"]:focus { background-color: #334155 !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] { background-color: #111827 !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] [role="menuitem"] { color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] [role="menuitem"]:hover,
+html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] [role="menuitem"]:focus-visible { background-color: #334155 !important; color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell table tbody tr [aria-haspopup="menu"]:hover,
+html[data-theme="dark"] #admin-app-shell table tbody tr [aria-haspopup="menu"]:focus-visible { background-color: #334155 !important; color: #f8fafc !important; }
