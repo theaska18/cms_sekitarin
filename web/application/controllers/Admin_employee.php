@@ -88,6 +88,23 @@ class Admin_employee extends Admin
         redirect('/admin/hr/employee', 'location', 303);
     }
 
+    /** Serve the signed-in user's own employee photo without requiring the HR menu. */
+    public function employee_profile_photo($filename)
+    {
+        if (!is_string($filename) || !preg_match('/\\A[A-Za-z0-9_-]+\\.(?:jpe?g|png|gif|webp)\\z/i', $filename)) { show_404(); return; }
+        $employee_id = isset($this->current_user['employee_id']) ? (int) $this->current_user['employee_id'] : 0;
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        $store = $this->employee_store();
+        $employee = $employee_id > 0 && $store && $store->schema_available() ? $store->find($employee_id, $tenant_id) : NULL;
+        if (!$employee || !isset($employee['image']) || !hash_equals((string) $employee['image'], $filename)) { show_404(); return; }
+        $path = $store->image_path($filename);
+        $image = $path && is_file($path) ? @getimagesize($path) : FALSE;
+        if (!$image || !in_array($image['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/webp'), TRUE)) { show_404(); return; }
+        $this->output->set_header('Cache-Control: private, no-store, max-age=0');
+        $this->output->set_header('X-Content-Type-Options: nosniff');
+        $this->output->set_content_type($image['mime'])->set_output(file_get_contents($path));
+    }
+
     /** Serve photos only after normal admin and tenant authorization. */
     public function employee_photo($employee_id)
     {

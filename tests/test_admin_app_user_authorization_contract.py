@@ -80,8 +80,9 @@ class AppUserAuthorizationContractTests(unittest.TestCase):
         self.assertIn("isset($row['employee_id'])", identity)
         self.assertIn("field_data('hr_employee')", identity)
         self.assertIn("$field->name === 'image'", identity)
-        self.assertIn("realpath(FCPATH . $path)", identity)
-        self.assertIn("strpos($file, $root . DIRECTORY_SEPARATOR) !== 0", identity)
+        self.assertIn("realpath(APPPATH . 'cache/employee-images/' . $filename)", identity)
+        self.assertIn("strpos($file, $image_directory . DIRECTORY_SEPARATOR) !== 0", identity)
+        self.assertIn("site_url('admin/hr/employee/profile-photo/' . rawurlencode($filename))", identity)
 
 
 if __name__ == "__main__":

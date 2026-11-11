@@ -107,23 +107,24 @@ class Admin_identity
         if ($query === FALSE || $query->num_rows() !== 1) {
             return NULL;
         }
-        $path = trim((string) $query->row()->image);
-        if ($path === '' || strpos($path, "\0") !== FALSE || strpos($path, ':') !== FALSE
-            || preg_match('#(^|[\\/])\.\.?([\\/]|$)#', $path) || preg_match('#[\\\\]#', $path)
-            || strpos($path, '/') === 0) {
+        $filename = trim((string) $query->row()->image);
+        if (!preg_match('/\\A[A-Za-z0-9_-]+\\.(?:jpe?g|png|gif|webp)\\z/i', $filename)) {
             return NULL;
         }
-        $root = realpath(FCPATH);
-        $file = realpath(FCPATH . $path);
-        if ($root === FALSE || $file === FALSE || !is_file($file)
-            || strpos($file, $root . DIRECTORY_SEPARATOR) !== 0) {
+
+        // Employee uploads are private files under application/cache, not the public web root.
+        $image_directory = realpath(APPPATH . 'cache/employee-images');
+        $file = realpath(APPPATH . 'cache/employee-images/' . $filename);
+        if ($image_directory === FALSE || $file === FALSE || !is_file($file)
+            || strpos($file, $image_directory . DIRECTORY_SEPARATOR) !== 0) {
             return NULL;
         }
+
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
         if (!in_array($extension, array('jpg', 'jpeg', 'png', 'gif', 'webp'), TRUE)) {
             return NULL;
         }
-        return base_url(str_replace(DIRECTORY_SEPARATOR, '/', $path));
+        return site_url('admin/hr/employee/profile-photo/' . rawurlencode($filename));
     }
 
     public function logout()

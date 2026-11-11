@@ -22,6 +22,7 @@ $route['admin/hr/employee'] = 'admin_employee/employee_index';
 $route['admin/hr/employee/new'] = 'admin_employee/employee_new';
 $route['admin/hr/employee/change/(:num)'] = 'admin_employee/employee_change/$1';
 $route['admin/hr/employee/photo/(:num)'] = 'admin_employee/employee_photo/$1';
+$route['admin/hr/employee/profile-photo/(:any)'] = 'admin_employee/employee_profile_photo/$1';
 $route['admin/hr/employee/delete'] = 'admin_employee/employee_delete';
 $route['admin/system/approval'] = 'admin/placeholder/system/approval';
 $route['admin/hr/hierarchy'] = 'admin/placeholder/hr/hierarchy';
