@@ -40,10 +40,38 @@ class Admin extends CI_Controller
         $this->render_admin('admin/dashboard', 'dashboard', '/admin');
     }
 
+    public function setting()
+    {
+        $locale = $this->resolve_admin_locale();
+        if ($this->input->method(TRUE) === 'POST') {
+            $requested_locale = (string) $this->input->post('locale', TRUE);
+            if (isset($this->admin_languages[$requested_locale])) {
+                $this->input->set_cookie('cmsnivo_admin_locale', $requested_locale, 31536000, '', '/', '', NULL, TRUE, 'Lax');
+                $this->session->set_flashdata('setting_notice', 'saved');
+                redirect('/admin/setting');
+                return;
+            }
+            $this->session->set_flashdata('setting_notice', 'invalid');
+            redirect('/admin/setting');
+            return;
+        }
+
+        $notice = (string) $this->session->flashdata('setting_notice');
+        $this->render_admin(
+            'admin/setting',
+            'settings',
+            '/admin/setting',
+            array(
+                'setting_locale' => $locale,
+                'admin_languages' => $this->admin_languages,
+                'setting_notice' => $notice,
+            )
+        );
+    }
+
     public function placeholder($section, $slug)
     {
         $sections = array(
-            'admin/setting' => 'settings',
             'admin/profile' => 'profile',
             'admin/settings' => 'settings',
             'admin/hr/employee' => 'employee',
@@ -361,6 +389,7 @@ class Admin extends CI_Controller
             'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
             'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
             'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links',
+            'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_system', 'setting_theme_note',
             'placeholder_title', 'placeholder_body', 'admin_area',
             'apply_language', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation',
             'path', 'not_built', 'logout_unavailable', 'avatar_alt', 'dashboard_sections',
@@ -374,6 +403,9 @@ class Admin extends CI_Controller
         $labels = array();
         foreach ($keys as $key) {
             $labels[$key] = $this->lang->line('admin_' . $key);
+            if ($labels[$key] === FALSE) {
+                $labels[$key] = '';
+            }
         }
         if ($is_property_view) {
             $property_keys = array(

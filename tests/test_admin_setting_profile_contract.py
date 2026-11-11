@@ -24,7 +24,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
 
     def test_exact_singular_routes_and_existing_plural_route_are_preserved(self):
         expected_routes = {
-            "admin/setting": "admin/placeholder/admin/setting",
+            "admin/setting": "admin/setting",
             "admin/profile": "admin/placeholder/admin/profile",
             "admin/settings": "admin/placeholder/admin/settings",
         }
@@ -37,7 +37,13 @@ class AdminSettingProfileContractTests(unittest.TestCase):
 
     def test_both_pages_use_only_existing_read_only_placeholder_content(self):
         placeholder_allowlist = self.controller.split("$sections = array(", 1)[1].split(");", 1)[0]
-        for uri, title_key in (("admin/setting", "settings"), ("admin/profile", "profile")):
+        self.assertIn("public function setting()", self.controller)
+        setting = self.controller.split("public function setting()", 1)[1].split("public function placeholder(", 1)[0]
+        self.assertIn("'admin/setting'", self.routes)
+        self.assertIn("'settings'", setting)
+        self.assertIn("admin/setting", self.controller)
+        self.assertTrue((ROOT / "web/application/views/admin/setting.php").is_file())
+        for uri, title_key in (("admin/profile", "profile"),):
             with self.subTest(uri=uri):
                 self.assertIn(f"'{uri}' => '{title_key}'", placeholder_allowlist)
         self.assertIn("admin/placeholder", self.routes)
