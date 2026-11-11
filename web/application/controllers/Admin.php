@@ -43,11 +43,27 @@ class Admin extends CI_Controller
     public function setting()
     {
         $locale = $this->resolve_admin_locale();
+        $this->load->database();
+        $db = $this->db;
         if ($this->input->method(TRUE) === 'POST') {
             $requested_locale = (string) $this->input->post('locale', TRUE);
-            if (isset($this->admin_languages[$requested_locale])) {
+            $requested_theme = strtolower(trim((string) $this->input->post('theme', TRUE)));
+            $locale_valid = isset($this->admin_languages[$requested_locale]);
+            $theme_valid = in_array($requested_theme, array('dark', 'light'), TRUE);
+            if ($locale_valid && $theme_valid) {
                 $this->input->set_cookie('cmsnivo_admin_locale', $requested_locale, 31536000, '', '/', '', NULL, TRUE, 'Lax');
-                $this->session->set_flashdata('setting_notice', 'saved');
+                $db->where('user_id', (int) $this->current_user['user_id'])
+                    ->where('tenant_id', (int) $this->current_user['tenant_id'])
+                    ->update('app_user', array('theme' => $requested_theme));
+                $updated = $db->affected_rows();
+                $db_error = $db->error();
+                if ($db->trans_status() === FALSE || (is_array($db_error) && !empty($db_error['code']))) {
+                    $this->session->set_flashdata('setting_notice', 'invalid');
+                } else {
+                    $this->current_user['theme'] = $requested_theme;
+                    $this->session->set_userdata('admin_user', $this->current_user);
+                    $this->session->set_flashdata('setting_notice', 'saved');
+                }
                 redirect('/admin/setting');
                 return;
             }
@@ -56,6 +72,17 @@ class Admin extends CI_Controller
             return;
         }
 
+        $theme_query = $db->select('theme')->from('app_user')
+            ->where('user_id', (int) $this->current_user['user_id'])
+            ->where('tenant_id', (int) $this->current_user['tenant_id'])->limit(1)->get();
+        $theme = $theme_query !== FALSE && $theme_query->num_rows() === 1
+            ? strtolower(trim((string) $theme_query->row()->theme))
+            : '';
+        if (!in_array($theme, array('dark', 'light'), TRUE)) {
+            $theme = 'light';
+        }
+        $this->current_user['theme'] = $theme;
+        $this->session->set_userdata('admin_user', $this->current_user);
         $notice = (string) $this->session->flashdata('setting_notice');
         $this->render_admin(
             'admin/setting',
@@ -63,6 +90,7 @@ class Admin extends CI_Controller
             '/admin/setting',
             array(
                 'setting_locale' => $locale,
+                'setting_theme' => $theme,
                 'admin_languages' => $this->admin_languages,
                 'setting_notice' => $notice,
             )
@@ -389,7 +417,7 @@ class Admin extends CI_Controller
             'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
             'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
             'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links',
-            'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_system', 'setting_theme_note',
+            'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_dark', 'setting_theme_system', 'setting_theme_note',
             'placeholder_title', 'placeholder_body', 'admin_area',
             'apply_language', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation',
             'path', 'not_built', 'logout_unavailable', 'avatar_alt', 'dashboard_sections',

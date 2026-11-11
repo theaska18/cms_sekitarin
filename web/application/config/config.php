@@ -23,7 +23,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = getenv('CI_BASE_URL') ?: 'http://localhost:8086/';
+$config['base_url'] = rtrim(getenv('CI_BASE_URL') ?: 'http://localhost:8086/', '/') . '/';
+if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== '') {
+    $is_https = !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+    $scheme = $is_https ? 'https' : 'http';
+    $config['base_url'] = $scheme . '://' . $_SERVER['HTTP_HOST'] . '/';
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +40,7 @@ $config['base_url'] = getenv('CI_BASE_URL') ?: 'http://localhost:8086/';
 | variable so that it is blank.
 |
 */
-$config['index_page'] = 'index.php';
+$config['index_page'] = '';
 
 /*
 |--------------------------------------------------------------------------

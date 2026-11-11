@@ -1,0 +1,18 @@
+/* Admin theme overrides. Appended after Tailwind output. */
+html[data-theme="dark"], body[data-theme="dark"] { color-scheme: dark; background-color: #0f172a !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell, body[data-theme="dark"] #admin-app-shell { background-color: #0f172a; color: #e2e8f0; }
+html[data-theme="dark"] #admin-app-shell .bg-white { background-color: #1e293b !important; }
+html[data-theme="dark"] #admin-app-shell .bg-slate-50 { background-color: #0f172a !important; }
+html[data-theme="dark"] #admin-app-shell .bg-slate-100 { background-color: #334155 !important; }
+html[data-theme="dark"] #admin-app-shell .bg-slate-900 { background-color: #020617 !important; }
+html[data-theme="dark"] #admin-app-shell .text-slate-900, html[data-theme="dark"] #admin-app-shell .text-slate-800, html[data-theme="dark"] #admin-app-shell .text-slate-700 { color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell .text-slate-600, html[data-theme="dark"] #admin-app-shell .text-slate-500 { color: #cbd5e1 !important; }
+html[data-theme="dark"] #admin-app-shell .text-slate-400 { color: #94a3b8 !important; }
+html[data-theme="dark"] #admin-app-shell .border-slate-200, html[data-theme="dark"] #admin-app-shell .border-slate-300 { border-color: #475569 !important; }
+html[data-theme="dark"] #admin-app-shell input:not([type="radio"]), html[data-theme="dark"] #admin-app-shell select, html[data-theme="dark"] #admin-app-shell textarea { background-color: #0f172a !important; color: #f1f5f9 !important; border-color: #475569 !important; }
+html[data-theme="dark"] #admin-app-shell .bg-emerald-50 { background-color: #064e3b !important; }
+html[data-theme="dark"] #admin-app-shell .text-emerald-800, html[data-theme="dark"] #admin-app-shell .text-emerald-900 { color: #a7f3d0 !important; }
+html[data-theme="dark"] #admin-app-shell .ring-emerald-100 { --tw-ring-color: #065f46 !important; }
+html[data-theme="dark"] #admin-app-shell .bg-rose-50 { background-color: #4c0519 !important; }
+html[data-theme="dark"] #admin-app-shell .text-rose-900 { color: #fecdd3 !important; }
+html[data-theme="dark"] footer { color: #cbd5e1; }

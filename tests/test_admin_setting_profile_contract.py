@@ -51,6 +51,20 @@ class AdminSettingProfileContractTests(unittest.TestCase):
         self.assertIn("placeholder_body", self.placeholder)
         self.assertIn("$current_path", self.placeholder)
 
+    def test_setting_post_updates_theme_and_invalidates_only_on_real_db_error(self):
+        setting = self.controller.split("public function setting()", 1)[1].split("public function placeholder(", 1)[0]
+        self.assertIn("'theme' => $requested_theme", setting)
+        self.assertIn("$db->error()", setting)
+        self.assertIn("$db->trans_status() === FALSE", setting)
+        setting_view = (ROOT / "web/application/views/admin/setting.php").read_text()
+        self.assertIn("action=\"<?= site_url('admin/setting') ?>\"", setting_view)
+        self.assertIn("name=\"theme\"", setting_view)
+        self.assertIn("addEventListener('change'", setting_view)
+        self.assertIn("requestSubmit()", setting_view)
+        theme_css = (ROOT / "assets/css/admin-theme.css").read_text()
+        self.assertIn('html[data-theme="dark"]', theme_css)
+        self.assertIn("admin-theme.css?v=", (ROOT / "web/application/views/admin/header.php").read_text())
+
     def test_logout_is_post_only_csrf_protected_and_expires_session(self):
         auth = (ROOT / "web/application/controllers/Auth.php").read_text()
         identity = (ROOT / "web/application/libraries/Admin_identity.php").read_text()

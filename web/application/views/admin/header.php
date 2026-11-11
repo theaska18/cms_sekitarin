@@ -14,9 +14,10 @@ $menu_icons = array(
     'user-round' => '<circle cx="12" cy="8" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 21a8 8 0 0 1 16 0"/>',
     'default' => '<circle cx="12" cy="12" r="8"/>',
 );
+$admin_theme = isset($current_user['theme']) && $current_user['theme'] === 'dark' ? 'dark' : 'light';
 ?>
 <!doctype html>
-<html lang="<?php echo html_escape($html_lang); ?>" dir="<?php echo html_escape($text_direction); ?>">
+<html lang="<?php echo html_escape($html_lang); ?>" dir="<?php echo html_escape($text_direction); ?>" data-theme="<?php echo $admin_theme; ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,8 +25,9 @@ $menu_icons = array(
     <title><?php echo html_escape($page_title); ?> — <?php echo html_escape($web_name); ?></title>
     <link rel="icon" type="image/png" href="/assets/logo_box.png">
     <link rel="stylesheet" href="/assets/css/tailwind.css?v=<?= is_file(FCPATH . 'assets/css/tailwind.css') ? filemtime(FCPATH . 'assets/css/tailwind.css') : '1' ?>">
+    <link rel="stylesheet" href="/assets/css/admin-theme.css?v=<?= is_file(FCPATH . 'assets/css/admin-theme.css') ? filemtime(FCPATH . 'assets/css/admin-theme.css') : '1' ?>">
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased" data-theme="<?php echo $admin_theme; ?>">
 <div id="admin-app-shell">
 <header class="admin-topbar sticky top-0 z-30 border-b border-slate-200 text-slate-900">
     <div class="mx-auto flex min-h-16 max-w-screen-2xl items-center justify-between gap-1 px-4 sm:gap-3 sm:px-6 lg:px-8">

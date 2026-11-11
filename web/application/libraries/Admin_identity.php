@@ -28,7 +28,7 @@ class Admin_identity
         }
 
         $this->CI->load->database();
-        $query = $this->CI->db->select('u.user_id, u.username, u.tenant_id, u.full_name, u.role_id, u.employee_id, u.password')
+        $query = $this->CI->db->select('u.user_id, u.username, u.tenant_id, u.full_name, u.role_id, u.employee_id, u.password, u.theme')
             ->from('app_user u')
             ->join('app_role r', 'r.role_id = u.role_id AND r.tenant_id = u.tenant_id', 'inner')
             ->where('u.username', $username)
@@ -51,13 +51,18 @@ class Admin_identity
             return FALSE;
         }
 
+        $theme = isset($row['theme']) ? strtolower(trim((string) $row['theme'])) : '';
+        if (!in_array($theme, array('dark', 'light'), TRUE)) {
+            $theme = 'light';
+        }
         $user = array(
             'username' => (string) $row['username'],
+            'user_id' => (int) $row['user_id'],
             'tenant_id' => $tenant_id,
             'role_id' => $role_id,
             'full_name' => trim((string) $row['full_name']),
-            // Retain the view-facing name while the rest of the admin area migrates.
             'display_name' => trim((string) $row['full_name']),
+            'theme' => $theme,
         );
         if (isset($row['employee_id']) && (int) $row['employee_id'] > 0) {
             $user['employee_id'] = (int) $row['employee_id'];
@@ -77,8 +82,9 @@ class Admin_identity
     {
         $user = $this->CI->session->userdata(self::SESSION_KEY);
         if (!is_array($user)
-            || !isset($user['username'], $user['tenant_id'], $user['role_id'], $user['full_name'])
+            || !isset($user['username'], $user['user_id'], $user['tenant_id'], $user['role_id'], $user['full_name'])
             || !is_string($user['username']) || !is_string($user['full_name'])
+            || !is_numeric($user['user_id']) || (int) $user['user_id'] < 1
             || $user['username'] === '' || trim($user['full_name']) === ''
             || !is_numeric($user['tenant_id']) || (int) $user['tenant_id'] < 1
             || !is_numeric($user['role_id']) || (int) $user['role_id'] < 1) {
