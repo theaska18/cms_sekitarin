@@ -335,6 +335,7 @@ class Admin extends CI_Controller
         $is_sequence_view = strpos($view, 'admin/sequence/') === 0;
         $is_role_view = strpos($view, 'admin/role/') === 0;
         $is_user_view = strpos($view, 'admin/user/') === 0;
+        $is_employee_view = strpos($view, 'admin/employee/') === 0;
         if ($is_property_view) {
             $this->lang->load('property', $locale);
         }
@@ -353,8 +354,11 @@ class Admin extends CI_Controller
         if ($is_user_view) {
             $this->lang->load('user', $locale);
         }
+        if ($is_employee_view) {
+            $this->lang->load('employee', $locale);
+        }
         $keys = array(
-            'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow',
+            'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
             'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
             'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links',
             'placeholder_title', 'placeholder_body', 'admin_area',
@@ -469,6 +473,18 @@ class Admin extends CI_Controller
             );
             foreach ($user_keys as $key) {
                 $labels['user_' . $key] = $this->lang->line('user_' . $key);
+            }
+        }
+        if ($is_employee_view) {
+            $employee_keys = array(
+                'heading', 'intro', 'search', 'search_hint', 'filter', 'reset', 'add', 'code_label', 'name_label', 'identity_label', 'identity_id_label', 'email_label', 'gender_label', 'gender_choose', 'birth_date_label', 'birth_place_label', 'age_label', 'image_label', 'image_current', 'image_hint', 'filter_columns', 'filter_code', 'filter_name', 'filter_code_hint', 'filter_name_hint',
+                'actions', 'edit', 'delete', 'confirm_delete', 'empty', 'no_results', 'unavailable', 'write_disabled',
+                'pagination', 'result_count', 'per_page', 'page_navigation', 'previous', 'next', 'form_new', 'form_edit', 'form_intro', 'cancel', 'save', 'created',
+                'saved', 'deleted', 'delete_error', 'save_error', 'employee_code_required', 'employee_name_required',
+                'employee_code_too_long', 'employee_name_too_long', 'employee_code_duplicate', 'access_denied'
+            );
+            foreach ($employee_keys as $key) {
+                $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
             }
         }
         $menu_groups = $this->load_admin_menu_groups();

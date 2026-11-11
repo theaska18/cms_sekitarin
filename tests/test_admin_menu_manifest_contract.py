@@ -6,7 +6,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
-MANIFEST_DIR = WEB / "application/views/admin/menu_manifest"
+APP = WEB / "application"
+MANIFEST_DIR = APP / "views/admin/menu_manifest"
 CONTROLLER = WEB / "application/controllers/Admin.php"
 PROPERTY_CONTROLLER = WEB / "application/controllers/Admin_property.php"
 HEADER = WEB / "application/views/admin/header.php"
@@ -135,12 +136,60 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         property_item = next(item for item in manifest.findall("menu") if item.attrib["code"] == "sys_property")
         self.assertEqual("/admin/system/property", property_item.attrib["route"])
 
-    def test_hr_employee_menu_routes_to_a_supported_placeholder(self):
+    def test_hr_employee_menu_routes_to_tenant_scoped_employee_management(self):
         routes = ROUTES.read_text()
-        controller = CONTROLLER.read_text()
-        placeholder = controller.split("public function placeholder", 1)[1].split("public function module", 1)[0]
-        self.assertIn("$route['admin/hr/employee'] = 'admin/placeholder/hr/employee';", routes)
-        self.assertIn("'admin/hr/employee' => 'employee'", placeholder)
+        employee_controller = (APP / "controllers/Admin_employee.php").read_text()
+        employee_store = (APP / "libraries/Employee_store.php").read_text()
+        employee_manifest = parse_xml(MANIFEST_DIR / "hr.xml")
+        employee_item = next(item for item in employee_manifest.findall("menu") if item.attrib["code"] == "hr_employee")
+        self.assertEqual("/admin/hr/employee", employee_item.attrib["route"])
+        self.assertIn("$route['admin/hr/employee'] = 'admin_employee/employee_index';", routes)
+        self.assertIn("$route['admin/hr/employee/new'] = 'admin_employee/employee_new';", routes)
+        self.assertIn("$route['admin/hr/employee/change/(:num)'] = 'admin_employee/employee_change/$1';", routes)
+        self.assertIn("$route['admin/hr/employee/delete'] = 'admin_employee/employee_delete';", routes)
+        self.assertIn("$this->has_admin_menu_code('hr_employee')", employee_controller)
+        self.assertIn("$this->has_admin_access_code('hr_employee_add')", employee_controller)
+        self.assertIn("$this->has_admin_access_code('hr_employee_update')", employee_controller)
+        self.assertIn("$this->has_admin_access_code('hr_employee_delete')", employee_controller)
+        self.assertIn("where('tenant_id', (int) $tenant_id)", employee_store)
+        self.assertIn("$data['tenant_id'] = (int) $tenant_id;", employee_store)
+        self.assertIn("(int) $tenant_id !== $this->tenant_id()", employee_store)
+
+    def test_employee_template_labels_are_handed_off_and_localized(self):
+        import re
+
+        template_paths = (
+            APP / "views/admin/employee/index.php",
+            APP / "views/admin/employee/form.php",
+            APP / "views/admin/employee/access_denied.php",
+        )
+        referenced = set()
+        for path in template_paths:
+            referenced.update(re.findall(r"\$labels\['employee_([^']+)'\]", path.read_text()))
+
+        admin_controller = CONTROLLER.read_text()
+        employee_block = admin_controller.split("if ($is_employee_view)", 1)[1].split("$menu_groups =", 1)[0]
+        loaded = set(re.findall(r"'([^']+)'", employee_block))
+        self.assertTrue(referenced.issubset(loaded), f"employee labels not handed to views: {referenced - loaded}")
+
+        for locale in ("english", "indonesian"):
+            language_file = APP / f"language/{locale}/employee_lang.php"
+            language_keys = set(re.findall(r"employee_([A-Za-z_]+)'\]\s*=", language_file.read_text()))
+            self.assertTrue(referenced.issubset(language_keys), f"{locale} labels missing: {referenced - language_keys}")
+
+    def test_employee_page_title_uses_the_localized_page_heading_not_sidebar_label(self):
+        employee_controller = (APP / "controllers/Admin_employee.php").read_text()
+        admin_controller = CONTROLLER.read_text()
+        employee_view = (APP / "views/admin/employee/index.php").read_text()
+        employee_manifest = parse_xml(MANIFEST_DIR / "hr.xml")
+        employee_item = next(item for item in employee_manifest.findall("menu") if item.attrib["code"] == "hr_employee")
+
+        self.assertIn("$this->render_admin('admin/employee/index', 'employee_heading'", employee_controller)
+        self.assertIn("$this->render_admin('admin/employee/form', 'employee_heading'", employee_controller)
+        self.assertIn("$this->render_admin('admin/employee/access_denied', 'employee_heading'", employee_controller)
+        self.assertIn("'page_title' => $labels[$title_key]", admin_controller)
+        self.assertIn("html_escape($labels['employee_heading'])", employee_view)
+        self.assertEqual("admin_employee", employee_item.attrib["label_key"])
 
     def test_manifest_codes_are_lowercase_and_each_menu_has_add_update_access(self):
         for path in MANIFEST_DIR.glob("*.xml"):

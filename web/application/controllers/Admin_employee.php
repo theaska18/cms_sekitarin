@@ -1,0 +1,254 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+require_once APPPATH . 'controllers/Admin.php';
+
+/** Tenant-scoped employee management under the HR menu. */
+class Admin_employee extends Admin
+{
+    private $employee_store_instance;
+
+    public function employee_index()
+    {
+        if (!$this->has_admin_menu_code('hr_employee')) { $this->employee_access_denied(); return; }
+        $store = $this->employee_store();
+        $filter_mode = $this->input->get('filter_mode', TRUE) === 'columns' ? 'columns' : 'search';
+        $search = $filter_mode === 'search' ? trim((string) $this->input->get('search', TRUE)) : '';
+        if (strlen($search) > 120) { $search = substr($search, 0, 120); }
+        $filter_code = $filter_mode === 'columns' ? trim((string) $this->input->get('employee_code', TRUE)) : '';
+        $filter_name = $filter_mode === 'columns' ? trim((string) $this->input->get('employee_name', TRUE)) : '';
+        if (strlen($filter_code) > 80) { $filter_code = substr($filter_code, 0, 80); }
+        if (strlen($filter_name) > 120) { $filter_name = substr($filter_name, 0, 120); }
+        $sort = $this->input->get('sort', TRUE);
+        if (!in_array($sort, array('employee_code', 'employee_name'), TRUE)) { $sort = 'employee_name'; }
+        $direction = strtoupper((string) $this->input->get('direction', TRUE)) === 'DESC' ? 'DESC' : 'ASC';
+        $per_page = $this->employee_page_size();
+        $page = $this->employee_page_number();
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        $available = $store !== NULL && $store->schema_available();
+        $total = 0;
+        $records = array();
+        if ($available) {
+            $total = $store->count($search, $tenant_id, $filter_code, $filter_name);
+            if ($total === FALSE) { $available = FALSE; $total = 0; }
+            else {
+                $page_count = max(1, (int) ceil($total / $per_page));
+                $page = min($page, $page_count);
+                $records = $store->page($search, $per_page, ($page - 1) * $per_page, $sort, $direction, $tenant_id, $filter_code, $filter_name);
+                if ($records === FALSE) { $available = FALSE; $records = array(); $total = 0; }
+            }
+        }
+        $this->render_admin('admin/employee/index', 'employee_heading', '/admin/hr/employee', array(
+            'employee_records' => $records,
+            'employee_search' => $search,
+            'employee_filter_mode' => $filter_mode,
+            'employee_filter_code' => $filter_code,
+            'employee_filter_name' => $filter_name,
+            'employee_sort' => $sort,
+            'employee_direction' => $direction,
+            'employee_total' => $total,
+            'employee_page' => $page,
+            'employee_per_page' => $per_page,
+            'employee_page_count' => max(1, (int) ceil($total / $per_page)),
+            'employee_available' => $available,
+            'employee_write_available' => $this->employee_write_available($store),
+            'employee_can_add' => $this->has_admin_access_code('hr_employee_add'),
+            'employee_can_update' => $this->has_admin_access_code('hr_employee_update'),
+            'employee_can_delete' => $this->has_admin_access_code('hr_employee_delete'),
+            'employee_status' => (string) $this->session->flashdata('admin_employee_status'),
+        ));
+    }
+
+    public function employee_new()
+    {
+        $this->employee_form(NULL);
+    }
+
+    public function employee_change($employee_id)
+    {
+        if (!ctype_digit((string) $employee_id) || (int) $employee_id < 1) { show_404(); return; }
+        $this->employee_form((int) $employee_id);
+    }
+
+    public function employee_delete()
+    {
+        if (!$this->has_admin_access_code('hr_employee_delete')) { $this->employee_access_denied(); return; }
+        if ($this->input->method(TRUE) !== 'POST') { show_404(); return; }
+        $store = $this->employee_store();
+        if (!$this->employee_write_available($store)) { show_error('Employee writes are unavailable.', 503); return; }
+        $id = $this->input->post('employee_id', TRUE);
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $old = ctype_digit((string) $id) ? $store->find($id, $tenant_id) : NULL;
+        if (!$old || !$store->delete((int) $id, $tenant_id)) {
+            $this->session->set_flashdata('admin_employee_status', 'delete_error');
+        } else {
+            $this->employee_remove_image(isset($old['image']) ? $old['image'] : NULL);
+            $this->session->set_flashdata('admin_employee_status', 'deleted');
+        }
+        redirect('/admin/hr/employee', 'location', 303);
+    }
+
+    /** Serve photos only after normal admin and tenant authorization. */
+    public function employee_photo($employee_id)
+    {
+        if (!$this->has_admin_menu_code('hr_employee')) { show_404(); return; }
+        $store = $this->employee_store();
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        $employee = $store && $store->schema_available() ? $store->find($employee_id, $tenant_id) : NULL;
+        $path = $employee ? $store->image_path(isset($employee['image']) ? $employee['image'] : NULL) : FALSE;
+        $image = $path && is_file($path) ? @getimagesize($path) : FALSE;
+        if (!$image || !in_array($image['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/webp'), TRUE)) { show_404(); return; }
+        $this->output->set_header('Cache-Control: private, no-store, max-age=0');
+        $this->output->set_header('X-Content-Type-Options: nosniff');
+        $this->output->set_content_type($image['mime'])->set_output(file_get_contents($path));
+    }
+
+    private function employee_form($employee_id)
+    {
+        $access = $employee_id === NULL ? 'hr_employee_add' : 'hr_employee_update';
+        if (!$this->has_admin_access_code($access)) { $this->employee_access_denied(); return; }
+        $store = $this->employee_store();
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $write_available = $this->employee_write_available($store);
+        $record = array(
+            'employee_code' => '', 'identity_id' => '', 'employee_name' => '',
+            'email_address' => '', 'gender' => '', 'birth_date' => '', 'birth_place' => '', 'image' => NULL,
+        );
+        if ($employee_id !== NULL) {
+            $existing = $store && $store->schema_available() ? $store->find($employee_id, $tenant_id) : FALSE;
+            if (!$existing) { show_404(); return; }
+            foreach ($record as $field => $value) { $record[$field] = isset($existing[$field]) ? (string) $existing[$field] : $value; }
+        }
+        $errors = array();
+        if ($this->input->method(TRUE) === 'POST') {
+            if (!$write_available) { show_error('Employee writes are unavailable.', 503); return; }
+            foreach (array_keys($record) as $field) {
+                if ($field === 'image') { continue; }
+                $record[$field] = trim((string) $this->input->post($field, TRUE));
+            }
+            $specs = $store->field_specs();
+            foreach (array('employee_code', 'identity_id', 'employee_name', 'email_address', 'gender', 'birth_date', 'birth_place') as $field) {
+                if ($record[$field] === '') { $errors[] = $field . '_required'; }
+                $max = isset($specs[$field]['max_length']) ? (int) $specs[$field]['max_length'] : 0;
+                $length = function_exists('mb_strlen') ? mb_strlen($record[$field], 'UTF-8') : strlen($record[$field]);
+                if ($max > 0 && $length > $max) { $errors[] = $field . '_too_long'; }
+            }
+            if ($record['email_address'] !== '' && !filter_var($record['email_address'], FILTER_VALIDATE_EMAIL)) { $errors[] = 'email_invalid'; }
+            $valid_date = $this->employee_valid_date($record['birth_date']);
+            if (!$valid_date) { $errors[] = 'birth_date_invalid'; }
+            elseif ($record['birth_date'] > date('Y-m-d')) { $errors[] = 'birth_date_future'; }
+            $valid_gender = FALSE;
+            foreach ($store->gender_options() as $option) {
+                if (isset($option['option_code']) && hash_equals((string) $option['option_code'], $record['gender'])) { $valid_gender = TRUE; break; }
+            }
+            if (!$valid_gender) { $errors[] = 'gender_invalid'; }
+            if ($record['employee_code'] !== '' && $store->code_exists($record['employee_code'], $tenant_id, $employee_id ?: 0)) { $errors[] = 'employee_code_duplicate'; }
+
+            $new_image = NULL;
+            $upload = isset($_FILES['image']) ? $_FILES['image'] : NULL;
+            $has_upload = $upload && isset($upload['error']) && $upload['error'] !== UPLOAD_ERR_NO_FILE;
+            if ($has_upload && !$errors) {
+                $upload_dir = APPPATH . 'cache/employee-images/';
+                if (!is_dir($upload_dir) && !@mkdir($upload_dir, 0750, TRUE) && !is_dir($upload_dir)) { $errors[] = 'image_invalid'; }
+                elseif (!is_writable($upload_dir)) { $errors[] = 'image_invalid'; }
+                else {
+                    $this->load->library('upload');
+                    $config = array(
+                        'upload_path' => $upload_dir,
+                        'allowed_types' => 'jpg|jpeg|png|gif|webp',
+                        'max_size' => 2048,
+                        'max_width' => 5000,
+                        'max_height' => 5000,
+                        'file_ext_tolower' => TRUE,
+                        'encrypt_name' => TRUE,
+                        'remove_spaces' => TRUE,
+                    );
+                    $this->upload->initialize($config, TRUE);
+                    if (!$this->upload->do_upload('image')) { $errors[] = 'image_invalid'; }
+                    else {
+                        $uploaded = $this->upload->data();
+                        $new_image = basename($uploaded['file_name']);
+                        $image_path = $store->image_path($new_image);
+                        $image_meta = $image_path ? @getimagesize($image_path) : FALSE;
+                        if (!$image_meta || !in_array($image_meta['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/webp'), TRUE)) {
+                            if ($image_path && is_file($image_path)) { @unlink($image_path); }
+                            $new_image = NULL;
+                            $errors[] = 'image_invalid';
+                        } else { $record['image'] = $new_image; }
+                    }
+                }
+            }
+
+            if (!$errors) {
+                $ok = $employee_id === NULL ? $store->insert($record, $tenant_id) : $store->update($employee_id, $tenant_id, $record);
+                if ($ok) {
+                    if ($employee_id !== NULL && isset($existing['image']) && $existing['image'] !== $record['image']) { $this->employee_remove_image($existing['image']); }
+                    $this->session->set_flashdata('admin_employee_status', $employee_id === NULL ? 'created' : 'saved');
+                    redirect('/admin/hr/employee', 'location', 303);
+                    return;
+                }
+                if ($new_image !== NULL) { $this->employee_remove_image($new_image); }
+                $errors[] = 'save_error';
+            }
+        }
+        $this->render_admin('admin/employee/form', 'employee_heading', $employee_id === NULL ? '/admin/hr/employee/new' : '/admin/hr/employee/change/' . $employee_id, array(
+            'employee_mode' => $employee_id === NULL ? 'new' : 'edit',
+            'employee_id' => $employee_id,
+            'employee_record' => $record,
+            'employee_errors' => $errors,
+            'employee_gender_options' => $store ? $store->gender_options() : array(),
+            'employee_available' => $store !== NULL && $store->schema_available(),
+            'employee_write_available' => $write_available,
+        ));
+    }
+
+    private function employee_valid_date($value)
+    {
+        if (!is_string($value) || !preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $value)) { return FALSE; }
+        $date = DateTime::createFromFormat('!Y-m-d', $value);
+        $errors = DateTime::getLastErrors();
+        return $date && $date->format('Y-m-d') === $value && ($errors === FALSE || (!$errors['warning_count'] && !$errors['error_count']));
+    }
+
+    private function employee_remove_image($filename)
+    {
+        $store = $this->employee_store();
+        $path = $store ? $store->image_path($filename) : FALSE;
+        if ($path && is_file($path)) { @unlink($path); }
+    }
+
+    private function employee_store()
+    {
+        if (!defined('ENVIRONMENT') || ENVIRONMENT !== 'development') { return NULL; }
+        if ($this->employee_store_instance === NULL) {
+            $this->load->database();
+            $this->load->library('employee_store');
+            $this->employee_store_instance = $this->employee_store;
+        }
+        return $this->employee_store_instance;
+    }
+
+    private function employee_write_available($store)
+    {
+        $csrf_enabled = isset($this->config) && $this->config->item('csrf_protection');
+        return $store !== NULL && $store->writes_supported() && $csrf_enabled;
+    }
+
+    private function employee_page_size()
+    {
+        $value = (int) $this->input->get('per_page', TRUE);
+        return in_array($value, array(10, 25, 50), TRUE) ? $value : 10;
+    }
+
+    private function employee_page_number()
+    {
+        $value = (int) $this->input->get('page', TRUE);
+        return max(1, min(100000, $value));
+    }
+
+    private function employee_access_denied()
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin('admin/employee/access_denied', 'employee_heading', '/admin/hr/employee');
+    }
+}
