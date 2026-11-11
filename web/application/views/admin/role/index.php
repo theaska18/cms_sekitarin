@@ -49,12 +49,12 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($role_title) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['role_intro']) ?></p>
         </div>
-        <?php if ($role_create_available): ?>
+        <?php if (!empty($role_create_allowed) && $role_create_available): ?>
             <a href="/admin/application/role/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
                 <?= html_escape($labels['role_add']) ?>
             </a>
-        <?php else: ?>
+        <?php elseif (!empty($role_create_allowed)): ?>
             <span class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500" aria-disabled="true">
                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
                 <?= html_escape($labels['role_add']) ?>
@@ -106,11 +106,11 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
                     </div>
                     <form id="role-column-filter-panel" action="/admin/application/role" method="get" data-role-column-filter-panel <?= $role_filter_mode === 'columns' ? '' : 'hidden' ?> class="<?= $role_filter_mode === 'columns' ? '' : 'hidden ' ?>mt-3 grid w-full min-w-0 grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-5">
                         <input type="hidden" name="filter_mode" value="columns"><input type="hidden" name="per_page" value="<?= $role_per_page ?>"><input type="hidden" name="sort" value="<?= html_escape($role_sort) ?>"><input type="hidden" name="direction" value="<?= html_escape($role_direction) ?>">
-                        <label class="block text-xs font-semibold text-slate-600"><span class="mb-1 block"><?= html_escape($labels['role_tenant_label']) ?></span>
+                        <?php if (!empty($role_tenant_access)): ?><label class="block text-xs font-semibold text-slate-600"><span class="mb-1 block"><?= html_escape($labels['role_tenant_label']) ?></span>
                             <select id="role-filter-tenant" name="tenant_id" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
                                 <?php foreach ($role_tenants as $tenant): ?><option value="<?= (int) $tenant['tenant_id'] ?>"<?= (int) $tenant['tenant_id'] === $role_selected_tenant ? ' selected' : '' ?>><?= html_escape($tenant['tenant_code'] . ' — ' . $tenant['tenant_name']) ?></option><?php endforeach; ?>
                             </select>
-                        </label>
+                        </label><?php endif; ?>
                         <?php foreach (array('role_code' => $labels['role_code_label'], 'role_name' => $labels['role_name_label'], 'description' => $labels['role_description_label']) as $field => $field_label): ?>
                             <label class="block text-xs font-semibold text-slate-600"><span class="mb-1 block"><?= html_escape($field_label) ?></span><input type="search" name="<?= html_escape($field) ?>" value="<?= html_escape(isset($role_filters[$field]) ? $role_filters[$field] : '') ?>" maxlength="100" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"></label>
                         <?php endforeach; ?>
@@ -125,6 +125,7 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
                 <thead class="md:sticky md:z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm" style="top: calc(4rem + var(--role-filter-header-height, 4.5rem));">
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['role_actions']) ?>" class="w-14 min-w-[3.5rem] px-1 py-3.5 sm:px-3"></th>
+                        <?php if (!empty($role_tenant_access)): ?><th scope="col" class="min-w-[10rem] whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['role_tenant_label']) ?></th><?php endif; ?>
                         <?php foreach (array('role_code' => $labels['role_code_label'], 'role_name' => $labels['role_name_label']) as $sort_field => $sort_label): ?>
                             <?php $sort_active = $role_sort === $sort_field; $sort_aria = !$sort_active ? 'none' : ($role_direction === 'ASC' ? 'ascending' : 'descending'); ?>
                             <th scope="col" aria-sort="<?= html_escape($sort_aria) ?>" class="<?= $sort_field === 'role_code' ? 'min-w-[8rem] whitespace-nowrap' : 'min-w-[10rem] break-words' ?> px-2 py-3.5 sm:px-6">
@@ -144,30 +145,31 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
                             <?php $role_code_value = (string) $role['role_code']; $action_menu_id = 'role-actions-menu-' . (int) $action_menu_index++; ?>
                             <tr class="transition hover:bg-slate-50/80">
                                 <td class="w-14 min-w-[3.5rem] whitespace-nowrap px-1 py-3 text-left sm:px-3 sm:py-4">
-                                    <?php if ($role_actions_available): ?>
+                                    <?php if ($role_has_actions): ?>
                                         <div class="relative inline-flex">
                                             <button type="button" data-role-actions-toggle aria-label="<?= html_escape($labels['role_actions']) ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="<?= html_escape($action_menu_id) ?>" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                                                 <svg data-role-actions-icon viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>
                                             </button>
                                             <div id="<?= html_escape($action_menu_id) ?>" data-role-actions-menu hidden role="menu" class="fixed z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
-                                                <a href="/admin/application/role/menu/<?= html_escape(rawurlencode($role_code_value)) ?>/<?= (int) $role['tenant_id'] ?>" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-indigo-700 hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none">
+                                                <?php if (!empty($role_menu_access_available)): ?><a href="/admin/application/role/menu/<?= html_escape(rawurlencode($role_code_value)) ?>/<?= (int) $role['tenant_id'] ?>" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-indigo-700 hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none">
                                                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path stroke-linecap="round" d="M7 7.5h6M7 10h6m-6 2.5h3"/></svg>
                                                     <?= html_escape($labels['role_menu_access']) ?>
-                                                </a>
-                                                <a href="/admin/application/role/change/<?= html_escape(rawurlencode($role_code_value)) ?>/<?= (int) $role['tenant_id'] ?>" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                                </a><?php endif; ?>
+                                                <?php if (!empty($role_update_available)): ?><a href="/admin/application/role/change/<?= html_escape(rawurlencode($role_code_value)) ?>/<?= (int) $role['tenant_id'] ?>" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
                                                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>
                                                     <?= html_escape($labels['role_edit']) ?>
-                                                </a>
-                                                <button type="button" data-role-delete-open="1" data-role-code="<?= html_escape($role_code_value) ?>" data-role-tenant-id="<?= (int) $role['tenant_id'] ?>" data-role-name="<?= html_escape($role['role_name']) ?>" aria-haspopup="dialog" aria-controls="role-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
+                                                </a><?php endif; ?>
+                                                <?php if (!empty($role_delete_available)): ?><button type="button" data-role-delete-open="1" data-role-code="<?= html_escape($role_code_value) ?>" data-role-tenant-id="<?= (int) $role['tenant_id'] ?>" data-role-name="<?= html_escape($role['role_name']) ?>" aria-haspopup="dialog" aria-controls="role-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
                                                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>
                                                     <?= html_escape($labels['role_delete']) ?>
-                                                </button>
+                                                </button><?php endif; ?>
                                             </div>
                                         </div>
                                     <?php else: ?>
                                         <span class="text-xs text-slate-400">—</span>
                                     <?php endif; ?>
                                 </td>
+                                <?php if (!empty($role_tenant_access)): ?><td class="min-w-[10rem] break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape(trim((string) (isset($role['tenant_code']) ? $role['tenant_code'] : '') . ' — ' . (isset($role['tenant_name']) ? $role['tenant_name'] : ''))) ?></td><?php endif; ?>
                                 <th scope="row" class="min-w-[8rem] whitespace-nowrap break-all px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4"><?= html_escape($role_code_value) ?></th>
                                 <td class="min-w-[10rem] break-words px-2 py-3 font-medium text-slate-900 sm:px-6 sm:py-4"><?= html_escape($role['role_name']) ?></td>
                                 <td class="min-w-[12rem] break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape(isset($role['description']) ? $role['description'] : '') ?></td>
@@ -176,7 +178,7 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="px-4 py-14 text-center sm:px-6">
+                            <td colspan="<?= !empty($role_tenant_access) ? 6 : 5 ?>" class="px-4 py-14 text-center sm:px-6">
                                 <div class="mx-auto max-w-md">
                                     <div aria-hidden="true" class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg></div>
                                     <p class="font-medium text-slate-800"><?= html_escape($role_backend_available ? $labels[$empty_title_key] : $labels['role_unavailable']) ?></p>
@@ -209,7 +211,7 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
         <?php endif; ?>
     </section>
 
-    <?php if ($role_actions_available): ?>
+    <?php if ($role_has_actions): ?>
         <div id="role-delete-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="role-delete-title" aria-describedby="role-delete-description" tabindex="-1" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
                 <div aria-hidden="true" class="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-lg font-bold text-rose-700">!</div>

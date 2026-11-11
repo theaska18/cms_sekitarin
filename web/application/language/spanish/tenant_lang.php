@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // Traducciones del menú de inquilinos.
 $lang['tenant_heading'] = 'inquilinos';
+$lang['tenant_no_access'] = 'No tienes acceso para ver la página de inquilinos.';
+$lang['tenant_add_denied'] = 'No tienes acceso para añadir un inquilino.';
+$lang['tenant_update_denied'] = 'No tienes acceso para actualizar un inquilino.';
+$lang['tenant_delete_denied'] = 'No tienes acceso para eliminar un inquilino.';
+$lang['tenant_menu_access_denied'] = 'No tienes acceso al menú de permisos del inquilino.';
 $lang['tenant_intro'] = 'Administra los datos de contacto y vencimientos de los inquilinos.';
 $lang['tenant_search_hint'] = 'Buscar inquilinos por código o nombre.';
 $lang['tenant_filter_code_hint'] = 'Buscar por código de inquilino';

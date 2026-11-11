@@ -327,8 +327,7 @@
         });
 
         groups.forEach(function (group) {
-            var hasVisibleItem = !!group.querySelector('li[data-admin-menu-item]:not([hidden])');
-            group.hidden = !!query && !hasVisibleItem;
+            group.hidden = !group.querySelector('li[data-admin-menu-item]:not([hidden])');
         });
 
         var hasQuery = query.length > 0;

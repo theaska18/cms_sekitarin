@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
 <menu-group code="hr"
             name="Human Resource"
@@ -15,6 +14,29 @@
           status="active">
         <access code="hr_employee_add" name="Add" />
         <access code="hr_employee_update" name="Update"/>
+        <access code="hr_employee_delete" name="Delete"/>
     </menu>
-
+    <menu code="hr_hierarchy"
+          name="Hirarki"
+          label_key="admin_hierarchy"
+          icon="hierarchy"
+          route="/admin/hr/hierarchy"
+          sort_order="2"
+          status="active">
+        <access code="hr_hierarchy_add" name="Add" />
+        <access code="hr_hierarchy_set_leader" name="Set Leader" />
+        <access code="hr_hierarchy_update" name="Update"/>
+        <access code="hr_hierarchy_delete" name="Delete"/>
+    </menu>
+    <menu code="hr_approval_flow"
+          name="Approval Flow"
+          label_key="admin_approval_flow"
+          icon="workflow"
+          route="/admin/hr/approvalFlow"
+          sort_order="2"
+          status="active">
+        <access code="hr_approval_flow_add" name="Add" />
+        <access code="hr_approval_flow_update" name="Update"/>
+        <access code="hr_approval_flow_set_deafult" name="Set to Default"/>
+    </menu>
 </menu-group>

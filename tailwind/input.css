@@ -169,6 +169,8 @@
 
     #admin-sidebar {
         overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y pinch-zoom;
     }
 
     .admin-menu-link {
@@ -309,6 +311,13 @@
         .parameter-option-active-cell .parameter-option-mobile-label {
             margin: 0;
         }
+    }
+}
+
+@media (max-width: 767px) {
+    #admin-sidebar {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        scroll-padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 }
 

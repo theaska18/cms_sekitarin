@@ -3,6 +3,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Admin extends CI_Controller
 {
+    const ADMIN_SEQUENCE_PATH = '/admin/system/sequence';
+    const ADMIN_ROLE_PATH = '/admin/application/role';
+
     protected $current_user;
     private $admin_menu_groups_loaded = FALSE;
     private $admin_menu_groups_cache = array();
@@ -44,6 +47,9 @@ class Admin extends CI_Controller
             'admin/profile' => 'profile',
             'admin/settings' => 'settings',
             'admin/hr/employee' => 'employee',
+            'system/approval' => 'approval',
+            'hr/hierarchy' => 'hierarchy',
+            'hr/approvalFlow' => 'approval_flow',
         );
         $path = $section . '/' . $slug;
         if (!isset($sections[$path])) {
@@ -73,7 +79,15 @@ class Admin extends CI_Controller
 
         $module = $modules[$path];
         $requested_path = '/' . trim($this->uri->uri_string(), '/');
+        if ($path === 'app/role' && !$this->has_admin_menu_code('app_role')) {
+            $this->role_deny_access('role_no_access');
+            return;
+        }
         if ($path === 'system/sequence') {
+            if (!$this->has_admin_menu_code('sys_sequence')) {
+                $this->sequence_deny_access('sequence_no_access');
+                return;
+            }
             $this->render_sequence_list($module, $requested_path);
             return;
         }
@@ -134,6 +148,10 @@ class Admin extends CI_Controller
                 'sort' => $sort,
                 'direction' => $direction,
                 'write_available' => $this->current_user !== NULL && (bool) config_item('csrf_protection'),
+                'sequence_add_allowed' => $this->has_admin_access_code('sys_sequence_add'),
+                'sequence_update_allowed' => $this->has_admin_access_code('sys_sequence_update'),
+                'sequence_delete_allowed' => $this->has_admin_access_code('sys_sequence_delete'),
+                'sequence_actions_available' => $this->has_admin_access_code('sys_sequence_update') || $this->has_admin_access_code('sys_sequence_delete'),
                 'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
             )
         );
@@ -272,6 +290,41 @@ class Admin extends CI_Controller
         return in_array((string) $access_code, $access_codes, TRUE);
     }
 
+    protected function sequence_deny_access($message_key = 'sequence_no_access')
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin(
+            'admin/sequence/access_denied',
+            'sequence',
+            self::ADMIN_SEQUENCE_PATH,
+            array('sequence_access_message_key' => $message_key)
+        );
+    }
+
+    protected function require_role_access($access_code = NULL, $message_key = 'role_no_access')
+    {
+        if (!$this->has_admin_menu_code('app_role')) {
+            $this->role_deny_access('role_no_access');
+            return FALSE;
+        }
+        if ($access_code !== NULL && !$this->has_admin_access_code($access_code)) {
+            $this->role_deny_access($message_key);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    protected function role_deny_access($message_key = 'role_no_access')
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin(
+            'admin/role/access_denied',
+            'role',
+            self::ADMIN_ROLE_PATH,
+            array('role_access_message_key' => $message_key)
+        );
+    }
+
     protected function render_admin($view, $title_key, $current_path, $extra_data = array())
     {
         $locale = $this->resolve_admin_locale();
@@ -301,7 +354,7 @@ class Admin extends CI_Controller
             $this->lang->load('user', $locale);
         }
         $keys = array(
-            'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence',
+            'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow',
             'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
             'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links',
             'placeholder_title', 'placeholder_body', 'admin_area',
@@ -340,7 +393,7 @@ class Admin extends CI_Controller
                 'confirm_delete', 'empty', 'empty_hint', 'unavailable', 'write_disabled', 'page', 'page_of', 'from_data',
                 'previous', 'next', 'per_page', 'created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error',
                 'invalid', 'name_required', 'due_on_required', 'form_new', 'form_edit', 'form_intro', 'code_help', 'back', 'save', 'actions',
-                'search_label', 'menu_access'
+                'search_label', 'menu_access', 'no_access', 'add_denied', 'update_denied', 'delete_denied', 'menu_access_denied'
             );
             foreach ($tenant_keys as $key) {
                 $labels['tenant_' . $key] = $this->lang->line('tenant_' . $key);
@@ -375,9 +428,9 @@ class Admin extends CI_Controller
                 'code_help', 'name_help', 'description_help', 'last_value_help', 'last_sequence_help',
                 'format_help', 'back', 'save', 'write_disabled', 'invalid', 'save_error', 'repeat_type_invalid',
                 'sequence_code_required', 'sequence_name_required', 'repeat_type_required', 'last_value_required',
-                'last_sequence_required', 'format_required', 'sequence_code_too_long', 'sequence_name_too_long',
+                'last_value_required', 'last_sequence_required', 'format_required', 'sequence_code_too_long', 'sequence_name_too_long',
                 'description_too_long', 'repeat_type_too_long', 'last_value_too_long', 'last_sequence_too_long',
-                'format_too_long', 'sequence_code_invalid', 'last_value_invalid', 'last_sequence_invalid',
+                'format_too_long', 'sequence_code_invalid', 'last_value_invalid', 'last_sequence_invalid', 'no_access',
             );
             foreach ($sequence_keys as $key) {
                 $labels['sequence_' . $key] = $this->lang->line('sequence_' . $key);
@@ -394,7 +447,8 @@ class Admin extends CI_Controller
                 'form_edit', 'form_intro', 'code_help', 'back', 'cancel', 'save', 'invalid',
                 'code_invalid', 'code_too_long', 'code_duplicate', 'name_required', 'name_too_long',
                 'description_too_long', 'save_error', 'tenant_label', 'tenant_placeholder', 'tenant_invalid', 'per_page', 'pagination_summary',
-                'menu_access', 'menu_heading', 'menu_intro', 'menu_unavailable', 'menu_saved', 'menu_save_error', 'menu_empty'
+                'menu_access', 'menu_heading', 'menu_intro', 'menu_unavailable', 'menu_saved', 'menu_save_error', 'menu_empty',
+                'no_access', 'add_denied', 'update_denied', 'delete_denied', 'menu_access_denied'
             );
             foreach ($role_keys as $key) {
                 $labels['role_' . $key] = $this->lang->line('role_' . $key);
@@ -404,13 +458,14 @@ class Admin extends CI_Controller
             $user_keys = array(
                 'heading', 'intro', 'search', 'search_hint', 'filter_role', 'filter_block', 'filter_columns', 'apply_filter', 'add', 'code', 'name', 'full_name', 'full_name_help', 'role', 'employee',
                 'block_status', 'actions', 'edit', 'change_password', 'block', 'unblock', 'yes', 'no', 'empty',
-                'unavailable', 'write_disabled', 'page', 'previous', 'next', 'per_page', 'total', 'created', 'saved',
+                'unavailable', 'write_disabled', 'page', 'previous', 'next', 'per_page', 'pagination', 'pagination_summary', 'total', 'created', 'saved',
                 'password_changed', 'blocked', 'unblocked', 'confirm_title', 'confirm_body', 'cancel', 'confirm',
                 'form_new', 'form_edit', 'form_intro', 'tenant', 'choose_tenant', 'role_choose', 'employee_flag',
                 'employee_search', 'employee_help', 'access_api_flag', 'access_api_help', 'api_secret', 'api_generate', 'password', 'retry_password', 'back', 'save', 'invalid',
                 'tenant_invalid', 'user_code_required', 'user_code_too_long', 'user_code_duplicate', 'username_required',
                 'username_too_long', 'username_duplicate', 'password_required', 'password_too_long', 'password_mismatch',
-                'role_invalid', 'employee_invalid', 'save_error'
+                'role_invalid', 'employee_invalid', 'save_error', 'tenant_filter', 'delete', 'delete_confirm',
+                'api_secret_copy', 'copy_success', 'copy_error', 'no_access'
             );
             foreach ($user_keys as $key) {
                 $labels['user_' . $key] = $this->lang->line('user_' . $key);

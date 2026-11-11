@@ -19,10 +19,20 @@ class AdminRoleContractTest(unittest.TestCase):
         self.assertTrue(store_path.is_file(), "Role_store persistence layer is missing")
         store = store_path.read_text()
         for required in (
-            "app_role", "sys_property", "property_code", "tenant_id", "role_code",
+            "app_role", "sys_tenant", "tenant_id", "role_code",
             "role_name", "description", "active_flag", "role_id",
         ):
             self.assertIn(required, store)
+
+    def test_role_store_gets_tenant_id_from_authenticated_session(self):
+        store = (APP / "libraries/Role_store.php").read_text()
+        tenant_method = store.split("public function tenant_id()", 1)[1].split("public function count(", 1)[0]
+
+        self.assertIn("$CI->session->userdata('admin_user')", tenant_method)
+        self.assertIn("$session_user['tenant_id']", tenant_method)
+        self.assertNotIn("property_code", tenant_method)
+        self.assertNotIn("get('sys_property')", tenant_method)
+        self.assertNotIn("'sys_property'", store.split("public function schema_available()", 1)[1].split("public function tenant_options()", 1)[0])
 
     def test_filtered_tenant_roles_keep_edit_menu_and_delete_actions(self):
         routes = (APP / "config/routes.php").read_text()
@@ -31,7 +41,7 @@ class AdminRoleContractTest(unittest.TestCase):
         index = (APP / "views/admin/role/index.php").read_text()
 
         self.assertIn("'role_create_available'", controller)
-        self.assertIn("'role_actions_available' => $this->role_write_available($store)", controller)
+        self.assertIn("'role_has_actions' => $this->role_write_available($store)", controller)
         self.assertIn("change/(:any)/(:num)", routes)
         self.assertIn("menu/(:any)/(:num)", routes)
         self.assertIn("public function role_change($role_code = '', $tenant_id = NULL)", controller)
@@ -40,7 +50,7 @@ class AdminRoleContractTest(unittest.TestCase):
         self.assertIn("$store->update($role_code, $record, $record['tenant_id'])", controller)
         self.assertIn("$tenant_id = $this->input->post('tenant_id', TRUE)", controller)
         self.assertIn("$store->find($role_code, $tenant_id)", controller)
-        self.assertIn("$role_actions_available", index)
+        self.assertIn("$role_has_actions", index)
         self.assertIn("data-role-tenant-id=\"<?= (int) $role['tenant_id'] ?>\"", index)
         self.assertIn("roleTenant.value = openButton.getAttribute('data-role-tenant-id')", index)
         self.assertIn("$store->delete($role_code, $tenant_id)", controller)
@@ -48,8 +58,31 @@ class AdminRoleContractTest(unittest.TestCase):
         self.assertIn("public function update($role_code, $record, $tenant_id = NULL)", store)
         self.assertIn("public function delete($role_code, $tenant_id = NULL)", store)
         self.assertIn("$role['tenant_id']", index)
-        self.assertIn("$role_actions_available", index)
+        self.assertIn("$role_has_actions", index)
         self.assertIn('name="tenant_id" value="" data-role-delete-tenant', index)
+
+    def test_role_list_shows_tenant_after_actions(self):
+        store = (APP / "libraries/Role_store.php").read_text()
+        view = (APP / "views/admin/role/index.php").read_text()
+
+        header = view.split('<thead', 1)[1].split('</thead>', 1)[0]
+        self.assertLess(header.index("$labels['role_actions']"), header.index("$labels['role_tenant_label']"))
+        row = view.split('<tbody', 1)[1].split('</tbody>', 1)[0]
+        self.assertLess(row.index('<td class="w-14'), row.index("$role['tenant_name']"))
+        self.assertIn("'tenant_name'", store)
+        self.assertIn("sys_tenant.tenant_id = app_role.tenant_id", store)
+
+
+    def test_new_role_tenant_has_configured_default_and_no_empty_option(self):
+        controller = (APP / "controllers/Admin_role.php").read_text()
+        view = (APP / "views/admin/role/form.php").read_text()
+
+        self.assertIn("$store->tenant_id()", controller)
+        self.assertIn("'tenant_id' => $default_tenant_id", controller)
+        tenant_select = view.split('id="role-tenant"', 1)[1].split('</select>', 1)[0]
+        self.assertNotIn('<option value="">', tenant_select)
+        self.assertIn("value=\"<?= html_escape($tenant_id) ?>\"", tenant_select)
+        self.assertIn("$role_record['tenant_id']", tenant_select)
 
     def test_code_exists_distinguishes_no_match_from_database_error(self):
         store = (APP / "libraries/Role_store.php").read_text()
@@ -299,6 +332,48 @@ class AdminRoleContractTest(unittest.TestCase):
         self.assertIn("$include_code ? array('tenant_id', 'role_code'", controller)
         self.assertIn("public function tenant_exists($tenant_id)", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
+
+    def test_role_routes_require_menu_and_action_access_codes(self):
+        controller = (APP / "controllers/Admin_role.php").read_text()
+        admin = (APP / "controllers/Admin.php").read_text()
+        self.assertIn("has_admin_menu_code('app_role')", admin)
+        for code in ('app_role_add', 'app_role_update', 'app_role_delete', 'app_role_menu_access', 'app_role_tenant'):
+            self.assertIn(f"has_admin_access_code('{code}')", controller)
+        for route_method, access_code in (("role_new", "app_role_add"), ("role_change", "app_role_update"), ("role_delete", "app_role_delete"), ("role_menu", "app_role_menu_access")):
+            method_body = controller.split(f"public function {route_method}(", 1)[1]
+            self.assertIn(f"require_role_access('{access_code}'", method_body)
+        self.assertIn("role_deny_access", admin)
+        self.assertIn("$this->output->set_status_header(403)", admin)
+
+    def test_role_list_and_actions_are_filtered_by_session_permissions(self):
+        controller = (APP / "controllers/Admin_role.php").read_text()
+        index = (APP / "views/admin/role/index.php").read_text()
+        form = (APP / "views/admin/role/form.php").read_text()
+        self.assertIn("role_tenant_access", controller)
+        self.assertIn("$store->tenant_id()", controller)
+        self.assertIn("role_create_available", controller)
+        self.assertIn("role_update_available", controller)
+        self.assertIn("role_delete_available", controller)
+        self.assertIn("role_menu_access_available", controller)
+        self.assertIn("$role_tenant_access", index)
+        self.assertIn("$role_update_available", index)
+        self.assertIn("$role_delete_available", index)
+        self.assertIn("$role_menu_access_available", index)
+        self.assertIn("$role_has_actions", index)
+        self.assertIn("$role_tenant_access", form)
+        self.assertIn("app_role_add", controller)
+        self.assertIn("$record['tenant_id'] = (string) $default_tenant_id", controller)
+
+    def test_role_permission_denial_labels_are_localized(self):
+        admin = (APP / "controllers/Admin.php").read_text()
+        denied_view = (APP / "views/admin/role/access_denied.php").read_text()
+        self.assertIn("isset($labels[$role_access_message_key])", denied_view)
+        role_keys = admin.split("$role_keys = array(", 1)[1].split(");", 1)[0]
+        for key in ('no_access', 'add_denied', 'update_denied', 'delete_denied', 'menu_access_denied'):
+            self.assertIn(f"'{key}'", role_keys)
+            for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+                language = (APP / f"language/{locale}/role_lang.php").read_text()
+                self.assertIn(f"role_{key}", language, f"role_{key} missing for {locale}")
 
 
 if __name__ == "__main__":

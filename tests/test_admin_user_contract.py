@@ -23,16 +23,18 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn("admin_user/user_index", routes)
         self.assertIn("admin_user/user_toggle_block", routes)
 
-    def test_store_uses_configured_tenant_and_real_app_user_schema(self):
+    def test_store_uses_authenticated_session_tenant_and_real_app_user_schema(self):
         store = (APP / "libraries/User_store.php").read_text()
+        tenant_method = store.split("public function tenant_id()", 1)[1].split("public function tenant_exists(", 1)[0]
         for field in (
-            "property_code", "tenant_id", "user_code", "username", "role_id",
+            "tenant_id", "user_code", "username", "role_id",
             "emloyee_flag", "employee_id", "password", "block_flag", "full_name",
         ):
             with self.subTest(field=field):
                 self.assertIn(field, store)
-        self.assertIn("select('value')", store)
-        self.assertIn("where('property_code', 'tenant_id')", store)
+        self.assertIn("$CI->session->userdata('admin_user')", tenant_method)
+        self.assertIn("$session_user['tenant_id']", tenant_method)
+        self.assertNotIn("sys_property", store)
 
     def test_list_count_and_rows_join_role_and_optional_employee_names(self):
         store = (APP / "libraries/User_store.php").read_text()
@@ -155,14 +157,54 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn("user_filter_block", controller)
         self.assertIn("role_id", store)
         self.assertIn("block_flag", store)
-        self.assertIn("'role_id' => $user_filter_role", view)
-        self.assertIn("'block_flag' => $user_filter_block", view)
+        self.assertIn("$params['role_id'] = $user_filter_role", view)
+        self.assertIn("$params['block_flag'] = $user_filter_block", view)
         self.assertIn('name="role_id"', view)
         self.assertIn('name="block_flag"', view)
         form_view = (APP / "views/admin/user/form.php").read_text()
         self.assertIn('class="sticky bottom-0', form_view)
         self.assertIn("shadow-none", form_view)
         self.assertIn("bg-white/10", form_view)
+
+    def test_tenant_selector_lives_inside_the_column_filter_panel(self):
+        view = (APP / "views/admin/user/index.php").read_text()
+        search_form = view.split('<form id="user-filter-form"', 1)[1].split('</form>', 1)[0]
+        column_panel = view.split('<form id="user-column-filter-panel"', 1)[1].split('</form>', 1)[0]
+
+        self.assertIn('name="tenant_id" value="<?= (int) $user_tenant_id ?>"', search_form)
+        self.assertIn('id="user-filter-tenant"', column_panel)
+        self.assertIn('name="tenant_id"', column_panel)
+        self.assertIn("$user_tenant_id === (int) $tenant['tenant_id'] ? ' selected' : ''", column_panel)
+        self.assertIn("$labels['user_tenant_filter']", column_panel)
+        self.assertNotIn('<select id="user-tenant-filter"', view)
+        tenant_select = column_panel.split('<select id="user-filter-tenant"', 1)[1].split('</select>', 1)[0]
+        self.assertNotIn('onchange="this.form.submit()"', tenant_select)
+        self.assertNotIn('<option value="">', tenant_select)
+
+    def test_user_filter_modes_match_role_toggle_icons_and_apply_icon(self):
+        view = (APP / "views/admin/user/index.php").read_text()
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        search_form = view.split('<form id="user-filter-form"', 1)[1].split('</form>', 1)[0]
+        column_panel = view.split('<form id="user-column-filter-panel"', 1)[1].split('</form>', 1)[0]
+        toggle = view.split('data-user-column-filter-toggle', 1)[1].split('</button>', 1)[0]
+        script = view.split("var header=document.querySelector('[data-user-filter-header]')", 1)[1].split("if(searchForm&&searchInput)", 1)[0]
+
+        self.assertIn("$user_filter_mode === 'columns' ? 'hidden' : ''", search_form)
+        self.assertIn("$user_filter_mode === 'columns' ? '' : ' hidden'", column_panel)
+        self.assertIn("data-user-filter-icon-columns", toggle)
+        self.assertIn("data-user-filter-icon-search", toggle)
+        self.assertIn("user_search", toggle)
+        self.assertIn("user_filter_columns", toggle)
+        self.assertIn("searchForm.hidden=showColumns", script)
+        self.assertIn("columnFilterPanel.hidden=!showColumns", script)
+        self.assertIn("columnIcon.toggleAttribute('hidden',showColumns)", script)
+        self.assertIn("searchIcon.toggleAttribute('hidden',!showColumns)", script)
+        self.assertIn("columnFilterToggle.setAttribute('aria-expanded',showColumns?'true':'false')", script)
+        self.assertIn("$filter_mode === 'columns'", controller)
+        self.assertIn("'user_filter_mode' => $filter_mode", controller)
+
+        apply_button = column_panel.split('user_filter_apply', 1)[0]
+        self.assertIn('d="m3 10 14-6-6 14-2-6-6-2Z"', apply_button)
 
     def test_user_header_and_form_layout_follow_role_page_width_without_shadow(self):
         role_form = (APP / "views/admin/role/form.php").read_text()
@@ -173,10 +215,10 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn('data-user-menu-toggle', view)
         self.assertIn('data-user-filter-header', view)
         self.assertIn('data-user-filter-header><div class="w-full sm:flex sm:flex-wrap sm:justify-end"><div class="flex w-full items-center justify-end gap-2 sm:w-auto">', view)
-        self.assertIn('data-user-live-filter class="flex min-w-0 flex-1 items-center gap-2 sm:w-64 sm:flex-none"', view)
-        self.assertIn('data-user-filter-toggle aria-expanded="false" aria-controls="user-filter-panel"', view)
+        self.assertIn('data-user-live-filter <?= $user_filter_mode === \'columns\' ? \'hidden\' : \'\' ?> class="', view)
+        self.assertIn('data-user-filter-toggle aria-expanded="<?= $user_filter_mode === \'columns\' ? \'true\' : \'false\' ?>"', view)
         self.assertLess(view.index('data-user-live-filter'), view.index('data-user-filter-toggle'))
-        self.assertIn('id="user-filter-panel"', view)
+        self.assertIn('id="user-column-filter-panel"', view)
         self.assertIn('setTimeout(function(){if(typeof searchForm.requestSubmit', view)
         self.assertIn("'filter_columns', 'apply_filter'", (APP / "controllers/Admin.php").read_text())
 
@@ -194,20 +236,58 @@ class AdminUserContractTests(unittest.TestCase):
             'class="flex flex-col gap-3 border-t border-slate-200 px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-6"',
             view,
         )
-        self.assertIn(
-            'class="flex min-w-0 flex-wrap items-center justify-center gap-2"',
-            view,
+        self.assertIn('data-user-pagination', view)
+        self.assertIn('foreach ($user_per_page_choices as $option)', view)
+        admin = (APP / "controllers/Admin.php").read_text()
+        self.assertIn("'pagination', 'pagination_summary'", admin)
+        self.assertIn('aria-label="<?= html_escape($labels[\'user_pagination\']) ?>"', view)
+        self.assertIn('aria-live="polite"', view)
+        self.assertIn("sprintf($labels['user_pagination_summary']", view)
+        self.assertIn('rel="prev"', view)
+        self.assertIn('rel="next"', view)
+        self.assertIn('aria-disabled="true"', view)
+        self.assertIn('aria-hidden="true"', view)
+        self.assertIn('flex w-full min-w-0 items-center justify-center gap-1 sm:w-auto', view)
+        self.assertIn('self-start sm:w-auto sm:self-auto', view)
+
+    def test_user_pagination_labels_exist_in_supported_user_locales(self):
+        required = (
+            "user_pagination",
+            "user_pagination_summary",
+            "user_previous",
+            "user_next",
+            "user_per_page",
         )
+        for locale in ("english", "indonesian"):
+            source = (APP / "language" / locale / "user_lang.php").read_text()
+            for key in required:
+                with self.subTest(locale=locale, key=key):
+                    self.assertIn("$lang['" + key + "']", source)
 
     def test_admin_maps_every_user_form_and_filter_label(self):
         admin = (APP / "controllers/Admin.php").read_text()
         required = (
             "access_api_flag", "access_api_help", "api_secret", "api_generate",
-            "filter_role", "filter_block", "full_name_help",
+            "filter_role", "filter_block", "full_name_help", "tenant_filter",
+            "delete", "delete_confirm", "api_secret_copy", "copy_success", "copy_error",
         )
         for key in required:
             with self.subTest(key=key):
                 self.assertIn("'" + key + "'", admin)
+
+    def test_user_access_denied_label_is_mapped_for_the_view(self):
+        admin = (APP / "controllers/Admin.php").read_text()
+        user_keys = admin.split("$user_keys = array(", 1)[1].split(");", 1)[0]
+        view = (APP / "views/admin/user/access_denied.php").read_text()
+        index_view = (APP / "views/admin/user/index.php").read_text()
+
+        self.assertIn("'no_access'", user_keys)
+        self.assertIn("$labels['user_no_access']", view)
+        self.assertIn("$labels['user_no_access']", index_view)
+        for locale in ("english", "indonesian"):
+            language = (APP / f"language/{locale}/user_lang.php").read_text()
+            with self.subTest(locale=locale):
+                self.assertIn("$lang['user_no_access']", language)
 
     def test_supported_locales_define_user_labels(self):
         required = (
@@ -220,6 +300,101 @@ class AdminUserContractTests(unittest.TestCase):
                 for key in required:
                     with self.subTest(key=key):
                         self.assertIn("'" + key + "'", language)
+
+    def test_user_table_header_matches_role_visual_style_without_role_overflow(self):
+        view = (APP / "views/admin/user/index.php").read_text()
+        header = view.split("<thead", 1)[1].split("</thead>", 1)[0]
+
+        self.assertIn("md:sticky md:z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm", header)
+        self.assertIn('style="top: 0;"', header)
+        self.assertIn("aria-sort=", header)
+        self.assertIn('viewBox="0 0 16 16"', header)
+        self.assertIn("data-user-filter-header", view)
+
+        table_region = view.split('<div class="max-w-full overflow-x-auto', 1)[1].split("</div>", 1)[0]
+        self.assertNotIn("md:overflow-visible", table_region)
+        self.assertIn("min-w-[60rem]", table_region)
+
+    def test_user_form_uses_schema_lengths_and_autofocuses_first_editable_input(self):
+        view = (APP / "views/admin/user/form.php").read_text()
+        for field in ("user_code", "username", "full_name", "password", "api_secret"):
+            with self.subTest(field=field):
+                self.assertIn("$user_field_specs['" + field + "']['max_length']", view)
+        self.assertNotIn("['max_length'] ?: ", view)
+        self.assertIn("field.focus({preventScroll:true})", view)
+        self.assertIn("!field.disabled&&!field.readOnly", view)
+
+    def test_user_form_applies_blur_normalization_and_adaptive_width(self):
+        view = (APP / "views/admin/user/form.php").read_text()
+        self.assertIn("replace(/\\s+/g,'')", view)
+        self.assertIn("replace(/\\S+/g,function(word)", view)
+        self.assertIn("Math.min(672", view)
+        self.assertIn("sizeFields();});if(field.id==='username'", view)
+
+    def test_user_text_controls_use_mobile_safe_font_size(self):
+        form = (APP / "views/admin/user/form.php").read_text()
+        index = (APP / "views/admin/user/index.php").read_text()
+        password = (APP / "views/admin/user/password.php").read_text()
+
+        for field in ("tenant_id", "user_code", "username", "role_id", "full_name", "employee-search", "api_secret", "password"):
+            with self.subTest(field=field):
+                fragment = form.split('id=\"' + field + '\"', 1)[1].split('class=\"', 1)[1].split('\"', 1)[0]
+                self.assertIn("text-base sm:text-sm", fragment)
+        readonly_user_code = form.split("<?php else: ?><div><label for=\"user_code\"", 1)[1].split('id=\"user_code\"', 1)[1].split('class=\"', 1)[1].split('\"', 1)[0]
+        self.assertIn("text-base sm:text-sm", readonly_user_code)
+        for field in ("user-search", "user-filter-tenant", "user-filter-role", "user-filter-block", "user-per-page"):
+            with self.subTest(field=field):
+                fragment = index.split('id=\"' + field + '\"', 1)[1].split('class=\"', 1)[1].split('\"', 1)[0]
+                self.assertIn("text-base sm:text-sm", fragment)
+        self.assertEqual(password.count("text-base sm:text-sm"), 2)
+
+    def test_user_list_columns_have_type_appropriate_minimum_widths(self):
+        view = (APP / "views/admin/user/index.php").read_text()
+        widths = view.split("$user_column_widths = array(", 1)[1].split(");", 1)[0]
+        expected = {
+            "user_code": "min-w-[9rem]",
+            "user_name": "min-w-[12rem]",
+            "full_name": "min-w-[16rem]",
+            "role_name": "min-w-[10rem]",
+            "employee_name": "min-w-[16rem]",
+            "block_flag": "min-w-[8rem]",
+        }
+        for field, width in expected.items():
+            with self.subTest(field=field):
+                self.assertIn("'" + field + "' => '" + width, widths)
+
+    def test_tenant_default_and_filter_are_nonempty_and_session_backed(self):
+        store = (APP / "libraries/User_store.php").read_text()
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        form = (APP / "views/admin/user/form.php").read_text()
+        view = (APP / "views/admin/user/index.php").read_text()
+        tenant_method = store.split("public function tenant_id()", 1)[1].split("public function tenant_exists(", 1)[0]
+        self.assertIn("$CI->session->userdata('admin_user')", tenant_method)
+        self.assertNotIn("get('sys_property')", tenant_method)
+        self.assertIn("'tenant_id' => $default_tenant", controller)
+        self.assertIn("if ($user_tenants): ?><select id=\"tenant_id\"", form)
+        self.assertNotIn('<option value="">', form.split('id="tenant_id"', 1)[1].split('</select>', 1)[0])
+        tenant_select = view.split('id="user-filter-tenant"', 1)[1].split('</select>', 1)[0]
+        self.assertIn('name="tenant_id" required', tenant_select)
+        self.assertNotIn('<option value="">', tenant_select)
+
+    def test_list_delete_and_api_secret_copy_are_tenant_scoped_and_on_demand(self):
+        store = (APP / "libraries/User_store.php").read_text()
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        routes = (APP / "config/routes.php").read_text()
+        view = (APP / "views/admin/user/index.php").read_text()
+        header = view.split("<thead", 1)[1].split("</thead>", 1)[0]
+        self.assertLess(header.index("user_actions"), header.index("user_tenant"))
+        self.assertIn("data-api-secret-copy", view)
+        self.assertIn("api_secret_present", store)
+        self.assertNotIn("u.api_secret,", store.split("public function page(", 1)[1].split("public function find(", 1)[0])
+        self.assertIn("/admin/application/user/api-secret", view)
+        self.assertIn("public function api_secret()", controller)
+        self.assertIn("admin/application/user/delete", routes)
+        self.assertIn("admin/application/user/api-secret", routes)
+        self.assertIn("public function delete($user_id, $tenant_id)", store)
+        self.assertIn("public function user_delete()", controller)
+        self.assertIn("$this->session->set_flashdata('admin_user_status'", controller)
 
 
 if __name__ == "__main__":

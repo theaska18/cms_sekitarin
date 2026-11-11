@@ -31,6 +31,50 @@ class AppUserAuthorizationContractTests(unittest.TestCase):
         self.assertIn("$session_menu_codes[$menu_code]", loader)
         self.assertIn("$render_groups = $session_render_groups;", loader)
 
+    def test_user_controller_enforces_menu_and_operation_access_codes(self):
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        self.assertIn("has_admin_menu_code('app_user')", controller)
+        self.assertNotIn("has_admin_access_code('app_user')", controller)
+        for code in (
+            "app_user_add", "app_user_update", "app_user_delete",
+            "app_user_change_password", "app_user_block", "app_user_tenant",
+        ):
+            with self.subTest(code=code):
+                self.assertIn("has_admin_access_code('" + code + "')", controller)
+        self.assertIn("user_access_denied", controller)
+        self.assertIn("user_can_add", controller)
+        self.assertIn("user_can_update", controller)
+        self.assertIn("user_can_delete", controller)
+        self.assertIn("user_can_change_password", controller)
+        self.assertIn("user_can_block", controller)
+        self.assertIn("user_can_tenant", controller)
+
+    def test_user_view_hides_unavailable_actions_and_tenant_controls(self):
+        index = (APP / "views/admin/user/index.php").read_text()
+        form = (APP / "views/admin/user/form.php").read_text()
+        self.assertIn("user_menu_access", index)
+        self.assertIn("user_can_add", index)
+        self.assertIn("user_actions_available", index)
+        self.assertIn("user_can_update", index)
+        self.assertIn("user_can_delete", index)
+        self.assertIn("user_can_change_password", index)
+        self.assertIn("user_can_block", index)
+        self.assertIn("user_can_tenant", index)
+        self.assertIn("user_can_tenant", form)
+        self.assertIn("user_no_access", index)
+
+    def test_user_access_denial_is_localized_in_both_supported_languages(self):
+        for locale in ("indonesian", "english"):
+            language = (APP / "language" / locale / "user_lang.php").read_text()
+            with self.subTest(locale=locale):
+                self.assertIn("user_no_access", language)
+
+    def test_user_tenant_scoped_lookup_uses_session_without_tenant_access(self):
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        employee_lookup = controller.split("public function employee_lookup()", 1)[1].split("public function user_delete()", 1)[0]
+        self.assertIn("$this->has_admin_access_code('app_user_tenant') ? $this->input->get('tenant_id', TRUE)", employee_lookup)
+        self.assertIn("$store->tenant_id()", employee_lookup)
+
     def test_profile_image_requires_employee_and_confined_existing_image_path(self):
         identity = (APP / "libraries/Admin_identity.php").read_text()
         self.assertIn("isset($row['employee_id'])", identity)

@@ -25,7 +25,7 @@ class User_store
             return $this->valid;
         }
         $this->checked = TRUE;
-        foreach (array('app_user', 'app_role', 'sys_property', 'sys_tenant', 'hr_employee') as $table) {
+        foreach (array('app_user', 'app_role', 'sys_tenant', 'hr_employee') as $table) {
             $fields = $this->db->field_data($table);
             if (!is_array($fields) || !$fields) {
                 return FALSE;
@@ -39,7 +39,6 @@ class User_store
         $required = array(
             'app_user' => array('user_id', 'tenant_id', 'user_code', 'username', 'role_id', 'emloyee_flag', 'employee_id', 'password', 'create_on', 'update_on', 'full_name', 'block_flag', 'access_api_flag', 'api_secret'),
             'app_role' => array('role_id', 'tenant_id', 'role_name', 'active_flag'),
-            'sys_property' => array('property_code', 'value'),
             'sys_tenant' => array('tenant_id', 'tenant_code', 'tenant_name'),
             'hr_employee' => array('employee_id', 'tenant_id', 'employee_code', 'employee_name'),
         );
@@ -59,15 +58,14 @@ class User_store
         if ($this->tenant_cache !== NULL) {
             return $this->tenant_cache;
         }
-        $query = $this->db->select('value')->where('property_code', 'tenant_id')->limit(2)->get('sys_property');
-        if (!$query || $query->num_rows() !== 1) {
+        $CI =& get_instance();
+        $session_user = $CI->session->userdata('admin_user');
+        if (!is_array($session_user) || !isset($session_user['tenant_id'])
+            || !is_numeric($session_user['tenant_id']) || (int) $session_user['tenant_id'] < 1) {
+            $this->tenant_cache = FALSE;
             return FALSE;
         }
-        $value = trim((string) $query->row()->value);
-        if (!preg_match('/^[1-9][0-9]*$/', $value)) {
-            return FALSE;
-        }
-        $this->tenant_cache = (int) $value;
+        $this->tenant_cache = (int) $session_user['tenant_id'];
         return $this->tenant_cache;
     }
 
@@ -136,9 +134,10 @@ class User_store
             $sort = 'user_code';
         }
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $this->db->select('u.user_id, u.tenant_id, u.user_code, u.username AS user_name, u.full_name, r.role_name, e.employee_name, u.block_flag')
+        $this->db->select('u.user_id, u.tenant_id, t.tenant_code, t.tenant_name, u.user_code, u.username AS user_name, u.full_name, r.role_name, e.employee_name, u.block_flag, (u.access_api_flag = 1 AND u.api_secret IS NOT NULL AND u.api_secret <> "") AS api_secret_present')
             ->from('app_user u')->join('app_role r', 'r.role_id = u.role_id AND r.tenant_id = u.tenant_id', 'left')
             ->join('hr_employee e', 'e.employee_id = u.employee_id AND e.tenant_id = u.tenant_id', 'left')
+            ->join('sys_tenant t', 't.tenant_id = u.tenant_id', 'inner')
             ->where('u.tenant_id', (int) $tenant_id);
         $this->apply_search($search);
         $this->apply_filters($role_id, $block_flag);
@@ -319,6 +318,29 @@ class User_store
         }
         return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
             ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => date('Y-m-d H:i:s')));
+    }
+
+    public function delete($user_id, $tenant_id)
+    {
+        if (!$this->find($user_id, $tenant_id)) {
+            return FALSE;
+        }
+        return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
+            ->delete('app_user') && $this->db->affected_rows() === 1;
+    }
+
+    public function api_secret($user_id, $tenant_id)
+    {
+        if (!$this->tenant_exists($tenant_id) || !is_numeric($user_id) || (int) $user_id < 1) {
+            return FALSE;
+        }
+        $query = $this->db->select('api_secret')->where('user_id', (int) $user_id)
+            ->where('tenant_id', (int) $tenant_id)->where('access_api_flag', 1)->limit(1)->get('app_user');
+        if ($query === FALSE || $query->num_rows() !== 1) {
+            return FALSE;
+        }
+        $secret = $query->row()->api_secret;
+        return is_string($secret) && $secret !== '' ? $secret : FALSE;
     }
 
     public function set_blocked($user_id, $tenant_id, $blocked)

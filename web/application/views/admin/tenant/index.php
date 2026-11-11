@@ -32,12 +32,12 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($tenant_title) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['tenant_intro']) ?></p>
         </div>
-        <?php if ($write_available): ?>
+        <?php if ($tenant_add_authorized && $write_available): ?>
             <a href="/admin/system/tenant/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
                 <?= html_escape($labels['tenant_add']) ?>
             </a>
-        <?php else: ?>
+        <?php elseif ($tenant_add_authorized): ?>
             <span class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500" aria-disabled="true">
                 <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
                 <?= html_escape($labels['tenant_add']) ?>
@@ -108,24 +108,24 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
                             <?php $tenant_code = (string) $tenant['tenant_code']; $action_menu_id = 'tenant-actions-menu-' . (int) $action_menu_index++; ?>
                             <tr class="transition hover:bg-slate-50/80">
                                 <td class="whitespace-nowrap px-1 py-3 text-left sm:px-3 sm:py-4">
-                                    <?php if ($write_available): ?>
+                                    <?php if ($write_available && $tenant_has_actions): ?>
                                         <div class="relative inline-flex">
                                             <button type="button" data-tenant-actions-toggle aria-label="<?= html_escape($labels['tenant_actions']) ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="<?= html_escape($action_menu_id) ?>" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                                                 <svg data-tenant-actions-icon viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>
                                             </button>
                                             <div id="<?= html_escape($action_menu_id) ?>" data-tenant-actions-menu hidden role="menu" class="fixed z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">
-                                                <a href="/admin/system/tenant/change/<?= html_escape(rawurlencode($tenant_code)) ?>" data-tenant-edit-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                                <?php if ($tenant_update_authorized): ?><a href="/admin/system/tenant/change/<?= html_escape(rawurlencode($tenant_code)) ?>" data-tenant-edit-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
                                                     <svg data-tenant-edit-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>
                                                     <?= html_escape($labels['tenant_edit']) ?>
-                                                </a>
-                                                <a href="/admin/system/tenant/menu/<?= html_escape(rawurlencode($tenant_code)) ?>" data-tenant-menu-access-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                                </a><?php endif; ?>
+                                                <?php if ($tenant_menu_access_authorized): ?><a href="/admin/system/tenant/menu/<?= html_escape(rawurlencode($tenant_code)) ?>" data-tenant-menu-access-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
                                                     <svg data-tenant-menu-access-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><rect x="3" y="3" width="14" height="14" rx="2"/><path stroke-linecap="round" d="M7 3v14M10 7h4m-4 3h4m-4 3h4"/></svg>
                                                     <?= html_escape($labels['tenant_menu_access']) ?>
-                                                </a>
-                                                <button type="button" data-tenant-delete-open="1" data-tenant-code="<?= html_escape($tenant_code) ?>" data-tenant-name="<?= html_escape($tenant['tenant_name']) ?>" aria-haspopup="dialog" aria-controls="tenant-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
+                                                </a><?php endif; ?>
+                                                <?php if ($tenant_delete_authorized): ?><button type="button" data-tenant-delete-open="1" data-tenant-code="<?= html_escape($tenant_code) ?>" data-tenant-name="<?= html_escape($tenant['tenant_name']) ?>" aria-haspopup="dialog" aria-controls="tenant-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none">
                                                     <svg data-tenant-delete-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>
                                                     <?= html_escape($labels['tenant_delete']) ?>
-                                                </button>
+                                                </button><?php endif; ?>
                                             </div>
                                         </div>
                                     <?php else: ?>
@@ -198,7 +198,7 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
         <?php endif; ?>
     </section>
 
-    <?php if ($write_available): ?>
+    <?php if ($write_available && $tenant_delete_authorized): ?>
         <div id="tenant-delete-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="tenant-delete-title" aria-describedby="tenant-delete-description" tabindex="-1" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
                 <div aria-hidden="true" class="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-lg font-bold text-rose-700">!</div>

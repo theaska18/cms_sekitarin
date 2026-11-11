@@ -285,5 +285,56 @@ class AdminSequenceContractTests(unittest.TestCase):
                     self.assertRegex(content, rf"\$lang\['sequence_{key}'\]")
 
 
+    def test_sequence_list_requires_the_session_menu_code_before_loading_records(self):
+        controller = (APP / "controllers" / "Admin.php").read_text()
+        self.assertIn("has_admin_menu_code('sys_sequence')", controller)
+        self.assertIn("sequence_deny_access('sequence_no_access')", controller)
+        sequence_branch = controller[controller.index("if ($path === 'system/sequence')"):]
+        self.assertLess(sequence_branch.index("has_admin_menu_code('sys_sequence')"), sequence_branch.index("render_sequence_list"))
+        self.assertIn("isset($this->current_user['menu_codes'])", controller)
+        self.assertIn("isset($this->current_user['access_codes'])", controller)
+
+    def test_add_and_update_routes_require_their_own_session_access_codes(self):
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
+        add_route = controller[controller.index("public function sequence_new") : controller.index("public function sequence_change")]
+        update_route = controller[controller.index("public function sequence_change") : controller.index("public function sequence_delete")]
+        self.assertIn("has_admin_access_code('sys_sequence_add')", add_route)
+        self.assertIn("sequence_deny_access('sequence_no_access')", add_route)
+        self.assertLess(add_route.index("has_admin_access_code('sys_sequence_add')"), add_route.index("$this->load->database()"))
+        self.assertIn("has_admin_access_code('sys_sequence_update')", update_route)
+        self.assertIn("sequence_deny_access('sequence_no_access')", update_route)
+        self.assertLess(update_route.index("has_admin_access_code('sys_sequence_update')"), update_route.index("$this->load->database()"))
+
+    def test_delete_route_requires_delete_access_before_mutating(self):
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
+        delete_route = controller[controller.index("public function sequence_delete"):]
+        self.assertIn("has_admin_access_code('sys_sequence_delete')", delete_route)
+        self.assertIn("sequence_deny_access('sequence_no_access')", delete_route)
+        self.assertLess(delete_route.index("has_admin_access_code('sys_sequence_delete')"), delete_route.index("$this->sequence_store->delete"))
+
+    def test_sequence_controls_follow_individual_action_permissions(self):
+        controller = (APP / "controllers" / "Admin.php").read_text()
+        view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
+        self.assertIn("'sequence_add_allowed' => $this->has_admin_access_code('sys_sequence_add')", controller)
+        self.assertIn("'sequence_update_allowed' => $this->has_admin_access_code('sys_sequence_update')", controller)
+        self.assertIn("'sequence_delete_allowed' => $this->has_admin_access_code('sys_sequence_delete')", controller)
+        self.assertIn("$sequence_add_allowed", view)
+        self.assertIn("$sequence_update_allowed", view)
+        self.assertIn("$sequence_delete_allowed", view)
+        self.assertIn("$sequence_actions_available", view)
+        self.assertIn("<?php if ($sequence_add_allowed): ?>", view)
+        self.assertIn("<?php if ($sequence_update_allowed): ?>", view)
+        self.assertIn("<?php if ($sequence_delete_allowed): ?>", view)
+        self.assertIn("<?php if ($sequence_actions_available): ?>", view)
+
+    def test_sequence_access_denied_message_is_localized_in_all_admin_locales(self):
+        locales = ("english", "indonesian", "japanese", "chinese", "arabic", "korean", "spanish", "french", "german")
+        for locale in locales:
+            content = (APP / "language" / locale / "sequence_lang.php").read_text()
+            with self.subTest(locale=locale):
+                self.assertRegex(content, r"\$lang\['sequence_no_access'\]")
+        self.assertTrue((APP / "views" / "admin" / "sequence" / "access_denied.php").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

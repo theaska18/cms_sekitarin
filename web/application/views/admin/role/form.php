@@ -50,16 +50,20 @@ $role_errors = is_array($role_errors) ? $role_errors : array();
         <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
         <div class="space-y-6">
             <?php if ($is_new): ?>
-            <div>
-                <label for="role-tenant" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['role_tenant_label']) ?></label>
-                <select id="role-tenant" name="tenant_id" required <?= !$role_write_available || !$role_backend_available ? 'disabled' : '' ?> class="min-h-12 w-full sm:w-[32rem] rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-500 disabled:opacity-60">
-                    <option value=""><?= html_escape($labels['role_tenant_placeholder']) ?></option>
-                    <?php foreach ($role_tenants as $tenant): ?>
-                        <?php $tenant_id = (string) $tenant['tenant_id']; ?>
-                        <option value="<?= html_escape($tenant_id) ?>" <?= isset($role_record['tenant_id']) && (string) $role_record['tenant_id'] === $tenant_id ? 'selected' : '' ?>><?= html_escape($tenant['tenant_code'] . ' — ' . $tenant['tenant_name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                <?php if (!empty($role_tenant_access)): ?>
+                <div>
+                    <label for="role-tenant" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['role_tenant_label']) ?></label>
+                    <select id="role-tenant" name="tenant_id" required <?= !$role_write_available || !$role_backend_available ? 'disabled' : '' ?> class="min-h-12 w-full sm:w-[32rem] rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:bg-slate-50 disabled:text-slate-500 disabled:opacity-60">
+                        <?php if (!$role_tenant_default_available): ?><option value="unavailable" selected disabled><?= html_escape($labels['role_tenant_placeholder']) ?></option><?php endif; ?>
+                        <?php foreach ($role_tenants as $tenant): ?>
+                            <?php $tenant_id = (string) $tenant['tenant_id']; ?>
+                            <option value="<?= html_escape($tenant_id) ?>" <?= isset($role_record['tenant_id']) && (string) $role_record['tenant_id'] === $tenant_id ? 'selected' : '' ?>><?= html_escape($tenant['tenant_code'] . ' — ' . $tenant['tenant_name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php else: ?>
+                    <input type="hidden" name="tenant_id" value="<?= html_escape(isset($role_record['tenant_id']) ? $role_record['tenant_id'] : '') ?>">
+                <?php endif; ?>
             <?php endif; ?>
             <div>
                 <label for="role-code" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['role_code_label']) ?></label>

@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // Übersetzungen für das Mandanten-Menü.
 $lang['tenant_heading'] = 'Mandanten';
+$lang['tenant_no_access'] = 'Du hast keinen Zugriff auf die Mandantenseite.';
+$lang['tenant_add_denied'] = 'Du hast keine Berechtigung, einen Mandanten hinzuzufügen.';
+$lang['tenant_update_denied'] = 'Du hast keine Berechtigung, einen Mandanten zu bearbeiten.';
+$lang['tenant_delete_denied'] = 'Du hast keine Berechtigung, einen Mandanten zu löschen.';
+$lang['tenant_menu_access_denied'] = 'Du hast keinen Zugriff auf die Menüberechtigungen des Mandanten.';
 $lang['tenant_intro'] = 'Kontaktdaten und Fälligkeitstermine der Mandanten verwalten.';
 $lang['tenant_search_hint'] = 'Mandanten nach Code oder Name suchen.';
 $lang['tenant_filter_code_hint'] = 'Nach Mandantscode suchen';

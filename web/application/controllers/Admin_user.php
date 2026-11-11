@@ -6,17 +6,48 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Tenant-scoped administration for application users. */
 class Admin_user extends Admin
 {
+    private function user_access_denied()
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin('admin/user/access_denied', 'user_heading', '/admin/application/user', array());
+    }
+
+    private function require_user_access($access_code)
+    {
+        if (!$this->has_admin_menu_code('app_user') || !$this->has_admin_access_code($access_code)) {
+            $this->user_access_denied();
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    private function user_access_flags()
+    {
+        return array(
+            'user_menu_access' => $this->has_admin_menu_code('app_user'),
+            'user_can_add' => $this->has_admin_access_code('app_user_add'),
+            'user_can_update' => $this->has_admin_access_code('app_user_update'),
+            'user_can_delete' => $this->has_admin_access_code('app_user_delete'),
+            'user_can_change_password' => $this->has_admin_access_code('app_user_change_password'),
+            'user_can_block' => $this->has_admin_access_code('app_user_block'),
+            'user_can_tenant' => $this->has_admin_access_code('app_user_tenant'),
+        );
+    }
+
     public function user_index()
     {
+        if (!$this->has_admin_menu_code('app_user')) { $this->user_access_denied(); return; }
+        $access = $this->user_access_flags();
         $store = $this->user_store();
-        $tenant_id = $store ? $store->tenant_id() : FALSE;
+        $tenant_id = $store ? $this->selected_tenant($store) : FALSE;
         $available = $store !== NULL && $store->schema_available() && $tenant_id !== FALSE;
-        $search = $this->search_value($this->input->get('search', TRUE));
+        $filter_mode = $this->input->get('filter_mode', TRUE) === 'columns' ? 'columns' : 'search';
+        $search = $filter_mode === 'search' ? $this->search_value($this->input->get('search', TRUE)) : '';
         $sort = $this->sort_value($this->input->get('sort', TRUE));
         $direction = strtoupper((string) $this->input->get('direction', TRUE)) === 'DESC' ? 'DESC' : 'ASC';
-        $role_filter = trim((string) $this->input->get('role_id', TRUE));
+        $role_filter = $filter_mode === 'columns' ? trim((string) $this->input->get('role_id', TRUE)) : '';
         if ($role_filter !== '' && (!$available || !$store->role_belongs_to_tenant($role_filter, $tenant_id))) { $role_filter = ''; }
-        $block_filter = (string) $this->input->get('block_flag', TRUE);
+        $block_filter = $filter_mode === 'columns' ? (string) $this->input->get('block_flag', TRUE) : '';
         if (!in_array($block_filter, array('', '0', '1'), TRUE)) { $block_filter = ''; }
         $per_page = $this->page_size();
         $page = $this->page_number();
@@ -28,25 +59,30 @@ class Admin_user extends Admin
         if ($records === FALSE) { $available = FALSE; $records = array(); $total = 0; $page = 1; $page_count = 1; }
         $status = $this->session->flashdata('admin_user_status');
         $can_write = $this->user_write_available($store);
-        $this->render_admin('admin/user/index', 'user_heading', '/admin/application/user', array(
+        $this->render_admin('admin/user/index', 'user_heading', '/admin/application/user', array_merge(array(
             'user_records' => $records, 'user_search' => $search, 'user_sort' => $sort,
             'user_direction' => $direction, 'user_page' => $page, 'user_page_count' => $page_count,
             'user_total' => $total, 'user_per_page' => $per_page, 'user_per_page_choices' => array(10, 25, 50),
-            'user_tenant_id' => $tenant_id === FALSE ? 0 : (int) $tenant_id,
+            'user_tenant_id' => $tenant_id === FALSE ? 0 : (int) $tenant_id, 'user_tenants' => is_array($store ? $store->tenant_options() : FALSE) ? $store->tenant_options() : array(),
             'user_roles' => $available ? $store->role_options($tenant_id) : array(),
-            'user_filter_role' => $role_filter, 'user_filter_block' => $block_filter,
+            'user_filter_role' => $role_filter, 'user_filter_block' => $block_filter, 'user_filter_mode' => $filter_mode,
             'user_backend_available' => $available, 'user_write_available' => $can_write,
             'user_status_key' => is_string($status) ? $status : '',
-        ));
+        ), $access));
     }
 
     public function user_new()
     {
+
+        if (!$this->require_user_access('app_user_add')) {
+            return;
+        }
         $store = $this->user_store();
         $available = $store !== NULL && $store->schema_available();
         $write_available = $this->user_write_available($store);
         $tenants = $available ? $store->tenant_options() : FALSE;
-        $record = array('tenant_id' => '', 'user_code' => '', 'username' => '', 'role_id' => '', 'employee_flag' => 0, 'employee_id' => '', 'password' => '', 'access_api_flag' => 0, 'api_secret' => '');
+        $default_tenant = $available ? $store->tenant_id() : FALSE;
+        $record = array('tenant_id' => $default_tenant === FALSE ? '' : (string) $default_tenant, 'user_code' => '', 'username' => '', 'role_id' => '', 'employee_flag' => 0, 'employee_id' => '', 'password' => '', 'access_api_flag' => 0, 'api_secret' => '');
         $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) { show_error('User writes are unavailable.', 503); return; }
@@ -64,8 +100,12 @@ class Admin_user extends Admin
 
     public function user_change($user_id = '')
     {
+
+        if (!$this->require_user_access('app_user_update')) {
+            return;
+        }
         $store = $this->user_store();
-        $tenant_id = $store ? $store->tenant_id() : FALSE;
+        $tenant_id = $store ? $this->selected_tenant($store) : FALSE;
         $available = $store !== NULL && $store->schema_available() && $tenant_id !== FALSE;
         $write_available = $this->user_write_available($store);
         $record = $available ? $store->find($user_id, $tenant_id) : NULL;
@@ -88,8 +128,12 @@ class Admin_user extends Admin
 
     public function user_password($user_id = '')
     {
+
+        if (!$this->require_user_access('app_user_change_password')) {
+            return;
+        }
         $store = $this->user_store();
-        $tenant_id = $store ? $store->tenant_id() : FALSE;
+        $tenant_id = $store ? $this->selected_tenant($store) : FALSE;
         $available = $store !== NULL && $store->schema_available() && $tenant_id !== FALSE;
         $write_available = $this->user_write_available($store);
         $record = $available ? $store->find($user_id, $tenant_id) : NULL;
@@ -120,10 +164,15 @@ class Admin_user extends Admin
 
     public function user_toggle_block()
     {
+
+        if (!$this->require_user_access('app_user_block')) {
+            return;
+        }
         if ($this->input->method(TRUE) !== 'POST') { show_error('User status changes require POST.', 405); return; }
         $store = $this->user_store();
         if (!$this->user_write_available($store)) { show_error('User status changes are unavailable.', 503); return; }
-        $tenant_id = $store->tenant_id();
+        $tenant_id = $this->selected_tenant($store);
+        if ($tenant_id === FALSE) { show_error('User status changes are unavailable.', 503); return; }
         $user_id = $this->input->post('user_id', TRUE);
         $blocked = $this->input->post('block_flag', TRUE);
         if (!in_array((string) $blocked, array('0', '1'), TRUE)) { show_error('Invalid user status.', 400); return; }
@@ -137,7 +186,9 @@ class Admin_user extends Admin
 
     public function role_options($tenant_id = '')
     {
-        $store = $this->user_store();
+        if (!$this->has_admin_menu_code('app_user') || (!$this->has_admin_access_code('app_user_add') && !$this->has_admin_access_code('app_user_update'))) { $this->json_response(array(), 403); return; }
+        if (!$this->has_admin_access_code('app_user_tenant')) { $store = $this->user_store(); $tenant_id = $store ? $store->tenant_id() : FALSE; }
+        $store = isset($store) ? $store : $this->user_store();
         if (!$store || !$store->schema_available() || !$store->tenant_exists($tenant_id)) { $this->json_response(array(), 400); return; }
         $options = $store->role_options($tenant_id);
         $this->json_response(is_array($options) ? $options : array(), $options === FALSE ? 500 : 200);
@@ -145,15 +196,51 @@ class Admin_user extends Admin
 
     public function employee_lookup()
     {
+        if (!$this->has_admin_menu_code('app_user') || (!$this->has_admin_access_code('app_user_add') && !$this->has_admin_access_code('app_user_update'))) { $this->json_response(array(), 403); return; }
         $store = $this->user_store();
         $term = $this->search_value($this->input->get('term', TRUE));
-        $tenant_id = $this->input->get('tenant_id', TRUE);
+        $tenant_id = $this->has_admin_access_code('app_user_tenant') ? $this->input->get('tenant_id', TRUE) : ($store ? $store->tenant_id() : FALSE);
         if (!$store || !$store->schema_available() || !$store->tenant_exists($tenant_id) || strlen($term) < 2) { $this->json_response(array(), 200); return; }
         $except_user_id = $this->input->get('user_id', TRUE);
         $current = $store->find($except_user_id, $tenant_id);
         $except_user_id = is_array($current) ? (int) $current['user_id'] : NULL;
         $items = $store->employee_options($tenant_id, $term, $except_user_id);
         $this->json_response(is_array($items) ? $items : array(), $items === FALSE ? 500 : 200);
+    }
+
+    public function user_delete()
+    {
+
+        if (!$this->require_user_access('app_user_delete')) {
+            return;
+        }
+        if ($this->input->method(TRUE) !== 'POST') { show_error('Method not allowed.', 405); return; }
+        $store = $this->user_store();
+        $tenant_id = $store ? $this->selected_tenant($store) : FALSE;
+        if (!$this->user_write_available($store) || $tenant_id === FALSE) { show_error('User writes are unavailable.', 503); return; }
+        $deleted = $store->delete($this->input->post('user_id'), $tenant_id);
+        redirect('/admin/application/user?tenant_id=' . (int) $tenant_id . '&status=' . ($deleted ? 'deleted' : 'error'));
+    }
+
+    public function api_secret()
+    {
+        if (!$this->require_user_access('app_user_update')) { return; }
+        if ($this->input->method(TRUE) !== 'POST') { show_error('Method not allowed.', 405); return; }
+        $store = $this->user_store();
+        $tenant_id = $store ? $this->selected_tenant($store) : FALSE;
+        if (!$this->user_write_available($store) || $tenant_id === FALSE) { show_error('User access is unavailable.', 503); return; }
+        $secret = $store->api_secret($this->input->post('user_id'), $tenant_id);
+        if ($secret === FALSE) { show_error('Secret unavailable.', 404); return; }
+        $this->output->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0')->set_header('Pragma: no-cache')->set_content_type('application/json')->set_output(json_encode(array('secret' => $secret, 'csrf' => array('name' => $this->security->get_csrf_token_name(), 'hash' => $this->security->get_csrf_hash()))));
+    }
+
+    private function selected_tenant($store)
+    {
+        if (!$this->has_admin_access_code('app_user_tenant')) { return $store->tenant_id(); }
+        $candidate = $this->input->post('tenant_id', TRUE);
+        if ($candidate === NULL || $candidate === '') { $candidate = $this->input->get('tenant_id', TRUE); }
+        if ($candidate !== NULL && $candidate !== '' && $store->tenant_exists($candidate)) { return (int) $candidate; }
+        return $store->tenant_id();
     }
 
     private function user_store()
@@ -176,14 +263,19 @@ class Admin_user extends Admin
             'user_mode' => $mode, 'user_id' => $user_id, 'user_record' => $record, 'user_errors' => $errors,
             'user_field_specs' => $available ? $store->field_specs() : array(), 'user_tenants' => $tenants,
             'user_roles' => $roles, 'user_backend_available' => $available, 'user_write_available' => $write_available,
-        ));
+        ) + $this->user_access_flags());
     }
 
     private function form_values($include_identity)
     {
         $values = array();
         if ($include_identity) {
-            $values['tenant_id'] = trim((string) $this->input->post('tenant_id', TRUE));
+            $posted_tenant = trim((string) $this->input->post('tenant_id', TRUE));
+            if (!$this->has_admin_access_code('app_user_tenant')) {
+                $store = $this->user_store();
+                $posted_tenant = $store ? $store->tenant_id() : FALSE;
+            }
+            $values['tenant_id'] = $posted_tenant === FALSE ? '' : trim((string) $posted_tenant);
             $values['user_code'] = trim((string) $this->input->post('user_code', TRUE));
             $values['password'] = (string) $this->input->post('password', FALSE);
         }

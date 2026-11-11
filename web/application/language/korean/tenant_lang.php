@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // 테넌트 메뉴 번역.
 $lang['tenant_heading'] = '테넌트';
+$lang['tenant_no_access'] = '테넌트 페이지를 볼 권한이 없습니다.';
+$lang['tenant_add_denied'] = '테넌트를 추가할 권한이 없습니다.';
+$lang['tenant_update_denied'] = '테넌트를 수정할 권한이 없습니다.';
+$lang['tenant_delete_denied'] = '테넌트를 삭제할 권한이 없습니다.';
+$lang['tenant_menu_access_denied'] = '테넌트 메뉴 접근 권한이 없습니다.';
 $lang['tenant_intro'] = '테넌트 연락처와 만기일을 관리합니다.';
 $lang['tenant_search_hint'] = '코드 또는 이름으로 테넌트를 검색합니다.';
 $lang['tenant_filter_code_hint'] = '테넌트 코드로 검색';

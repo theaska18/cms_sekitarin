@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = '序列';
+$lang['sequence_no_access'] = '您无权访问此序列页面。';
 $lang['sequence_add'] = '添加';
 $lang['sequence_actions'] = '操作';
 $lang['sequence_edit'] = '编辑';

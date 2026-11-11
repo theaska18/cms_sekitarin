@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // Terjemahan menu tenant.
 $lang['tenant_heading'] = 'Tenant';
+$lang['tenant_no_access'] = 'Kamu tidak memiliki akses untuk melihat halaman Tenant.';
+$lang['tenant_add_denied'] = 'Kamu tidak memiliki akses untuk menambah Tenant.';
+$lang['tenant_update_denied'] = 'Kamu tidak memiliki akses untuk mengubah Tenant.';
+$lang['tenant_delete_denied'] = 'Kamu tidak memiliki akses untuk menghapus Tenant.';
+$lang['tenant_menu_access_denied'] = 'Kamu tidak memiliki akses ke Menu Akses Tenant.';
 $lang['tenant_intro'] = 'Kelola informasi kontak dan tanggal jatuh tempo tenant.';
 $lang['tenant_search_hint'] = 'Cari tenant berdasarkan kode atau nama.';
 $lang['tenant_filter_code_hint'] = 'Cari berdasarkan kode tenant';

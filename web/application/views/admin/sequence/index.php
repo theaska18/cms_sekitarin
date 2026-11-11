@@ -39,16 +39,18 @@ $columns = array(
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($sequence_title) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['sequence_intro']) ?></p>
         </div>
-        <?php if ($write_available): ?>
-            <a href="/admin/system/sequence/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                <?= html_escape($labels['sequence_add']) ?>
-            </a>
-        <?php else: ?>
-            <span aria-disabled="true" class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                <?= html_escape($labels['sequence_add']) ?>
-            </span>
+        <?php if ($sequence_add_allowed): ?>
+            <?php if ($write_available): ?>
+                <a href="/admin/system/sequence/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
+                    <?= html_escape($labels['sequence_add']) ?>
+                </a>
+            <?php else: ?>
+                <span aria-disabled="true" class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500">
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
+                    <?= html_escape($labels['sequence_add']) ?>
+                </span>
+            <?php endif; ?>
         <?php endif; ?>
     </header>
 
@@ -118,16 +120,24 @@ $columns = array(
                         <?php foreach ($records as $record): ?>
                             <tr class="transition hover:bg-slate-50/80">
                                 <td class="w-16 px-2 py-2 sm:px-6">
+                                    <?php if ($sequence_actions_available): ?>
                                     <details class="relative" data-sequence-actions>
                                         <summary aria-label="<?= html_escape($labels['sequence_actions']) ?>: <?= html_escape((string) $record['sequence_code']) ?>" class="ml-auto flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 [&::-webkit-details-marker]:hidden">
                                             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
                                         </summary>
                                         <div data-sequence-actions-menu class="fixed z-50 w-40 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-                                            <?php if ($write_available): ?>
+                                            <?php if ($sequence_update_allowed): ?>
+                                                <?php if ($write_available): ?>
                                                 <a href="/admin/system/sequence/change/<?= rawurlencode((string) $record['sequence_code']) ?>" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                                                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m13.5 3.5 3 3M4 16l3.6-.7L16 6.9a2.1 2.1 0 0 0-3-3L4.7 12.3 4 16Z"/></svg>
                                                     <?= html_escape($labels['sequence_edit']) ?>
                                                 </a>
+                                                <?php else: ?>
+                                                    <span class="flex min-h-10 items-center px-3 text-sm text-slate-400" aria-disabled="true"><?= html_escape($labels['sequence_write_disabled']) ?></span>
+                                                <?php endif; ?>
+                                            <?php endif; ?>
+                                            <?php if ($sequence_delete_allowed): ?>
+                                                <?php if ($write_available): ?>
                                                 <form action="/admin/system/sequence/delete" method="post" onsubmit="return window.confirm(<?= html_escape(json_encode($labels['sequence_confirm_delete'])) ?>);">
                                                     <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
                                                     <input type="hidden" name="sequence_code" value="<?= html_escape((string) $record['sequence_code']) ?>">
@@ -136,11 +146,14 @@ $columns = array(
                                                         <?= html_escape($labels['sequence_delete']) ?>
                                                     </button>
                                                 </form>
+                                                <?php else: ?>
+                                                    <span class="flex min-h-10 items-center px-3 text-sm text-slate-400" aria-disabled="true"><?= html_escape($labels['sequence_write_disabled']) ?></span>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                <span class="flex min-h-10 items-center px-3 text-sm text-slate-400" aria-disabled="true"><?= html_escape($labels['sequence_write_disabled']) ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </details>
+                                    <?php endif; ?>
                                 </td>
                                 <th scope="row" class="whitespace-nowrap px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['sequence_code']) ?></th>
                                 <td class="min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4"><?= html_escape((string) $record['sequence_name']) ?></td>

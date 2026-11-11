@@ -8,6 +8,10 @@ class Admin_sequence extends Admin
 {
     public function sequence_new()
     {
+        if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_add')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
         $this->load->database();
         $this->db->db_debug = FALSE;
         $this->load->library('sequence_store');
@@ -61,6 +65,10 @@ class Admin_sequence extends Admin
 
     public function sequence_change($sequence_code)
     {
+        if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_update')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
         $this->load->database();
         $this->db->db_debug = FALSE;
         $this->load->library('sequence_store');
@@ -124,6 +132,10 @@ class Admin_sequence extends Admin
 
     public function sequence_delete()
     {
+        if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_delete')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
         if ($this->input->method(TRUE) !== 'POST') {
             show_error('Method not allowed.', 405);
             return;

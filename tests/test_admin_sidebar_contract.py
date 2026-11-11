@@ -69,6 +69,30 @@ class AdminSidebarContractTests(unittest.TestCase):
                 self.assertEqual(FILTER_LABELS, set(translations))
                 self.assertTrue(all(value.strip() for value in translations.values()))
 
+    def test_all_sidebar_items_are_visible_by_default_and_scroll_only_on_mobile(self):
+        markup = HEADER.read_text()
+        script = FOOTER.read_text()
+        css = TAILWIND.read_text()
+        sidebar = re.search(r'<aside id="admin-sidebar" class="([^"]*)"', markup)
+        self.assertIsNotNone(sidebar)
+        self.assertIn("overflow-y-auto", sidebar.group(1))
+        self.assertIn("md:overflow-y-visible", sidebar.group(1))
+        self.assertIn("md:h-auto", sidebar.group(1))
+        self.assertIn("md:self-start", sidebar.group(1))
+        self.assertNotIn("md:min-h-[calc(100vh-6rem)]", sidebar.group(1))
+        self.assertIn('id="admin-sidebar-navigation"', markup)
+        self.assertIn("flex-none overflow-visible", markup)
+        self.assertNotRegex(markup, r'<li[^>]*data-admin-menu-item[^>]*hidden')
+        self.assertNotIn("admin-sidebar-pagination", markup)
+        self.assertNotIn("admin-sidebar-toggle-more", markup)
+        self.assertIn("item.hidden = !matches", script)
+        self.assertNotIn("maxPageSize", script)
+        self.assertNotIn("var expanded = false", script)
+        self.assertNotIn("admin-sidebar-pagination", script)
+        self.assertNotIn("admin-sidebar-toggle-more", script)
+        self.assertNotIn("admin-sidebar-pagination", css)
+        self.assertIn("#admin-sidebar [hidden]", css)
+
     def test_all_existing_navigation_items_keep_destinations_and_have_decorative_icons(self):
         markup = HEADER.read_text()
         icon_map = markup.split("$menu_icons = array(", 1)[1].split(");", 1)[0]
@@ -83,7 +107,7 @@ class AdminSidebarContractTests(unittest.TestCase):
                 manifest_icons.add(item.attrib["icon"])
         system_manifest = parse_menu_xml(MANIFEST_DIR / "system.xml")
         tenant_item = next(item for item in system_manifest.findall("menu") if item.attrib["code"] == "sys_tenant")
-        self.assertEqual(7, len(manifest_routes))
+        self.assertEqual(11, len(manifest_routes))
         self.assertEqual("building", tenant_item.attrib["icon"])
         self.assertIn("'building' =>", icon_map)
         self.assertTrue(manifest_icons.issubset(icon_names), manifest_icons - icon_names)
@@ -99,6 +123,27 @@ class AdminSidebarContractTests(unittest.TestCase):
         self.assertIn('aria-current="page"', markup)
         self.assertIn('data-admin-menu-group', markup)
 
+    def test_new_menu_icons_match_their_meaning(self):
+        markup = HEADER.read_text()
+        icon_map = markup.split("$menu_icons = array(", 1)[1].split(");", 1)[0]
+        icon_names = set(re.findall(r"'([^']+)'\s*=>", icon_map))
+        manifest = parse_menu_xml(MANIFEST_DIR / "manifest.xml")
+        menu_icons = {}
+        for group in manifest.findall("group"):
+            submenu = parse_menu_xml(MANIFEST_DIR / group.attrib["file"])
+            menu_icons.update({item.attrib["code"]: item.attrib["icon"] for item in submenu.findall("menu")})
+
+        expected = {
+            "app_sequence": "list-ordered",
+            "hr_hierarchy": "hierarchy",
+            "hr_approval_flow": "workflow",
+            "sys_approval": "approval",
+        }
+        for menu_code, icon_name in expected.items():
+            with self.subTest(menu=menu_code):
+                self.assertEqual(icon_name, menu_icons[menu_code])
+                self.assertIn(icon_name, icon_names)
+
     def test_admin_head_declares_public_png_favicon(self):
         markup = HEADER.read_text()
         self.assertIn('<link rel="icon" type="image/png" href="/assets/logo_box.png">', markup)
@@ -108,9 +153,14 @@ class AdminSidebarContractTests(unittest.TestCase):
         css = TAILWIND.read_text()
         self.assertIn('id="admin-sidebar"', markup)
         self.assertIn('overflow-y-auto', markup)
-        self.assertIn('md:sticky', markup)
+        self.assertIn('md:overflow-y-visible', markup)
+        self.assertIn('md:static', markup)
+        self.assertIn('md:h-auto', markup)
         self.assertIn('admin-menu-link', css)
         self.assertIn('#admin-sidebar [hidden]', css)
+        self.assertIn('-webkit-overflow-scrolling: touch;', css)
+        self.assertIn('touch-action: pan-y pinch-zoom;', css)
+        self.assertIn('env(safe-area-inset-bottom', css)
 
 
 if __name__ == "__main__":

@@ -1,11 +1,20 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
 <menu-group code="application"
             name="Application"
             label_key="admin_application"
             version="1.0.0"
             sort_order="3">
-
+    <menu code="app_sequence"
+          name="Sequence"
+          label_key="admin_sequence"
+          icon="list-ordered"
+          route="/admin/application/sequence"
+          sort_order="1"
+          status="active">
+        <access code="app_sequence_add" name="Add" />
+        <access code="app_sequence_update"  name="Update"/>
+        <access code="app_sequence_set_default" name="Set to Default" />
+    </menu>
     <menu code="app_role"
           name="Role"
           label_key="admin_role"
@@ -17,6 +26,7 @@
         <access code="app_role_update"  name="Update"/>
         <access code="app_role_delete" name="Delete" />
         <access code="app_role_menu_access" name="Menu Access" />
+        <access code="app_role_tenant" name="Tenant Access" />
     </menu>
 
     <menu code="app_user"
@@ -31,6 +41,7 @@
         <access code="app_user_change_password" name="Change Password" />
         <access code="app_user_block" name="Block User" />
         <access code="app_user_delete" name="Delete" />
+        <access code="app_user_tenant" name="Tenant Access" />
     </menu>
 
 </menu-group>

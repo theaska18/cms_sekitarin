@@ -26,7 +26,7 @@ class Role_store
             return $this->schema_valid;
         }
         $this->schema_checked = TRUE;
-        foreach (array('app_role', 'sys_property', 'sys_tenant') as $table) {
+        foreach (array('app_role', 'sys_tenant') as $table) {
             $fields = $this->db->field_data($table);
             if (!is_array($fields) || !$fields) {
                 return FALSE;
@@ -42,7 +42,6 @@ class Role_store
             $this->columns['app_role']['role_name'], $this->columns['app_role']['tenant_id'],
             $this->columns['app_role']['description'], $this->columns['app_role']['active_flag'],
             $this->columns['app_role']['create_on'], $this->columns['app_role']['update_on'],
-            $this->columns['sys_property']['property_code'], $this->columns['sys_property']['value'],
             $this->columns['sys_tenant']['tenant_id'], $this->columns['sys_tenant']['tenant_code'],
             $this->columns['sys_tenant']['tenant_name']
         ) && $this->tenant_id() !== FALSE;
@@ -90,18 +89,14 @@ class Role_store
         if ($this->tenant_id_cache !== NULL) {
             return $this->tenant_id_cache;
         }
-        $query = $this->db->select('value')
-            ->where('property_code', 'tenant_id')
-            ->limit(2)
-            ->get('sys_property');
-        if (!$query || $query->num_rows() !== 1) {
+        $CI =& get_instance();
+        $session_user = $CI->session->userdata('admin_user');
+        if (!is_array($session_user) || !isset($session_user['tenant_id'])
+            || !is_numeric($session_user['tenant_id']) || (int) $session_user['tenant_id'] < 1) {
+            $this->tenant_id_cache = FALSE;
             return FALSE;
         }
-        $value = $query->row()->value;
-        if (!is_scalar($value) || !preg_match('/^[1-9][0-9]*$/', trim((string) $value))) {
-            return FALSE;
-        }
-        $this->tenant_id_cache = (int) $value;
+        $this->tenant_id_cache = (int) $session_user['tenant_id'];
         return $this->tenant_id_cache;
     }
 
@@ -129,11 +124,13 @@ class Role_store
             $sort = 'role_code';
         }
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $this->db->select('role_id, tenant_id, role_code, role_name, description, active_flag')
-            ->from('app_role')->where('tenant_id', (int) $tenant_id);
+        $this->db->select('app_role.role_id, app_role.tenant_id, app_role.role_code, app_role.role_name, app_role.description, app_role.active_flag, sys_tenant.tenant_code, sys_tenant.tenant_name')
+            ->from('app_role')
+            ->join('sys_tenant', 'sys_tenant.tenant_id = app_role.tenant_id', 'left')
+            ->where('app_role.tenant_id', (int) $tenant_id);
         $this->apply_search($search);
         $this->apply_column_filters($filters);
-        $query = $this->db->order_by($sort, $direction)
+        $query = $this->db->order_by('app_role.' . $sort, $direction)
             ->limit((int) $limit, (int) $offset)->get();
         return $query ? $query->result_array() : FALSE;
     }
@@ -220,9 +217,9 @@ class Role_store
         $search = trim((string) $search);
         if ($search !== '') {
             $this->db->group_start()
-                ->like('role_code', $search)
-                ->or_like('role_name', $search)
-                ->or_like('description', $search)
+                ->like('app_role.role_code', $search)
+                ->or_like('app_role.role_name', $search)
+                ->or_like('app_role.description', $search)
                 ->group_end();
         }
     }
@@ -234,11 +231,11 @@ class Role_store
         }
         foreach (array('role_code', 'role_name', 'description') as $field) {
             if (isset($filters[$field]) && is_string($filters[$field]) && trim($filters[$field]) !== '') {
-                $this->db->like($field, trim(substr($filters[$field], 0, 100)));
+                $this->db->like('app_role.' . $field, trim(substr($filters[$field], 0, 100)));
             }
         }
         if (isset($filters['active_flag']) && in_array((string) $filters['active_flag'], array('0', '1'), TRUE)) {
-            $this->db->where('active_flag', (int) $filters['active_flag']);
+            $this->db->where('app_role.active_flag', (int) $filters['active_flag']);
         }
     }
 }

@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = '시퀀스';
+$lang['sequence_no_access'] = '이 시퀀스 페이지에 접근할 권한이 없습니다.';
 $lang['sequence_add'] = '추가';
 $lang['sequence_actions'] = '작업';
 $lang['sequence_edit'] = '수정';

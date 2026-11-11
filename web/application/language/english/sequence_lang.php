@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequences';
+$lang['sequence_no_access'] = 'You do not have access to this Sequence page.';
 $lang['sequence_add'] = 'Add';
 $lang['sequence_actions'] = 'Actions';
 $lang['sequence_edit'] = 'Edit';

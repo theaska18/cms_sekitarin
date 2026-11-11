@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // 租户菜单翻译。
 $lang['tenant_heading'] = '租户';
+$lang['tenant_no_access'] = '您没有权限查看租户页面。';
+$lang['tenant_add_denied'] = '您没有权限添加租户。';
+$lang['tenant_update_denied'] = '您没有权限更新租户。';
+$lang['tenant_delete_denied'] = '您没有权限删除租户。';
+$lang['tenant_menu_access_denied'] = '您没有租户菜单访问权限。';
 $lang['tenant_intro'] = '管理租户联系方式和到期日期。';
 $lang['tenant_search_hint'] = '按代码或名称搜索租户。';
 $lang['tenant_filter_code_hint'] = '按租户代码搜索';

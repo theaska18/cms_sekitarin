@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // ترجمات قائمة المستأجرون.
 $lang['tenant_heading'] = 'المستأجرون';
+$lang['tenant_no_access'] = 'ليس لديك إذن لعرض صفحة المستأجرين.';
+$lang['tenant_add_denied'] = 'ليس لديك إذن لإضافة مستأجر.';
+$lang['tenant_update_denied'] = 'ليس لديك إذن لتحديث مستأجر.';
+$lang['tenant_delete_denied'] = 'ليس لديك إذن لحذف مستأجر.';
+$lang['tenant_menu_access_denied'] = 'ليس لديك إذن للوصول إلى قوائم المستأجر.';
 $lang['tenant_intro'] = 'إدارة بيانات الاتصال وتواريخ استحقاق المستأجرين.';
 $lang['tenant_search_hint'] = 'ابحث عن المستأجرين بالرمز أو الاسم.';
 $lang['tenant_filter_code_hint'] = 'ابحث برمز المستأجر';

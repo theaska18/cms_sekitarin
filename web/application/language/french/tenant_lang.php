@@ -3,6 +3,11 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 // Traductions du menu des locataires.
 $lang['tenant_heading'] = 'locataires';
+$lang['tenant_no_access'] = 'Vous n’avez pas accès à la page des locataires.';
+$lang['tenant_add_denied'] = 'Vous n’avez pas accès à l’ajout d’un locataire.';
+$lang['tenant_update_denied'] = 'Vous n’avez pas accès à la modification d’un locataire.';
+$lang['tenant_delete_denied'] = 'Vous n’avez pas accès à la suppression d’un locataire.';
+$lang['tenant_menu_access_denied'] = 'Vous n’avez pas accès aux menus du locataire.';
 $lang['tenant_intro'] = 'Gérer les coordonnées et les dates d’échéance des locataires.';
 $lang['tenant_search_hint'] = 'Rechercher par code ou nom du locataire.';
 $lang['tenant_filter_code_hint'] = 'Rechercher par code de locataire';

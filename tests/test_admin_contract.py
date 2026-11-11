@@ -181,7 +181,7 @@ class AdminDashboardContractTests(unittest.TestCase):
         self.assertIn('aria-controls="admin-sidebar"', markup)
         self.assertIn('aria-expanded="false"', markup)
         self.assertIn('id="admin-sidebar"', markup)
-        self.assertIn("md:block", markup)
+        self.assertIn("md:flex", markup)
         self.assertRegex(markup, r"event\.key\s*===\s*['\"]Escape['\"]")
         self.assertIn("aria-expanded", markup)
         self.assertIn("focus()", markup)

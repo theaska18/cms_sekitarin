@@ -203,6 +203,43 @@ console.log(JSON.stringify(results));
         self.assertIn("sticky bottom-0", action_bar.group(0))
         self.assertLess(action_bar.group(0).index("tenant_back"), action_bar.group(0).index("tenant_save"))
 
+    def test_tenant_routes_and_actions_are_guarded_by_session_permissions(self):
+        controller = (APP / "controllers/Admin_tenant.php").read_text(encoding="utf-8")
+        index = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
+        access_rules = {
+            "tenant_index": "sys_tenant",
+            "tenant_new": "sys_tenant_add",
+            "tenant_change": "sys_tenant_update",
+            "tenant_delete": "sys_tenant_delete",
+            "tenant_menu": "sys_tenant_menu_access",
+        }
+        for method, permission in access_rules.items():
+            body = re.search(rf"public function {method}\([^)]*\)(.*?)\n    (?:public|private) function ", controller, re.S)
+            self.assertIsNotNone(body, method)
+            with self.subTest(method=method, permission=permission):
+                self.assertIn(permission, body.group(1))
+                self.assertIn("tenant_deny_access", body.group(1))
+        self.assertIn("show_error", controller)
+        self.assertIn("set_status_header(403)", controller)
+        self.assertIn("has_admin_menu_code", controller)
+        self.assertIn("has_admin_access_code", controller)
+        self.assertIn("tenant_add_authorized", index)
+        self.assertIn("tenant_update_authorized", index)
+        self.assertIn("tenant_delete_authorized", index)
+        self.assertIn("tenant_menu_access_authorized", index)
+        self.assertIn("$tenant_has_actions", index)
+        self.assertIn("if ($write_available && $tenant_has_actions)", index)
+        self.assertIn("if ($write_available && $tenant_delete_authorized)", index)
+        self.assertRegex(index, r"if \(\$tenant_add_authorized && \$write_available\)")
+        self.assertRegex(index, r"if \(\$tenant_update_authorized\).*?data-tenant-edit-action")
+        self.assertRegex(index, r"if \(\$tenant_menu_access_authorized\).*?data-tenant-menu-access-action")
+        self.assertRegex(index, r"if \(\$tenant_delete_authorized\).*?data-tenant-delete-open")
+        self.assertIn("tenant_no_access", controller)
+        self.assertIn("tenant_add_denied", controller)
+        self.assertIn("tenant_update_denied", controller)
+        self.assertIn("tenant_delete_denied", controller)
+        self.assertIn("tenant_menu_access_denied", controller)
+
     def test_tenant_add_save_and_back_buttons_use_short_localized_labels(self):
         index = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
         form = (APP / "views/admin/tenant/form.php").read_text(encoding="utf-8")

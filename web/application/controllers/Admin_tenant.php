@@ -8,6 +8,16 @@ class Admin_tenant extends Admin
 {
     public function tenant_index()
     {
+        $menu_access = $this->has_admin_menu_code('sys_tenant');
+        if (!$menu_access) {
+            $this->tenant_deny_access('tenant_no_access');
+            return;
+        }
+        $add_allowed = $this->has_admin_access_code('sys_tenant_add');
+        $update_allowed = $this->has_admin_access_code('sys_tenant_update');
+        $delete_allowed = $this->has_admin_access_code('sys_tenant_delete');
+        $menu_access_allowed = $this->has_admin_access_code('sys_tenant_menu_access');
+        $actions_available = $update_allowed || $delete_allowed || $menu_access_allowed;
         $store = $this->tenant_store();
         $filters = array(
             'search' => $this->tenant_filter($this->input->get('search', TRUE)),
@@ -53,6 +63,11 @@ class Admin_tenant extends Admin
                 'tenant_records' => $tenant_records,
                 'backend_available' => $backend_available,
                 'write_available' => $this->tenant_write_available($store),
+                'tenant_add_authorized' => $add_allowed,
+                'tenant_update_authorized' => $update_allowed,
+                'tenant_delete_authorized' => $delete_allowed,
+                'tenant_menu_access_authorized' => $menu_access_allowed,
+                'tenant_has_actions' => $actions_available,
                 'status_key' => is_string($status) ? $status : '',
             )
         );
@@ -60,6 +75,10 @@ class Admin_tenant extends Admin
 
     public function tenant_new()
     {
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_add')) {
+            $this->tenant_deny_access($this->has_admin_menu_code('sys_tenant') ? 'tenant_add_denied' : 'tenant_no_access');
+            return;
+        }
         $store = $this->tenant_store();
         $backend_available = $store !== NULL && $store->schema_available();
         $write_available = $this->tenant_write_available($store);
@@ -99,6 +118,10 @@ class Admin_tenant extends Admin
 
     public function tenant_change($tenant_code)
     {
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_update')) {
+            $this->tenant_deny_access($this->has_admin_menu_code('sys_tenant') ? 'tenant_update_denied' : 'tenant_no_access');
+            return;
+        }
         if (!$this->is_valid_tenant_code($tenant_code)) {
             show_404();
             return;
@@ -157,6 +180,10 @@ class Admin_tenant extends Admin
 
     public function tenant_delete()
     {
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_delete')) {
+            $this->tenant_deny_access($this->has_admin_menu_code('sys_tenant') ? 'tenant_delete_denied' : 'tenant_no_access');
+            return;
+        }
         if ($this->input->method(TRUE) !== 'POST') {
             show_404();
             return;
@@ -179,6 +206,10 @@ class Admin_tenant extends Admin
 
     public function tenant_menu($tenant_code)
     {
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_menu_access')) {
+            $this->tenant_deny_access($this->has_admin_menu_code('sys_tenant') ? 'tenant_menu_access_denied' : 'tenant_no_access');
+            return;
+        }
         if (!$this->is_valid_tenant_code($tenant_code)) {
             show_404();
             return;
@@ -433,5 +464,16 @@ class Admin_tenant extends Admin
             && $tenant_code !== ''
             && strlen($tenant_code) <= 32
             && preg_match('/^[a-z0-9][a-z0-9._-]*$/', $tenant_code);
+    }
+
+    private function tenant_deny_access($message_key)
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin(
+            'admin/tenant/access_denied',
+            'tenant',
+            '/admin/system/tenant',
+            array('tenant_access_message_key' => $message_key)
+        );
     }
 }

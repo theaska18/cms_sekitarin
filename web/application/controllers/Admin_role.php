@@ -8,14 +8,18 @@ class Admin_role extends Admin
 {
     public function role_index()
     {
+        if (!$this->require_role_access()) {
+            return;
+        }
+        $tenant_access = $this->has_admin_access_code('app_role_tenant');
         $store = $this->role_store();
         $filter_mode = $this->input->get('filter_mode', TRUE) === 'columns' ? 'columns' : 'search';
         $default_tenant_id = $store ? $store->tenant_id() : FALSE;
-        $tenant_options = $store ? $store->tenant_options() : FALSE;
+        $tenant_options = $tenant_access && $store ? $store->tenant_options() : array();
         $selected_tenant_id = $default_tenant_id;
         if ($filter_mode === 'columns') {
             $requested_tenant = $this->input->get('tenant_id', TRUE);
-            if ($store && $store->tenant_exists($requested_tenant)) {
+            if ($tenant_access && $store && $store->tenant_exists($requested_tenant)) {
                 $selected_tenant_id = (int) $requested_tenant;
             }
         }
@@ -67,19 +71,36 @@ class Admin_role extends Admin
             'role_per_page_choices' => array(10, 25, 50),
             'role_backend_available' => $available,
             'role_write_available' => $this->role_write_available($store),
-            'role_create_available' => $this->role_write_available($store)
+            'role_create_allowed' => $this->has_admin_access_code('app_role_add'),
+            'role_create_available' => $this->has_admin_access_code('app_role_add') && $this->role_write_available($store)
                 && (int) $selected_tenant_id === (int) $default_tenant_id,
-            'role_actions_available' => $this->role_write_available($store),
+            'role_update_available' => $this->has_admin_access_code('app_role_update') && $this->role_write_available($store),
+            'role_delete_available' => $this->has_admin_access_code('app_role_delete') && $this->role_write_available($store),
+            'role_menu_access_available' => $this->has_admin_access_code('app_role_menu_access') && $this->role_write_available($store),
+            'role_has_actions' => $this->role_write_available($store) && (
+                $this->has_admin_access_code('app_role_update')
+                || $this->has_admin_access_code('app_role_delete')
+                || $this->has_admin_access_code('app_role_menu_access')
+            ),
+            'role_tenant_access' => $tenant_access,
             'role_status_key' => is_string($status) ? $status : '',
         ));
     }
 
     public function role_new()
     {
+        if (!$this->require_role_access('app_role_add', 'role_add_denied')) {
+            return;
+        }
+        $tenant_access = $this->has_admin_access_code('app_role_tenant');
         $store = $this->role_store();
         $available = $store !== NULL && $store->schema_available();
         $write_available = $this->role_write_available($store);
-        $record = array('tenant_id' => '', 'role_code' => '', 'role_name' => '', 'description' => '', 'active_flag' => 1);
+        $default_tenant_id = $store ? $store->tenant_id() : FALSE;
+        $record = array(
+            'tenant_id' => $default_tenant_id !== FALSE ? (string) $default_tenant_id : '',
+            'role_code' => '', 'role_name' => '', 'description' => '', 'active_flag' => 1,
+        );
         $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) {
@@ -87,6 +108,9 @@ class Admin_role extends Admin
                 return;
             }
             $record = $this->role_form_values(TRUE);
+            if (!$tenant_access) {
+                $record['tenant_id'] = (string) $default_tenant_id;
+            }
             $errors = $this->validate_role($record, $store, TRUE);
             if (!$errors && $store->insert($record)) {
                 $this->session->set_flashdata('admin_role_status', 'created');
@@ -102,6 +126,12 @@ class Admin_role extends Admin
 
     public function role_change($role_code = '', $tenant_id = NULL)
     {
+        if (!$this->require_role_access('app_role_update', 'role_update_denied')) {
+            return;
+        }
+        if (!$this->has_admin_access_code('app_role_tenant')) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+        }
         $role_code = $this->role_code($role_code);
         if ($tenant_id !== NULL && (!is_numeric($tenant_id) || (string) (int) $tenant_id !== (string) $tenant_id || (int) $tenant_id < 1)) {
             show_404();
@@ -141,6 +171,9 @@ class Admin_role extends Admin
 
     public function role_delete()
     {
+        if (!$this->require_role_access('app_role_delete', 'role_delete_denied')) {
+            return;
+        }
         if ($this->input->method(TRUE) !== 'POST') {
             show_error('Role deletion requires POST.', 405);
             return;
@@ -152,6 +185,9 @@ class Admin_role extends Admin
         }
         $role_code = $this->role_code($this->input->post('role_code', TRUE));
         $tenant_id = $this->input->post('tenant_id', TRUE);
+        if (!$this->has_admin_access_code('app_role_tenant')) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+        }
         $role = $store->find($role_code, $tenant_id);
         if ($role_code === '' || !is_array($role) || !$store->delete($role_code, $tenant_id)) {
             $this->session->set_flashdata('admin_role_status', 'delete_error');
@@ -163,12 +199,30 @@ class Admin_role extends Admin
 
     private function render_role_form($store, $available, $write_available, $mode, $role_code, $record, $errors)
     {
+        $tenant_access = $this->has_admin_access_code('app_role_tenant');
         $status = $this->session->flashdata('admin_role_status');
-        $role_tenants = $mode === 'new' && $store ? $store->tenant_options() : array();
-        if ($mode === 'new' && !is_array($role_tenants)) {
+        $role_tenants = $mode === 'new' && $tenant_access && $store ? $store->tenant_options() : array();
+        if ($mode === 'new' && $tenant_access && !is_array($role_tenants)) {
             $role_tenants = array();
             $available = FALSE;
             $write_available = FALSE;
+        }
+        $role_tenant_default_available = FALSE;
+        if ($mode === 'new') {
+            if (!$tenant_access && $store && isset($record['tenant_id'])) {
+                $role_tenant_default_available = $store->tenant_exists($record['tenant_id']);
+            } else {
+                foreach ($role_tenants as $tenant) {
+                    if (isset($tenant['tenant_id'], $record['tenant_id'])
+                        && (string) $tenant['tenant_id'] === (string) $record['tenant_id']) {
+                        $role_tenant_default_available = TRUE;
+                        break;
+                    }
+                }
+            }
+            if (!$role_tenant_default_available) {
+                $write_available = FALSE;
+            }
         }
         $role_form_action = '/admin/application/role/' . ($mode === 'new' ? 'new' : 'change/' . rawurlencode($role_code) . '/' . rawurlencode((string) $record['tenant_id']));
         $this->render_admin('admin/role/form', 'role', $role_form_action, array(
@@ -176,16 +230,24 @@ class Admin_role extends Admin
             'role_code' => $role_code,
             'role_record' => $record,
             'role_tenants' => $role_tenants,
+            'role_tenant_default_available' => $role_tenant_default_available,
             'role_field_specs' => $store ? $store->field_specs() : array(),
             'role_errors' => $errors,
             'role_backend_available' => $available,
             'role_write_available' => $write_available,
+            'role_tenant_access' => $tenant_access,
             'role_status_key' => is_string($status) ? $status : '',
         ));
     }
 
     public function role_menu($role_code, $tenant_id = NULL)
     {
+        if (!$this->require_role_access('app_role_menu_access', 'role_menu_access_denied')) {
+            return;
+        }
+        if (!$this->has_admin_access_code('app_role_tenant')) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+        }
         $role_code = $this->role_code($role_code);
         if ($tenant_id !== NULL && (!is_numeric($tenant_id) || (string) (int) $tenant_id !== (string) $tenant_id || (int) $tenant_id < 1)) {
             show_404();

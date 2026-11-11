@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
 <menu-group code="system"
             name="System"
@@ -39,7 +38,7 @@
         <access code="sys_tenant_add" name="Add" />
         <access code="sys_tenant_update" name="Update" />
         <access code="sys_tenant_menu_access" name="Menu Access" />
-        <access code="sys_tenant_menu_delete" name="Delete" />
+        <access code="sys_tenant_delete" name="Delete" />
     </menu>
 
     <menu code="sys_sequence"
@@ -52,6 +51,18 @@
         <access code="sys_sequence_add" name="Add" />
         <access code="sys_sequence_update"  name="Update"/>
         <access code="sys_sequence_delete" name="Delete" />
+    </menu>
+
+    <menu code="sys_approval"
+          name="Approval"
+          label_key="admin_approval"
+          icon="approval"
+          route="/admin/system/approval"
+          sort_order="5"
+          status="active">
+        <access code="sys_approval_add" name="Add" />
+        <access code="sys_approval_update" name="Update"/>
+        <access code="sys_approval_delete" name="Delete" />
     </menu>
 
 </menu-group>

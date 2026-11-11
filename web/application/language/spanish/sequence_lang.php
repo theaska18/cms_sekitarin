@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Secuencias';
+$lang['sequence_no_access'] = 'No tienes permiso para acceder a esta página de secuencias.';
 $lang['sequence_add'] = 'Añadir';
 $lang['sequence_actions'] = 'Acciones';
 $lang['sequence_edit'] = 'Editar';
