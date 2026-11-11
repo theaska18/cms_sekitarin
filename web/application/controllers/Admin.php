@@ -42,32 +42,46 @@ class Admin extends CI_Controller
 
     public function setting()
     {
-        $locale = $this->resolve_admin_locale();
         $this->load->database();
         $db = $this->db;
+        $locale = $this->resolve_admin_locale();
         if ($this->input->method(TRUE) === 'POST') {
             $requested_locale = (string) $this->input->post('locale', TRUE);
-            $requested_theme = strtolower(trim((string) $this->input->post('theme', TRUE)));
-            $locale_valid = isset($this->admin_languages[$requested_locale]);
-            $theme_valid = in_array($requested_theme, array('dark', 'light'), TRUE);
-            if ($locale_valid && $theme_valid) {
-                $this->input->set_cookie('cmsnivo_admin_locale', $requested_locale, 31536000, '', '/', '', NULL, TRUE, 'Lax');
-                $db->where('user_id', (int) $this->current_user['user_id'])
-                    ->where('tenant_id', (int) $this->current_user['tenant_id'])
-                    ->update('app_user', array('theme' => $requested_theme));
-                $updated = $db->affected_rows();
+            $requested_theme = $this->input->post('theme', TRUE);
+            $locale_valid = $requested_locale !== '' && isset($this->admin_languages[$requested_locale]);
+            $theme_valid = $requested_theme !== NULL
+                && in_array(strtolower(trim((string) $requested_theme)), array('dark', 'light'), TRUE);
+            $has_valid_setting = $locale_valid || $theme_valid;
+            if ($has_valid_setting && ($requested_locale === '' || $locale_valid) && ($requested_theme === NULL || $theme_valid)) {
+                $update = array();
+                if ($locale_valid) {
+                    $update['language'] = $requested_locale;
+                }
+                if ($requested_theme !== NULL) {
+                    $update['theme'] = strtolower(trim((string) $requested_theme));
+                    $requested_theme = $update['theme'];
+                }
+                if (!empty($update)) {
+                    $db->where('user_id', (int) $this->current_user['user_id'])
+                        ->where('tenant_id', (int) $this->current_user['tenant_id'])
+                        ->update('app_user', $update);
+                }
                 $db_error = $db->error();
                 if ($db->trans_status() === FALSE || (is_array($db_error) && !empty($db_error['code']))) {
                     $this->session->set_flashdata('setting_notice', 'invalid');
                 } else {
-                    $this->current_user['theme'] = $requested_theme;
+                    if (isset($update['theme'])) {
+                        $this->current_user['theme'] = $update['theme'];
+                    }
+                    if (isset($update['language'])) {
+                        $this->current_user['language'] = $update['language'];
+                    }
                     $this->session->set_userdata('admin_user', $this->current_user);
                     $this->session->set_flashdata('setting_notice', 'saved');
                 }
-                redirect('/admin/setting');
-                return;
+            } else {
+                $this->session->set_flashdata('setting_notice', 'invalid');
             }
-            $this->session->set_flashdata('setting_notice', 'invalid');
             redirect('/admin/setting');
             return;
         }
@@ -82,6 +96,7 @@ class Admin extends CI_Controller
             $theme = 'light';
         }
         $this->current_user['theme'] = $theme;
+        $this->current_user['language'] = $locale;
         $this->session->set_userdata('admin_user', $this->current_user);
         $notice = (string) $this->session->flashdata('setting_notice');
         $this->render_admin(
@@ -215,19 +230,44 @@ class Admin extends CI_Controller
 
     private function resolve_admin_locale()
     {
-        $requested_locale = $this->input->get('lang', TRUE);
+        $requested_locale = isset($_POST['locale']) ? trim((string) $_POST['locale']) : '';
+        if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_METHOD']) === 'POST' && isset($this->admin_languages[$requested_locale])) {
+            return $requested_locale;
+        }
+        $this->load->database();
+        $query = $this->db->select('language')->from('app_user')
+            ->where('user_id', (int) $this->current_user['user_id'])
+            ->where('tenant_id', (int) $this->current_user['tenant_id'])
+            ->limit(1)->get();
+        if ($query !== FALSE && $query->num_rows() === 1) {
+            $language = strtolower(trim((string) $query->row()->language));
+            $locale_map = array('en' => 'english', 'id' => 'indonesian');
+            if (isset($locale_map[$language])) {
+                $language = $locale_map[$language];
+            }
+            if (isset($this->admin_languages[$language])) {
+                return $language;
+            }
+        }
+
+        $requested_locale = $this->input->post('locale', TRUE);
         if (is_string($requested_locale) && isset($this->admin_languages[$requested_locale])) {
-            $this->input->set_cookie('cmsnivo_admin_locale', $requested_locale, 31536000, '', '/', '', NULL, TRUE, 'Lax');
             return $requested_locale;
         }
 
-        $stored_locale = $this->input->cookie('cmsnivo_admin_locale', TRUE);
-        if (is_string($stored_locale) && isset($this->admin_languages[$stored_locale])) {
-            return $stored_locale;
+        $accept_language = strtolower((string) $this->input->server('HTTP_ACCEPT_LANGUAGE'));
+        $available_by_browser = array();
+        foreach ($this->admin_languages as $code => $language) {
+            $available_by_browser[strtolower(substr($language['html_lang'], 0, 2))] = $code;
+        }
+        foreach (explode(',', $accept_language) as $browser_locale) {
+            $browser_locale = substr(trim($browser_locale), 0, 2);
+            if ($browser_locale !== '' && isset($available_by_browser[$browser_locale])) {
+                return $available_by_browser[$browser_locale];
+            }
         }
 
-        $configured_locale = config_item('language');
-        return isset($this->admin_languages[$configured_locale]) ? $configured_locale : 'indonesian';
+        return 'english';
     }
 
     private function load_admin_menu_groups()
@@ -384,7 +424,19 @@ class Admin extends CI_Controller
     protected function render_admin($view, $title_key, $current_path, $extra_data = array())
     {
         $locale = $this->resolve_admin_locale();
-        $this->lang->load('admin', $locale);
+        if ($this->input->get('lang', TRUE) !== NULL) {
+            $url_locale = (string) $this->input->get('lang', TRUE);
+            if (isset($this->admin_languages[$url_locale])) {
+                $current_user = $this->session->userdata('admin_user');
+                if (is_array($current_user)) {
+                    $current_user['language'] = $url_locale;
+                    $this->current_user = $current_user;
+                    $this->session->set_userdata('admin_user', $current_user);
+                }
+                $locale = $url_locale;
+            }
+        }
+        $this->load->language('admin', $locale);
         $is_property_view = strpos($view, 'admin/property/') === 0;
         $is_tenant_view = strpos($view, 'admin/tenant/') === 0;
         $is_parameter_view = strpos($view, 'admin/parameter/') === 0;

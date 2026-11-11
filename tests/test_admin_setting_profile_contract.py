@@ -53,7 +53,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
 
     def test_setting_post_updates_theme_and_invalidates_only_on_real_db_error(self):
         setting = self.controller.split("public function setting()", 1)[1].split("public function placeholder(", 1)[0]
-        self.assertIn("'theme' => $requested_theme", setting)
+        self.assertIn("$update['theme'] = strtolower(trim((string) $requested_theme))", setting)
         self.assertIn("$db->error()", setting)
         self.assertIn("$db->trans_status() === FALSE", setting)
         setting_view = (ROOT / "web/application/views/admin/setting.php").read_text()
