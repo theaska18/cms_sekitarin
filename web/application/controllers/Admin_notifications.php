@@ -23,8 +23,9 @@ class Admin_notifications extends Admin
             'notifications_total_pages' => 1,
             'notifications_error' => FALSE,
         );
-        foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next') as $key) {
-            $data['notifications_' . $key] = $this->lang->line('notifications_' . $key);
+        $selected_id = $this->input->get('selected', TRUE);
+        if ($selected_id !== NULL && ctype_digit((string) $selected_id)) {
+            $data['selected_notification_id'] = max(0, (int) $selected_id);
         }
 
         // Authenticated identity is sourced from Admin's server-side session validation.
@@ -53,12 +54,16 @@ class Admin_notifications extends Admin
 
                 $select = array('notification_id', 'title', 'message');
                 $order_date_field = NULL;
-                foreach (array('created_at', 'created_date', 'date_created') as $candidate) {
+                foreach (array('create_on', 'created_at', 'created_date', 'date_created') as $candidate) {
                     if (isset($fields[$candidate])) {
                         $select[] = $candidate;
                         $order_date_field = $candidate;
                         break;
                     }
+                }
+                $read_flag_field = isset($fields['read_flag']) ? 'read_flag' : NULL;
+                if ($read_flag_field !== NULL) {
+                    $select[] = $read_flag_field;
                 }
                 $query = $db->select(implode(', ', $select), FALSE)
                     ->from('app_notification')
@@ -77,6 +82,7 @@ class Admin_notifications extends Admin
                             'title' => isset($row['title']) ? (string) $row['title'] : '',
                             'message' => isset($row['message']) ? (string) $row['message'] : '',
                             'created_at' => $order_date_field !== NULL && isset($row[$order_date_field]) ? (string) $row[$order_date_field] : '',
+                            'read_flag' => $read_flag_field !== NULL && isset($row[$read_flag_field]) ? (string) $row[$read_flag_field] : '0',
                         );
                     }
                 }

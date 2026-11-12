@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = '通知';
+$lang['notifications_intro'] = 'アカウントの最新通知です。';
+$lang['notifications_unavailable'] = '通知は一時的に利用できません。';
+$lang['notifications_empty'] = '通知はありません';
+$lang['notifications_empty_hint'] = 'アカウントへの新しい通知がここに表示されます。';
+$lang['notifications_pagination'] = '通知ページ';
+$lang['notifications_previous'] = '前へ';
+$lang['notifications_next'] = '次へ';
+$lang['notifications_select_prompt'] = '通知を選択してください';
+$lang['notifications_select_hint'] = '左側の一覧から通知を選択すると詳細を表示できます。';
+$lang['notifications_list_label'] = '通知一覧';
+$lang['notifications_read'] = '既読';
+$lang['notifications_unread'] = '未読';
+$lang['notifications_time_just_now'] = 'たった今';
+$lang['notifications_time_year'] = '年前';
+$lang['notifications_time_month'] = 'か月前';
+$lang['notifications_time_week'] = '週間前';
+$lang['notifications_time_day'] = '日前';
+$lang['notifications_time_hour'] = '時間前';
+$lang['notifications_time_minute'] = '分前';
+$lang['notifications_time_ago'] = '';

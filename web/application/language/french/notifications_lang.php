@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = 'Notifications';
+$lang['notifications_intro'] = 'Notifications récentes de votre compte.';
+$lang['notifications_unavailable'] = 'Les notifications sont temporairement indisponibles.';
+$lang['notifications_empty'] = 'Aucune notification pour le moment';
+$lang['notifications_empty_hint'] = 'Les nouvelles notifications de votre compte apparaîtront ici.';
+$lang['notifications_pagination'] = 'Pages de notifications';
+$lang['notifications_previous'] = 'Précédent';
+$lang['notifications_next'] = 'Suivant';
+$lang['notifications_select_prompt'] = 'Veuillez sélectionner une notification';
+$lang['notifications_select_hint'] = 'Choisissez une notification dans la liste à gauche pour afficher ses détails.';
+$lang['notifications_list_label'] = 'Liste des notifications';
+$lang['notifications_read'] = 'Lue';
+$lang['notifications_unread'] = 'Non lue';
+$lang['notifications_time_just_now'] = 'à l’instant';
+$lang['notifications_time_year'] = 'ans';
+$lang['notifications_time_month'] = 'mois';
+$lang['notifications_time_week'] = 'semaines';
+$lang['notifications_time_day'] = 'jours';
+$lang['notifications_time_hour'] = 'heures';
+$lang['notifications_time_minute'] = 'minutes';
+$lang['notifications_time_ago'] = '';

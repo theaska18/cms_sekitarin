@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = 'الإشعارات';
+$lang['notifications_intro'] = 'أحدث الإشعارات لحسابك.';
+$lang['notifications_unavailable'] = 'الإشعارات غير متاحة مؤقتًا.';
+$lang['notifications_empty'] = 'لا توجد إشعارات بعد';
+$lang['notifications_empty_hint'] = 'ستظهر إشعارات حسابك الجديدة هنا.';
+$lang['notifications_pagination'] = 'صفحات الإشعارات';
+$lang['notifications_previous'] = 'السابق';
+$lang['notifications_next'] = 'التالي';
+$lang['notifications_select_prompt'] = 'يرجى اختيار إشعار';
+$lang['notifications_select_hint'] = 'اختر إشعارًا من القائمة على اليسار لعرض التفاصيل.';
+$lang['notifications_list_label'] = 'قائمة الإشعارات';
+$lang['notifications_read'] = 'مقروء';
+$lang['notifications_unread'] = 'غير مقروء';
+$lang['notifications_time_just_now'] = 'الآن';
+$lang['notifications_time_year'] = 'سنوات';
+$lang['notifications_time_month'] = 'أشهر';
+$lang['notifications_time_week'] = 'أسابيع';
+$lang['notifications_time_day'] = 'أيام';
+$lang['notifications_time_hour'] = 'ساعات';
+$lang['notifications_time_minute'] = 'دقائق';
+$lang['notifications_time_ago'] = 'مضت';

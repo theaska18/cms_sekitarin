@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = '알림';
+$lang['notifications_intro'] = '계정의 최신 알림입니다.';
+$lang['notifications_unavailable'] = '알림을 일시적으로 사용할 수 없습니다.';
+$lang['notifications_empty'] = '알림이 없습니다';
+$lang['notifications_empty_hint'] = '계정의 새 알림이 여기에 표시됩니다.';
+$lang['notifications_pagination'] = '알림 페이지';
+$lang['notifications_previous'] = '이전';
+$lang['notifications_next'] = '다음';
+$lang['notifications_select_prompt'] = '알림을 선택하세요';
+$lang['notifications_select_hint'] = '왼쪽 목록에서 알림을 선택하면 자세한 내용을 볼 수 있습니다.';
+$lang['notifications_list_label'] = '알림 목록';
+$lang['notifications_read'] = '읽음';
+$lang['notifications_unread'] = '읽지 않음';
+$lang['notifications_time_just_now'] = '방금 전';
+$lang['notifications_time_year'] = '년';
+$lang['notifications_time_month'] = '개월';
+$lang['notifications_time_week'] = '주';
+$lang['notifications_time_day'] = '일';
+$lang['notifications_time_hour'] = '시간';
+$lang['notifications_time_minute'] = '분';
+$lang['notifications_time_ago'] = '전';

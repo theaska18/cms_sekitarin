@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = '通知';
+$lang['notifications_intro'] = '您账户的最新通知。';
+$lang['notifications_unavailable'] = '通知暂时不可用。';
+$lang['notifications_empty'] = '暂无通知';
+$lang['notifications_empty_hint'] = '您账户的新通知将显示在这里。';
+$lang['notifications_pagination'] = '通知页';
+$lang['notifications_previous'] = '上一页';
+$lang['notifications_next'] = '下一页';
+$lang['notifications_select_prompt'] = '请选择一条通知';
+$lang['notifications_select_hint'] = '从左侧列表中选择一条通知以查看详情。';
+$lang['notifications_list_label'] = '通知列表';
+$lang['notifications_read'] = '已读';
+$lang['notifications_unread'] = '未读';
+$lang['notifications_time_just_now'] = '刚刚';
+$lang['notifications_time_year'] = '年';
+$lang['notifications_time_month'] = '个月';
+$lang['notifications_time_week'] = '周';
+$lang['notifications_time_day'] = '天';
+$lang['notifications_time_hour'] = '小时';
+$lang['notifications_time_minute'] = '分钟';
+$lang['notifications_time_ago'] = '前';

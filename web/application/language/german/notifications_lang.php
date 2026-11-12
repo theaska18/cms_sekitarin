@@ -1,0 +1,22 @@
+<?php
+$lang['notifications_heading'] = 'Benachrichtigungen';
+$lang['notifications_intro'] = 'Neueste Benachrichtigungen für Ihr Konto.';
+$lang['notifications_unavailable'] = 'Benachrichtigungen sind vorübergehend nicht verfügbar.';
+$lang['notifications_empty'] = 'Noch keine Benachrichtigungen';
+$lang['notifications_empty_hint'] = 'Neue Benachrichtigungen für Ihr Konto erscheinen hier.';
+$lang['notifications_pagination'] = 'Benachrichtigungsseiten';
+$lang['notifications_previous'] = 'Zurück';
+$lang['notifications_next'] = 'Weiter';
+$lang['notifications_select_prompt'] = 'Bitte wählen Sie eine Benachrichtigung';
+$lang['notifications_select_hint'] = 'Wählen Sie links eine Benachrichtigung aus, um die Details anzuzeigen.';
+$lang['notifications_list_label'] = 'Benachrichtigungsliste';
+$lang['notifications_read'] = 'Gelesen';
+$lang['notifications_unread'] = 'Ungelesen';
+$lang['notifications_time_just_now'] = 'gerade eben';
+$lang['notifications_time_year'] = 'Jahren';
+$lang['notifications_time_month'] = 'Monaten';
+$lang['notifications_time_week'] = 'Wochen';
+$lang['notifications_time_day'] = 'Tagen';
+$lang['notifications_time_hour'] = 'Stunden';
+$lang['notifications_time_minute'] = 'Minuten';
+$lang['notifications_time_ago'] = '';

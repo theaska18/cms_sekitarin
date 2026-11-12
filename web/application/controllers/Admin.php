@@ -615,6 +615,10 @@ class Admin extends CI_Controller
         $is_user_view = strpos($view, 'admin/user/') === 0;
         $is_employee_view = strpos($view, 'admin/employee/') === 0;
         $is_notifications_view = strpos($view, 'admin/notifications/') === 0;
+        $is_profile_view = $view === 'admin/profile';
+        if ($is_profile_view) {
+            $this->lang->load('profile', $locale);
+        }
         if ($is_property_view) {
             $this->lang->load('property', $locale);
         }
@@ -658,6 +662,14 @@ class Admin extends CI_Controller
             $labels[$key] = $this->lang->line('admin_' . $key);
             if ($labels[$key] === FALSE) {
                 $labels[$key] = '';
+            }
+        }
+        if ($is_profile_view) {
+            foreach (array('eyebrow', 'intro', 'notice_saved', 'notice_password', 'notice_photo', 'error_heading', 'error_username', 'error_username_taken', 'error_full_name', 'error_current_password', 'error_password', 'error_password_mismatch', 'error_photo_invalid', 'error_photo_unavailable', 'error_save', 'error_action', 'error_invalid', 'avatar_alt', 'active', 'account_kicker', 'employee_unlinked', 'change_photo', 'upload', 'personal', 'details', 'details_help', 'full_name', 'username', 'username_hint', 'save_changes', 'security', 'change_password', 'password_help', 'current_password', 'new_password', 'password_hint', 'confirm_password', 'update_password') as $key) {
+                $labels['profile_' . $key] = $this->lang->line('profile_' . $key);
+                if ($labels['profile_' . $key] === FALSE) {
+                    $labels['profile_' . $key] = '';
+                }
             }
         }
         if ($is_property_view) {
@@ -738,7 +750,7 @@ class Admin extends CI_Controller
         }
 
         if ($is_notifications_view) {
-            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next') as $key) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
                 $labels['notifications_' . $key] = $this->lang->line('notifications_' . $key);
             }
             $labels['admin_notifications_heading'] = $labels['notifications_heading'];
@@ -899,6 +911,12 @@ class Admin extends CI_Controller
             'popular_menu_items' => $popular_menu_items,
         );
         $data = array_merge($data, $extra_data);
+        if ($is_notifications_view) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
+                $data['notifications_' . $key] = $labels['notifications_' . $key];
+            }
+            $data['notifications_breadcrumb_parent'] = $labels['dashboard'];
+        }
         $this->load->view('admin/header', $data);
         $this->load->view($view, $data);
         $this->load->view('admin/footer', $data);

@@ -108,3 +108,23 @@ html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] [rol
 html[data-theme="dark"] #admin-app-shell table tbody tr:hover [role="menu"] [role="menuitem"]:focus-visible { background-color: #334155 !important; color: #ffffff !important; }
 html[data-theme="dark"] #admin-app-shell table tbody tr [aria-haspopup="menu"]:hover,
 html[data-theme="dark"] #admin-app-shell table tbody tr [aria-haspopup="menu"]:focus-visible { background-color: #334155 !important; color: #f8fafc !important; }
+
+/* Notification list items use indigo-50/70 for selection, which needs an explicit dark surface. */
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="] { background-color: transparent !important; color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:hover,
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:focus-visible { background-color: #334155 !important; color: #f8fafc !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="][aria-current="true"] { background-color: #312e81 !important; border-left-color: #818cf8 !important; color: #f8fafc !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="] h3 { color: #f1f5f9 !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="] p { color: #cbd5e1 !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="][aria-current="true"] p { color: #c7d2fe !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:hover h3,
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:focus-visible h3 { color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:hover p,
+html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:focus-visible p { color: #e2e8f0 !important; }
+#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #f8fafc !important; }
+#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
+#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #f1f5f9 !important; }
+html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #1e293b !important; }
+html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
+html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #334155 !important; }
+html[data-theme="dark"] #admin-app-shell a.notification-list-item .notification-message-preview { color: #cbd5e1 !important; }
