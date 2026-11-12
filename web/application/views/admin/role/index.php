@@ -86,7 +86,7 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
         <?php if ($role_backend_available): ?>
             <input type="hidden" name="per_page" value="<?= $role_per_page ?>" form="role-filter-form">
         <?php endif; ?>
-        <div class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:px-6 rounded-none" data-role-filter-header>
+        <div class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-none backdrop-blur-sm sm:px-6 rounded-none" data-role-filter-header>
             <?php if ($role_backend_available): ?>
                 <div class="w-full sm:flex sm:flex-wrap sm:justify-end">
                     <div class="flex w-full items-center justify-end gap-2 sm:w-auto">

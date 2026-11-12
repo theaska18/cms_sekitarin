@@ -27,6 +27,8 @@ $admin_theme = isset($current_user['theme']) && $current_user['theme'] === 'dark
     <link rel="stylesheet" href="/assets/css/tailwind.css?v=<?= is_file(FCPATH . 'assets/css/tailwind.css') ? filemtime(FCPATH . 'assets/css/tailwind.css') : '1' ?>">
     <link rel="stylesheet" href="/assets/css/admin-theme.css?v=<?= is_file(FCPATH . 'assets/css/admin-theme.css') ? filemtime(FCPATH . 'assets/css/admin-theme.css') : '1' ?>">
     <link rel="stylesheet" href="/assets/css/admin-profile.css?v=<?= is_file(FCPATH . 'web/assets/css/admin-profile.css') ? filemtime(FCPATH . 'web/assets/css/admin-profile.css') : '1' ?>">
+    <?php $ios_controls_path = FCPATH . 'assets/css/ios-form-controls.css'; ?>
+    <link rel="stylesheet" href="/assets/css/ios-form-controls.css?v=<?= is_file($ios_controls_path) ? filemtime($ios_controls_path) : '1' ?>">
     <style>
 .profile-page{--profile-ink:#172033;--profile-muted:#64748b;--profile-line:#e2e8f0;--profile-surface:#fff;max-width:none;width:100%;margin:0;padding:36px clamp(22px,4vw,56px) 64px;color:var(--profile-ink)}
 .profile-page .page-heading{margin-bottom:28px}.profile-page .eyebrow,.profile-kicker{display:inline-flex;align-items:center;gap:8px;color:#5265d8;font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.profile-page .eyebrow:before{content:"";width:22px;height:2px;background:#5265d8;border-radius:2px}.profile-page h1{margin:9px 0 0;font-size:clamp(1.85rem,3vw,2.35rem);font-weight:650;letter-spacing:-.045em;line-height:1.12}.profile-page .page-heading .muted{color:var(--profile-muted);margin:9px 0 0;font-size:.95rem}.profile-page .card{background:var(--profile-surface);border:1px solid var(--profile-line);border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.025),0 10px 30px rgba(15,23,42,.035)}
@@ -45,8 +47,9 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
             </button>
             <a href="/admin" class="flex min-w-0 items-center gap-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="<?php echo html_escape($web_name . ' ' . $labels['dashboard']); ?>">
-                <img src="/assets/logo_box.png" alt="" aria-hidden="true" class="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10">
-                <span class="max-w-[5.5rem] truncate text-xs font-bold tracking-tight text-slate-900 max-[429px]:hidden sm:max-w-none sm:text-lg"><?php echo html_escape($web_name); ?></span>
+                <img src="/assets/logo_box.png" alt="" aria-hidden="true" class="h-8 w-8 shrink-0 object-contain sm:hidden">
+                <img src="/assets/logo_text.png" alt="" aria-hidden="true" class="hidden h-10 max-w-36 shrink-0 object-contain sm:block">
+                <span class="sr-only"><?php echo html_escape($web_name); ?></span>
             </a>
         </div>
         <nav aria-label="<?php echo html_escape($labels['topbar_navigation']); ?>" class="flex shrink-0 items-center gap-0 sm:gap-2">

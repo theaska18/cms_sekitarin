@@ -81,7 +81,7 @@ $columns = array(
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="sequence-filter-form">
         <?php endif; ?>
-        <div id="sequence-filter-bar" class="sticky top-16 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
+        <div id="sequence-filter-bar" class="sticky top-16 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-none backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
             <?php if (!$backend_available): ?>
                 <p class="text-sm text-slate-500 sm:ml-auto" role="status" aria-live="polite"><?= html_escape($labels['sequence_unavailable']) ?></p>
             <?php endif; ?>

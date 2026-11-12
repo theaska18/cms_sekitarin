@@ -174,7 +174,7 @@ class Admin extends CI_Controller
                 $password = is_string($password) ? $password : '';
                 $confirm = is_string($confirm) ? $confirm : '';
                 if (!password_verify($current, (string) $record['password'])) { $errors[] = 'current_password'; }
-                if (strlen($password) < 10 || strlen($password) > 4096) { $errors[] = 'password'; }
+                if (strlen($password) < 8 || strlen($password) > 4096) { $errors[] = 'password'; }
                 if ($password !== $confirm) { $errors[] = 'password_mismatch'; }
                 if (!$errors) {
                     $db->where('user_id', $user_id)->where('tenant_id', $tenant_id)

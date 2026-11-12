@@ -83,7 +83,7 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="property-filter-form">
         <?php endif; ?>
-        <div data-property-filter-header class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
+        <div data-property-filter-header class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
             <?php if (!$backend_available): ?>
                 <p class="text-sm text-slate-500"><?= html_escape($labels['property_unavailable']) ?></p>
             <?php endif; ?>

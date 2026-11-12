@@ -71,7 +71,7 @@ $tenant_menu_errors = is_array($tenant_menu_errors) ? $tenant_menu_errors : arra
                 </section>
             <?php endforeach; ?>
         </div>
-        <div data-tenant-menu-sticky-actions class="sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/10 p-4 shadow-sm backdrop-blur-sm sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6 rounded-t-2xl rounded-b-none">
+        <div data-tenant-menu-sticky-actions class="sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/10 p-4 shadow-none backdrop-blur-sm sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6 rounded-t-2xl rounded-b-none">
             <a href="/admin/system/tenant" class="admin-back-link inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5M7.5 10h10"/></svg>
                 <?= html_escape($labels['tenant_back']) ?>
