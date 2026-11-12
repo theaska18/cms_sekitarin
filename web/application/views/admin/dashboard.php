@@ -18,6 +18,27 @@
         </a>
     </div>
 </section>
+<section class="mt-8" aria-labelledby="popular-menus-heading">
+    <div class="mb-4">
+        <p class="text-sm font-medium text-slate-500"><?php echo html_escape($labels['popular_menu_description']); ?></p>
+        <h2 id="popular-menus-heading" class="mt-1 text-lg font-bold tracking-tight text-slate-900"><?php echo html_escape($labels['popular_menu_heading']); ?></h2>
+    </div>
+    <?php if (!empty($popular_menu_items)): ?>
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <?php foreach ($popular_menu_items as $popular_item): ?>
+                <a href="<?php echo html_escape($popular_item['route']); ?>" class="group flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+                    <span class="flex min-w-0 items-center gap-3">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-9M15 6h6v6"/></svg></span>
+                        <span class="truncate text-sm font-bold text-slate-800 group-hover:text-emerald-800"><?php echo html_escape($popular_item['label']); ?></span>
+                    </span>
+                    <span class="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800"><?php echo html_escape(number_format($popular_item['visit_count'])); ?> <?php echo html_escape($labels['popular_menu_visits']); ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500"><?php echo html_escape($labels['popular_menu_empty']); ?></p>
+    <?php endif; ?>
+</section>
 <section class="mt-8" aria-labelledby="admin-sections-heading">
     <div class="mb-4 flex items-end justify-between gap-3">
         <div>

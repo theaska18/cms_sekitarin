@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = '有効な管理者セッションがあ�
 $lang['admin_auth_language'] = '言語';
 
 $lang['admin_tenant'] = 'テナント';
+
+$lang['admin_popular_menu_heading'] = 'よく利用されるメニュー';
+$lang['admin_popular_menu_description'] = '過去30日間の訪問数に基づく人気メニューです。';
+$lang['admin_popular_menu_visits'] = '回';
+$lang['admin_popular_menu_empty'] = 'メニューの訪問履歴はまだありません。アクセス可能なメニューを開くとここに表示されます。';

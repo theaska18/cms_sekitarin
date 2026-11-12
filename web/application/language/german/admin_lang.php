@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = 'Es wurde keine aktive Administratorsitzu
 $lang['admin_auth_language'] = 'Sprache';
 
 $lang['admin_tenant'] = 'Mandant';
+
+$lang['admin_popular_menu_heading'] = 'Häufig besuchte Menüs';
+$lang['admin_popular_menu_description'] = 'Beliebte Links basierend auf den Besuchen der letzten 30 Tage.';
+$lang['admin_popular_menu_visits'] = 'Aufrufe';
+$lang['admin_popular_menu_empty'] = 'Noch keine Menüaufrufe. Besuchen Sie ein zugängliches Menü, damit es hier erscheint.';

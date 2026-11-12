@@ -95,3 +95,8 @@ $lang['admin_auth_session_required'] = 'Sesi admin aktif tidak ditemukan.';
 $lang['admin_auth_language'] = 'Bahasa';
 
 $lang['admin_tenant'] = 'Tenant';
+
+$lang['admin_popular_menu_heading'] = 'Menu yang sering dikunjungi';
+$lang['admin_popular_menu_description'] = 'Menu populer berdasarkan kunjungan selama 30 hari terakhir.';
+$lang['admin_popular_menu_visits'] = 'kunjungan';
+$lang['admin_popular_menu_empty'] = 'Belum ada kunjungan menu. Kunjungi menu yang dapat diakses untuk melihatnya di sini.';

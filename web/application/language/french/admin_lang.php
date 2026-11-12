@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = 'Aucune session administrateur active n�
 $lang['admin_auth_language'] = 'Langue';
 
 $lang['admin_tenant'] = 'locataire';
+
+$lang['admin_popular_menu_heading'] = 'Menus les plus visités';
+$lang['admin_popular_menu_description'] = 'Liens populaires selon les visites des 30 derniers jours.';
+$lang['admin_popular_menu_visits'] = 'visites';
+$lang['admin_popular_menu_empty'] = 'Aucune visite pour le moment. Consultez un menu autorisé pour l’afficher ici.';

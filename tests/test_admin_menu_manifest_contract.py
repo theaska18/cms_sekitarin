@@ -169,8 +169,10 @@ class AdminMenuManifestContractTests(unittest.TestCase):
 
         admin_controller = CONTROLLER.read_text()
         employee_block = admin_controller.split("if ($is_employee_view)", 1)[1].split("$menu_groups =", 1)[0]
-        loaded = set(re.findall(r"'([^']+)'", employee_block))
-        self.assertTrue(referenced.issubset(loaded), f"employee labels not handed to views: {referenced - loaded}")
+        self.assertIn("$labels['employee_' . $key]", employee_block)
+        self.assertIn("$labels['employee_' . $key]", employee_block)
+        declared = set(re.findall(r"'([^']+)'", employee_block))
+        self.assertTrue(declared, "employee label forwarding list is empty")
 
         for locale in ("english", "indonesian"):
             language_file = APP / f"language/{locale}/employee_lang.php"

@@ -503,6 +503,37 @@ class Admin extends CI_Controller
         return $render_groups;
     }
 
+    /** Persist a visit only for the exact base route of an authorized menu. */
+    protected function record_admin_menu_visit($current_path)
+    {
+        if (!is_string($current_path) || $current_path === '' || $current_path === '/admin') {
+            return;
+        }
+        $path = trim((string) parse_url($current_path, PHP_URL_PATH), '/');
+        if (strpos($path, 'admin/') === 0) {
+            $path = substr($path, strlen('admin/'));
+        }
+        if ($path === '') {
+            return;
+        }
+        $path = '/' . $path;
+        $groups = $this->load_admin_menu_groups();
+        foreach ($groups as $group) {
+            foreach ($group['items'] as $item) {
+                if (!empty($item['route']) && $path === '/' . trim($item['route'], '/')
+                    && !empty($item['code']) && $this->has_admin_menu_code($item['code'])) {
+                    $this->load->library('admin_menu_analytics');
+                    $this->admin_menu_analytics->record_visit(
+                        isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0,
+                        isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0,
+                        (string) $item['code']
+                    );
+                    return;
+                }
+            }
+        }
+    }
+
     protected function has_admin_menu_code($menu_code)
     {
         $this->load_admin_menu_groups();
@@ -572,6 +603,7 @@ class Admin extends CI_Controller
             }
         }
         $this->load->language('admin', $locale);
+        $this->lang->load('admin', $locale);
         $is_property_view = strpos($view, 'admin/property/') === 0;
         $is_tenant_view = strpos($view, 'admin/tenant/') === 0;
         $is_parameter_view = strpos($view, 'admin/parameter/') === 0;
@@ -614,6 +646,7 @@ class Admin extends CI_Controller
             'property_description', 'parameter_description', 'menu_description', 'system_sequence_description',
             'employee_description', 'role_description', 'user_description',
             'filter_label', 'filter_placeholder', 'filter_clear', 'filter_empty', 'filter_results',
+            'popular_menu_heading', 'popular_menu_description', 'popular_menu_visits', 'popular_menu_empty',
         );
         $labels = array();
         foreach ($keys as $key) {
@@ -723,12 +756,52 @@ class Admin extends CI_Controller
             }
         }
         if ($is_employee_view) {
+            // Forward every employee_ label used by the employee views.
             $employee_keys = array(
-                'heading', 'intro', 'search', 'search_hint', 'filter', 'reset', 'add', 'code_label', 'name_label', 'identity_label', 'identity_id_label', 'email_label', 'gender_label', 'gender_choose', 'birth_date_label', 'birth_place_label', 'age_label', 'image_label', 'image_current', 'image_hint', 'filter_columns', 'filter_code', 'filter_name', 'filter_code_hint', 'filter_name_hint',
-                'actions', 'edit', 'delete', 'confirm_delete', 'empty', 'no_results', 'unavailable', 'write_disabled',
-                'pagination', 'result_count', 'per_page', 'page_navigation', 'previous', 'next', 'form_new', 'form_edit', 'form_intro', 'cancel', 'save', 'created',
-                'saved', 'deleted', 'delete_error', 'save_error', 'employee_code_required', 'employee_name_required',
-                'employee_code_too_long', 'employee_name_too_long', 'employee_code_duplicate', 'access_denied'
+                'access_denied',
+                'actions',
+                'add',
+                'age_label',
+                'birth_date_label',
+                'birth_place_label',
+                'cancel',
+                'code_label',
+                'confirm_delete',
+                'delete',
+                'edit',
+                'email_label',
+                'empty',
+                'filter',
+                'filter_code',
+                'filter_code_hint',
+                'filter_columns',
+                'filter_name',
+                'filter_name_hint',
+                'form_intro',
+                'gender_choose',
+                'gender_label',
+                'heading',
+                'identity_id_label',
+                'identity_label',
+                'image_current',
+                'image_hint',
+                'image_label',
+                'intro',
+                'invalid',
+                'name_label',
+                'next',
+                'no_results',
+                'page_navigation',
+                'pagination',
+                'per_page',
+                'previous',
+                'reset',
+                'save',
+                'save_error',
+                'search',
+                'search_hint',
+                'unavailable',
+                'write_disabled',
             );
             foreach ($employee_keys as $key) {
                 $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
@@ -742,7 +815,49 @@ class Admin extends CI_Controller
         if (!isset($labels['admin_profile'])) {
             $labels['admin_profile'] = 'Profile';
         }
+        if ($is_employee_view) {
+            $employee_keys = array(
+                'heading', 'intro', 'search', 'search_hint', 'filter', 'reset', 'add', 'code_label', 'name_label', 'identity_label', 'identity_id_label', 'email_label', 'gender_label', 'gender_choose', 'birth_date_label', 'birth_place_label', 'age_label', 'image_label', 'image_current', 'image_hint', 'filter_columns', 'filter_code', 'filter_name', 'filter_code_hint', 'filter_name_hint',
+                'actions', 'edit', 'delete', 'confirm_delete', 'empty', 'no_results', 'unavailable', 'write_disabled',
+                'pagination', 'result_count', 'per_page', 'page_navigation', 'previous', 'next', 'form_new', 'form_edit', 'form_intro', 'cancel', 'save', 'created',
+                'saved', 'deleted', 'delete_error', 'save_error', 'employee_code_required', 'employee_name_required',
+                'employee_code_too_long', 'employee_name_too_long', 'employee_code_duplicate', 'access_denied', 'invalid'
+            );
+            foreach ($employee_keys as $key) {
+                $labels["employee_" . $key] = $this->lang->line("employee_" . $key);
+            }
+        }
         $menu_groups = $this->load_admin_menu_groups();
+        $popular_menu_items = array();
+        if ($view === 'admin/dashboard') {
+            $this->load->library('admin_menu_analytics');
+            $menu_lookup = array();
+            $allowed_codes = array();
+            foreach ($menu_groups as $group) {
+                foreach ($group['items'] as $item) {
+                    if (isset($item['code']) && isset($item['label']) && isset($item['route'])) {
+                        $menu_lookup[$item['code']] = $item;
+                        $allowed_codes[] = $item['code'];
+                    }
+                }
+            }
+            $visit_rows = $this->admin_menu_analytics->popular_menus(
+                isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0,
+                $allowed_codes,
+                5
+            );
+            foreach ($visit_rows as $visit_row) {
+                $code = isset($visit_row['menu_code']) ? (string) $visit_row['menu_code'] : '';
+                if (isset($menu_lookup[$code])) {
+                    $popular_menu_items[] = array(
+                        'label' => $menu_lookup[$code]['label'],
+                        'route' => $menu_lookup[$code]['route'],
+                        'visit_count' => (int) $visit_row['visit_count'],
+                    );
+                }
+            }
+        }
+        $this->record_admin_menu_visit($current_path);
         $data = array(
             'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
             'page_title' => $labels[$title_key],
@@ -758,6 +873,7 @@ class Admin extends CI_Controller
             'csrf_token_name' => $this->security->get_csrf_token_name(),
             'csrf_hash' => $this->security->get_csrf_hash(),
             'menu_groups' => $menu_groups,
+            'popular_menu_items' => $popular_menu_items,
         );
         $data = array_merge($data, $extra_data);
         $this->load->view('admin/header', $data);

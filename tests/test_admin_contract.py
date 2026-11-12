@@ -55,6 +55,8 @@ def parse_menu_xml(path):
 
 
 class AdminDashboardContractTests(unittest.TestCase):
+
+
     def test_ci3_default_locale_and_dashboard_language_resource_are_configured(self):
         config = CONFIG.read_text()
         self.assertRegex(config, r"\$config\['language'\]\s*=\s*'indonesian';")
@@ -92,15 +94,22 @@ class AdminDashboardContractTests(unittest.TestCase):
                 self.assertIn(f"'{html_lang}'", controller)
                 self.assertTrue((LANGUAGE_DIR / locale / "admin_lang.php").is_file())
         self.assertIn("$this->input->get('lang'", controller)
-        self.assertIn("$this->input->cookie('cmsnivo_admin_locale'", controller)
-        self.assertIn("$this->input->set_cookie('cmsnivo_admin_locale'", controller)
+        self.assertIn("$this->session->userdata('admin_user')", controller)
+        self.assertIn("$this->session->set_userdata('admin_user'", controller)
         self.assertIn("$this->lang->load('admin', $locale)", controller)
-        self.assertIn('name="lang"', markup)
-        self.assertIn("$admin_languages", markup)
+        self.assertNotIn('name="lang"', markup)
+        self.assertNotIn("$admin_languages", markup)
         self.assertIn('lang="<?php echo html_escape($html_lang); ?>"', markup)
         self.assertIn('dir="<?php echo html_escape($text_direction); ?>"', markup)
         self.assertIn("$is_rtl", markup)
         self.assertIn("'zh-CN'", controller)
+
+    def test_admin_header_provides_navigation_label_without_controller_specific_local_variable(self):
+        header = HEADER.read_text()
+        controller = CONTROLLER.read_text()
+        self.assertIn("$labels['topbar_navigation']", header)
+        self.assertNotIn("$topbar_navigation_label", header)
+        self.assertIn("'topbar_navigation'", controller.split("$keys = array(", 1)[1].split(");", 1)[0])
 
     def test_sidebar_accessibility_label_is_provided_to_the_admin_header(self):
         controller = CONTROLLER.read_text()
@@ -133,10 +142,11 @@ class AdminDashboardContractTests(unittest.TestCase):
         markup = HEADER.read_text() + VIEW.read_text() + PLACEHOLDER.read_text() + FOOTER.read_text()
         header = HEADER.read_text()
         language = LANGUAGE.read_text()
-        for key in ("back_home", "logout", "profile", "settings", "language", "apply_language"):
+        for key in ("back_home", "logout", "profile", "settings"):
             with self.subTest(key=key):
                 self.assertIn(f"$labels['{key}']", markup)
-        self.assertIn('name="lang"', markup)
+        self.assertNotIn("$labels['language']", header)
+        self.assertNotIn('name="lang"', markup)
         self.assertIn('href="/admin"', header)
         self.assertIn("$item['route']", header)
         self.assertIn("$group['label']", header)
@@ -165,16 +175,10 @@ class AdminDashboardContractTests(unittest.TestCase):
         self.assertIn("$route['system/parameter'] = 'admin/module/system/parameter';", routes)
         self.assertIn("'system/parameter' => array(", controller)
 
-    def test_mobile_header_keeps_flag_selector_compact_without_clipping(self):
+    def test_mobile_header_does_not_show_language_selector(self):
         markup = HEADER.read_text()
-        match = re.search(r'<select id="admin-language"[^\n]*class="([^"]+)"', markup)
-        self.assertIsNotNone(match, "Admin locale selector must remain present")
-        selector_classes = match.group(1).split()
-        self.assertIn("w-16", selector_classes)
-        self.assertIn("shrink-0", selector_classes)
-        self.assertIn("sm:w-auto", selector_classes)
-        self.assertNotIn("max-w-[5.25rem]", selector_classes)
-        self.assertIn("max-[429px]:hidden", markup)
+        self.assertNotIn('id="admin-language"', markup)
+        self.assertNotIn("admin-language-form", markup)
 
     def test_mobile_navigation_has_keyboard_accessible_drawer_controls(self):
         markup = HEADER.read_text() + FOOTER.read_text()
@@ -262,6 +266,21 @@ class AdminDashboardContractTests(unittest.TestCase):
                     self.assertIn("$labels[$module['focus_key']]", view)
         self.assertIn("$labels['module_focus']", view)
         self.assertEqual(view.count("html_escape($module_description)"), 1)
+
+
+class AdminMenuAnalyticsContractTests(unittest.TestCase):
+    def test_menu_analytics_is_tenant_scoped_and_dashboard_has_popular_menu(self):
+        root = Path(__file__).resolve().parents[1]
+        library = (root / 'web/application/libraries/Admin_menu_analytics.php').read_text()
+        controller = (root / 'web/application/controllers/Admin.php').read_text()
+        dashboard = (root / 'web/application/views/admin/dashboard.php').read_text()
+        self.assertIn("where('tenant_id'", library)
+        self.assertIn("where_in('menu_code'", library)
+        self.assertIn('visited_at >=', library)
+        self.assertIn('record_admin_menu_visit($current_path)', controller)
+        self.assertIn('popular_menus(', controller)
+        self.assertIn('popular_menu_items', dashboard)
+        self.assertIn('popular_menu_heading', dashboard)
 
 
 if __name__ == "__main__":

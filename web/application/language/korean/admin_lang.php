@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = '활성 관리자 세션이 없습니다.
 $lang['admin_auth_language'] = '언어';
 
 $lang['admin_tenant'] = '테넌트';
+
+$lang['admin_popular_menu_heading'] = '자주 방문한 메뉴';
+$lang['admin_popular_menu_description'] = '최근 30일 방문 수를 기준으로 한 인기 메뉴 링크입니다.';
+$lang['admin_popular_menu_visits'] = '회 방문';
+$lang['admin_popular_menu_empty'] = '아직 메뉴 방문 기록이 없습니다. 접근 가능한 메뉴를 방문하면 여기에 표시됩니다.';

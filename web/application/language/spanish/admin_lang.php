@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = 'No se encontró una sesión de administr
 $lang['admin_auth_language'] = 'Idioma';
 
 $lang['admin_tenant'] = 'inquilino';
+
+$lang['admin_popular_menu_heading'] = 'Menús más visitados';
+$lang['admin_popular_menu_description'] = 'Enlaces populares según las visitas de los últimos 30 días.';
+$lang['admin_popular_menu_visits'] = 'visitas';
+$lang['admin_popular_menu_empty'] = 'Aún no hay visitas. Visita un menú autorizado para verlo aquí.';

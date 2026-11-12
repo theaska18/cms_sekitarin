@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = '未找到有效的管理员会话。';
 $lang['admin_auth_language'] = '语言';
 
 $lang['admin_tenant'] = '租户';
+
+$lang['admin_popular_menu_heading'] = '常用菜单';
+$lang['admin_popular_menu_description'] = '根据最近 30 天的访问量显示热门菜单。';
+$lang['admin_popular_menu_visits'] = '次访问';
+$lang['admin_popular_menu_empty'] = '暂无菜单访问记录。访问有权限的菜单后，记录将显示在这里。';

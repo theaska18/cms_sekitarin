@@ -80,3 +80,8 @@ $lang['admin_auth_session_required'] = 'لا توجد جلسة مشرف نشطة
 $lang['admin_auth_language'] = 'اللغة';
 
 $lang['admin_tenant'] = 'مستأجر';
+
+$lang['admin_popular_menu_heading'] = 'القوائم الأكثر زيارة';
+$lang['admin_popular_menu_description'] = 'الروابط الشائعة حسب الزيارات خلال آخر 30 يومًا。';
+$lang['admin_popular_menu_visits'] = 'زيارة';
+$lang['admin_popular_menu_empty'] = 'لا توجد زيارات للقوائم بعد. قم بزيارة قائمة متاحة لتظهر هنا.';

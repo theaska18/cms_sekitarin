@@ -95,3 +95,8 @@ $lang['admin_auth_session_required'] = 'No active admin session was found.';
 $lang['admin_auth_language'] = 'Language';
 
 $lang['admin_tenant'] = 'Tenant';
+
+$lang['admin_popular_menu_heading'] = 'Frequently visited menus';
+$lang['admin_popular_menu_description'] = 'Popular menu links based on the last 30 days of visits.';
+$lang['admin_popular_menu_visits'] = 'visits';
+$lang['admin_popular_menu_empty'] = 'No menu visits yet. Visit an authorized menu to see it here.';

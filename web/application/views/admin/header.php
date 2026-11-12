@@ -52,6 +52,7 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
             </a>
         </div>
     <nav aria-label="<?php echo html_escape($labels['topbar_navigation']); ?>" class="admin-quick-actions shrink-0">
+                <span class="sr-only"><?php echo html_escape($labels['topbar_navigation']); ?></span>
             <a id="admin-home-link" href="/admin" class="admin-home-action" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5M5 9v11h14V9M9 20v-6h6v6"/></svg><span>Home</span></a>
             <div class="relative shrink-0">
                 <button id="admin-notifications-toggle" type="button" class="admin-quick-action" aria-label="Notifikasi, 2 belum dibaca" aria-expanded="false" aria-controls="admin-notifications-panel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="admin-action-badge" aria-hidden="true">2</span></button>

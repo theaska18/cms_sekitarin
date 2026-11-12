@@ -96,7 +96,7 @@ class AdminAuthContractTests(unittest.TestCase):
         self.assertIn("add_key(array('tenant_id', 'visited_at', 'menu_code'))", migration)
         self.assertIn("add_key(array('tenant_id', 'user_id', 'visited_at'))", migration)
         self.assertIn("'migration_type'] = 'timestamp'", config)
-        self.assertIn("'migration_version'] = 202611110001", config)
+        self.assertIn("'migration_version'] = 202611120001", config)
 
     def test_chat_icon_visibility_uses_authenticated_users_chat_flag(self):
         header = (APP / "views" / "admin" / "header.php").read_text()
