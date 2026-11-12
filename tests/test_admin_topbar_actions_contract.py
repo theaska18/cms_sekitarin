@@ -1,0 +1,53 @@
+from pathlib import Path
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+HEADER = (ROOT / "web/application/views/admin/header.php").read_text()
+CSS = (ROOT / "assets/css/admin-topbar-actions.css").read_text()
+
+
+class AdminTopbarActionsContractTests(unittest.TestCase):
+    def test_desktop_home_action_is_named_home_and_hidden_on_mobile(self):
+        self.assertIn('id="admin-home-link"', HEADER)
+        self.assertIn('<span>Home</span>', HEADER)
+        self.assertIn('aria-label="Home"', HEADER)
+        self.assertNotIn("Dashboard</span></a>", HEADER)
+        self.assertIn(".admin-topbar .admin-home-action{display:none;", CSS)
+        self.assertIn("@media (min-width:768px){.admin-topbar .admin-home-action{display:inline-flex}}", CSS)
+        dark_css = (ROOT / "assets/css/admin-theme.css").read_text()
+        self.assertIn('a[aria-label*="Dashboard"] img', dark_css)
+        self.assertIn('a[aria-label*="Home"] img', dark_css)
+        self.assertIn('id="admin-home-link-mobile"', HEADER)
+
+    def test_home_dialog_does_not_close_from_its_opening_click_bubbling(self):
+        footer = (ROOT / "web/application/views/admin/footer.php").read_text()
+        self.assertIn("homeLink.addEventListener('click', function (event)", footer)
+        self.assertIn("event.stopPropagation();", footer)
+        self.assertIn("event.preventDefault();\n                    event.stopPropagation();", footer)
+        self.assertIn("homeDialog.addEventListener('click'", footer)
+        self.assertIn("event.target === homeDialog", footer)
+        self.assertIn("data-home-dialog-backdrop", footer)
+        self.assertIn("cancelHome.addEventListener('click'", footer)
+        self.assertIn("setHomeDialogOpen(false, true)", footer)
+
+    def test_popover_trigger_protects_the_opening_click_from_outside_dismissal(self):
+        footer = (ROOT / "web/application/views/admin/footer.php").read_text()
+        self.assertIn("ignoreNextDocumentClick", footer)
+        self.assertIn("event.target === ignoreNextDocumentClick.target", footer)
+
+    def test_profile_menu_settings_and_logout_have_icons(self):
+        menu = HEADER.split('id="admin-profile-menu"', 1)[1]
+        settings = menu.split('href="/admin/setting"', 1)[1].split("</a>", 1)[0]
+        logout = HEADER.split('action="/logout"', 1)[1].split("</button>", 1)[0]
+        self.assertIn("<svg", settings)
+        self.assertIn("<svg", logout)
+        self.assertIn('href="/admin/profile"', HEADER)
+
+    def test_popovers_are_viewport_anchored_and_not_shifted_left_on_small_screens(self):
+        self.assertNotIn(
+            "right:-42px",
+            CSS,
+        )
+        self.assertIn("position:fixed", CSS)
+        self.assertIn("right:16px", CSS)
+        self.assertIn("max-width:calc(100vw - 32px)", CSS)

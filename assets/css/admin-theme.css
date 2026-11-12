@@ -18,7 +18,8 @@ html[data-theme="dark"] #admin-app-shell .text-rose-900 { color: #fecdd3 !import
 html[data-theme="dark"] footer { color: #cbd5e1; }
 
 html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dashboard"] img,
-html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dasbor"] img { filter: brightness(0) invert(1) drop-shadow(0 0 1px rgba(255,255,255,.45)); }
+html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dasbor"] img,
+html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Home"] img { filter: brightness(0) invert(1) drop-shadow(0 0 1px rgba(255,255,255,.45)); }
 
 html[data-theme="dark"] #admin-app-shell .admin-topbar { background-color: #111827 !important; color: #e5e7eb !important; border-color: #374151 !important; }
 html[data-theme="dark"] #admin-app-shell .admin-topbar button,

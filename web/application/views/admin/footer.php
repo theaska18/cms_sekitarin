@@ -205,7 +205,9 @@
                 }
             }
             homeLinks.forEach(function (homeLink) {
-                homeLink.addEventListener('click', function () {
+                homeLink.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     lastHomeTrigger = homeLink;
                     setHomeDialogOpen(true, false);
                 });
@@ -239,6 +241,38 @@
 
         var trigger = document.getElementById('admin-profile-toggle');
         var menu = document.getElementById('admin-profile-menu');
+        var popovers = [
+            { trigger: document.getElementById('admin-notifications-toggle'), panel: document.getElementById('admin-notifications-panel') },
+            { trigger: document.getElementById('admin-messages-toggle'), panel: document.getElementById('admin-messages-panel') }
+        ].filter(function (item) { return item.trigger && item.panel; });
+
+        var ignoreNextDocumentClick = null;
+        function closePopovers(except) {
+            popovers.forEach(function (item) {
+                if (item === except) return;
+                item.panel.hidden = true;
+                item.trigger.setAttribute('aria-expanded', 'false');
+            });
+        }
+        popovers.forEach(function (item) {
+            item.trigger.addEventListener('click', function (event) {
+                event.stopPropagation();
+                var open = item.trigger.getAttribute('aria-expanded') !== 'true';
+                closePopovers(item);
+                if (menu && trigger) {
+                    menu.hidden = true;
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+                item.panel.hidden = !open;
+                item.trigger.setAttribute('aria-expanded', String(open));
+                ignoreNextDocumentClick = { target: event.target, expires: Date.now() + 500 };
+            });
+            item.panel.addEventListener('click', function (event) {
+                event.stopPropagation();
+                var link = event.target.closest('[data-demo-action]');
+                if (link) event.preventDefault();
+            });
+        });
         if (!trigger || !menu) return;
 
         function menuItems() {
@@ -256,6 +290,7 @@
         }
 
         trigger.addEventListener('click', function () {
+            closePopovers();
             setOpen(trigger.getAttribute('aria-expanded') !== 'true', 0);
         });
         trigger.addEventListener('keydown', function (event) {
@@ -293,12 +328,34 @@
             if (event.target.closest('a[href]')) setOpen(false, false);
         });
         document.addEventListener('click', function (event) {
+            if (ignoreNextDocumentClick && Date.now() < ignoreNextDocumentClick.expires && event.target === ignoreNextDocumentClick.target) {
+                ignoreNextDocumentClick = null;
+                return;
+            }
+            ignoreNextDocumentClick = null;
+            popovers.forEach(function (item) {
+                if (item.trigger.getAttribute('aria-expanded') === 'true' && !item.trigger.contains(event.target) && !item.panel.contains(event.target)) {
+                    item.panel.hidden = true;
+                    item.trigger.setAttribute('aria-expanded', 'false');
+                }
+            });
             if (trigger.getAttribute('aria-expanded') === 'true' && !trigger.contains(event.target) && !menu.contains(event.target)) {
                 setOpen(false, false);
             }
         });
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && trigger.getAttribute('aria-expanded') === 'true') setOpen(false, true);
+            if (event.key === 'Escape') {
+                var closed = false;
+                popovers.forEach(function (item) {
+                    if (item.trigger.getAttribute('aria-expanded') === 'true') {
+                        item.panel.hidden = true;
+                        item.trigger.setAttribute('aria-expanded', 'false');
+                        item.trigger.focus();
+                        closed = true;
+                    }
+                });
+                if (!closed && trigger.getAttribute('aria-expanded') === 'true') setOpen(false, true);
+            }
         });
     }());
 </script>
