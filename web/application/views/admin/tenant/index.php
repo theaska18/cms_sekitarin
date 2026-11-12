@@ -66,7 +66,7 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
         </div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($tenant_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
+    <section aria-label="<?= html_escape($tenant_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="tenant-filter-form">
         <?php endif; ?>

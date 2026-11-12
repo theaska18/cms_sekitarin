@@ -64,7 +64,7 @@ foreach ($sequence_errors as $error) {
         </div>
     <?php endif; ?>
 
-    <form action="<?= html_escape($current_path) ?>" method="post" class="w-full rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
+    <form action="<?= html_escape($current_path) ?>" method="post" class="w-full rounded-t-2xl rounded-b-none border border-slate-200 bg-white p-4 shadow-sm sm:p-8">
         <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
         <div class="space-y-6">
             <div>

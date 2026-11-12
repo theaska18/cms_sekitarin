@@ -82,7 +82,7 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
         </div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($role_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
+    <section aria-label="<?= html_escape($role_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
         <?php if ($role_backend_available): ?>
             <input type="hidden" name="per_page" value="<?= $role_per_page ?>" form="role-filter-form">
         <?php endif; ?>

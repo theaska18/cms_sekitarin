@@ -78,7 +78,7 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
         </div>
     <?php endif; ?>
 
-    <section aria-labelledby="property-list-heading" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
+    <section aria-labelledby="property-list-heading" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
         <h2 id="property-list-heading" class="sr-only"><?= html_escape($property_title) ?></h2>
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="property-filter-form">

@@ -77,7 +77,7 @@ $columns = array(
         </div>
     <?php endif; ?>
 
-    <section id="sequence-list" data-sequence-list aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
+    <section id="sequence-list" data-sequence-list aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="sequence-filter-form">
         <?php endif; ?>

@@ -82,7 +82,7 @@ $status_key = isset($role_menu_status_key) && $role_menu_status_key !== '' ? 'ro
                     </section>
                 <?php endforeach; ?>
             </div>
-            <div data-role-menu-actions class="sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/10 px-4 pb-4 pt-5 backdrop-blur-sm sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6">
+            <div data-role-menu-actions class="sticky bottom-0 z-20 -mx-4 -mb-4 mt-5 flex items-center justify-between gap-3 border-t border-slate-200 bg-white/10 px-4 pb-4 pt-5 backdrop-blur-sm sm:-mx-6 sm:-mb-6 sm:px-6 sm:pb-6 rounded-t-2xl rounded-b-none">
                 <a href="/admin/application/role" class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5M7.5 10h10"/></svg>
                     <?= html_escape($labels['role_back']) ?>
