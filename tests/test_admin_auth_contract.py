@@ -117,12 +117,12 @@ class AdminAuthContractTests(unittest.TestCase):
             self.assertIn("'" + locale + "'", auth)
         self.assertIn("'rtl'", auth)
 
-    def test_compose_exposes_only_a_password_hash_and_example_does_not_ship_one(self):
+    def test_compose_and_example_do_not_ship_admin_credentials(self):
         compose = (ROOT / "docker-compose.yml").read_text()
         example = (ROOT / ".env.example").read_text()
-        self.assertIn("CMS_ADMIN_PASSWORD_HASH", compose)
-        self.assertIn("CMS_ADMIN_PASSWORD_HASH=", example)
-        self.assertRegex(example, r"(?m)^CMS_ADMIN_PASSWORD_HASH=$")
+        admin_env_pattern = r"(?m)^\s*CMS_ADMIN_(?:USERNAME|PASSWORD_HASH|NAME)\s*(?::|=)"
+        self.assertNotRegex(compose, admin_env_pattern)
+        self.assertNotRegex(example, admin_env_pattern)
 
 
 if __name__ == "__main__":

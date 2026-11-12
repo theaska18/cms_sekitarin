@@ -46,7 +46,7 @@
 - `web/application/views/admin/footer.php`
 - `web/application/views/admin/placeholder.php`
 - `tests/test_admin_contract.py`
-- `assets/css/tailwind.css` (hasil build)
+- `web/assets/css/tailwind.css` (hasil build)
 - `artifacts/admin-redesign/` (screenshot, log build/test/smoke, dan laporan ini)
 
 ## Catatan review

@@ -3,7 +3,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 HEADER = (ROOT / "web/application/views/admin/header.php").read_text()
-CSS = (ROOT / "assets/css/admin-topbar-actions.css").read_text()
+CSS = (ROOT / "web/assets/css/admin-topbar-actions.css").read_text()
 
 
 class AdminTopbarActionsContractTests(unittest.TestCase):
@@ -14,7 +14,7 @@ class AdminTopbarActionsContractTests(unittest.TestCase):
         self.assertNotIn("Dashboard</span></a>", HEADER)
         self.assertIn(".admin-topbar .admin-home-action{display:none;", CSS)
         self.assertIn("@media (min-width:768px){.admin-topbar .admin-home-action{display:inline-flex}}", CSS)
-        dark_css = (ROOT / "assets/css/admin-theme.css").read_text()
+        dark_css = (ROOT / "web/assets/css/admin-theme.css").read_text()
         self.assertIn('a[aria-label*="Dashboard"] img', dark_css)
         self.assertIn('a[aria-label*="Home"] img', dark_css)
         self.assertIn('id="admin-home-link-mobile"', HEADER)

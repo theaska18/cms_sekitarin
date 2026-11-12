@@ -243,7 +243,7 @@ class AdminParameterContractTests(unittest.TestCase):
         self.assertIn("min-w-[14rem]", self.list_view)
         self.assertIn("min-w-[16rem]", self.list_view)
         self.assertIn("min-w-[3.5rem]", self.list_view)
-        stylesheet = (ROOT / "assets/css/tailwind.css").read_text(encoding="utf-8")
+        stylesheet = (ROOT / "web/assets/css/tailwind.css").read_text(encoding="utf-8")
         for selector in (r".min-w-\[8rem\]", r".min-w-\[12rem\]", r".min-w-\[14rem\]", r".min-w-\[16rem\]", r".min-w-\[3\.5rem\]"):
             with self.subTest(selector=selector):
                 self.assertIn(selector, stylesheet)

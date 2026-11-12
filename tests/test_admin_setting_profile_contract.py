@@ -61,7 +61,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
         self.assertIn("name=\"theme\"", setting_view)
         self.assertIn("addEventListener('change'", setting_view)
         self.assertIn("requestSubmit()", setting_view)
-        theme_css = (ROOT / "assets/css/admin-theme.css").read_text()
+        theme_css = (ROOT / "web/assets/css/admin-theme.css").read_text()
         self.assertIn('html[data-theme="dark"]', theme_css)
         self.assertIn(".admin-topbar { background-color:", theme_css)
         self.assertIn("#admin-profile-menu [role=\"menuitem\"]:hover", theme_css)

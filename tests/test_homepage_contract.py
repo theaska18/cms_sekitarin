@@ -21,7 +21,7 @@ class HomepageContractTests(unittest.TestCase):
 
     def test_tailwind_stylesheet_is_built_locally(self):
         view = VIEW.read_text()
-        stylesheet = ROOT / "assets/css/tailwind.css"
+        stylesheet = ROOT / "web/assets/css/tailwind.css"
         self.assertIn('href="/assets/css/tailwind.css?v=', view)
         self.assertNotIn("cdn.tailwindcss.com", view)
         self.assertTrue(stylesheet.is_file())
@@ -33,10 +33,17 @@ class HomepageContractTests(unittest.TestCase):
         compose = COMPOSE.read_text()
         self.assertRegex(compose, r"(?m)^\s+WEB_NAME:\s*\$\{WEB_NAME:")
 
+    def test_assets_are_inside_web_root_without_separate_compose_mount(self):
+        compose = COMPOSE.read_text()
+        package = (ROOT / "package.json").read_text()
+        self.assertNotIn("./assets:/var/www/html/assets", compose)
+        self.assertIn("./web/assets/css/tailwind.css", package)
+        self.assertTrue((ROOT / "web/assets").is_dir())
+
     def test_homepage_uses_local_logo_and_has_content_sections(self):
         view = VIEW.read_text()
         self.assertIn('src="/assets/logo_box.png"', view)
-        self.assertTrue((ROOT / "assets/logo_box.png").is_file())
+        self.assertTrue((ROOT / "web/assets/logo_box.png").is_file())
         sections = set(re.findall(r'<section id="([a-z]+)"', view))
         for section in ("home", "features", "about", "contact", "workflow"):
             self.assertIn(section, sections)
