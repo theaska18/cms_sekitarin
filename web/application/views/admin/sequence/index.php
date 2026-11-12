@@ -77,11 +77,11 @@ $columns = array(
         </div>
     <?php endif; ?>
 
-    <section id="sequence-list" data-sequence-list aria-label="<?= html_escape($sequence_title) ?>" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section id="sequence-list" data-sequence-list aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="sequence-filter-form">
         <?php endif; ?>
-        <div id="sequence-filter-bar" class="sticky top-16 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:flex-row sm:items-start sm:justify-end sm:px-6">
+        <div id="sequence-filter-bar" class="sticky top-16 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
             <?php if (!$backend_available): ?>
                 <p class="text-sm text-slate-500 sm:ml-auto" role="status" aria-live="polite"><?= html_escape($labels['sequence_unavailable']) ?></p>
             <?php endif; ?>
@@ -98,7 +98,7 @@ $columns = array(
             <?php endif; ?>
         </div>
 
-        <div data-sequence-table-scroll class="overflow-x-auto">
+        <div data-sequence-table-scroll class="overflow-x-auto rounded-b-2xl">
             <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <caption class="sr-only"><?= html_escape($sequence_title) ?></caption>
                 <thead data-sequence-sticky-header class="bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -167,7 +167,7 @@ $columns = array(
                     <?php else: ?>
                         <tr>
                             <td colspan="8" class="px-4 py-14 text-center sm:px-6">
-                                <div class="sticky left-0 mx-0 max-w-md sm:static sm:mx-auto" style="width: min(448px, calc(100vw - 4rem));">
+                                <div class="sticky left-0 mx-0 max-w-md sm:static sm:mx-auto rounded-none" style="width: min(448px, calc(100vw - 4rem));">
                                     <div aria-hidden="true" class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
                                     </div>

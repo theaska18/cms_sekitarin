@@ -93,11 +93,13 @@ class Admin_employee extends Admin
     {
         if (!is_string($filename) || !preg_match('/\\A[A-Za-z0-9_-]+\\.(?:jpe?g|png|gif|webp)\\z/i', $filename)) { show_404(); return; }
         $employee_id = isset($this->current_user['employee_id']) ? (int) $this->current_user['employee_id'] : 0;
-        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
-        $store = $this->employee_store();
-        $employee = $employee_id > 0 && $store && $store->schema_available() ? $store->find($employee_id, $tenant_id) : NULL;
-        if (!$employee || !isset($employee['image']) || !hash_equals((string) $employee['image'], $filename)) { show_404(); return; }
-        $path = $store->image_path($filename);
+        $employee_record = NULL;
+        if ($employee_id > 0) {
+            $this->load->library('employee_store');
+            if ($this->employee_store->schema_available()) { $employee_record = $this->employee_store->find($employee_id, (int) $this->current_user['tenant_id']); }
+        }
+        if (!$employee_record || !isset($employee_record['image']) || !hash_equals((string) $employee_record['image'], $filename)) { show_404(); return; }
+        $path = $this->employee_store->image_path($filename);
         $image = $path && is_file($path) ? @getimagesize($path) : FALSE;
         if (!$image || !in_array($image['mime'], array('image/jpeg', 'image/png', 'image/gif', 'image/webp'), TRUE)) { show_404(); return; }
         $this->output->set_header('Cache-Control: private, no-store, max-age=0');

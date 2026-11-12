@@ -78,12 +78,12 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
         </div>
     <?php endif; ?>
 
-    <section aria-labelledby="property-list-heading" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-labelledby="property-list-heading" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
         <h2 id="property-list-heading" class="sr-only"><?= html_escape($property_title) ?></h2>
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="property-filter-form">
         <?php endif; ?>
-        <div data-property-filter-header class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur sm:flex-row sm:items-start sm:justify-end sm:px-6">
+        <div data-property-filter-header class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
             <?php if (!$backend_available): ?>
                 <p class="text-sm text-slate-500"><?= html_escape($labels['property_unavailable']) ?></p>
             <?php endif; ?>
@@ -99,7 +99,7 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
                 </form>
             <?php endif; ?>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-b-2xl">
             <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>

@@ -416,7 +416,7 @@ $config['sess_regenerate_destroy'] = TRUE;
 $config['cookie_prefix']	= '';
 $config['cookie_domain']	= '';
 $config['cookie_path']		= '/';
-$config['cookie_secure']	= FALSE;
+$config['cookie_secure'] = (strpos($config['base_url'], 'https://') === 0);
 $config['cookie_httponly'] = TRUE;
 $config['cookie_samesite'] 	= 'Lax';
 

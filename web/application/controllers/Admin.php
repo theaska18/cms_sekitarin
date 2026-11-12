@@ -37,13 +37,17 @@ class Admin extends CI_Controller
 
     public function index()
     {
-        $this->render_admin('admin/dashboard', 'dashboard', '/admin');
+        $this->render_admin(
+            'admin/dashboard',
+            'dashboard',
+            '/admin',
+            array('page_slug' => 'dashboard')
+        );
     }
 
     public function setting()
     {
-        $this->load->database();
-        $db = $this->db;
+        $db = $this->load->database('default', TRUE);
         $locale = $this->resolve_admin_locale();
         if ($this->input->method(TRUE) === 'POST') {
             $requested_locale = (string) $this->input->post('locale', TRUE);
@@ -110,6 +114,137 @@ class Admin extends CI_Controller
                 'setting_notice' => $notice,
             )
         );
+    }
+
+    public function profile()
+    {
+        $db = $this->load->database('default', TRUE);
+        $user_id = (int) $this->current_user['user_id'];
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $user_query = $db->select('user_id, tenant_id, username, full_name, password')
+            ->from('app_user')->where('user_id', $user_id)->where('tenant_id', $tenant_id)->limit(2)->get();
+        if ($user_query === FALSE || $user_query->num_rows() !== 1) {
+            show_error('Profile is unavailable.', 503);
+            return;
+        }
+        $record = $user_query->row_array();
+        if (!is_array($record)) { show_error('Profile record is unavailable.', 404); return; }
+        $record['employee_id'] = isset($this->current_user['employee_id']) ? (int) $this->current_user['employee_id'] : 0;
+        $this->load->library('employee_store');
+        $employee_store = $this->employee_store;
+        $profile_employee = $record['employee_id'] > 0 && $employee_store->schema_available()
+            ? $employee_store->find($record['employee_id'], $tenant_id) : NULL;
+        if (!is_array($profile_employee)) { $profile_employee = NULL; }
+        $has_employee = $profile_employee !== NULL;
+        $errors = array();
+        $notice = (string) $this->session->flashdata('profile_notice');
+
+        if ($this->input->method(TRUE) === 'POST') {
+            if (!$this->config->item('csrf_protection')) { show_error('Profile updates are unavailable.', 503); return; }
+            $action = (string) $this->input->post('action', TRUE);
+            if ($action === 'profile') {
+                $username = trim((string) $this->input->post('username', TRUE));
+                $full_name = trim((string) $this->input->post('full_name', TRUE));
+                if ($username === '' || strlen($username) > 100 || !preg_match('/\\A[A-Za-z0-9._@+-]+\\z/', $username)) { $errors[] = 'username'; }
+                else {
+                    $duplicate = $db->from('app_user')->where('username', $username)->where('user_id !=', $user_id)->limit(1)->count_all_results();
+                    if ($duplicate > 0) { $errors[] = 'username_taken'; }
+                }
+                if ($full_name === '' || strlen($full_name) > 150) { $errors[] = 'full_name'; }
+                if (!$errors) {
+                    $db->where('user_id', $user_id)->where('tenant_id', $tenant_id)
+                        ->update('app_user', array('username' => $username, 'full_name' => $full_name, 'update_on' => date('Y-m-d H:i:s')));
+                    if ($db->trans_status() !== FALSE) {
+                        $this->current_user['username'] = $username;
+                        $this->current_user['full_name'] = $full_name;
+                        $this->current_user['display_name'] = $full_name;
+                        $this->session->set_userdata('admin_user', $this->current_user);
+                        $this->session->set_flashdata('profile_notice', 'saved');
+                        redirect('/admin/profile', 'location', 303); return;
+                    }
+                    $errors[] = 'save';
+                }
+                $record['username'] = $username;
+                $record['full_name'] = $full_name;
+            } elseif ($action === 'password') {
+                $current = $this->input->post('current_password', FALSE);
+                $password = $this->input->post('new_password', FALSE);
+                $confirm = $this->input->post('confirm_password', FALSE);
+                $current = is_string($current) ? $current : '';
+                $password = is_string($password) ? $password : '';
+                $confirm = is_string($confirm) ? $confirm : '';
+                if (!password_verify($current, (string) $record['password'])) { $errors[] = 'current_password'; }
+                if (strlen($password) < 10 || strlen($password) > 4096) { $errors[] = 'password'; }
+                if ($password !== $confirm) { $errors[] = 'password_mismatch'; }
+                if (!$errors) {
+                    $db->where('user_id', $user_id)->where('tenant_id', $tenant_id)
+                        ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => date('Y-m-d H:i:s')));
+                    if ($db->trans_status() !== FALSE) {
+                        $this->session->set_flashdata('profile_notice', 'password_saved');
+                        redirect('/admin/profile', 'location', 303); return;
+                    }
+                    $errors[] = 'save';
+                }
+            } elseif ($action === 'photo' && !$has_employee) {
+                show_404(); return;
+            } elseif ($action === 'photo') {
+                $image_dir = APPPATH . 'cache/employee-images';
+                if (!is_dir($image_dir) && !@mkdir($image_dir, 0700, TRUE) && !is_dir($image_dir)) { $errors[] = 'photo_unavailable'; }
+                else {
+                    $this->load->library('upload');
+                    $config = array('upload_path' => $image_dir, 'allowed_types' => 'jpg|jpeg|png|webp', 'max_size' => 5120,
+                        'encrypt_name' => TRUE, 'file_ext_tolower' => TRUE, 'max_width' => 4096, 'max_height' => 4096);
+                    $this->upload->initialize($config, TRUE);
+                    if (!$this->upload->do_upload('profile_photo')) { $errors[] = 'photo_invalid'; }
+                    else {
+                        $upload = $this->upload->data();
+                        $filename = basename($upload['file_name']);
+                        $employee_record = array(
+                            'employee_code' => $profile_employee['employee_code'],
+                            'identity_id' => $profile_employee['identity_id'],
+                            'employee_name' => $profile_employee['employee_name'],
+                            'email_address' => $profile_employee['email_address'],
+                            'gender' => $profile_employee['gender'],
+                            'birth_date' => $profile_employee['birth_date'],
+                            'birth_place' => $profile_employee['birth_place'],
+                            'image' => $filename,
+                        );
+                        $old_filename = isset($profile_employee['image']) ? (string) $profile_employee['image'] : '';
+                        $updated = $employee_store->update($record['employee_id'], $tenant_id, $employee_record);
+                        if ($updated) {
+                            if ($old_filename !== '' && preg_match('/\\A[A-Za-z0-9_-]+\\.(?:jpe?g|png|webp)\\z/i', $old_filename)
+                                && is_file($image_dir . DIRECTORY_SEPARATOR . $old_filename)) { @unlink($image_dir . DIRECTORY_SEPARATOR . $old_filename); }
+                            $this->session->set_flashdata('profile_notice', 'photo_saved');
+                            redirect('/admin/profile', 'location', 303); return;
+                        }
+                        @unlink($image_dir . DIRECTORY_SEPARATOR . $filename);
+                        $errors[] = 'save';
+                    }
+                }
+            } else { $errors[] = 'action'; }
+        }
+
+        $filename = $has_employee && isset($profile_employee['image']) ? (string) $profile_employee['image'] : '';
+        if ($filename !== '' && preg_match('/\\A[A-Za-z0-9_-]+\\.(?:jpe?g|png|webp)\\z/i', $filename)
+            && $employee_store) {
+            $photo_path = $employee_store->image_path($filename);
+            if ($photo_path && is_file($photo_path)) {
+                $profile_image = site_url('admin/hr/employee/profile-photo/' . rawurlencode($filename));
+            } else { $profile_image = '/assets/images/avatar-placeholder.svg'; }
+        } else { $profile_image = '/assets/images/avatar-placeholder.svg'; }
+        $employee_name = $has_employee ? (string) $profile_employee['employee_name'] : NULL;
+        $this->render_admin('admin/profile', 'profile', '/admin/profile', array(
+            'profile_record' => $record, 'profile_errors' => $errors, 'profile_notice' => $notice,
+            'profile_image' => $profile_image,
+            'profile_employee_name' => $employee_name,
+            'has_employee' => $has_employee, 'profile_employee' => $profile_employee,
+            'page_slug' => 'profile',
+        ));
+    }
+
+    public function profile_photo($filename = '')
+    {
+        show_404();
     }
 
     public function placeholder($section, $slug)
@@ -234,8 +369,8 @@ class Admin extends CI_Controller
         if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_METHOD']) === 'POST' && isset($this->admin_languages[$requested_locale])) {
             return $requested_locale;
         }
-        $this->load->database();
-        $query = $this->db->select('language')->from('app_user')
+        $db = $this->load->database('default', TRUE);
+        $query = $db->select('language')->from('app_user')
             ->where('user_id', (int) $this->current_user['user_id'])
             ->where('tenant_id', (int) $this->current_user['tenant_id'])
             ->limit(1)->get();
@@ -599,11 +734,20 @@ class Admin extends CI_Controller
                 $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
             }
         }
+        foreach (array('admin_' . $title_key, 'admin_profile') as $label_key) {
+            if (!isset($labels[$label_key])) {
+                $labels[$label_key] = ($label_key === 'admin_profile') ? 'Profile' : 'Dashboard';
+            }
+        }
+        if (!isset($labels['admin_profile'])) {
+            $labels['admin_profile'] = 'Profile';
+        }
         $menu_groups = $this->load_admin_menu_groups();
         $data = array(
             'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
             'page_title' => $labels[$title_key],
             'current_path' => $current_path,
+            'page_slug' => isset($extra_data['page_slug']) ? $extra_data['page_slug'] : '',
             'labels' => $labels,
             'admin_languages' => $this->admin_languages,
             'locale' => $locale,

@@ -27,8 +27,12 @@ class Admin_identity
             return FALSE;
         }
 
-        $this->CI->load->database();
-        $query = $this->CI->db->select('u.user_id, u.username, u.tenant_id, u.full_name, u.role_id, u.employee_id, u.password, u.theme')
+        $db = $this->CI->load->database('default', TRUE);
+        $select = array('u.user_id', 'u.username', 'u.tenant_id', 'u.full_name', 'u.role_id', 'u.password', 'u.theme');
+        if ($db->field_exists('employee_id', 'app_user')) {
+            $select[] = 'u.employee_id';
+        }
+        $query = $db->select(implode(', ', $select))
             ->from('app_user u')
             ->join('app_role r', 'r.role_id = u.role_id AND r.tenant_id = u.tenant_id', 'inner')
             ->where('u.username', $username)
@@ -96,7 +100,8 @@ class Admin_identity
 
     private function employee_image($employee_id, $tenant_id)
     {
-        $fields = $this->CI->db->field_data('hr_employee');
+        $db = $this->CI->load->database('default', TRUE);
+        $fields = $db->field_data('hr_employee');
         $has_image = FALSE;
         foreach ((array) $fields as $field) {
             if (isset($field->name) && $field->name === 'image') {
@@ -107,7 +112,7 @@ class Admin_identity
         if (!$has_image) {
             return NULL;
         }
-        $query = $this->CI->db->select('image')->from('hr_employee')
+        $query = $db->select('image')->from('hr_employee')
             ->where('employee_id', (int) $employee_id)->where('tenant_id', (int) $tenant_id)
             ->limit(2)->get();
         if ($query === FALSE || $query->num_rows() !== 1) {

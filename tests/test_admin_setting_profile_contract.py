@@ -25,7 +25,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
     def test_exact_singular_routes_and_existing_plural_route_are_preserved(self):
         expected_routes = {
             "admin/setting": "admin/setting",
-            "admin/profile": "admin/placeholder/admin/profile",
+            "admin/profile": "admin/profile",
             "admin/settings": "admin/placeholder/admin/settings",
         }
         for uri, target in expected_routes.items():

@@ -66,11 +66,11 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
         </div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($tenant_title) ?>" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-label="<?= html_escape($tenant_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
         <?php if ($backend_available): ?>
             <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="tenant-filter-form">
         <?php endif; ?>
-        <div data-tenant-sticky-filter class="sticky z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6" style="top: 4rem">
+        <div data-tenant-sticky-filter class="sticky z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none" style="top: 4rem">
             <?php if ($backend_available): ?>
                 <form id="tenant-filter-form" action="/admin/system/tenant" method="get" data-tenant-live-filter class="w-full sm:w-64 sm:shrink-0">
                     <label for="tenant-filter-search" class="sr-only"><?= html_escape($labels['tenant_search_label']) ?></label>
@@ -83,9 +83,9 @@ $empty_hint_key = $has_active_filters ? 'tenant_no_results_hint' : 'tenant_empty
                 </form>
             <?php endif; ?>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-b-2xl">
             <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <thead data-tenant-sticky-table-head class="sticky z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm" style="top: 9rem">
+                <thead data-tenant-sticky-table-head class="sticky z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm rounded-none" style="top: 9rem">
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['tenant_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
                         <?php foreach (array('tenant_code' => $labels['tenant_code_label'], 'tenant_name' => $labels['tenant_name_label']) as $sort_field => $sort_label): ?>

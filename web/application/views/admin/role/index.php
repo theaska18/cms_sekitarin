@@ -82,11 +82,11 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
         </div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($role_title) ?>" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-label="<?= html_escape($role_title) ?>" class="rounded-tl-none rounded-tr-none border border-slate-200 bg-white shadow-sm">
         <?php if ($role_backend_available): ?>
             <input type="hidden" name="per_page" value="<?= $role_per_page ?>" form="role-filter-form">
         <?php endif; ?>
-        <div class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:px-6" data-role-filter-header>
+        <div class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-sm sm:px-6 rounded-none" data-role-filter-header>
             <?php if ($role_backend_available): ?>
                 <div class="w-full sm:flex sm:flex-wrap sm:justify-end">
                     <div class="flex w-full items-center justify-end gap-2 sm:w-auto">
@@ -120,9 +120,9 @@ $empty_hint_key = $has_active_filters ? 'role_no_results_hint' : 'role_empty_hin
                 </div>
             <?php endif; ?>
         </div>
-        <div class="max-w-full overflow-x-auto overscroll-x-contain md:overflow-visible" tabindex="0" role="region" aria-label="<?= html_escape($role_title) ?>">
+        <div class="max-w-full overflow-x-auto overscroll-x-contain md:overflow-visible rounded-b-2xl" tabindex="0" role="region" aria-label="<?= html_escape($role_title) ?>">
             <table class="w-full min-w-[42rem] table-auto divide-y divide-slate-200 text-left text-sm">
-                <thead class="md:sticky md:z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm" style="top: calc(4rem + var(--role-filter-header-height, 4.5rem));">
+                <thead class="md:sticky md:z-10 bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500 backdrop-blur-sm rounded-none" style="top: calc(4rem + var(--role-filter-header-height, 4.5rem));">
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['role_actions']) ?>" class="w-14 min-w-[3.5rem] px-1 py-3.5 sm:px-3"></th>
                         <?php if (!empty($role_tenant_access)): ?><th scope="col" class="min-w-[10rem] whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['role_tenant_label']) ?></th><?php endif; ?>
