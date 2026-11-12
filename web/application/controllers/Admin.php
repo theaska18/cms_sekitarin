@@ -506,23 +506,26 @@ class Admin extends CI_Controller
     /** Persist a visit only for the exact base route of an authorized menu. */
     protected function record_admin_menu_visit($current_path)
     {
-        if (!is_string($current_path) || $current_path === '' || $current_path === '/admin') {
+        if (!is_string($current_path) || $current_path === ''
+            || $current_path === '/' || $current_path === '/admin') {
             return;
         }
-        $path = trim((string) parse_url($current_path, PHP_URL_PATH), '/');
-        if (strpos($path, 'admin/') === 0) {
-            $path = substr($path, strlen('admin/'));
-        }
-        if ($path === '') {
+        $this->load->library('admin_menu_analytics');
+        $path = $this->admin_menu_analytics->normalize_path($current_path);
+        if ($path === '' || $path === '/' || $path === '/admin') {
             return;
         }
-        $path = '/' . $path;
-        $groups = $this->load_admin_menu_groups();
-        foreach ($groups as $group) {
+
+        // Resolve the base route from the complete manifest, independently of
+        // the filtered menu used for rendering. Permission is still checked
+        // against the caller's effective menu_codes before recording.
+        $this->load->library('admin_menu_manifest');
+        $manifest_groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
+        foreach ($manifest_groups as $group) {
             foreach ($group['items'] as $item) {
-                if (!empty($item['route']) && $path === '/' . trim($item['route'], '/')
+                if (!empty($item['route'])
+                    && $path === $this->admin_menu_analytics->normalize_path($item['route'])
                     && !empty($item['code']) && $this->has_admin_menu_code($item['code'])) {
-                    $this->load->library('admin_menu_analytics');
                     $this->admin_menu_analytics->record_visit(
                         isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0,
                         isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0,

@@ -6,6 +6,21 @@ class Admin_menu_analytics
 {
     const TABLE = 'app_menu_visit';
 
+    /** Normalize a request or manifest route to the same absolute path form. */
+    public static function normalize_path($path)
+    {
+        if (!is_string($path) || trim($path) === '') {
+            return '';
+        }
+
+        $path = parse_url(trim($path), PHP_URL_PATH);
+        if (!is_string($path) || $path === '') {
+            return '';
+        }
+
+        return '/' . trim($path, '/');
+    }
+
     /** Record one successfully rendered menu landing page. */
     public function record_visit($tenant_id, $user_id, $menu_code)
     {
