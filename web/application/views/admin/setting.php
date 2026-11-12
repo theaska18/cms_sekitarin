@@ -19,11 +19,19 @@ if (!$admin_languages) {
 $setting_locale = isset($admin_languages[$setting_locale]) ? $setting_locale : (isset($admin_languages['english']) ? 'english' : (string) key($admin_languages));
 $setting_language_label = isset($labels['setting_current_language']) ? $labels['setting_current_language'] : (isset($labels['admin_setting_current_language']) ? $labels['admin_setting_current_language'] : 'Language');
 ?>
-<div class="mb-6">
-    <p class="text-xs font-bold uppercase tracking-[.16em] text-emerald-700"><?php echo html_escape($labels['admin_area']); ?></p>
-    <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl"><?php echo html_escape($page_title); ?></h1>
-    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600"><?php echo html_escape($labels['setting_intro']); ?></p>
-</div>
+<nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
+    <ol class="flex flex-wrap items-center gap-2">
+        <li><?php echo html_escape($labels['system']); ?></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" class="font-medium text-slate-800"><?php echo html_escape($page_title); ?></li>
+    </ol>
+</nav>
+<header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div class="max-w-2xl">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?php echo html_escape($page_title); ?></h1>
+        <p class="mt-2 text-base leading-7 text-slate-600"><?php echo html_escape($labels['setting_intro']); ?></p>
+    </div>
+</header>
 
 <?php if ($setting_notice === 'saved'): ?>
     <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"><span class="mt-0.5 font-bold" aria-hidden="true">✓</span><p><?php echo html_escape($labels['setting_saved']); ?></p></div>
