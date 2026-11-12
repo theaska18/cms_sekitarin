@@ -53,7 +53,6 @@ class AdminPropertyContractTests(unittest.TestCase):
 
     def test_property_routes_use_the_dedicated_controller(self):
         expected = {
-            "admin/system/property": "admin_property/property_index",
             "admin/system/property/new": "admin_property/property_new",
             "admin/system/property/change/(:any)": "admin_property/property_change/$1",
             "admin/system/property/delete": "admin_property/property_delete",

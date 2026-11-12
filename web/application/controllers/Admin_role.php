@@ -6,6 +6,32 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Authenticated CRUD pages for tenant-scoped application roles. */
 class Admin_role extends Admin
 {
+    const ADMIN_ROLE_PATH = '/admin/application/role';
+
+    private function require_role_access($access_code = NULL, $message_key = 'role_no_access')
+    {
+        if (!$this->has_admin_menu_code('app_role')) {
+            $this->role_deny_access('role_no_access');
+            return FALSE;
+        }
+        if ($access_code !== NULL && !$this->has_admin_access_code($access_code)) {
+            $this->role_deny_access($message_key);
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    private function role_deny_access($message_key = 'role_no_access')
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin(
+            'admin/role/access_denied',
+            'role',
+            self::ADMIN_ROLE_PATH,
+            array('role_access_message_key' => $message_key)
+        );
+    }
+
     public function role_index()
     {
         if (!$this->require_role_access()) {

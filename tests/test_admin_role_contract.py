@@ -9,7 +9,7 @@ APP = ROOT / "web/application"
 class AdminRoleContractTest(unittest.TestCase):
     def test_application_role_routes_use_role_controller(self):
         routes = (APP / "config/routes.php").read_text()
-        self.assertIn("$route['admin/application/role'] = 'admin_role/role_index';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
         self.assertIn("$route['admin/application/role/new'] = 'admin_role/role_new';", routes)
         self.assertIn("$route['admin/application/role/change/(:any)'] = 'admin_role/role_change/$1';", routes)
         self.assertIn("$route['admin/application/role/delete'] = 'admin_role/role_delete';", routes)
@@ -335,15 +335,14 @@ class AdminRoleContractTest(unittest.TestCase):
 
     def test_role_routes_require_menu_and_action_access_codes(self):
         controller = (APP / "controllers/Admin_role.php").read_text()
-        admin = (APP / "controllers/Admin.php").read_text()
-        self.assertIn("has_admin_menu_code('app_role')", admin)
+        self.assertIn("has_admin_menu_code('app_role')", controller)
         for code in ('app_role_add', 'app_role_update', 'app_role_delete', 'app_role_menu_access', 'app_role_tenant'):
             self.assertIn(f"has_admin_access_code('{code}')", controller)
         for route_method, access_code in (("role_new", "app_role_add"), ("role_change", "app_role_update"), ("role_delete", "app_role_delete"), ("role_menu", "app_role_menu_access")):
             method_body = controller.split(f"public function {route_method}(", 1)[1]
             self.assertIn(f"require_role_access('{access_code}'", method_body)
-        self.assertIn("role_deny_access", admin)
-        self.assertIn("$this->output->set_status_header(403)", admin)
+        self.assertIn("role_deny_access", controller)
+        self.assertIn("$this->output->set_status_header(403)", controller)
 
     def test_role_list_and_actions_are_filtered_by_session_permissions(self):
         controller = (APP / "controllers/Admin_role.php").read_text()

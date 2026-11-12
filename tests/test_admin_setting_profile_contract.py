@@ -35,17 +35,17 @@ class AdminSettingProfileContractTests(unittest.TestCase):
                     rf"(?m)^\$route\['{re.escape(uri)}'\]\s*=\s*'{re.escape(target)}';",
                 )
 
-    def test_both_pages_use_only_existing_read_only_placeholder_content(self):
-        placeholder_allowlist = self.controller.split("$sections = array(", 1)[1].split(");", 1)[0]
+    def test_placeholder_title_key_is_derived_from_slug_without_static_allowlist(self):
         self.assertIn("public function setting()", self.controller)
         setting = self.controller.split("public function setting()", 1)[1].split("public function placeholder(", 1)[0]
         self.assertIn("'admin/setting'", self.routes)
         self.assertIn("'settings'", setting)
         self.assertIn("admin/setting", self.controller)
         self.assertTrue((ROOT / "web/application/views/admin/setting.php").is_file())
-        for uri, title_key in (("admin/profile", "profile"),):
-            with self.subTest(uri=uri):
-                self.assertIn(f"'{uri}' => '{title_key}'", placeholder_allowlist)
+        placeholder = self.controller.split("public function placeholder(", 1)[1].split("public function module(", 1)[0]
+        self.assertNotIn("$sections = array(", placeholder)
+        self.assertIn("preg_replace('/([a-z0-9])([A-Z])/', '$1_$2'", placeholder)
+        self.assertIn("$this->render_admin('admin/placeholder', $title_key", placeholder)
         self.assertIn("admin/placeholder", self.routes)
         self.assertIn("placeholder_title", self.placeholder)
         self.assertIn("placeholder_body", self.placeholder)

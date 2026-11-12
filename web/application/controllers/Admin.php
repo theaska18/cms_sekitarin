@@ -3,9 +3,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Admin extends CI_Controller
 {
-    const ADMIN_SEQUENCE_PATH = '/admin/system/sequence';
-    const ADMIN_ROLE_PATH = '/admin/application/role';
-
     protected $current_user;
     private $admin_menu_groups_loaded = FALSE;
     private $admin_menu_groups_cache = array();
@@ -229,7 +226,7 @@ class Admin extends CI_Controller
             && $employee_store) {
             $photo_path = $employee_store->image_path($filename);
             if ($photo_path && is_file($photo_path)) {
-                $profile_image = site_url('admin/hr/employee/profile-photo/' . rawurlencode($filename));
+                $profile_image = site_url('admin/hr/employee/profile_photo/' . rawurlencode($filename));
             } else { $profile_image = '/assets/images/avatar-placeholder.svg'; }
         } else { $profile_image = '/assets/images/avatar-placeholder.svg'; }
         $employee_name = $has_employee ? (string) $profile_employee['employee_name'] : NULL;
@@ -242,59 +239,30 @@ class Admin extends CI_Controller
         ));
     }
 
-    public function profile_photo($filename = '')
-    {
-        show_404();
-    }
-
     public function placeholder($section, $slug)
     {
-        $sections = array(
-            'admin/profile' => 'profile',
-            'admin/settings' => 'settings',
-            'admin/hr/employee' => 'employee',
-            'system/approval' => 'approval',
-            'hr/hierarchy' => 'hierarchy',
-            'hr/approvalFlow' => 'approval_flow',
-        );
         $path = $section . '/' . $slug;
-        if (!isset($sections[$path])) {
+        $title_key = strtolower(preg_replace('/([a-z0-9])([A-Z])/', '$1_$2', (string) $slug));
+        if (!preg_match('/\\A[a-z][a-z0-9_]*\\z/', $title_key)) {
             show_404();
             return;
         }
 
-        $this->render_admin('admin/placeholder', $sections[$path], '/' . $path);
+        $this->render_admin('admin/placeholder', $title_key, '/' . $path);
     }
 
-    public function module($section, $slug)
+    public function module($section, $slug = '')
     {
-        $modules = array(
-            'system/property' => array('key' => 'property', 'group_key' => 'system', 'description_key' => 'property_description', 'focus_key' => 'property_focus'),
-            'system/parameter' => array('key' => 'parameter', 'group_key' => 'system', 'description_key' => 'parameter_description', 'focus_key' => 'parameter_focus'),
-            'system/menu' => array('key' => 'menu', 'group_key' => 'system', 'description_key' => 'menu_description', 'focus_key' => 'menu_focus'),
-            'system/sequence' => array('key' => 'sequence', 'group_key' => 'system', 'description_key' => 'system_sequence_description', 'focus_key' => 'system_sequence_focus'),
-            'app/sequence' => array('key' => 'employee', 'group_key' => 'application', 'description_key' => 'employee_description', 'focus_key' => 'employee_focus'),
-            'app/role' => array('key' => 'role', 'group_key' => 'application', 'description_key' => 'role_description', 'focus_key' => 'role_focus'),
-            'app/user' => array('key' => 'user', 'group_key' => 'application', 'description_key' => 'user_description', 'focus_key' => 'user_focus'),
-        );
-        $path = $section . '/' . $slug;
-        if (!isset($modules[$path])) {
+        $requested_path = '/' . trim($this->uri->uri_string(), '/');
+        $module = $this->module_from_menu_manifest($requested_path);
+        if ($module === NULL) {
             show_404();
             return;
         }
 
-        $module = $modules[$path];
-        $requested_path = '/' . trim($this->uri->uri_string(), '/');
-        if ($path === 'app/role' && !$this->has_admin_menu_code('app_role')) {
-            $this->role_deny_access('role_no_access');
-            return;
-        }
-        if ($path === 'system/sequence') {
-            if (!$this->has_admin_menu_code('sys_sequence')) {
-                $this->sequence_deny_access('sequence_no_access');
-                return;
-            }
-            $this->render_sequence_list($module, $requested_path);
+        if (isset($module['menu_code']) && !$this->has_admin_menu_code($module['menu_code'])) {
+            $this->output->set_status_header(403);
+            show_error('You do not have permission to access this module.', 403);
             return;
         }
         $this->render_admin(
@@ -308,60 +276,37 @@ class Admin extends CI_Controller
         );
     }
 
-    private function render_sequence_list($module, $requested_path)
+    /** Resolve generic read-only module pages from the menu manifest. */
+    private function module_from_menu_manifest($requested_path)
     {
-        $this->load->database();
-        $this->load->library('sequence_store');
-        $search = trim((string) $this->input->get('search', TRUE));
-        $search = mb_substr($search, 0, 120, 'UTF-8');
-        $per_page = (int) $this->input->get('per_page');
-        $per_page = in_array($per_page, array(10, 25, 50), TRUE) ? $per_page : 10;
-        $sort = (string) $this->input->get('sort', TRUE);
-        $sort_columns = array(
-            'sequence_code', 'sequence_name', 'description', 'repeat_type',
-            'last_value', 'last_sequence', 'format',
-        );
-        $sort = in_array($sort, $sort_columns, TRUE) ? $sort : 'sequence_code';
-        $direction = strtoupper((string) $this->input->get('direction', TRUE));
-        $direction = in_array($direction, array('ASC', 'DESC'), TRUE) ? $direction : 'ASC';
-
-        $total_records = $this->sequence_store->count($search);
-        $backend_available = $total_records !== FALSE;
-        $page_count = $backend_available ? max(1, (int) ceil($total_records / $per_page)) : 1;
-        $page = max(1, (int) $this->input->get('page'));
-        $page = min($page, $page_count);
-        $records = $backend_available
-            ? $this->sequence_store->page($search, $page, $per_page, $sort, $direction)
-            : FALSE;
-        if ($records === FALSE) {
-            $backend_available = FALSE;
-            $records = array();
+        $requested_path = '/' . trim((string) $requested_path, '/');
+        $admin_path = strpos($requested_path, '/admin/') === 0
+            ? $requested_path
+            : '/admin' . $requested_path;
+        $candidates = array($requested_path, $admin_path);
+        if (strpos($admin_path, '/admin/app/') === 0) {
+            $candidates[] = '/admin/application/' . substr($admin_path, strlen('/admin/app/'));
         }
-
-        $this->render_admin(
-            'admin/sequence/index',
-            $module['key'],
-            $requested_path,
-            array(
-                'module' => $module,
-                'backend_available' => $backend_available,
-                'records' => $records,
-                'total_records' => (int) ($backend_available ? $total_records : 0),
-                'search' => $search,
-                'page' => $page,
-                'page_count' => $page_count,
-                'per_page' => $per_page,
-                'sort' => $sort,
-                'direction' => $direction,
-                'write_available' => $this->current_user !== NULL && (bool) config_item('csrf_protection'),
-                'sequence_add_allowed' => $this->has_admin_access_code('sys_sequence_add'),
-                'sequence_update_allowed' => $this->has_admin_access_code('sys_sequence_update'),
-                'sequence_delete_allowed' => $this->has_admin_access_code('sys_sequence_delete'),
-                'sequence_actions_available' => $this->has_admin_access_code('sys_sequence_update') || $this->has_admin_access_code('sys_sequence_delete'),
-                'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
-            )
-        );
+        $this->load->library('admin_menu_manifest');
+        $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
+        foreach ($groups as $group) {
+            foreach ($group['items'] as $item) {
+                if (!in_array($item['route'], $candidates, TRUE) || empty($item['module_key'])) {
+                    continue;
+                }
+                return array(
+                    'key' => $item['module_key'],
+                    'group_key' => $group['label_key'],
+                    'description_key' => $item['module_description_key'],
+                    'focus_key' => $item['module_focus_key'],
+                    'menu_code' => $item['code'],
+                );
+            }
+        }
+        return NULL;
     }
+
+
 
     private function resolve_admin_locale()
     {
@@ -555,41 +500,6 @@ class Admin extends CI_Controller
         return in_array((string) $access_code, $access_codes, TRUE);
     }
 
-    protected function sequence_deny_access($message_key = 'sequence_no_access')
-    {
-        $this->output->set_status_header(403);
-        $this->render_admin(
-            'admin/sequence/access_denied',
-            'sequence',
-            self::ADMIN_SEQUENCE_PATH,
-            array('sequence_access_message_key' => $message_key)
-        );
-    }
-
-    protected function require_role_access($access_code = NULL, $message_key = 'role_no_access')
-    {
-        if (!$this->has_admin_menu_code('app_role')) {
-            $this->role_deny_access('role_no_access');
-            return FALSE;
-        }
-        if ($access_code !== NULL && !$this->has_admin_access_code($access_code)) {
-            $this->role_deny_access($message_key);
-            return FALSE;
-        }
-        return TRUE;
-    }
-
-    protected function role_deny_access($message_key = 'role_no_access')
-    {
-        $this->output->set_status_header(403);
-        $this->render_admin(
-            'admin/role/access_denied',
-            'role',
-            self::ADMIN_ROLE_PATH,
-            array('role_access_message_key' => $message_key)
-        );
-    }
-
     protected function render_admin($view, $title_key, $current_path, $extra_data = array())
     {
         $locale = $this->resolve_admin_locale();
@@ -607,247 +517,28 @@ class Admin extends CI_Controller
         }
         $this->load->language('admin', $locale);
         $this->lang->load('admin', $locale);
-        $is_property_view = strpos($view, 'admin/property/') === 0;
-        $is_tenant_view = strpos($view, 'admin/tenant/') === 0;
-        $is_parameter_view = strpos($view, 'admin/parameter/') === 0;
-        $is_sequence_view = strpos($view, 'admin/sequence/') === 0;
-        $is_role_view = strpos($view, 'admin/role/') === 0;
-        $is_user_view = strpos($view, 'admin/user/') === 0;
-        $is_employee_view = strpos($view, 'admin/employee/') === 0;
-        $is_notifications_view = strpos($view, 'admin/notifications/') === 0;
-        $is_profile_view = $view === 'admin/profile';
-        if ($is_profile_view) {
-            $this->lang->load('profile', $locale);
+        $view_parts = explode('/', trim($view, '/'));
+        $view_language_pack = isset($view_parts[1]) ? $view_parts[1] : '';
+        if (count($view_parts) === 2 && $view_parts[1] === 'profile') {
+            $view_language_pack = 'profile';
         }
-        if ($is_property_view) {
-            $this->lang->load('property', $locale);
-        }
-        if ($is_tenant_view) {
-            $this->lang->load('tenant', $locale);
-        }
-        if ($is_parameter_view) {
-            $this->lang->load('parameter', $locale);
-        }
-        if ($is_sequence_view) {
-            $this->lang->load('sequence', $locale);
-        }
-        if ($is_role_view) {
-            $this->lang->load('role', $locale);
-        }
-        if ($is_user_view) {
-            $this->lang->load('user', $locale);
-        }
-        if ($is_employee_view) {
-            $this->lang->load('employee', $locale);
+        if ($view_language_pack !== '' && preg_match('/^[a-z_]+$/', $view_language_pack)
+            && is_file(APPPATH . 'language/' . $locale . '/' . $view_language_pack . '_lang.php')) {
+            $this->lang->load($view_language_pack, $locale);
         }
         $this->lang->load('notifications', $locale);
-        $keys = array(
-            'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
-            'employee', 'role', 'user', 'notifications_label', 'notifications_unread_count', 'notifications_empty', 'view_all', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
-            'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation', 'admin_area',
-            'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_dark', 'setting_theme_system', 'setting_theme_note',
-            'path', 'not_built', 'logout_unavailable', 'avatar_alt', 'dashboard_sections',
-            'module_overview', 'module_status', 'module_read_only', 'module_backend_unavailable',
-            'module_focus', 'property_focus', 'parameter_focus', 'menu_focus', 'system_sequence_focus',
-            'employee_focus', 'role_focus', 'user_focus',
-            'property_description', 'parameter_description', 'menu_description', 'system_sequence_description',
-            'employee_description', 'role_description', 'user_description',
-            'filter_label', 'filter_placeholder', 'filter_clear', 'filter_empty', 'filter_results',
-            'popular_menu_heading', 'popular_menu_description', 'popular_menu_visits', 'popular_menu_empty',
-        );
         $labels = array();
-        foreach ($keys as $key) {
-            $labels[$key] = $this->lang->line('admin_' . $key);
-            if ($labels[$key] === FALSE) {
-                $labels[$key] = '';
+        foreach ($this->lang->language as $key => $value) {
+            $labels[$key] = $value;
+            if (strpos($key, 'admin_') === 0) {
+                $labels[substr($key, 6)] = $value;
             }
         }
-        foreach (array('unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago', 'actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel') as $time_key) {
-            $labels['notifications_' . $time_key] = $this->lang->line('notifications_' . $time_key);
-            if ($labels['notifications_' . $time_key] === FALSE) {
-                $labels['notifications_' . $time_key] = '';
-            }
-        }
-        if ($is_profile_view) {
-            foreach (array('eyebrow', 'intro', 'notice_saved', 'notice_password', 'notice_photo', 'error_heading', 'error_username', 'error_username_taken', 'error_full_name', 'error_current_password', 'error_password', 'error_password_mismatch', 'error_photo_invalid', 'error_photo_unavailable', 'error_save', 'error_action', 'error_invalid', 'avatar_alt', 'active', 'account_kicker', 'employee_unlinked', 'change_photo', 'upload', 'personal', 'details', 'details_help', 'full_name', 'username', 'username_hint', 'save_changes', 'security', 'change_password', 'password_help', 'current_password', 'new_password', 'password_hint', 'confirm_password', 'update_password') as $key) {
-                $labels['profile_' . $key] = $this->lang->line('profile_' . $key);
-                if ($labels['profile_' . $key] === FALSE) {
-                    $labels['profile_' . $key] = '';
-                }
-            }
-        }
-        if ($is_property_view) {
-            $property_keys = array(
-                'heading', 'intro', 'search_hint', 'code_label', 'name_label', 'filter_code', 'filter_name',
-                'filter_code_hint', 'filter_name_hint', 'no_results', 'no_results_hint',
-                'filter', 'reset', 'add', 'edit', 'delete', 'cancel', 'confirm_title', 'confirm_body',
-                'confirm_delete', 'empty', 'empty_hint', 'unavailable', 'write_disabled', 'total', 'page',
-                'page_of', 'from_data', 'previous', 'next', 'per_page', 'created', 'saved', 'deleted', 'not_found',
-                'save_error', 'delete_error', 'invalid', 'name_required', 'form_new', 'form_edit',
-                'form_intro', 'description_label', 'value_label', 'code_help', 'back', 'save', 'actions',
-                'search_label', 'access_denied'
-            );
-            foreach ($property_keys as $key) {
-                $labels['property_' . $key] = $this->lang->line('property_' . $key);
-            }
-        }
-        if ($is_tenant_view) {
-            $tenant_keys = array(
-                'heading', 'intro', 'search_hint', 'code_label', 'name_label', 'email_label', 'phone_label', 'due_on_label', 'due_flag_label',
-                'no_results', 'no_results_hint', 'add', 'edit', 'delete', 'cancel', 'confirm_title', 'confirm_body',
-                'confirm_delete', 'empty', 'empty_hint', 'unavailable', 'write_disabled', 'page', 'page_of', 'from_data',
-                'previous', 'next', 'per_page', 'created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error',
-                'invalid', 'name_required', 'due_on_required', 'form_new', 'form_edit', 'form_intro', 'code_help', 'back', 'save', 'actions',
-                'search_label', 'menu_access', 'no_access', 'add_denied', 'update_denied', 'delete_denied', 'menu_access_denied'
-            );
-            foreach ($tenant_keys as $key) {
-                $labels['tenant_' . $key] = $this->lang->line('tenant_' . $key);
-            }
-            $labels['tenant_code_label'] = $this->lang->line('tenant_code_label');
-            $labels['tenant_name_label'] = $this->lang->line('tenant_name_label');
-            $labels['tenant_address_label'] = $this->lang->line('tenant_address_label');
-        }
-        if ($is_parameter_view) {
-            $parameter_keys = array(
-                'heading', 'intro', 'code_label', 'name_label', 'description_label', 'summary_label',
-                'search_label', 'search_hint', 'total', 'page', 'page_of', 'from_data', 'previous', 'next',
-                'empty', 'empty_hint', 'no_results', 'unavailable', 'pagination', 'per_page',
-                'add', 'edit', 'delete', 'actions', 'save', 'back', 'form_new', 'form_edit', 'form_intro',
-                'option_code_label', 'option_name_label', 'active_label', 'option_add', 'option_remove',
-                'option_minimum', 'option_duplicate', 'code_duplicate', 'option_drag', 'option_move_up', 'option_move_down', 'invalid', 'name_required',
-                'save_error', 'delete_error', 'created', 'saved', 'deleted', 'not_found',
-                'confirm_title', 'confirm_body', 'confirm_delete', 'write_disabled', 'no_access', 'add_denied', 'update_denied', 'delete_denied'
-            );
-            foreach ($parameter_keys as $key) {
-                $labels['parameter_' . $key] = $this->lang->line('parameter_' . $key);
-            }
-        }
-
-        if ($is_sequence_view) {
-            $sequence_keys = array(
-                'heading', 'intro', 'search_label', 'search_hint', 'total', 'empty',
-                'no_results', 'empty_hint', 'no_results_hint', 'unavailable', 'page', 'page_of', 'previous', 'next',
-                'per_page', 'sequence_code', 'sequence_name', 'description', 'repeat_type',
-                'last_value', 'last_sequence', 'format', 'form_new', 'form_edit', 'form_intro', 'choose_repeat_type',
-                'add', 'actions', 'edit', 'delete', 'confirm_delete', 'created', 'saved', 'deleted', 'delete_error',
-                'code_help', 'name_help', 'description_help', 'last_value_help', 'last_sequence_help',
-                'format_help', 'back', 'save', 'write_disabled', 'invalid', 'save_error', 'repeat_type_invalid',
-                'sequence_code_required', 'sequence_name_required', 'repeat_type_required', 'last_value_required',
-                'last_value_required', 'last_sequence_required', 'format_required', 'sequence_code_too_long', 'sequence_name_too_long',
-                'description_too_long', 'repeat_type_too_long', 'last_value_too_long', 'last_sequence_too_long',
-                'format_too_long', 'sequence_code_invalid', 'last_value_invalid', 'last_sequence_invalid', 'no_access',
-            );
-            foreach ($sequence_keys as $key) {
-                $labels['sequence_' . $key] = $this->lang->line('sequence_' . $key);
-            }
-        }
-
-        if ($is_employee_view) {
-            $employee_keys = array(
-                'heading', 'intro', 'search_hint', 'empty', 'empty_hint', 'no_results', 'no_results_hint', 'unavailable',
-                'total', 'page', 'page_of', 'previous', 'next', 'per_page', 'actions', 'add', 'edit', 'delete',
-                'form_new', 'form_edit', 'form_intro', 'back', 'save', 'cancel', 'name_label', 'code_label'
-            );
-            foreach ($employee_keys as $key) {
-                $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
-            }
-        }
-
-        if ($is_notifications_view) {
-            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
-                $labels['notifications_' . $key] = $this->lang->line('notifications_' . $key);
-            }
+        if (isset($labels['notifications_heading'])) {
             $labels['admin_notifications_heading'] = $labels['notifications_heading'];
         }
-
-        if ($is_role_view) {
-            $role_keys = array(
-                'heading', 'intro', 'search_label', 'search_hint', 'code_label', 'name_label',
-                'description_label', 'active_label', 'active_yes', 'active_no', 'filter_any', 'filter_apply', 'filter_columns', 'actions', 'add',
-                'edit', 'delete', 'confirm_delete', 'empty', 'empty_hint', 'no_results',
-                'no_results_hint', 'unavailable', 'write_disabled', 'total', 'pagination',
-                'previous', 'next', 'created', 'saved', 'deleted', 'delete_error', 'form_new',
-                'form_edit', 'form_intro', 'code_help', 'back', 'cancel', 'save', 'invalid',
-                'code_invalid', 'code_too_long', 'code_duplicate', 'name_required', 'name_too_long',
-                'description_too_long', 'save_error', 'tenant_label', 'tenant_placeholder', 'tenant_invalid', 'per_page', 'pagination_summary',
-                'menu_access', 'menu_heading', 'menu_intro', 'menu_unavailable', 'menu_saved', 'menu_save_error', 'menu_empty',
-                'no_access', 'add_denied', 'update_denied', 'delete_denied', 'menu_access_denied'
-            );
-            foreach ($role_keys as $key) {
-                $labels['role_' . $key] = $this->lang->line('role_' . $key);
-            }
-        }
-        if ($is_user_view) {
-            $user_keys = array(
-                'heading', 'intro', 'search', 'search_hint', 'filter_role', 'filter_block', 'filter_columns', 'apply_filter', 'add', 'code', 'name', 'full_name', 'full_name_help', 'role', 'employee',
-                'block_status', 'actions', 'edit', 'change_password', 'block', 'unblock', 'yes', 'no', 'empty',
-                'unavailable', 'write_disabled', 'page', 'previous', 'next', 'per_page', 'pagination', 'pagination_summary', 'total', 'created', 'saved',
-                'password_changed', 'blocked', 'unblocked', 'confirm_title', 'confirm_body', 'cancel', 'confirm',
-                'form_new', 'form_edit', 'form_intro', 'tenant', 'choose_tenant', 'role_choose', 'employee_flag',
-                'employee_search', 'employee_help', 'access_api_flag', 'access_api_help', 'api_secret', 'api_generate', 'password', 'retry_password', 'back', 'save', 'invalid',
-                'tenant_invalid', 'user_code_required', 'user_code_too_long', 'user_code_duplicate', 'username_required',
-                'username_too_long', 'username_duplicate', 'password_required', 'password_too_long', 'password_mismatch',
-                'role_invalid', 'employee_invalid', 'save_error', 'tenant_filter', 'delete', 'delete_confirm',
-                'api_secret_copy', 'copy_success', 'copy_error', 'no_access', 'chat_flag'
-            );
-            foreach ($user_keys as $key) {
-                $labels['user_' . $key] = $this->lang->line('user_' . $key);
-            }
-            if ($labels['user_chat_flag'] === FALSE) {
-                $labels['user_chat_flag'] = 'Enable chat';
-            }
-        }
-        if ($is_employee_view) {
-            // Forward every employee_ label used by the employee views.
-            $employee_keys = array(
-                'access_denied',
-                'actions',
-                'add',
-                'age_label',
-                'birth_date_label',
-                'birth_place_label',
-                'cancel',
-                'code_label',
-                'confirm_delete',
-                'delete',
-                'edit',
-                'email_label',
-                'empty',
-                'filter',
-                'filter_code',
-                'filter_code_hint',
-                'filter_columns',
-                'filter_name',
-                'filter_name_hint',
-                'form_intro',
-                'gender_choose',
-                'gender_label',
-                'heading',
-                'identity_id_label',
-                'identity_label',
-                'image_current',
-                'image_hint',
-                'image_label',
-                'intro',
-                'invalid',
-                'name_label',
-                'next',
-                'no_results',
-                'page_navigation',
-                'pagination',
-                'per_page',
-                'previous',
-                'reset',
-                'save',
-                'save_error',
-                'search',
-                'search_hint',
-                'unavailable',
-                'write_disabled',
-            );
-            foreach ($employee_keys as $key) {
-                $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
-            }
+        if (!isset($labels['user_chat_flag']) || $labels['user_chat_flag'] === FALSE || $labels['user_chat_flag'] === '') {
+            $labels['user_chat_flag'] = 'Enable chat';
         }
         foreach (array('admin_' . $title_key, 'admin_profile') as $label_key) {
             if (!isset($labels[$label_key])) {
@@ -856,18 +547,6 @@ class Admin extends CI_Controller
         }
         if (!isset($labels['admin_profile'])) {
             $labels['admin_profile'] = 'Profile';
-        }
-        if ($is_employee_view) {
-            $employee_keys = array(
-                'heading', 'intro', 'search', 'search_hint', 'filter', 'reset', 'add', 'code_label', 'name_label', 'identity_label', 'identity_id_label', 'email_label', 'gender_label', 'gender_choose', 'birth_date_label', 'birth_place_label', 'age_label', 'image_label', 'image_current', 'image_hint', 'filter_columns', 'filter_code', 'filter_name', 'filter_code_hint', 'filter_name_hint',
-                'actions', 'edit', 'delete', 'confirm_delete', 'empty', 'no_results', 'unavailable', 'write_disabled',
-                'pagination', 'result_count', 'per_page', 'page_navigation', 'previous', 'next', 'form_new', 'form_edit', 'form_intro', 'cancel', 'save', 'created',
-                'saved', 'deleted', 'delete_error', 'save_error', 'employee_code_required', 'employee_name_required',
-                'employee_code_too_long', 'employee_name_too_long', 'employee_code_duplicate', 'access_denied', 'invalid'
-            );
-            foreach ($employee_keys as $key) {
-                $labels["employee_" . $key] = $this->lang->line("employee_" . $key);
-            }
         }
         $menu_groups = $this->load_admin_menu_groups();
         $popular_menu_items = array();
@@ -979,7 +658,7 @@ class Admin extends CI_Controller
             'popular_menu_items' => $popular_menu_items,
         );
         $data = array_merge($data, $extra_data);
-        if ($is_notifications_view) {
+        if ($view_language_pack === 'notifications') {
             foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }

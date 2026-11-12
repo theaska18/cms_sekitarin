@@ -139,7 +139,7 @@ class Admin_identity
         if (!in_array($extension, array('jpg', 'jpeg', 'png', 'gif', 'webp'), TRUE)) {
             return NULL;
         }
-        return site_url('admin/hr/employee/profile-photo/' . rawurlencode($filename));
+        return site_url('admin/hr/employee/profile_photo/' . rawurlencode($filename));
     }
 
     public function logout()

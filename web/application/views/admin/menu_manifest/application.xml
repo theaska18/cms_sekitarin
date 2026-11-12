@@ -10,7 +10,10 @@
           icon="list-ordered"
           route="/admin/application/sequence"
           sort_order="1"
-          status="active">
+          status="active"
+          module_key="sequence"
+          module_description_key="module_backend_unavailable"
+          module_focus_key="module_focus">
         <access code="app_sequence_add" name="Add" />
         <access code="app_sequence_update"  name="Update"/>
         <access code="app_sequence_set_default" name="Set to Default" />
@@ -20,6 +23,9 @@
           label_key="admin_role"
           icon="shield-check"
           route="/admin/application/role"
+          module_key="role"
+          module_description_key="role_description"
+          module_focus_key="role_focus"
           sort_order="2"
           status="active">
         <access code="app_role_add" name="Add" />
@@ -34,6 +40,9 @@
           label_key="admin_user"
           icon="user-round"
           route="/admin/application/user"
+          module_key="user"
+          module_description_key="user_description"
+          module_focus_key="user_focus"
           sort_order="3"
           status="active">
         <access code="app_user_add" name="Add" />

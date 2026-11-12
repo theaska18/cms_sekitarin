@@ -10,6 +10,9 @@
           label_key="admin_property"
           icon="sliders-horizontal"
           route="/admin/system/property"
+          module_key="property"
+          module_description_key="property_description"
+          module_focus_key="property_focus"
           sort_order="1"
           status="active">
         <access code="sys_property_add" name="Add" />
@@ -22,6 +25,9 @@
           label_key="admin_parameter"
           icon="menu"
           route="/admin/system/parameter"
+          module_key="parameter"
+          module_description_key="parameter_description"
+          module_focus_key="parameter_focus"
           sort_order="2"
           status="active">
         <access code="sys_parameter_add" name="Add" />
@@ -46,6 +52,9 @@
           label_key="admin_sequence"
           icon="list-ordered"
           route="/admin/system/sequence"
+          module_key="sequence"
+          module_description_key="system_sequence_description"
+          module_focus_key="system_sequence_focus"
           sort_order="4"
           status="active">
         <access code="sys_sequence_add" name="Add" />

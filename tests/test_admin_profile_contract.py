@@ -31,9 +31,12 @@ class AdminProfileContractTests(unittest.TestCase):
         self.assertIn('name="action" value="password"', self.view)
 
     def test_photo_upload_is_limited_and_served_privately(self):
-        for token in ("'allowed_types' => 'jpg|jpeg|png|webp'", "'max_size' => 5120", 'public function profile_photo'):
+        for token in ("'allowed_types' => 'jpg|jpeg|png|webp'", "'max_size' => 5120"):
             self.assertIn(token, self.controller)
-        self.assertIn("$route['admin/profile/photo/(:any)']", self.routes)
+        self.assertNotIn("$route['admin/profile/photo/(:any)']", self.routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)/(:any)']", self.routes)
+        employee = (ROOT / "web/application/controllers/Admin_employee.php").read_text()
+        self.assertIn('function employee_profile_photo($filename)', employee)
         self.assertIn('name="profile_photo"', self.view)
 
     def test_view_is_escaped_csrf_protected_and_styled_with_versioned_asset(self):

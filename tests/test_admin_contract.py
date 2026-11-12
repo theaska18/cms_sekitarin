@@ -109,12 +109,13 @@ class AdminDashboardContractTests(unittest.TestCase):
         controller = CONTROLLER.read_text()
         self.assertIn("$labels['topbar_navigation']", header)
         self.assertNotIn("$topbar_navigation_label", header)
-        self.assertIn("'topbar_navigation'", controller.split("$keys = array(", 1)[1].split(");", 1)[0])
+        self.assertIn("foreach ($this->lang->language as $key => $value)", controller)
+        self.assertIn("$labels[substr($key, 6)] = $value", controller)
 
     def test_sidebar_accessibility_label_is_provided_to_the_admin_header(self):
         controller = CONTROLLER.read_text()
-        key_list = controller.split("$keys = array(", 1)[1].split(");", 1)[0]
-        self.assertIn("'sidebar_navigation'", key_list)
+        self.assertIn("foreach ($this->lang->language as $key => $value)", controller)
+        self.assertIn("$labels[substr($key, 6)] = $value", controller)
 
     def test_admin_and_all_requested_menu_paths_have_ci3_routes(self):
         routes = ROUTES.read_text()
@@ -253,15 +254,13 @@ class AdminDashboardContractTests(unittest.TestCase):
     def test_each_module_has_a_distinct_focus_panel_without_repeating_its_summary(self):
         controller = CONTROLLER.read_text()
         view = MODULE_VIEW.read_text()
-        key_list = controller.split("$keys = array(", 1)[1].split(");", 1)[0]
         for key in (
             "module_focus", "property_focus", "parameter_focus", "menu_focus", "system_sequence_focus",
             "employee_focus", "role_focus", "user_focus",
         ):
             with self.subTest(focus=key):
-                if key != "module_focus":
-                    self.assertIn("'focus_key' => '" + key + "'", controller)
-                self.assertIn("'" + key + "'", key_list)
+                self.assertIn("foreach ($this->lang->language as $key => $value)", controller)
+                self.assertIn("$labels[substr($key, 6)] = $value", controller)
                 if key != "module_focus":
                     self.assertIn("$labels[$module['focus_key']]", view)
         self.assertIn("$labels['module_focus']", view)

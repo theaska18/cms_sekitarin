@@ -27,7 +27,6 @@ class AdminParameterContractTests(unittest.TestCase):
 
     def test_admin_parameter_routes_expose_list_new_edit_and_post_delete(self):
         expected_routes = (
-            ("admin/system/parameter", "admin_parameter/parameter_index"),
             ("admin/system/parameter/new", "admin_parameter/parameter_new"),
             ("admin/system/parameter/change/(:any)", "admin_parameter/parameter_change/$1"),
             ("admin/system/parameter/delete", "admin_parameter/parameter_delete"),
@@ -360,10 +359,10 @@ class AdminParameterContractTests(unittest.TestCase):
                     self.assertRegex(text, rf"\$lang\['{key}'\]")
 
     def test_admin_shell_loads_parameter_crud_labels_for_parameter_views(self):
-        self.assertIn("admin/parameter/", self.admin)
-        self.assertIn("$this->lang->load('parameter', $locale)", self.admin)
-        for key in ("add", "edit", "delete", "option_add", "option_remove", "option_code_label", "created", "saved"):
-            self.assertIn(f"'{key}'", self.admin)
+        self.assertIn("$view_language_pack = isset($view_parts[1]) ? $view_parts[1] : '';", self.admin)
+        self.assertIn("$this->lang->load($view_language_pack, $locale)", self.admin)
+        self.assertIn("foreach ($this->lang->language as $key => $value)", self.admin)
+        self.assertIn("$labels[$key] = $value;", self.admin)
 
     def test_parameter_list_and_form_escape_output_and_use_csrf_on_mutations(self):
         for view in (self.list_view, self.form_view):

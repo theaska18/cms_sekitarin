@@ -162,7 +162,7 @@ class Admin_user extends Admin
         ));
     }
 
-    public function user_toggle_block()
+    public function user_block()
     {
 
         if (!$this->require_user_access('app_user_block')) {

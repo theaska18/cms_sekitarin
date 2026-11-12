@@ -6,6 +6,89 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Sequence create controller, using the authenticated admin shell. */
 class Admin_sequence extends Admin
 {
+    const ADMIN_SEQUENCE_PATH = '/admin/system/sequence';
+
+    private function sequence_deny_access($message_key = 'sequence_no_access')
+    {
+        $this->output->set_status_header(403);
+        $this->render_admin(
+            'admin/sequence/access_denied',
+            'sequence',
+            self::ADMIN_SEQUENCE_PATH,
+            array('sequence_access_message_key' => $message_key)
+        );
+    }
+
+    public function sequence_index()
+    {
+        if (trim($this->uri->uri_string(), '/') === 'admin/application/sequence') {
+            $this->module('application', 'sequence');
+            return;
+        }
+        if (!$this->has_admin_menu_code('sys_sequence')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
+        $module = array(
+            'key' => 'sequence',
+            'group_key' => 'system',
+            'description_key' => 'system_sequence_description',
+            'focus_key' => 'system_sequence_focus',
+        );
+        $requested_path = '/admin/system/sequence';
+        $this->load->database();
+        $this->load->library('sequence_store');
+        $search = trim((string) $this->input->get('search', TRUE));
+        $search = mb_substr($search, 0, 120, 'UTF-8');
+        $per_page = (int) $this->input->get('per_page');
+        $per_page = in_array($per_page, array(10, 25, 50), TRUE) ? $per_page : 10;
+        $sort = (string) $this->input->get('sort', TRUE);
+        $sort_columns = array(
+            'sequence_code', 'sequence_name', 'description', 'repeat_type',
+            'last_value', 'last_sequence', 'format',
+        );
+        $sort = in_array($sort, $sort_columns, TRUE) ? $sort : 'sequence_code';
+        $direction = strtoupper((string) $this->input->get('direction', TRUE));
+        $direction = in_array($direction, array('ASC', 'DESC'), TRUE) ? $direction : 'ASC';
+
+        $total_records = $this->sequence_store->count($search);
+        $backend_available = $total_records !== FALSE;
+        $page_count = $backend_available ? max(1, (int) ceil($total_records / $per_page)) : 1;
+        $page = max(1, (int) $this->input->get('page'));
+        $page = min($page, $page_count);
+        $records = $backend_available
+            ? $this->sequence_store->page($search, $page, $per_page, $sort, $direction)
+            : FALSE;
+        if ($records === FALSE) {
+            $backend_available = FALSE;
+            $records = array();
+        }
+
+        $this->render_admin(
+            'admin/sequence/index',
+            $module['key'],
+            $requested_path,
+            array(
+                'module' => $module,
+                'backend_available' => $backend_available,
+                'records' => $records,
+                'total_records' => (int) ($backend_available ? $total_records : 0),
+                'search' => $search,
+                'page' => $page,
+                'page_count' => $page_count,
+                'per_page' => $per_page,
+                'sort' => $sort,
+                'direction' => $direction,
+                'write_available' => $this->current_user !== NULL && (bool) config_item('csrf_protection'),
+                'sequence_add_allowed' => $this->has_admin_access_code('sys_sequence_add'),
+                'sequence_update_allowed' => $this->has_admin_access_code('sys_sequence_update'),
+                'sequence_delete_allowed' => $this->has_admin_access_code('sys_sequence_delete'),
+                'sequence_actions_available' => $this->has_admin_access_code('sys_sequence_update') || $this->has_admin_access_code('sys_sequence_delete'),
+                'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
+            )
+        );
+    }
+
     public function sequence_new()
     {
         if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_add')) {

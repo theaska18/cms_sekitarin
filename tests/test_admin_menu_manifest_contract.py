@@ -9,6 +9,7 @@ WEB = ROOT / "web"
 APP = WEB / "application"
 MANIFEST_DIR = APP / "views/admin/menu_manifest"
 CONTROLLER = WEB / "application/controllers/Admin.php"
+SEQUENCE_CONTROLLER = WEB / "application/controllers/Admin_sequence.php"
 PROPERTY_CONTROLLER = WEB / "application/controllers/Admin_property.php"
 HEADER = WEB / "application/views/admin/header.php"
 ROUTES = WEB / "application/config/routes.php"
@@ -79,6 +80,31 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertIn("$item['route']", header)
         self.assertIn("$item['icon']", header)
 
+    def test_manifest_driven_module_dispatch_needs_no_per_item_route_or_controller_entry(self):
+        routes = ROUTES.read_text()
+        controller = CONTROLLER.read_text()
+        loader = (APP / "libraries/Admin_menu_manifest.php").read_text()
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
+        self.assertIn("function module_from_menu_manifest", controller)
+        self.assertIn("$this->module_from_menu_manifest($requested_path)", controller)
+        self.assertIn("module_key", loader)
+        self.assertIn("module_description_key", loader)
+        self.assertIn("module_focus_key", loader)
+        self.assertIn('module_key="sequence"', (MANIFEST_DIR / "system.xml").read_text())
+        self.assertIn("has_admin_menu_code($module['menu_code'])", controller)
+
+    def test_application_sequence_route_dispatches_separately_from_system_sequence(self):
+        routes = ROUTES.read_text()
+        self.assertNotIn("$route['admin/application/sequence']", routes)
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
+        application = parse_xml(MANIFEST_DIR / "application.xml")
+        app_sequence = next(item for item in application.findall("menu") if item.attrib["code"] == "app_sequence")
+        self.assertEqual("/admin/application/sequence", app_sequence.attrib["route"])
+        self.assertEqual("sequence", app_sequence.attrib["module_key"])
+        sequence = SEQUENCE_CONTROLLER.read_text()
+        self.assertIn("admin/application/sequence", sequence)
+        self.assertIn("$this->module('application', 'sequence')", sequence)
+
     def test_manifest_labels_resolve_in_all_nine_locales_and_fall_back_to_xml_name(self):
         groups = parse_xml(MANIFEST_DIR / "manifest.xml").findall("group")
         label_keys = set()
@@ -102,14 +128,36 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             self.assertIn(path, HEADER.read_text())
         self.assertIn("DASHBOARD", controller)
 
-    def test_every_manifest_href_has_a_ci3_route(self):
+    def test_every_manifest_href_uses_the_shared_admin_route(self):
         manifest = parse_xml(MANIFEST_DIR / "manifest.xml")
-        routes = set()
+        routes_text = ROUTES.read_text()
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes_text)
         for group in manifest.findall("group"):
             submenu = parse_xml(MANIFEST_DIR / group.attrib["file"])
-            routes.update(item.attrib["route"].lstrip("/") for item in submenu.findall("menu"))
-        route_keys = set(re.findall(r"\$route\['([^']+)'\]\s*=", ROUTES.read_text()))
-        self.assertFalse(routes - route_keys, f"manifest destinations without CI3 route: {sorted(routes - route_keys)}")
+            for item in submenu.findall("menu"):
+                route = item.attrib["route"].strip("/").split("/")
+                with self.subTest(menu=item.attrib["code"], route=route):
+                    self.assertEqual(3, len(route), "menu routes must have two segments after /admin/")
+                    self.assertEqual("admin", route[0])
+                    controller = APP / "controllers" / f"Admin_{route[2]}.php"
+                    self.assertTrue(controller.exists(), f"missing convention controller for {item.attrib['route']}")
+                    self.assertNotIn(f"$route['{'/'.join(route)}']", routes_text)
+
+    def test_special_menu_pages_keep_behavior_without_item_routes(self):
+        routes_text = ROUTES.read_text()
+        for route in ("admin/system/approval", "admin/hr/hierarchy", "admin/hr/approvalFlow", "admin/system/menu"):
+            with self.subTest(route=route):
+                self.assertNotIn(f"$route['{route}']", routes_text)
+        expected = {
+            "Admin_approval.php": "approval_index",
+            "Admin_hierarchy.php": "hierarchy_index",
+            "Admin_approvalFlow.php": "approvalFlow_index",
+            "Admin_menu.php": "menu_index",
+        }
+        for filename, method in expected.items():
+            source = (APP / "controllers" / filename).read_text()
+            with self.subTest(controller=filename):
+                self.assertIn(f"function {method}", source)
 
     def test_parameter_placeholder_has_localized_module_copy_in_all_locales(self):
         controller = CONTROLLER.read_text()
@@ -143,10 +191,11 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         employee_manifest = parse_xml(MANIFEST_DIR / "hr.xml")
         employee_item = next(item for item in employee_manifest.findall("menu") if item.attrib["code"] == "hr_employee")
         self.assertEqual("/admin/hr/employee", employee_item.attrib["route"])
-        self.assertIn("$route['admin/hr/employee'] = 'admin_employee/employee_index';", routes)
-        self.assertIn("$route['admin/hr/employee/new'] = 'admin_employee/employee_new';", routes)
-        self.assertIn("$route['admin/hr/employee/change/(:num)'] = 'admin_employee/employee_change/$1';", routes)
-        self.assertIn("$route['admin/hr/employee/delete'] = 'admin_employee/employee_delete';", routes)
+        self.assertNotIn("$route['admin/hr/employee'] = 'admin_employee/employee_index';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$3/$3_index';", routes)
+        for group in ("system", "hr", "application"):
+            self.assertNotIn(f"$route['admin/{group}/", routes)
         self.assertIn("$this->has_admin_menu_code('hr_employee')", employee_controller)
         self.assertIn("$this->has_admin_access_code('hr_employee_add')", employee_controller)
         self.assertIn("$this->has_admin_access_code('hr_employee_update')", employee_controller)
@@ -168,11 +217,12 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             referenced.update(re.findall(r"\$labels\['employee_([^']+)'\]", path.read_text()))
 
         admin_controller = CONTROLLER.read_text()
-        employee_block = admin_controller.split("if ($is_employee_view)", 1)[1].split("$menu_groups =", 1)[0]
-        self.assertIn("$labels['employee_' . $key]", employee_block)
-        self.assertIn("$labels['employee_' . $key]", employee_block)
-        declared = set(re.findall(r"'([^']+)'", employee_block))
-        self.assertTrue(declared, "employee label forwarding list is empty")
+        self.assertIn("$view_language_pack = isset($view_parts[1]) ? $view_parts[1] : '';", admin_controller)
+        self.assertIn("$this->lang->load($view_language_pack, $locale);", admin_controller)
+        self.assertIn("foreach ($this->lang->language as $key => $value)", admin_controller)
+        self.assertIn("$labels[$key] = $value;", admin_controller)
+        self.assertNotRegex(admin_controller, r"\$is_[a-z_]+_view")
+        self.assertIn("employee_", "\n".join(re.findall(r"employee_[A-Za-z_]+", "\n".join(path.read_text() for path in template_paths))))
 
         for locale in ("english", "indonesian"):
             language_file = APP / f"language/{locale}/employee_lang.php"

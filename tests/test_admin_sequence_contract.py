@@ -9,9 +9,10 @@ APP = ROOT / "web" / "application"
 
 class AdminSequenceContractTests(unittest.TestCase):
     def test_sequence_route_renders_the_dedicated_list(self):
-        controller = (APP / "controllers" / "Admin.php").read_text()
-        self.assertRegex(controller, r"system/sequence['\"]\s*=>")
-        self.assertIn("render_sequence_list", controller)
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
+        routes = (APP / "config" / "routes.php").read_text()
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
+        self.assertIn("public function sequence_index()", controller)
         self.assertIn("$this->load->database();", controller)
         self.assertIn("sequence_store", controller)
         self.assertIn("admin/sequence/index", controller)
@@ -288,13 +289,14 @@ class AdminSequenceContractTests(unittest.TestCase):
 
 
     def test_sequence_list_requires_the_session_menu_code_before_loading_records(self):
-        controller = (APP / "controllers" / "Admin.php").read_text()
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
         self.assertIn("has_admin_menu_code('sys_sequence')", controller)
         self.assertIn("sequence_deny_access('sequence_no_access')", controller)
-        sequence_branch = controller[controller.index("if ($path === 'system/sequence')"):]
-        self.assertLess(sequence_branch.index("has_admin_menu_code('sys_sequence')"), sequence_branch.index("render_sequence_list"))
-        self.assertIn("isset($this->current_user['menu_codes'])", controller)
-        self.assertIn("isset($this->current_user['access_codes'])", controller)
+        sequence_branch = controller[controller.index("public function sequence_index()"):]
+        self.assertLess(sequence_branch.index("has_admin_menu_code('sys_sequence')"), sequence_branch.index("$this->load->database();"))
+        admin_controller = (APP / "controllers" / "Admin.php").read_text()
+        self.assertIn("isset($this->current_user['menu_codes'])", admin_controller)
+        self.assertIn("isset($this->current_user['access_codes'])", admin_controller)
 
     def test_add_and_update_routes_require_their_own_session_access_codes(self):
         controller = (APP / "controllers" / "Admin_sequence.php").read_text()

@@ -19,8 +19,8 @@ class AdminTenantContractTest(unittest.TestCase):
         ):
             self.assertIn(route, routes)
         self.assertIn("$this->lang->load('tenant', $locale)", admin)
-        title_keys = admin.split("$keys = array(", 1)[1].split(");", 1)[0]
-        self.assertIn("'tenant'", title_keys)
+        self.assertIn("foreach ($this->lang->language as $key => $value)", admin)
+        self.assertIn("$labels[substr($key, 6)] = $value", admin)
         self.assertIn("'tenant_code_label'", admin)
         self.assertIn("'tenant_address_label'", admin)
         self.assertIn("'due_on_label'", admin)

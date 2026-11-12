@@ -6,22 +6,15 @@ APP = ROOT / "web/application"
 
 
 class AdminUserContractTests(unittest.TestCase):
-    def test_routes_target_user_controller_for_requested_workflows(self):
+    def test_routes_target_user_controller_through_generic_menu_slug_dispatch(self):
         routes = (APP / "config/routes.php").read_text()
-        expected = (
-            "admin/application/user",
-            "admin/application/user/new",
-            "admin/application/user/change/(:num)",
-            "admin/application/user/password/(:num)",
-            "admin/application/user/block",
-            "admin/application/user/roles/(:num)",
-            "admin/application/user/employees",
-        )
-        for route in expected:
-            with self.subTest(route=route):
-                self.assertIn(route, routes)
-        self.assertIn("admin_user/user_index", routes)
-        self.assertIn("admin_user/user_toggle_block", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3/$4';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';", routes)
+        self.assertIn("public function user_index()", (APP / "controllers/Admin_user.php").read_text())
+        self.assertIn("public function user_block()", (APP / "controllers/Admin_user.php").read_text())
+        self.assertNotIn("admin/application/user/block", routes)
+        self.assertIn("$route['admin/(:any)/user/employees']", routes)
+        self.assertIn("$route['admin/(:any)/user/roles/(:num)']", routes)
 
     def test_store_uses_authenticated_session_tenant_and_real_app_user_schema(self):
         store = (APP / "libraries/User_store.php").read_text()
@@ -92,7 +85,7 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertNotIn("window.confirm", view)
         self.assertNotIn("window.prompt", view)
         self.assertIn("user-status-dialog", view)
-        self.assertIn("user_toggle_block", controller)
+        self.assertIn("user_block", controller)
         self.assertIn("method(TRUE) !== 'POST'", controller)
         self.assertIn("set_blocked(", controller)
 
@@ -266,14 +259,10 @@ class AdminUserContractTests(unittest.TestCase):
 
     def test_admin_maps_every_user_form_and_filter_label(self):
         admin = (APP / "controllers/Admin.php").read_text()
-        required = (
-            "access_api_flag", "access_api_help", "api_secret", "api_generate",
-            "filter_role", "filter_block", "full_name_help", "tenant_filter",
-            "delete", "delete_confirm", "api_secret_copy", "copy_success", "copy_error",
-        )
-        for key in required:
-            with self.subTest(key=key):
-                self.assertIn("'" + key + "'", admin)
+        self.assertIn("$view_language_pack = isset($view_parts[1]) ? $view_parts[1] : '';", admin)
+        self.assertIn("$this->lang->load($view_language_pack, $locale);", admin)
+        self.assertIn("foreach ($this->lang->language as $key => $value)", admin)
+        self.assertIn("$labels[$key] = $value;", admin)
 
     def test_user_access_denied_label_is_mapped_for_the_view(self):
         admin = (APP / "controllers/Admin.php").read_text()
@@ -390,8 +379,8 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertNotIn("u.api_secret,", store.split("public function page(", 1)[1].split("public function find(", 1)[0])
         self.assertIn("/admin/application/user/api-secret", view)
         self.assertIn("public function api_secret()", controller)
-        self.assertIn("admin/application/user/delete", routes)
-        self.assertIn("admin/application/user/api-secret", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';", routes)
+        self.assertNotIn("admin/application/user/api-secret", routes)
         self.assertIn("public function delete($user_id, $tenant_id)", store)
         self.assertIn("public function user_delete()", controller)
         self.assertIn("$this->session->set_flashdata('admin_user_status'", controller)

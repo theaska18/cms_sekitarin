@@ -24,7 +24,8 @@ class AdminProfilePhotoContractTests(unittest.TestCase):
     def test_profile_photo_endpoint_remains_private_and_employee_scoped(self):
         routes = (APP / "config" / "routes.php").read_text()
         controller = (APP / "controllers" / "Admin_employee.php").read_text()
-        self.assertIn("$route['admin/hr/employee/profile-photo/(:any)'] = 'admin_employee/employee_profile_photo/$1';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)/(:any)'] = 'admin_$3/$3_$4';", routes)
+        self.assertIn("site_url('admin/hr/employee/profile_photo/' . rawurlencode($filename))", (APP / "controllers" / "Admin.php").read_text())
         self.assertIn("function employee_profile_photo($filename)", controller)
         self.assertIn("$this->current_user['employee_id']", controller)
         self.assertIn("$this->current_user['tenant_id']", controller)
