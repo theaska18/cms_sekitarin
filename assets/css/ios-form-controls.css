@@ -1,0 +1,24 @@
+/* iOS Safari native controls can ignore the sizing of standard form widgets. */
+@supports (-webkit-touch-callout: none) {
+    input[type="date"],
+    select {
+        box-sizing: border-box !important;
+        min-height: 3rem !important;
+        height: 3rem !important;
+        padding-block: 0.75rem !important;
+        font-size: 16px !important;
+        line-height: 1.5rem !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        vertical-align: middle;
+    }
+
+    select {
+        background-color: #fff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem 1rem;
+        padding-right: 2.5rem !important;
+    }
+}
