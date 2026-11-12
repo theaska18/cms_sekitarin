@@ -124,7 +124,7 @@ html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected=
 #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #f8fafc !important; }
 #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
 #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #f1f5f9 !important; }
-html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #1e293b !important; }
+html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #273449 !important; }
 html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
 html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #334155 !important; }
 html[data-theme="dark"] #admin-app-shell a.notification-list-item .notification-message-preview { color: #cbd5e1 !important; }

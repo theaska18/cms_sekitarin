@@ -64,6 +64,13 @@ class Admin_notifications extends Admin
                 $read_flag_field = isset($fields['read_flag']) ? 'read_flag' : NULL;
                 if ($read_flag_field !== NULL) {
                     $select[] = $read_flag_field;
+                    $selected_notification_id = isset($data['selected_notification_id']) ? (int) $data['selected_notification_id'] : 0;
+                    if ($selected_notification_id > 0) {
+                        // Only mark a notification belonging to the authenticated user as read.
+                        $db->where('notification_id', $selected_notification_id)
+                            ->where('user_id', $user_id)
+                            ->update('app_notification', array('read_flag' => 1));
+                    }
                 }
                 $query = $db->select(implode(', ', $select), FALSE)
                     ->from('app_notification')

@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = 'New notifications for your account will app
 $lang['notifications_pagination'] = 'Notifications pages';
 $lang['notifications_previous'] = 'Previous';
 $lang['notifications_next'] = 'Next';
+$lang['notifications_back'] = 'Back to notifications';
 $lang['notifications_select_prompt'] = 'Select a notification';
 $lang['notifications_select_hint'] = 'Choose a notification from the list on the left to see its details.';
 $lang['notifications_list_label'] = 'Notification list';

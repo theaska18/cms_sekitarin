@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = '您账户的新通知将显示在这里。'
 $lang['notifications_pagination'] = '通知页';
 $lang['notifications_previous'] = '上一页';
 $lang['notifications_next'] = '下一页';
+$lang['notifications_back'] = '返回通知列表';
 $lang['notifications_select_prompt'] = '请选择一条通知';
 $lang['notifications_select_hint'] = '从左侧列表中选择一条通知以查看详情。';
 $lang['notifications_list_label'] = '通知列表';

@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = '계정의 새 알림이 여기에 표시됩
 $lang['notifications_pagination'] = '알림 페이지';
 $lang['notifications_previous'] = '이전';
 $lang['notifications_next'] = '다음';
+$lang['notifications_back'] = '알림 목록으로 돌아가기';
 $lang['notifications_select_prompt'] = '알림을 선택하세요';
 $lang['notifications_select_hint'] = '왼쪽 목록에서 알림을 선택하면 자세한 내용을 볼 수 있습니다.';
 $lang['notifications_list_label'] = '알림 목록';

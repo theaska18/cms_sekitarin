@@ -8,6 +8,7 @@ $notifications_empty_hint = isset($notifications_empty_hint) ? $notifications_em
 $notifications_pagination = isset($notifications_pagination) ? $notifications_pagination : '';
 $notifications_previous = isset($notifications_previous) ? $notifications_previous : '';
 $notifications_next = isset($notifications_next) ? $notifications_next : '';
+$notifications_back = isset($notifications_back) ? $notifications_back : '';
 $notifications_select_prompt = isset($notifications_select_prompt) ? $notifications_select_prompt : '';
 $notifications_select_hint = isset($notifications_select_hint) ? $notifications_select_hint : '';
 $notifications_list_label = isset($notifications_list_label) ? $notifications_list_label : '';
@@ -64,7 +65,7 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
     return $notifications_time_just_now;
 };
 ?>
-<section class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<section class="mx-auto w-full max-w-7xl px-0 py-6 sm:px-6 sm:py-8 lg:px-8">
             <nav aria-label="<?php echo html_escape($notifications_heading); ?>" class="mb-5 text-sm text-slate-500"><ol class="flex flex-wrap items-center gap-2"><li><?php echo html_escape($notifications_breadcrumb_parent); ?></li><li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800"><?php echo html_escape($notifications_heading); ?></li></ol></nav>
             <header class="mb-8"><h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?php echo html_escape($notifications_heading); ?></h1><p class="mt-2 text-base leading-7 text-slate-600"><?php echo html_escape($notifications_intro); ?></p></header>
 
@@ -82,7 +83,7 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
         </div>
     <?php else: ?>
         <div class="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[minmax(16rem,0.85fr)_minmax(0,1.65fr)]">
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="<?php echo html_escape($notifications_list_label); ?>">
+            <section class="<?php echo $selected_notification !== NULL ? 'hidden lg:block' : 'block'; ?> overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-label="<?php echo html_escape($notifications_list_label); ?>">
                 <div class="border-b border-slate-200 px-4 py-4 sm:px-5">
                     <h2 class="text-sm font-semibold text-slate-800"><?php echo html_escape($notifications_list_label); ?></h2>
                 </div>
@@ -95,12 +96,12 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
                         ?>
                         <li>
                             <a href="/admin/notifications?selected=<?php echo (int) $notification['id']; ?>&page=<?php echo (int) $notifications_page; ?>" data-notification-unread="<?php echo $is_read ? 'false' : 'true'; ?>" class="notification-list-item block border-l-4 px-4 py-4 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:px-5 <?php echo $is_selected ? 'border-indigo-600 bg-indigo-50/70' : 'border-transparent'; ?>"<?php echo $is_selected ? ' aria-current="true"' : ''; ?>>
-                                <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-2">
                                     <h3 class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900"><?php echo html_escape($notification['title'] !== '' ? $notification['title'] : '#' . (int) $notification['id']); ?></h3>
-                                    <svg class="mt-0.5 h-4 w-4 shrink-0 <?php echo $is_read ? 'text-slate-400' : 'text-indigo-600'; ?>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-label="<?php echo html_escape($status_label); ?>" role="img" title="<?php echo html_escape($status_label); ?>"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                                    <time class="shrink-0 text-xs font-medium text-slate-500" datetime="<?php echo html_escape($notification['created_at']); ?>" title="<?php echo html_escape($notification['created_at']); ?>"><?php echo html_escape($relative_time($notification['created_at'])); ?></time>
+                                    <?php if ($is_read): ?><svg class="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-label="<?php echo html_escape($status_label); ?>" role="img" title="<?php echo html_escape($status_label); ?>"><path stroke-linecap="round" stroke-linejoin="round" d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg><?php endif; ?>
                                 </div>
-                                <?php if ($notification['message'] !== ''): ?><p class="notification-message-preview mt-2 text-xs leading-5 text-slate-600"><?php echo html_escape($message_preview($notification['message'])); ?></p><?php endif; ?>
-                                <time class="mt-2 block text-xs font-medium text-slate-500" datetime="<?php echo html_escape($notification['created_at']); ?>" title="<?php echo html_escape($notification['created_at']); ?>"><?php echo html_escape($relative_time($notification['created_at'])); ?></time>
+                                <?php if ($notification['message'] !== ''): ?><p class="notification-message-preview mt-2 block truncate text-xs leading-5 text-slate-600"><?php echo html_escape($message_preview($notification['message'])); ?></p><?php endif; ?>
                             </a>
                         </li>
                     <?php endforeach; ?>
@@ -116,8 +117,12 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
                 <?php endif; ?>
             </section>
 
-            <section class="min-h-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-live="polite">
+            <section class="<?php echo $selected_notification !== NULL ? 'block' : 'hidden lg:block'; ?> min-h-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-live="polite">
                 <?php if ($selected_notification !== NULL): ?>
+                    <a href="/admin/notifications?page=<?php echo (int) $notifications_page; ?>" class="mb-5 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-indigo-700 hover:text-indigo-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 lg:hidden">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6M9 12h12"/></svg>
+                        <?php echo html_escape($notifications_back); ?>
+                    </a>
                     <article>
                         <div class="flex items-start gap-3">
                             <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-50 text-indigo-700" aria-hidden="true">

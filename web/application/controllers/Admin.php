@@ -750,7 +750,7 @@ class Admin extends CI_Controller
         }
 
         if ($is_notifications_view) {
-            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
                 $labels['notifications_' . $key] = $this->lang->line('notifications_' . $key);
             }
             $labels['admin_notifications_heading'] = $labels['notifications_heading'];
@@ -912,7 +912,7 @@ class Admin extends CI_Controller
         );
         $data = array_merge($data, $extra_data);
         if ($is_notifications_view) {
-            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }
             $data['notifications_breadcrumb_parent'] = $labels['dashboard'];

@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = 'ستظهر إشعارات حسابك الج
 $lang['notifications_pagination'] = 'صفحات الإشعارات';
 $lang['notifications_previous'] = 'السابق';
 $lang['notifications_next'] = 'التالي';
+$lang['notifications_back'] = 'العودة إلى الإشعارات';
 $lang['notifications_select_prompt'] = 'يرجى اختيار إشعار';
 $lang['notifications_select_hint'] = 'اختر إشعارًا من القائمة على اليسار لعرض التفاصيل.';
 $lang['notifications_list_label'] = 'قائمة الإشعارات';

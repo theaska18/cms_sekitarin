@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = 'Neue Benachrichtigungen für Ihr Konto ersc
 $lang['notifications_pagination'] = 'Benachrichtigungsseiten';
 $lang['notifications_previous'] = 'Zurück';
 $lang['notifications_next'] = 'Weiter';
+$lang['notifications_back'] = 'Zurück zu Benachrichtigungen';
 $lang['notifications_select_prompt'] = 'Bitte wählen Sie eine Benachrichtigung';
 $lang['notifications_select_hint'] = 'Wählen Sie links eine Benachrichtigung aus, um die Details anzuzeigen.';
 $lang['notifications_list_label'] = 'Benachrichtigungsliste';

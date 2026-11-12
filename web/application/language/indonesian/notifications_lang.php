@@ -7,6 +7,7 @@ $lang['notifications_empty_hint'] = 'Notifikasi baru untuk akun Anda akan muncul
 $lang['notifications_pagination'] = 'Halaman notifikasi';
 $lang['notifications_previous'] = 'Sebelumnya';
 $lang['notifications_next'] = 'Berikutnya';
+$lang['notifications_back'] = 'Kembali ke notifikasi';
 $lang['notifications_select_prompt'] = 'Pilih notifikasi';
 $lang['notifications_select_hint'] = 'Pilih notifikasi dari daftar di sebelah kiri untuk melihat detailnya.';
 $lang['notifications_list_label'] = 'Daftar notifikasi';
