@@ -87,6 +87,25 @@ class AdminAuthContractTests(unittest.TestCase):
         self.assertIn("image", identity)
         self.assertIn("profile_image", header)
 
+    def test_menu_visit_migration_creates_indexed_per_visit_analytics_table(self):
+        migration = (APP / "migrations" / "202611120001_create_app_menu_visit.php").read_text()
+        config = (APP / "config" / "migration.php").read_text()
+        self.assertIn("class Migration_202611120001_create_app_menu_visit", migration)
+        for column in ("menu_visit_id", "tenant_id", "user_id", "menu_code", "visited_at"):
+            self.assertIn("'" + column + "'", migration)
+        self.assertIn("add_key(array('tenant_id', 'visited_at', 'menu_code'))", migration)
+        self.assertIn("add_key(array('tenant_id', 'user_id', 'visited_at'))", migration)
+        self.assertIn("'migration_type'] = 'timestamp'", config)
+        self.assertIn("'migration_version'] = 202611110001", config)
+
+    def test_chat_icon_visibility_uses_authenticated_users_chat_flag(self):
+        header = (APP / "views" / "admin" / "header.php").read_text()
+        identity = (APP / "libraries" / "Admin_identity.php").read_text()
+        self.assertIn("$current_user['chat_flag']", header)
+        self.assertIn("id=\"admin-messages-toggle\"", header)
+        self.assertIn("u.chat_flag", identity)
+        self.assertIn("'chat_flag' =>", identity)
+
     def test_login_password_toggle_is_accessible_and_supports_nine_locales(self):
         login = (APP / "views" / "auth" / "login.php").read_text()
         auth = (APP / "controllers" / "Auth.php").read_text()

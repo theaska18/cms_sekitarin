@@ -29,6 +29,9 @@ class Admin_identity
 
         $db = $this->CI->load->database('default', TRUE);
         $select = array('u.user_id', 'u.username', 'u.tenant_id', 'u.full_name', 'u.role_id', 'u.password', 'u.theme');
+        if ($db->field_exists('chat_flag', 'app_user')) {
+            $select[] = 'u.chat_flag';
+        }
         if ($db->field_exists('employee_id', 'app_user')) {
             $select[] = 'u.employee_id';
         }
@@ -67,6 +70,7 @@ class Admin_identity
             'full_name' => trim((string) $row['full_name']),
             'display_name' => trim((string) $row['full_name']),
             'theme' => $theme,
+            'chat_flag' => isset($row['chat_flag']) && in_array((string) $row['chat_flag'], array('1', 'true', 'TRUE'), TRUE),
         );
         if (isset($row['employee_id']) && (int) $row['employee_id'] > 0) {
             $user['employee_id'] = (int) $row['employee_id'];
