@@ -282,6 +282,13 @@ class AdminMenuAnalyticsContractTests(unittest.TestCase):
         self.assertIn('popular_menu_items', dashboard)
         self.assertIn('popular_menu_heading', dashboard)
 
+    def test_dashboard_does_not_render_the_quick_access_feature(self):
+        root = Path(__file__).resolve().parents[1]
+        dashboard = (root / 'web/application/views/admin/dashboard.php').read_text()
+        self.assertNotIn("$labels['quick_links']", dashboard)
+        self.assertNotIn('dashboard_links', dashboard)
+        self.assertIn('popular_menu_items', dashboard)
+
 
 if __name__ == "__main__":
     unittest.main()

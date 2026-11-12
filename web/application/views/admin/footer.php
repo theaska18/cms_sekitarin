@@ -17,6 +17,64 @@
         </div>
     </section>
 </div>
+<div id="admin-web-confirm-backdrop" hidden class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4" aria-hidden="true">
+    <section id="admin-web-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="admin-web-confirm-title" aria-describedby="admin-web-confirm-message" tabindex="-1" class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-2xl sm:p-7">
+        <h2 id="admin-web-confirm-title" class="text-lg font-bold text-slate-900 sm:text-xl"></h2>
+        <p id="admin-web-confirm-message" class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-600"></p>
+        <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button id="admin-web-confirm-cancel" type="button" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"><?php echo html_escape($labels['cancel']); ?></button>
+            <button id="admin-web-confirm-accept" type="button" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-rose-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:ring-offset-2"></button>
+        </div>
+    </section>
+</div>
+<script>
+(function () {
+    var backdrop = document.getElementById('admin-web-confirm-backdrop');
+    var title = document.getElementById('admin-web-confirm-title');
+    var message = document.getElementById('admin-web-confirm-message');
+    var cancel = document.getElementById('admin-web-confirm-cancel');
+    var accept = document.getElementById('admin-web-confirm-accept');
+    if (!backdrop || !title || !message || !cancel || !accept) return;
+    var pendingForm = null;
+    var previousFocus = null;
+    function closeDialog() {
+        backdrop.hidden = true;
+        backdrop.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+        pendingForm = null;
+        if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+    }
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form || !form.matches || !form.matches('form[data-web-confirm]') || form.dataset.webConfirmed === 'true') return;
+        event.preventDefault();
+        pendingForm = form;
+        previousFocus = document.activeElement;
+        title.textContent = form.getAttribute('data-web-confirm-title') || '';
+        message.textContent = form.getAttribute('data-web-confirm-message') || '';
+        accept.textContent = form.getAttribute('data-web-confirm-accept') || '';
+        backdrop.hidden = false;
+        backdrop.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+        cancel.focus();
+    }, true);
+    cancel.addEventListener('click', closeDialog);
+    backdrop.addEventListener('click', function (event) { if (event.target === backdrop) closeDialog(); });
+    accept.addEventListener('click', function () {
+        if (!pendingForm) return;
+        var form = pendingForm;
+        form.dataset.webConfirmed = 'true';
+        closeDialog();
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.submit();
+        delete form.dataset.webConfirmed;
+    });
+    document.addEventListener('keydown', function (event) {
+        if (backdrop.hidden) return;
+        if (event.key === 'Escape') { event.preventDefault(); closeDialog(); }
+    });
+})();
+</script>
 <script>
     (function () {
         var form = document.getElementById('admin-language-form');

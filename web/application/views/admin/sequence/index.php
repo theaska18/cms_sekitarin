@@ -138,7 +138,7 @@ $columns = array(
                                             <?php endif; ?>
                                             <?php if ($sequence_delete_allowed): ?>
                                                 <?php if ($write_available): ?>
-                                                <form action="/admin/system/sequence/delete" method="post" onsubmit="return window.confirm(<?= html_escape(json_encode($labels['sequence_confirm_delete'])) ?>);">
+                                                <form action="/admin/system/sequence/delete" method="post" data-web-confirm data-web-confirm-title="<?= html_escape($labels['sequence_delete']) ?>" data-web-confirm-message="<?= html_escape($labels['sequence_confirm_delete']) ?>" data-web-confirm-accept="<?= html_escape($labels['sequence_delete']) ?>">
                                                     <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
                                                     <input type="hidden" name="sequence_code" value="<?= html_escape((string) $record['sequence_code']) ?>">
                                                     <button type="submit" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">

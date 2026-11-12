@@ -81,7 +81,9 @@ class AdminSequenceContractTests(unittest.TestCase):
 
     def test_list_filter_and_table_header_stick_below_the_admin_topbar(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
+        topbar_css = (ROOT / "assets" / "css" / "admin-topbar-actions.css").read_text()
         self.assertIn('sticky top-16 z-30', view)
+        self.assertIn('.admin-topbar{z-index:40!important}', topbar_css)
         self.assertIn('id="sequence-filter-bar"', view)
         self.assertIn('bg-white/10', view)
         self.assertIn('data-sequence-sticky-header', view)
@@ -271,7 +273,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         for method in ("find", "update", "delete"):
             self.assertIn(f"function {method}", store)
         self.assertIn("csrf_token_name", view)
-        self.assertIn("confirm(", view)
+        self.assertIn("data-web-confirm", view)
 
     def test_sequence_action_labels_are_available_in_all_admin_locales(self):
         controller = (APP / "controllers" / "Admin.php").read_text()
