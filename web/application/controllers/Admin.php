@@ -614,6 +614,7 @@ class Admin extends CI_Controller
         $is_role_view = strpos($view, 'admin/role/') === 0;
         $is_user_view = strpos($view, 'admin/user/') === 0;
         $is_employee_view = strpos($view, 'admin/employee/') === 0;
+        $is_notifications_view = strpos($view, 'admin/notifications/') === 0;
         if ($is_property_view) {
             $this->lang->load('property', $locale);
         }
@@ -635,13 +636,14 @@ class Admin extends CI_Controller
         if ($is_employee_view) {
             $this->lang->load('employee', $locale);
         }
+        if ($is_notifications_view) {
+            $this->lang->load('notifications', $locale);
+        }
         $keys = array(
             'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
             'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
-            'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links',
+            'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation', 'admin_area',
             'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_dark', 'setting_theme_system', 'setting_theme_note',
-            'placeholder_title', 'placeholder_body', 'admin_area',
-            'apply_language', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation',
             'path', 'not_built', 'logout_unavailable', 'avatar_alt', 'dashboard_sections',
             'module_overview', 'module_status', 'module_read_only', 'module_backend_unavailable',
             'module_focus', 'property_focus', 'parameter_focus', 'menu_focus', 'system_sequence_focus',
@@ -722,6 +724,24 @@ class Admin extends CI_Controller
             foreach ($sequence_keys as $key) {
                 $labels['sequence_' . $key] = $this->lang->line('sequence_' . $key);
             }
+        }
+
+        if ($is_employee_view) {
+            $employee_keys = array(
+                'heading', 'intro', 'search_hint', 'empty', 'empty_hint', 'no_results', 'no_results_hint', 'unavailable',
+                'total', 'page', 'page_of', 'previous', 'next', 'per_page', 'actions', 'add', 'edit', 'delete',
+                'form_new', 'form_edit', 'form_intro', 'back', 'save', 'cancel', 'name_label', 'code_label'
+            );
+            foreach ($employee_keys as $key) {
+                $labels['employee_' . $key] = $this->lang->line('employee_' . $key);
+            }
+        }
+
+        if ($is_notifications_view) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next') as $key) {
+                $labels['notifications_' . $key] = $this->lang->line('notifications_' . $key);
+            }
+            $labels['admin_notifications_heading'] = $labels['notifications_heading'];
         }
 
         if ($is_role_view) {
