@@ -82,7 +82,7 @@ class Admin_user extends Admin
         $write_available = $this->user_write_available($store);
         $tenants = $available ? $store->tenant_options() : FALSE;
         $default_tenant = $available ? $store->tenant_id() : FALSE;
-        $record = array('tenant_id' => $default_tenant === FALSE ? '' : (string) $default_tenant, 'user_code' => '', 'username' => '', 'role_id' => '', 'employee_flag' => 0, 'employee_id' => '', 'password' => '', 'access_api_flag' => 0, 'api_secret' => '');
+        $record = array('tenant_id' => $default_tenant === FALSE ? '' : (string) $default_tenant, 'user_code' => '', 'username' => '', 'role_id' => '', 'employee_flag' => 0, 'employee_id' => '', 'password' => '', 'access_api_flag' => 0, 'api_secret' => '', 'chat_flag' => 0);
         $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) { show_error('User writes are unavailable.', 503); return; }
@@ -263,6 +263,7 @@ class Admin_user extends Admin
             'user_mode' => $mode, 'user_id' => $user_id, 'user_record' => $record, 'user_errors' => $errors,
             'user_field_specs' => $available ? $store->field_specs() : array(), 'user_tenants' => $tenants,
             'user_roles' => $roles, 'user_backend_available' => $available, 'user_write_available' => $write_available,
+            'user_has_chat_flag' => $available && $store->has_chat_flag(),
         ) + $this->user_access_flags());
     }
 
@@ -279,12 +280,13 @@ class Admin_user extends Admin
             $values['user_code'] = trim((string) $this->input->post('user_code', TRUE));
             $values['password'] = (string) $this->input->post('password', FALSE);
         }
-        $values['username'] = trim((string) $this->input->post('username', TRUE));
+        $values['username'] = preg_replace('/\s+/u', '', strtolower(trim((string) $this->input->post('username', TRUE))));
         $values['role_id'] = trim((string) $this->input->post('role_id', TRUE));
         $values['employee_flag'] = $this->input->post('employee_flag', TRUE) === '1' ? 1 : 0;
         $values['employee_id'] = trim((string) $this->input->post('employee_id', TRUE));
         $values['full_name'] = trim((string) $this->input->post('full_name', TRUE));
         $values['access_api_flag'] = $this->input->post('access_api_flag', TRUE) === '1' ? 1 : 0;
+        $values['chat_flag'] = $this->input->post('chat_flag', TRUE) === '1' ? 1 : 0;
         $values['api_secret'] = trim((string) $this->input->post('api_secret', TRUE));
         return $values;
     }

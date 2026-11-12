@@ -100,3 +100,8 @@ $lang['admin_popular_menu_heading'] = 'Frequently visited menus';
 $lang['admin_popular_menu_description'] = 'Popular menu links based on the last 30 days of visits.';
 $lang['admin_popular_menu_visits'] = 'visits';
 $lang['admin_popular_menu_empty'] = 'No menu visits yet. Visit an authorized menu to see it here.';
+
+$lang['admin_notifications_label'] = 'Notifications';
+$lang['admin_notifications_unread_count'] = '%d unread';
+$lang['admin_view_all'] = 'View all';
+$lang['admin_notifications_empty'] = 'No notifications yet.';

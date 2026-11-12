@@ -257,6 +257,35 @@
         popovers.forEach(function (item) {
             item.trigger.addEventListener('click', function (event) {
                 event.stopPropagation();
+                if (item.trigger.id === 'admin-notifications-toggle' && !item.trigger.getAttribute('data-mark-viewed-pending')) {
+                    item.trigger.setAttribute('data-mark-viewed-pending', 'true');
+                    var csrfName = item.trigger.getAttribute('data-csrf-name');
+                    var csrfHash = item.trigger.getAttribute('data-csrf-hash');
+                    var markViewedUrl = item.trigger.getAttribute('data-mark-viewed-url');
+                    if (csrfName && csrfHash && markViewedUrl && window.fetch && window.URLSearchParams) {
+                        var requestBody = new URLSearchParams();
+                        requestBody.append(csrfName, csrfHash);
+                        window.fetch(markViewedUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' },
+                            body: requestBody.toString()
+                        }).then(function (response) {
+                            if (!response.ok) throw new Error('Notification view update failed');
+                            return response.json();
+                        }).then(function (result) {
+                            if (!result || result.success !== true) throw new Error('Notification view update failed');
+                            if (result.csrf_hash) item.trigger.setAttribute('data-csrf-hash', result.csrf_hash);
+                            var badge = item.trigger.querySelector('.admin-action-badge');
+                            if (badge) badge.remove();
+                            item.trigger.setAttribute('aria-label', 'Notifikasi');
+                        }).catch(function () {
+                            item.trigger.removeAttribute('data-mark-viewed-pending');
+                        });
+                    } else {
+                        item.trigger.removeAttribute('data-mark-viewed-pending');
+                    }
+                }
                 var open = item.trigger.getAttribute('aria-expanded') !== 'true';
                 closePopovers(item);
                 if (menu && trigger) {

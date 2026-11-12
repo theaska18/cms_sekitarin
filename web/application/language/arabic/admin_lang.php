@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = 'القوائم الأكثر زيارة';
 $lang['admin_popular_menu_description'] = 'الروابط الشائعة حسب الزيارات خلال آخر 30 يومًا。';
 $lang['admin_popular_menu_visits'] = 'زيارة';
 $lang['admin_popular_menu_empty'] = 'لا توجد زيارات للقوائم بعد. قم بزيارة قائمة متاحة لتظهر هنا.';
+
+$lang['admin_notifications_label'] = 'الإشعارات';
+$lang['admin_notifications_unread_count'] = '%d غير مقروءة';
+$lang['admin_view_all'] = 'عرض الكل';
+$lang['admin_notifications_empty'] = 'لا توجد إشعارات بعد.';

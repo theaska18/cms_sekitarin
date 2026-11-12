@@ -640,12 +640,10 @@ class Admin extends CI_Controller
         if ($is_employee_view) {
             $this->lang->load('employee', $locale);
         }
-        if ($is_notifications_view) {
-            $this->lang->load('notifications', $locale);
-        }
+        $this->lang->load('notifications', $locale);
         $keys = array(
             'dashboard', 'system', 'application', 'property', 'tenant', 'parameter', 'menu', 'sequence', 'approval', 'hierarchy', 'approval_flow', 'hr',
-            'employee', 'role', 'user', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
+            'employee', 'role', 'user', 'notifications_label', 'notifications_unread_count', 'notifications_empty', 'view_all', 'back_home', 'home_dialog_title', 'home_dialog_description', 'home_dialog_confirm', 'cancel', 'language', 'logout',
             'profile', 'settings', 'welcome_title', 'welcome_body', 'quick_links', 'topbar_navigation', 'sidebar_navigation', 'open_navigation', 'close_navigation', 'admin_area',
             'setting_intro', 'setting_language_heading', 'setting_language_help', 'setting_appearance_heading', 'setting_appearance_help', 'setting_account_heading', 'setting_account_help', 'setting_save', 'setting_saved', 'setting_invalid', 'setting_current_language', 'setting_theme', 'setting_theme_light', 'setting_theme_dark', 'setting_theme_system', 'setting_theme_note',
             'path', 'not_built', 'logout_unavailable', 'avatar_alt', 'dashboard_sections',
@@ -662,6 +660,12 @@ class Admin extends CI_Controller
             $labels[$key] = $this->lang->line('admin_' . $key);
             if ($labels[$key] === FALSE) {
                 $labels[$key] = '';
+            }
+        }
+        foreach (array('unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago', 'actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel') as $time_key) {
+            $labels['notifications_' . $time_key] = $this->lang->line('notifications_' . $time_key);
+            if ($labels['notifications_' . $time_key] === FALSE) {
+                $labels['notifications_' . $time_key] = '';
             }
         }
         if ($is_profile_view) {
@@ -784,10 +788,13 @@ class Admin extends CI_Controller
                 'tenant_invalid', 'user_code_required', 'user_code_too_long', 'user_code_duplicate', 'username_required',
                 'username_too_long', 'username_duplicate', 'password_required', 'password_too_long', 'password_mismatch',
                 'role_invalid', 'employee_invalid', 'save_error', 'tenant_filter', 'delete', 'delete_confirm',
-                'api_secret_copy', 'copy_success', 'copy_error', 'no_access'
+                'api_secret_copy', 'copy_success', 'copy_error', 'no_access', 'chat_flag'
             );
             foreach ($user_keys as $key) {
                 $labels['user_' . $key] = $this->lang->line('user_' . $key);
+            }
+            if ($labels['user_chat_flag'] === FALSE) {
+                $labels['user_chat_flag'] = 'Enable chat';
             }
         }
         if ($is_employee_view) {
@@ -892,6 +899,65 @@ class Admin extends CI_Controller
                 }
             }
         }
+        $notification_count = 0;
+        $notification_items = array();
+        $notification_user_id = isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0;
+        if ($notification_user_id > 0) {
+            $notification_db = $this->load->database('default', TRUE);
+            if ($notification_db && $notification_db->table_exists('app_notification')
+                && $notification_db->field_exists('user_id', 'app_notification')
+                && $notification_db->field_exists('notification_id', 'app_notification')
+                && $notification_db->field_exists('title', 'app_notification')
+                && $notification_db->field_exists('message', 'app_notification')) {
+                if ($notification_db->field_exists('view_flag', 'app_notification')) {
+                    $count_result = $notification_db->from('app_notification')
+                        ->where('user_id', $notification_user_id)
+                        ->where('view_flag', 0)
+                        ->count_all_results();
+                    if ($count_result !== FALSE) {
+                        $notification_count = (int) $count_result;
+                    }
+                }
+
+                $notification_select = array('notification_id', 'title', 'message');
+                $notification_order_field = NULL;
+                foreach (array('create_on', 'created_at', 'created_date', 'date_created') as $date_field) {
+                    if ($notification_db->field_exists($date_field, 'app_notification')) {
+                        $notification_select[] = $date_field;
+                        $notification_order_field = $date_field;
+                        break;
+                    }
+                }
+                if ($notification_db->field_exists('view_flag', 'app_notification')) {
+                    $notification_select[] = 'view_flag';
+                }
+                $notification_read_field = $notification_db->field_exists('read_flag', 'app_notification');
+                if ($notification_read_field) {
+                    $notification_select[] = 'read_flag';
+                }
+                $notification_query = $notification_db->select(implode(', ', $notification_select), FALSE)
+                    ->from('app_notification')
+                    ->where('user_id', $notification_user_id);
+                if ($notification_order_field !== NULL) {
+                    $notification_query->order_by($notification_order_field, 'DESC');
+                }
+                $notification_result = $notification_query->order_by('notification_id', 'DESC')
+                    ->limit(5)
+                    ->get();
+                if ($notification_result !== FALSE) {
+                    foreach ($notification_result->result_array() as $notification_row) {
+                        $notification_items[] = array(
+                            'id' => (int) $notification_row['notification_id'],
+                            'title' => (string) $notification_row['title'],
+                            'message' => (string) $notification_row['message'],
+                            'created_at' => $notification_order_field !== NULL && isset($notification_row[$notification_order_field]) ? (string) $notification_row[$notification_order_field] : '',
+                            'view_flag' => isset($notification_row['view_flag']) ? (string) $notification_row['view_flag'] : '1',
+                            'read_flag' => $notification_read_field && isset($notification_row['read_flag']) ? (string) $notification_row['read_flag'] : '1',
+                        );
+                    }
+                }
+            }
+        }
         $this->record_admin_menu_visit($current_path);
         $data = array(
             'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
@@ -905,6 +971,8 @@ class Admin extends CI_Controller
             'text_direction' => $this->admin_languages[$locale]['direction'],
             'is_rtl' => $this->admin_languages[$locale]['direction'] === 'rtl',
             'current_user' => $this->current_user,
+            'notification_count' => $notification_count,
+            'notification_items' => $notification_items,
             'csrf_token_name' => $this->security->get_csrf_token_name(),
             'csrf_hash' => $this->security->get_csrf_hash(),
             'menu_groups' => $menu_groups,
@@ -913,6 +981,9 @@ class Admin extends CI_Controller
         $data = array_merge($data, $extra_data);
         if ($is_notifications_view) {
             foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
+                $data['notifications_' . $key] = $labels['notifications_' . $key];
+            }
+            foreach (array('actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }
             $data['notifications_breadcrumb_parent'] = $labels['dashboard'];

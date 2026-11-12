@@ -53,6 +53,11 @@ class User_store
         return $this->valid;
     }
 
+    public function has_chat_flag()
+    {
+        return $this->schema_available() && isset($this->columns['app_user']['chat_flag']);
+    }
+
     public function tenant_id()
     {
         if ($this->tenant_cache !== NULL) {
@@ -152,7 +157,9 @@ class User_store
         if (!$this->tenant_exists($tenant_id) || !is_numeric($user_id) || (int) $user_id < 1) {
             return FALSE;
         }
-        $query = $this->db->select('u.user_id, u.tenant_id, u.user_code, u.username, u.role_id, u.emloyee_flag AS employee_flag, u.employee_id, u.full_name, u.block_flag, u.access_api_flag, u.api_secret, e.employee_name')
+        $select = 'u.user_id, u.tenant_id, u.user_code, u.username, u.role_id, u.emloyee_flag AS employee_flag, u.employee_id, u.full_name, u.block_flag, u.access_api_flag, u.api_secret, e.employee_name';
+        if ($this->has_chat_flag()) { $select .= ', u.chat_flag'; }
+        $query = $this->db->select($select)
             ->from('app_user u')->join('hr_employee e', 'e.employee_id = u.employee_id AND e.tenant_id = u.tenant_id', 'left')
             ->where('u.tenant_id', (int) $tenant_id)->where('u.user_id', (int) $user_id)->limit(2)->get();
         if (!$query) {
@@ -290,6 +297,7 @@ class User_store
             'access_api_flag' => (int) $record['access_api_flag'], 'api_secret' => $record['access_api_flag'] ? $record['api_secret'] : NULL,
             'create_on' => date('Y-m-d H:i:s'),
         );
+        if ($this->has_chat_flag()) { $data['chat_flag'] = isset($record['chat_flag']) && (int) $record['chat_flag'] === 1 ? 1 : 0; }
         return $this->db->insert('app_user', $data) && $this->db->affected_rows() === 1;
     }
 
@@ -307,6 +315,7 @@ class User_store
             'access_api_flag' => (int) $record['access_api_flag'], 'api_secret' => $record['access_api_flag'] ? $record['api_secret'] : NULL,
             'update_on' => date('Y-m-d H:i:s'),
         );
+        if ($this->has_chat_flag()) { $data['chat_flag'] = isset($record['chat_flag']) && (int) $record['chat_flag'] === 1 ? 1 : 0; }
         return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
             ->update('app_user', $data);
     }

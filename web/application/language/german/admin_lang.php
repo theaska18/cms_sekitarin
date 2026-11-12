@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = 'Häufig besuchte Menüs';
 $lang['admin_popular_menu_description'] = 'Beliebte Links basierend auf den Besuchen der letzten 30 Tage.';
 $lang['admin_popular_menu_visits'] = 'Aufrufe';
 $lang['admin_popular_menu_empty'] = 'Noch keine Menüaufrufe. Besuchen Sie ein zugängliches Menü, damit es hier erscheint.';
+
+$lang['admin_notifications_label'] = 'Benachrichtigungen';
+$lang['admin_notifications_unread_count'] = '%d ungelesen';
+$lang['admin_view_all'] = 'Alle anzeigen';
+$lang['admin_notifications_empty'] = 'Noch keine Benachrichtigungen.';

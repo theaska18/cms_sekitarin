@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = '자주 방문한 메뉴';
 $lang['admin_popular_menu_description'] = '최근 30일 방문 수를 기준으로 한 인기 메뉴 링크입니다.';
 $lang['admin_popular_menu_visits'] = '회 방문';
 $lang['admin_popular_menu_empty'] = '아직 메뉴 방문 기록이 없습니다. 접근 가능한 메뉴를 방문하면 여기에 표시됩니다.';
+
+$lang['admin_notifications_label'] = '알림';
+$lang['admin_notifications_unread_count'] = '읽지 않음 %d개';
+$lang['admin_view_all'] = '모두 보기';
+$lang['admin_notifications_empty'] = '아직 알림이 없습니다.';

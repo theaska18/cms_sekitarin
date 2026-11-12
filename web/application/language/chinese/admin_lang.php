@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = '常用菜单';
 $lang['admin_popular_menu_description'] = '根据最近 30 天的访问量显示热门菜单。';
 $lang['admin_popular_menu_visits'] = '次访问';
 $lang['admin_popular_menu_empty'] = '暂无菜单访问记录。访问有权限的菜单后，记录将显示在这里。';
+
+$lang['admin_notifications_label'] = '通知';
+$lang['admin_notifications_unread_count'] = '%d 条未读';
+$lang['admin_view_all'] = '查看全部';
+$lang['admin_notifications_empty'] = '暂无通知。';

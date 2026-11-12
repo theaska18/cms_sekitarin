@@ -14,6 +14,7 @@ $lang['user_access_api_help'] = 'Jika diaktifkan, secret API wajib diisi.';
 $lang['user_api_secret'] = 'Secret API';
 $lang['user_api_generate'] = 'Buat secret';
 $lang['user_code'] = 'Kode pengguna';
+$lang['user_chat_flag'] = 'Aktifkan fitur chat';
 $lang['user_name'] = 'Username';
 $lang['user_full_name'] = 'Nama lengkap';
 $lang['user_full_name_help'] = 'Jika dihubungkan ke pegawai, nama diambil dari data pegawai.';

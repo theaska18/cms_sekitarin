@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = 'Menús más visitados';
 $lang['admin_popular_menu_description'] = 'Enlaces populares según las visitas de los últimos 30 días.';
 $lang['admin_popular_menu_visits'] = 'visitas';
 $lang['admin_popular_menu_empty'] = 'Aún no hay visitas. Visita un menú autorizado para verlo aquí.';
+
+$lang['admin_notifications_label'] = 'Notificaciones';
+$lang['admin_notifications_unread_count'] = '%d sin leer';
+$lang['admin_view_all'] = 'Ver todo';
+$lang['admin_notifications_empty'] = 'Todavía no hay notificaciones.';

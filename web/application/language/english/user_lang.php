@@ -14,6 +14,7 @@ $lang['user_access_api_help'] = 'When enabled, an API secret is required.';
 $lang['user_api_secret'] = 'API secret';
 $lang['user_api_generate'] = 'Generate secret';
 $lang['user_code'] = 'User code';
+$lang['user_chat_flag'] = 'Enable chat';
 $lang['user_name'] = 'Username';
 $lang['user_full_name'] = 'Full name';
 $lang['user_full_name_help'] = 'When linked to an employee, this name is taken from the employee record.';

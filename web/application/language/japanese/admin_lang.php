@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = 'よく利用されるメニュー';
 $lang['admin_popular_menu_description'] = '過去30日間の訪問数に基づく人気メニューです。';
 $lang['admin_popular_menu_visits'] = '回';
 $lang['admin_popular_menu_empty'] = 'メニューの訪問履歴はまだありません。アクセス可能なメニューを開くとここに表示されます。';
+
+$lang['admin_notifications_label'] = '通知';
+$lang['admin_notifications_unread_count'] = '未読 %d 件';
+$lang['admin_view_all'] = 'すべて表示';
+$lang['admin_notifications_empty'] = '通知はありません。';

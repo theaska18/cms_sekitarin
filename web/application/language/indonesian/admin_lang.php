@@ -100,3 +100,8 @@ $lang['admin_popular_menu_heading'] = 'Menu yang sering dikunjungi';
 $lang['admin_popular_menu_description'] = 'Menu populer berdasarkan kunjungan selama 30 hari terakhir.';
 $lang['admin_popular_menu_visits'] = 'kunjungan';
 $lang['admin_popular_menu_empty'] = 'Belum ada kunjungan menu. Kunjungi menu yang dapat diakses untuk melihatnya di sini.';
+
+$lang['admin_notifications_label'] = 'Notifikasi';
+$lang['admin_notifications_unread_count'] = '%d belum dibaca';
+$lang['admin_view_all'] = 'Lihat semua';
+$lang['admin_notifications_empty'] = 'Belum ada notifikasi.';

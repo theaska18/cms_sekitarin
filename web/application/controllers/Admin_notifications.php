@@ -98,4 +98,88 @@ class Admin_notifications extends Admin
 
         $this->render_admin('admin/notifications/index', 'notifications_heading', '/admin/notifications', $data);
     }
+
+    public function mark_viewed()
+    {
+        if (strtoupper((string) $this->input->method(TRUE)) !== 'POST') {
+            $this->output->set_status_header(405);
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('success' => FALSE)));
+            return;
+        }
+
+        $user_id = isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0;
+        if ($user_id < 1) {
+            $this->output->set_status_header(401);
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('success' => FALSE)));
+            return;
+        }
+
+        $db = $this->load->database('default', TRUE);
+        if (!$db->table_exists('app_notification')) {
+            $this->output->set_status_header(503);
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('success' => FALSE)));
+            return;
+        }
+
+        $fields = array();
+        foreach ((array) $db->field_data('app_notification') as $field) {
+            if (isset($field->name)) {
+                $fields[(string) $field->name] = TRUE;
+            }
+        }
+        if (!isset($fields['user_id'], $fields['view_flag'])) {
+            $this->output->set_status_header(503);
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('success' => FALSE)));
+            return;
+        }
+
+        $updated = $db->where('user_id', $user_id)
+            ->where('view_flag', 0)
+            ->update('app_notification', array('view_flag' => 1));
+        if ($updated === FALSE) {
+            $this->output->set_status_header(500);
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('success' => FALSE)));
+            return;
+        }
+
+        $this->output->set_content_type('application/json')->set_output(json_encode(array(
+            'success' => TRUE,
+            'csrf_hash' => $this->security->get_csrf_hash(),
+        )));
+    }
+
+    public function delete()
+    {
+        if (strtoupper((string) $this->input->method(TRUE)) !== 'POST') {
+            $this->output->set_status_header(405);
+            return;
+        }
+        $user_id = isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0;
+        $notification_id = $this->input->post('notification_id', TRUE);
+        if ($user_id < 1 || $notification_id === NULL || !ctype_digit((string) $notification_id) || (int) $notification_id < 1) {
+            show_error('Not Found', 404);
+            return;
+        }
+        $db = $this->load->database('default', TRUE);
+        if (!$db->table_exists('app_notification')) {
+            show_error('Service Unavailable', 503);
+            return;
+        }
+        $fields = array();
+        foreach ((array) $db->field_data('app_notification') as $field) {
+            if (isset($field->name)) { $fields[(string) $field->name] = TRUE; }
+        }
+        if (!isset($fields['notification_id'], $fields['user_id'])) {
+            show_error('Service Unavailable', 503);
+            return;
+        }
+        $deleted = $db->where('notification_id', (int) $notification_id)
+            ->where('user_id', $user_id)
+            ->delete('app_notification');
+        if ($deleted === FALSE) {
+            show_error('Unable to delete notification', 500);
+            return;
+        }
+        redirect('/admin/notifications');
+    }
 }

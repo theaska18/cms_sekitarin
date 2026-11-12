@@ -85,3 +85,8 @@ $lang['admin_popular_menu_heading'] = 'Menus les plus visités';
 $lang['admin_popular_menu_description'] = 'Liens populaires selon les visites des 30 derniers jours.';
 $lang['admin_popular_menu_visits'] = 'visites';
 $lang['admin_popular_menu_empty'] = 'Aucune visite pour le moment. Consultez un menu autorisé pour l’afficher ici.';
+
+$lang['admin_notifications_label'] = 'Notifications';
+$lang['admin_notifications_unread_count'] = '%d non lues';
+$lang['admin_view_all'] = 'Tout voir';
+$lang['admin_notifications_empty'] = 'Aucune notification pour le moment.';

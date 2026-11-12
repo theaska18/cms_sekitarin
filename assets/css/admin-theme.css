@@ -8,7 +8,9 @@ html[data-theme="dark"] #admin-app-shell .bg-slate-900 { background-color: #0206
 html[data-theme="dark"] #admin-app-shell .text-slate-900, html[data-theme="dark"] #admin-app-shell .text-slate-800, html[data-theme="dark"] #admin-app-shell .text-slate-700 { color: #e2e8f0 !important; }
 html[data-theme="dark"] #admin-app-shell .text-slate-600, html[data-theme="dark"] #admin-app-shell .text-slate-500 { color: #cbd5e1 !important; }
 html[data-theme="dark"] #admin-app-shell .text-slate-400 { color: #94a3b8 !important; }
-html[data-theme="dark"] #admin-app-shell .border-slate-200, html[data-theme="dark"] #admin-app-shell .border-slate-300 { border-color: #475569 !important; }
+html[data-theme="dark"] #admin-app-shell .border-slate-100, html[data-theme="dark"] #admin-app-shell .border-slate-200, html[data-theme="dark"] #admin-app-shell .border-slate-300 { border-color: #334155 !important; }
+html[data-theme="dark"] #admin-app-shell [class*="divide-slate-"] > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+html[data-theme="dark"] #admin-app-shell table th, html[data-theme="dark"] #admin-app-shell table td { border-color: #334155; }
 html[data-theme="dark"] #admin-app-shell input:not([type="radio"]), html[data-theme="dark"] #admin-app-shell select, html[data-theme="dark"] #admin-app-shell textarea { background-color: #0f172a !important; color: #f1f5f9 !important; border-color: #475569 !important; }
 html[data-theme="dark"] #admin-app-shell .bg-emerald-50 { background-color: #064e3b !important; }
 html[data-theme="dark"] #admin-app-shell .text-emerald-800, html[data-theme="dark"] #admin-app-shell .text-emerald-900 { color: #a7f3d0 !important; }
@@ -39,6 +41,15 @@ html[data-theme="dark"] #admin-app-shell #admin-profile-menu [role="menuitem"]:f
 html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"] { background-color: #064e3b !important; color: #d1fae5 !important; border-color: #047857 !important; }
 html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"]:hover,
 html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"][aria-selected="true"]:focus-visible { background-color: #065f46 !important; color: #ffffff !important; }
+
+html[data-theme="dark"] #admin-app-shell .notification-list-row { background-color: #172033 !important; }
+html[data-theme="dark"] #admin-app-shell .notification-list-row:not(.is-selected) .notification-list-item:hover,
+html[data-theme="dark"] #admin-app-shell .notification-list-row:not(.is-selected) .notification-list-item:focus-visible { background-color: #263449 !important; }
+html[data-theme="dark"] #admin-app-shell .notification-list-row.is-selected { background-color: #26364b !important; }
+html[data-theme="dark"] #admin-app-shell .notification-list-row.is-selected .notification-list-item:hover,
+html[data-theme="dark"] #admin-app-shell .notification-list-row.is-selected .notification-list-item:focus-visible { background-color: #31445c !important; }
+html[data-theme="dark"] #admin-app-shell .notification-list-row.is-selected .notification-list-item { color: #f1f5f9; }
+html[data-theme="dark"] #admin-app-shell .divide-slate-300 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
 
 /* Ensure hover and selected navigation labels remain high-contrast. */
 html[data-theme="dark"] #admin-app-shell #admin-sidebar a:hover,
@@ -121,10 +132,4 @@ html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected=
 html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:focus-visible h3 { color: #ffffff !important; }
 html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:hover p,
 html[data-theme="dark"] #admin-app-shell a[href^="/admin/notifications?selected="]:focus-visible p { color: #e2e8f0 !important; }
-#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #f8fafc !important; }
-#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
-#admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #f1f5f9 !important; }
-html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]) { background-color: #273449 !important; }
-html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):hover,
-html[data-theme="dark"] #admin-app-shell a.notification-list-item[data-notification-unread="true"]:not([aria-current="true"]):focus-visible { background-color: #334155 !important; }
 html[data-theme="dark"] #admin-app-shell a.notification-list-item .notification-message-preview { color: #cbd5e1 !important; }
