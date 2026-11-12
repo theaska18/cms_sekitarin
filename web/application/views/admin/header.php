@@ -25,7 +25,7 @@ $admin_theme = isset($current_user['theme']) && $current_user['theme'] === 'dark
     <title><?php echo html_escape($page_title); ?> — <?php echo html_escape($web_name); ?></title>
     <link rel="icon" type="image/png" href="/assets/logo_box.png">
     <link rel="stylesheet" href="/assets/css/tailwind.css?v=<?= is_file(FCPATH . 'assets/css/tailwind.css') ? filemtime(FCPATH . 'assets/css/tailwind.css') : '1' ?>">
-    <link rel="stylesheet" href="/assets/css/admin-theme.css?v=<?= is_file(FCPATH . 'assets/css/admin-theme.css') ? filemtime(FCPATH . 'assets/css/admin-theme.css') : '1' ?>">
+    <link rel="stylesheet" href="/assets/css/admin-theme.css?v=<?= is_file(FCPATH . 'assets/css/admin-theme.css') ? filemtime(FCPATH . 'assets/css/admin-theme.css') + 1 : '1' ?>">
     <link rel="stylesheet" href="/assets/css/admin-profile.css?v=<?= is_file(FCPATH . 'web/assets/css/admin-profile.css') ? filemtime(FCPATH . 'web/assets/css/admin-profile.css') : '1' ?>">
     <?php $ios_controls_path = FCPATH . 'assets/css/ios-form-controls.css'; ?>
     <link rel="stylesheet" href="/assets/css/ios-form-controls.css?v=<?= is_file($ios_controls_path) ? filemtime($ios_controls_path) : '1' ?>">
@@ -47,7 +47,6 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
             </button>
             <a href="/admin" class="flex min-w-0 items-center gap-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="<?php echo html_escape($web_name . ' ' . $labels['dashboard']); ?>">
-                <img src="<?php echo base_url('assets/logo_box.png'); ?>" alt="" aria-hidden="true" class="hidden h-8 w-8 shrink-0 object-contain sm:block">
                 <img src="<?php echo base_url('assets/logo_text.png'); ?>" alt="" aria-hidden="true" class="h-8 max-w-36 shrink-0 object-contain">
                 <span class="sr-only"><?php echo html_escape($web_name); ?></span>
             </a>
