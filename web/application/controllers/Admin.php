@@ -662,7 +662,7 @@ class Admin extends CI_Controller
             foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }
-            foreach (array('actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel') as $key) {
+            foreach (array('actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel', 'approval_view') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }
             $data['notifications_breadcrumb_parent'] = $labels['dashboard'];

@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = 'Benachrichtigung löschen?';
 $lang['notifications_delete_confirm_body'] = 'Diese Benachrichtigung wird dauerhaft gelöscht.';
 $lang['notifications_confirm_delete'] = 'Benachrichtigung löschen';
 $lang['notifications_cancel'] = 'Abbrechen';
+$lang['notifications_approval_view'] = 'Genehmigung ansehen';

@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = 'Hapus notifikasi?';
 $lang['notifications_delete_confirm_body'] = 'Notifikasi ini akan dihapus secara permanen.';
 $lang['notifications_confirm_delete'] = 'Hapus notifikasi';
 $lang['notifications_cancel'] = 'Batal';
+$lang['notifications_approval_view'] = 'Lihat persetujuan';

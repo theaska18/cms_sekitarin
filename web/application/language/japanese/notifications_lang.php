@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = '通知を削除しますか？';
 $lang['notifications_delete_confirm_body'] = 'この通知は完全に削除されます。';
 $lang['notifications_confirm_delete'] = '通知を削除';
 $lang['notifications_cancel'] = 'キャンセル';
+$lang['notifications_approval_view'] = '承認を表示';

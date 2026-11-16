@@ -13,20 +13,28 @@ class Admin_approval extends Admin
         if ($token !== NULL) {
             $decision=(string)$this->input->get('approval_decision',TRUE);
             $request=$store->approval_token_request((string)$token);
-            if (!$request || !in_array($decision,array('approved','rejected'),TRUE) || ($request && $request['decision']!==$decision)) { show_error('Tautan persetujuan tidak valid, kedaluwarsa, atau sudah digunakan.', 410); return; }
+            $token_decision=$request && isset($request['decision']) ? (string)$request['decision'] : '';
+            $valid_view=$token_decision==='view' && $decision==='view';
+            $valid_legacy=in_array($token_decision,array('approved','rejected'),TRUE) && $decision===$token_decision;
+            if (!$request || (!$valid_view && !$valid_legacy)) { show_error('Tautan persetujuan tidak valid, kedaluwarsa, atau sudah digunakan.', 410); return; }
             if ($this->input->method(TRUE)==='POST') {
                 $posted_token=(string)$this->input->post('approval_token',TRUE);
                 $posted_decision=(string)$this->input->post('approval_decision',TRUE);
-                $ok=hash_equals((string)$token,$posted_token) && $decision===$posted_decision && $store->decide_approval_token($posted_token,$posted_decision);
+                $valid_choice=$token_decision==='view'
+                    ? in_array($posted_decision,array('approved','rejected'),TRUE)
+                    : $posted_decision===$token_decision;
+                $ok=hash_equals((string)$token,$posted_token) && $valid_choice && $store->decide_approval_token($posted_token,$posted_decision);
                 if (!$ok) { show_error('Persetujuan tidak dapat diproses. Tautan mungkin sudah digunakan atau kedaluwarsa.', 409); return; }
                 $this->session->set_flashdata('admin_approval_status','decided');
                 redirect('/admin/system/approval','location',303);
                 return;
             }
-            $escape=function($value) { return htmlspecialchars((string)$value,ENT_QUOTES,'UTF-8'); };
-            $label=$decision==='approved'?'Setuju':'Tidak setuju';
-            $html='<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Konfirmasi persetujuan</title><body><main><h1>Konfirmasi keputusan</h1><p><strong>'.$escape($request['subject']).'</strong></p><p>'.$escape($request['details']).'</p><form method="post" action="'.htmlspecialchars(site_url('admin/system/approval').'?approval_token='.rawurlencode($token).'&approval_decision='.rawurlencode($decision),ENT_QUOTES,'UTF-8').'"> <input type="hidden" name="'.htmlspecialchars($this->security->get_csrf_token_name(),ENT_QUOTES,'UTF-8').'" value="'.htmlspecialchars($this->security->get_csrf_hash(),ENT_QUOTES,'UTF-8').'"> <input type="hidden" name="approval_token" value="'.$escape($token).'"><input type="hidden" name="approval_decision" value="'.$escape($decision).'"><button type="submit">Konfirmasi '.$label.'</button></form></main></body></html>';
-            $this->output->set_content_type('text/html','utf-8')->set_output($html);
+            $this->render_admin('admin/approval/confirm','admin_approval','/admin/system/approval',array(
+                'approval_confirmation'=>$request,
+                'approval_confirmation_token'=>(string)$token,
+                'approval_confirmation_token_decision'=>$token_decision,
+                'approval_confirmation_decision'=>$token_decision==='view'?NULL:$token_decision,
+            ));
             return;
         }
         $available=$store->available();
@@ -34,7 +42,8 @@ class Admin_approval extends Admin
         $can_update = $this->has_admin_access_code('sys_approval_update');
         $this->render_admin('admin/approval/index', 'admin_approval', '/admin/system/approval', array(
             'approval_requests'=>$available && $can_update ? $store->pending():array(),
-            'approval_flows_for_request'=>$available && $can_add ? $store->active_flows():array(),
+            'approval_my_requests_available'=>$available,
+            'approval_error_count'=>$available && $can_update ? $store->count_approval_errors():0,
             'approval_available'=>$available,
             'approval_can_add'=>$can_add,
             'approval_can_update'=>$can_update,
@@ -47,8 +56,101 @@ class Admin_approval extends Admin
         if (!$this->has_admin_access_code('sys_approval_add')) { show_error('Access denied', 403); return; }
         if ($this->input->method(TRUE)!=='POST') { show_404(); return; }
         $this->load->library('approval_workflow_store'); $store=$this->approval_workflow_store;
-        $ok=$store->available() && $store->submit($this->input->post('flow_id',TRUE),$this->input->post('subject',TRUE),$this->input->post('details',TRUE));
-        $this->session->set_flashdata('admin_approval_status',$ok?'submitted':'error'); redirect('/admin/system/approval','location',303);
+        $result=$store->available() ? $store->submit(
+            $this->input->post('request_type',TRUE),
+            $this->input->post('subject',TRUE),
+            $this->input->post('details',TRUE)
+        ) : FALSE;
+        $status=is_array($result)&&isset($result['status'])?(string)$result['status']:'error';
+        $this->session->set_flashdata('admin_approval_status',$status);
+        redirect('/admin/system/approval','location',303);
+    }
+
+    public function approval_request_type_search()
+    {
+        if (!$this->has_admin_access_code('sys_approval_add')) { $this->output->set_status_header(403); $this->output->set_content_type('application/json')->set_output('[]'); return; }
+        $term=trim((string)$this->input->get('q',TRUE));
+        $this->load->library('approval_workflow_store');
+        $rows=strlen($term)>=2&&$this->approval_workflow_store->available()
+            ?$this->approval_workflow_store->request_type_suggestions($term):array();
+        $this->output->set_content_type('application/json')->set_output(json_encode($rows));
+    }
+
+    public function approval_my_request_data()
+    {
+        if (!$this->has_admin_menu_code('sys_approval')) {
+            $this->load->library('datatable_server');
+            $this->datatable_server->error(403);
+            return;
+        }
+        $this->load->library('approval_workflow_store');
+        $store=$this->approval_workflow_store;
+        $this->load->library('datatable_server');
+        if (!$store->available()) { $this->datatable_server->error(503); return; }
+        $this->datatable_server->respond(
+            array(0=>'subject',1=>'request_type',2=>'status',4=>'create_on'),
+            function() use ($store) { return $store->count_my_approval_requests(''); },
+            function($search) use ($store) { return $store->count_my_approval_requests($search); },
+            function($search,$length,$start,$order,$direction) use ($store) {
+                return $store->my_approval_requests($search,$length,$start,$order,$direction);
+            },
+            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
+        );
+    }
+
+    public function approval_errors()
+    {
+        if (!$this->has_admin_menu_code('sys_approval') || !$this->has_admin_access_code('sys_approval_update')) { show_error('Access denied', 403); return; }
+        if ($this->input->method(TRUE)==='POST') {
+            $this->load->library('approval_workflow_store');
+            $result=$this->approval_workflow_store->assign_approval_error(
+                $this->input->post('error_id',TRUE),
+                $this->input->post('employee_id',TRUE)
+            );
+            $this->session->set_flashdata('admin_approval_error_status',$result);
+            redirect('/admin/system/approval/errors','location',303);
+            return;
+        }
+        $this->load->library('approval_workflow_store');
+        $store=$this->approval_workflow_store;
+        $available=$store->available();
+        $this->render_admin('admin/approval/errors','admin_approval','/admin/system/approval/errors',array(
+            'approval_error_available'=>$available,
+            'approval_error_count'=>$available?$store->count_approval_errors():0,
+            'approval_error_status'=>(string)$this->session->flashdata('admin_approval_error_status'),
+        ));
+    }
+
+    public function approval_error_data()
+    {
+        if (!$this->has_admin_menu_code('sys_approval') || !$this->has_admin_access_code('sys_approval_update')) {
+            $this->load->library('datatable_server');
+            $this->datatable_server->error(403);
+            return;
+        }
+        $this->load->library('approval_workflow_store');
+        $store=$this->approval_workflow_store;
+        $this->load->library('datatable_server');
+        if (!$store->available()) { $this->datatable_server->error(503); return; }
+        $this->datatable_server->respond(
+            array(0=>'subject',4=>'error_code',5=>'create_on'),
+            function() use ($store) { return $store->count_approval_errors(''); },
+            function($search) use ($store) { return $store->count_approval_errors($search); },
+            function($search,$length,$start,$order,$direction) use ($store) {
+                return $store->approval_errors($search,$length,$start,$order,$direction);
+            },
+            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
+        );
+    }
+
+    public function approval_employee_search()
+    {
+        if (!$this->has_admin_menu_code('sys_approval') || !$this->has_admin_access_code('sys_approval_update')) { $this->output->set_status_header(403); $this->output->set_content_type('application/json')->set_output('[]'); return; }
+        $term=trim((string)$this->input->get('q',TRUE));
+        $this->load->library('approval_workflow_store');
+        $rows=strlen($term)>=2&&$this->approval_workflow_store->available()
+            ?$this->approval_workflow_store->approval_employee_suggestions($term):array();
+        $this->output->set_content_type('application/json')->set_output(json_encode($rows));
     }
 
     public function approval_decide()

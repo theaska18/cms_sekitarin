@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = '알림을 삭제할까요?';
 $lang['notifications_delete_confirm_body'] = '이 알림은 영구적으로 삭제됩니다.';
 $lang['notifications_confirm_delete'] = '알림 삭제';
 $lang['notifications_cancel'] = '취소';
+$lang['notifications_approval_view'] = '승인 보기';

@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = '删除通知？';
 $lang['notifications_delete_confirm_body'] = '此通知将被永久删除。';
 $lang['notifications_confirm_delete'] = '删除通知';
 $lang['notifications_cancel'] = '取消';
+$lang['notifications_approval_view'] = '查看审批';

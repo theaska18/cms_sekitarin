@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = '¿Eliminar notificación?';
 $lang['notifications_delete_confirm_body'] = 'Esta notificación se eliminará permanentemente.';
 $lang['notifications_confirm_delete'] = 'Eliminar notificación';
 $lang['notifications_cancel'] = 'Cancelar';
+$lang['notifications_approval_view'] = 'Ver aprobación';

@@ -45,7 +45,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("$root_ids[] = $org_id", view)
         self.assertIn("$render_node($child_id, $level + 1)", view)
         self.assertIn('class="hierarchy-tree-table"', view)
-        self.assertIn("Hierarki induk → anak", view)
+        self.assertIn("$labels['hierarchy_legend']", view)
         self.assertIn("$rendered_ids[$org_id]", view)
         css = (ROOT / "tailwind/input.css").read_text()
         self.assertIn(".org-chart li > ul > li::before", css)
@@ -55,12 +55,16 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
 
     def test_workflow_submission_and_decision_enforce_step_and_tenant(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        self.assertIn("public function submit($flow_id, $subject, $details)", store)
+        self.assertIn("public function submit($request_type, $subject, $details)", store)
         self.assertIn("public function decide($request_id, $decision, $note)", store)
-        self.assertIn("'status'=>'pending','current_step'=>(int)$request['current_step']", store)
+        self.assertIn("'request_type'=>$request_type", store)
+        self.assertIn("'requester_employee_id'", store)
+        self.assertIn("'status'=>$request_status", store)
+        self.assertIn("'status'=>'needs_assignment'", store)
         self.assertIn("'approver_user_id'=>$this->user", store)
-        self.assertIn("$next=$decision==='rejected'?'rejected':'pending'", store)
+        self.assertIn("$new_status=$decision==='rejected'?'rejected':'approved'", store)
         self.assertIn("'status'=>'approved'", store)
+        self.assertIn("'status'=>'auto_approved'", store)
 
     def test_controller_actions_require_access_and_post(self):
         cases = {
@@ -102,8 +106,9 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
     def test_approval_notifies_next_approver_after_intermediate_approval(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
         decide = store.split("public function decide($request_id, $decision, $note)", 1)[1].split("public function users()", 1)[0]
-        self.assertIn("notify_next_approver", decide)
-        self.assertIn("'step_number'=>(int)$request['current_step']+1", decide)
+        self.assertIn("$this->resolve_approver(", decide)
+        self.assertIn("$this->deliver_approval(", decide)
+        self.assertIn("'current_approver_user_id'", decide)
         self.assertIn("create_approval_token", store)
         self.assertIn("notify_approver", store)
 
@@ -137,7 +142,12 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn('name="flow_name" type="text" required maxlength="120"', form)
         self.assertIn("'request_type' => array('type' => 'VARCHAR', 'constraint' => 64)", migration)
         self.assertIn('name="request_type" type="text" required maxlength="64"', form)
-        self.assertIn('name="approver_user_id[]"', form)
+        self.assertIn('data-approval-step-list', form)
+        self.assertIn('data-add-approval-step', form)
+        self.assertIn('data-approver-type', form)
+        self.assertIn('data-organization-search', form)
+        self.assertIn('data-employee-search', form)
+        self.assertNotIn('<select', form)
         self.assertIn('text-base', form)
         self.assertIn('sm:text-sm', form)
         self.assertIn('focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100', form)
@@ -160,6 +170,85 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("$data['job_title']=$member['job_title']", store)
         self.assertIn("$row['job_title']=$member['job_title']", store)
         self.assertIn("m.job_title", store)
+
+    def test_approval_errors_are_queued_and_admin_can_route_to_an_employee(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        view = (APP / "views/admin/approval/errors.php").read_text()
+        approval_view = (APP / "views/admin/approval/index.php").read_text()
+        migration = (APP / "migrations/20261116000100_add_dynamic_approval_routing.php").read_text()
+        self.assertIn("public function approval_errors()", controller)
+        self.assertIn("public function approval_error_data()", controller)
+        self.assertIn("assign_approval_error", controller)
+        self.assertIn("public function assign_approval_error", store)
+        self.assertIn("needs_assignment", store)
+        self.assertIn("insert_approval_error", store)
+        self.assertIn("'app_approval_error'", migration)
+        self.assertIn("serverSide:true", view)
+        self.assertIn("data-approval-error-form", view)
+        self.assertIn("data-error-employee-search", view)
+        self.assertIn("$approval_error_count", approval_view)
+
+    def test_email_approval_confirmation_renders_inside_admin_shell(self):
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        view = (APP / "views/admin/approval/confirm.php").read_text()
+        token_branch = controller.split("if ($token !== NULL)", 1)[1].split("$available=", 1)[0]
+        self.assertIn("render_admin('admin/approval/confirm'", token_branch)
+        self.assertNotIn("<!doctype html>", token_branch.lower())
+        self.assertIn("csrf_token_name", view)
+        self.assertIn("approval_confirmation_token", view)
+        self.assertIn("Konfirmasi keputusan", view)
+
+    def test_approval_notifications_only_offer_a_view_link_before_decision(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        notifications = (ROOT / "web/application/views/admin/notifications/index.php").read_text()
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        confirm = (APP / "views/admin/approval/confirm.php").read_text()
+        self.assertIn("'view'", store)
+        self.assertIn('"\\nLihat: "', store)
+        self.assertNotIn('"\\nSetuju: "', store)
+        self.assertNotIn('"\\nTidak setuju: "', store)
+        self.assertIn("notifications_approval_view", notifications)
+        self.assertIn("$token_decision==='view'", controller)
+        self.assertIn("value=\"rejected\"", confirm)
+        self.assertIn("value=\"approved\"", confirm)
+
+    def test_dynamic_approval_step_types_resolve_at_request_time(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        flow_form = (APP / "views/admin/approval_flow/add.php").read_text()
+        request_form = (APP / "views/admin/approval/index.php").read_text()
+        migration = (APP / "migrations/20261116000100_add_dynamic_approval_routing.php").read_text()
+        for step_type in ("superior", "organization", "employee"):
+            self.assertIn("'" + step_type + "'", store)
+            self.assertIn('value="' + step_type + '"', flow_form)
+        self.assertIn("function resolve_approver(", store)
+        self.assertIn("data-request-type-search-url", request_form)
+        self.assertNotIn('name="flow_id"', request_form)
+        self.assertIn("if ((int)$previous_org_id>0)", store)
+        self.assertIn("$this->hierarchy_org($parent_id)", store)
+        self.assertIn("$step['approver_type']==='organization'", store)
+        self.assertIn("'request_type'", migration)
+        self.assertIn("'current_approver_user_id'", migration)
+
+    def test_requester_sees_own_approval_history_and_unapproved_step_checklist(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        view = (APP / "views/admin/approval/index.php").read_text()
+        self.assertIn("public function count_my_approval_requests($search = '')", store)
+        self.assertIn("public function my_approval_requests($search = '', $limit = 10", store)
+        self.assertIn("function approval_my_request_data()", controller)
+        self.assertIn("serverSide:true", view)
+        self.assertNotIn("my_approval_requests(30)", controller)
+        self.assertIn("r.requester_user_id'=>$this->user", store)
+        self.assertIn("'approval_my_requests_available'=>$available", controller)
+        self.assertIn('id="my-approval-requests-heading"', view)
+        self.assertIn("data:'approval_steps'", view)
+        self.assertIn("assigned_approver_name", store)
+        self.assertIn("statusIcons", view)
+        self.assertIn("statusIcon(value)", view)
+        self.assertNotIn("Riwayat 30 pengajuan", view)
+        self.assertIn("needs_assignment:'Menunggu penetapan admin'", view)
+        self.assertIn('Checklist persetujuan', view)
 
 
 if __name__ == "__main__":

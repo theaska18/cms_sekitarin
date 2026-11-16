@@ -35,6 +35,9 @@ Run from repository root:
 - For fields backed by potentially large datasets, do not render every option in an HTML `<select>` or rely on native browser autocomplete/`<datalist>`. Use the jQuery UI Autocomplete widget (https://jqueryui.com/autocomplete/) with server-side, tenant-scoped search, a minimum query length, and a bounded result count. Load jQuery before jQuery UI and preserve keyboard/accessibility behavior.
 - For tabular list views, use DataTables (https://datatables.net/) rather than hand-built sorting and pagination. Prefer server-side processing for potentially large datasets, with bounded page lengths, allow-listed ordering, localized controls, and existing access/tenant checks. Use the System Property list as the project reference implementation.
 - Reuse `web/application/libraries/Datatable_server.php` for DataTables server-side request parsing, allow-listed ordering, bounded paging, and response envelopes; keep each feature's permission checks and schema-scoped query callbacks in its controller/store.
+- **3. Code inputs:** on blur, normalize codes to lowercase and remove whitespace.
+- **4. Disabled/readonly inputs:** give them a visibly muted appearance (background, text, and/or border) while keeping the value readable; do not rely on color alone to convey the state.
+- **5. Name inputs:** on blur, uppercase only the first character of each word and preserve the remaining characters' existing case (for example, `asep kamaludin` becomes `Asep Kamaludin`, while `aSEp` becomes `ASEp`). Apply equivalent normalization before saving when the value must be canonical.
 
 ## Pitfalls
 

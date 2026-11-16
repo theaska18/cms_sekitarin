@@ -35,7 +35,7 @@ class Admin_approvalFlow extends Admin
         $store = $this->approval_workflow_store;
         $available = $store->available();
         $this->render_admin('admin/approval_flow/add', 'approval_flow', '/admin/hr/approvalFlow/add', array(
-            'approval_users' => $available ? $store->users() : array(),
+            'approval_flow_steps' => array(),
             'approval_flow_available' => $available,
         ));
     }
@@ -49,7 +49,8 @@ class Admin_approvalFlow extends Admin
         $flow = $store->flow((int)$flow_id);
         if (!$flow) { show_404(); return; }
         $this->render_admin('admin/approval_flow/add', 'approval_flow', '/admin/hr/approvalFlow/edit/'.$flow_id, array(
-            'approval_users'=>$store->users(), 'approval_flow_available'=>$store->available(), 'approval_flow'=>$flow,
+            'approval_flow_steps'=>isset($flow['steps'])?$flow['steps']:array(),
+            'approval_flow_available'=>$store->available(), 'approval_flow'=>$flow,
         ));
     }
 
@@ -63,12 +64,44 @@ class Admin_approvalFlow extends Admin
         }
         if ($this->input->method(TRUE) !== 'POST') { show_404(); return; }
         $this->load->library('approval_workflow_store');
-        $approvers = $this->input->post('approver_user_id');
+        $steps = $this->input->post('steps', TRUE);
         $flow = $this->approval_workflow_store->available() ? $this->approval_workflow_store->save_flow(
-            $this->input->post('flow_name', TRUE), $this->input->post('request_type', TRUE), $approvers, $flow_id
+            $this->input->post('flow_name', TRUE), $this->input->post('request_type', TRUE), $steps, $flow_id
         ) : FALSE;
         $this->session->set_flashdata('admin_approval_flow_status', $flow ? ($flow_id ? 'updated' : 'saved') : 'error');
         redirect('/admin/hr/approvalFlow', 'location', 303);
+    }
+
+    public function approvalFlow_employee_search()
+    {
+        if (!$this->has_admin_menu_code('hr_approval_flow')
+            || (!$this->has_admin_access_code('hr_approval_flow_add') && !$this->has_admin_access_code('hr_approval_flow_update'))) {
+            $this->output->set_status_header(403);
+            $this->output->set_content_type('application/json')->set_output('[]');
+            return;
+        }
+        $term = trim((string)$this->input->get('q', TRUE));
+        $this->load->library('approval_workflow_store');
+        $rows = strlen($term) >= 2 && $this->approval_workflow_store->available()
+            ? $this->approval_workflow_store->approval_employee_suggestions($term)
+            : array();
+        $this->output->set_content_type('application/json')->set_output(json_encode($rows));
+    }
+
+    public function approvalFlow_organization_search()
+    {
+        if (!$this->has_admin_menu_code('hr_approval_flow')
+            || (!$this->has_admin_access_code('hr_approval_flow_add') && !$this->has_admin_access_code('hr_approval_flow_update'))) {
+            $this->output->set_status_header(403);
+            $this->output->set_content_type('application/json')->set_output('[]');
+            return;
+        }
+        $term = trim((string)$this->input->get('q', TRUE));
+        $this->load->library('approval_workflow_store');
+        $rows = strlen($term) >= 2 && $this->approval_workflow_store->available()
+            ? $this->approval_workflow_store->approval_organization_suggestions($term)
+            : array();
+        $this->output->set_content_type('application/json')->set_output(json_encode($rows));
     }
 
     public function approvalFlow_delete($flow_id = 0)

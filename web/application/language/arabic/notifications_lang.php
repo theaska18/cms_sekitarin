@@ -27,3 +27,4 @@ $lang['notifications_delete_confirm_title'] = 'حذف الإشعار؟';
 $lang['notifications_delete_confirm_body'] = 'سيتم حذف هذا الإشعار نهائيًا.';
 $lang['notifications_confirm_delete'] = 'حذف الإشعار';
 $lang['notifications_cancel'] = 'إلغاء';
+$lang['notifications_approval_view'] = 'عرض الموافقة';
