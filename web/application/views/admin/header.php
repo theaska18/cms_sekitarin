@@ -104,19 +104,16 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
 </header>
 <button id="admin-sidebar-backdrop" type="button" class="fixed inset-0 z-40 hidden bg-slate-950/40 md:hidden" aria-label="<?php echo html_escape($labels['close_navigation']); ?>"></button>
 <div class="mx-auto flex max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 lg:gap-8 lg:px-8">
-    <aside id="admin-sidebar" class="fixed inset-y-0 <?php echo $is_rtl ? 'right-0 border-l' : 'left-0 border-r'; ?> z-50 hidden flex w-72 flex-col overflow-x-hidden overflow-y-auto border-slate-200 bg-white px-3 py-4 shadow-xl md:static md:inset-auto md:z-auto md:flex md:h-auto md:self-start md:w-60 md:shrink-0 md:rounded-2xl md:border md:shadow-sm lg:w-64 md:overflow-x-visible md:overflow-y-visible" aria-label="<?php echo html_escape($labels['admin_area']); ?>">
-        <div class="relative mb-5 flex min-h-14 items-center justify-center px-12 md:hidden">
-            <a href="/admin" aria-label="<?php echo html_escape($web_name); ?>" class="inline-flex max-w-full items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                <img src="/assets/logo_banner.png" alt="" aria-hidden="true" class="mx-auto h-auto max-h-12 w-48 max-w-full object-contain">
-            </a>
-            <button id="admin-sidebar-close" type="button" class="absolute <?php echo $is_rtl ? 'left-0' : 'right-0'; ?> top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="<?php echo html_escape($labels['close_navigation']); ?>"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="m6 6 12 12M18 6 6 18"/></svg></button>
-        </div>
-        <div role="search" class="mb-3 shrink-0">
+    <aside id="admin-sidebar" class="fixed inset-y-0 <?php echo $is_rtl ? 'right-0 border-l' : 'left-0 border-r'; ?> z-50 hidden flex w-72 flex-col overflow-hidden border-slate-200 bg-white shadow-xl md:fixed md:inset-y-auto md:z-40 md:flex md:w-60 md:shrink-0 md:rounded-2xl md:border md:shadow-sm lg:w-64" aria-label="<?php echo html_escape($labels['admin_area']); ?>">
+        <div role="search" class="shrink-0 bg-white px-3 pb-3 pt-4">
             <div class="admin-sidebar-filter-wrap relative min-w-0">
                 <svg class="admin-sidebar-filter-icon pointer-events-none absolute top-1/2 h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><circle cx="8.5" cy="8.5" r="5.5"/><path stroke-linecap="round" d="m13 13 4 4"/></svg>
-                <input id="admin-sidebar-filter" type="search" autocomplete="off" aria-label="<?php echo html_escape($labels['filter_label']); ?>" aria-controls="admin-sidebar-navigation" data-results-template="<?php echo html_escape($labels['filter_results']); ?>" placeholder="<?php echo html_escape($labels['filter_placeholder']); ?>" class="admin-sidebar-filter h-10 min-w-0 w-full rounded-lg border border-slate-300 bg-white text-base text-slate-800 placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 md:text-sm">
+                <input id="admin-sidebar-filter" type="search" autocomplete="off" aria-label="<?php echo html_escape($labels['filter_label']); ?>" aria-controls="admin-sidebar-navigation" data-results-template="<?php echo html_escape($labels['filter_results']); ?>" placeholder="<?php echo html_escape($labels['filter_placeholder']); ?>" class="admin-sidebar-filter h-10 min-w-0 w-full rounded-lg border border-slate-300 bg-white pe-12 text-base text-slate-800 placeholder:text-slate-400 focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 md:text-sm">
+                <button id="admin-sidebar-close" type="button" class="absolute <?php echo $is_rtl ? 'left-1' : 'right-1'; ?> top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 md:hidden" aria-label="<?php echo html_escape($labels['close_navigation']); ?>"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" d="m6 6 12 12M18 6 6 18"/></svg></button>
             </div>
         </div>
+        <div id="admin-sidebar-scroll-shell" class="relative min-h-0 flex-1">
+        <div id="admin-sidebar-scroll-region" class="h-full overflow-x-hidden overflow-y-auto px-3 pb-4">
         <nav id="admin-sidebar-navigation" aria-label="<?php echo html_escape($labels['sidebar_navigation']); ?>" class="flex-none overflow-visible space-y-2">
             <section data-admin-menu-group aria-label="<?php echo html_escape($labels['dashboard']); ?>">
                 <ul class="space-y-1">
@@ -129,7 +126,12 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
                     <h2 class="px-2.5 text-[.68rem] font-bold uppercase tracking-[.12em] text-slate-400"><?php echo html_escape($group['label']); ?></h2>
                     <ul class="mt-1.5 space-y-0.5">
                         <?php foreach ($group['items'] as $item): ?>
-                            <?php $is_current = $current_path === $item['route']; ?>
+                            <?php
+                                $item_base_route = rtrim((string) $item['route'], '/');
+                                $current_admin_path = '/' . trim((string) $current_path, '/');
+                                $is_current = $current_admin_path === $item_base_route
+                                    || ($item_base_route !== '' && strpos($current_admin_path, $item_base_route . '/') === 0);
+                            ?>
                             <li data-admin-menu-item><a href="<?php echo html_escape($item['route']); ?>" data-admin-menu-link data-menu-label="<?php echo html_escape($item['label']); ?>" class="admin-menu-link flex min-h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 <?php echo $is_current ? 'bg-emerald-50 font-semibold text-emerald-800 ring-1 ring-emerald-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'; ?>"<?php echo $is_current ? ' aria-current="page"' : ''; ?>><svg class="admin-menu-icon h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><?php echo isset($menu_icons[$item['icon']]) ? $menu_icons[$item['icon']] : $menu_icons['default']; ?></svg><span class="admin-menu-label"><?php echo html_escape($item['label']); ?></span></a></li>
                         <?php endforeach; ?>
                     </ul>
@@ -140,5 +142,9 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
             <p data-filter-empty-message><?php echo html_escape($labels['filter_empty']); ?></p>
         </div>
         <p id="admin-sidebar-filter-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+        <div id="admin-sidebar-fade-top" aria-hidden="true"></div>
+        <div id="admin-sidebar-fade-bottom" aria-hidden="true"></div>
+        </div>
     </aside>
     <main id="admin-main" class="min-w-0 flex-1" tabindex="-1">

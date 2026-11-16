@@ -432,7 +432,7 @@
 }
 
 @media (max-width: 767px) {
-    #admin-sidebar {
+    #admin-sidebar-scroll-region {
         padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
         scroll-padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
@@ -443,4 +443,143 @@
 #admin-language-options[hidden],
 #admin-sidebar [hidden] {
     display: none !important;
+}
+
+@media (min-width: 768px) {
+    #admin-sidebar {
+        position: fixed;
+        inset-block: 5rem 1rem;
+        inset-inline-start: max(1.5rem, calc((100vw - 96rem) / 2 + 2rem));
+        height: auto;
+        max-height: calc(100vh - 6rem);
+        overflow: hidden;
+        overscroll-behavior: contain;
+    }
+
+    #admin-main {
+        margin-inline-start: calc(15rem + 1.5rem);
+    }
+}
+
+#admin-sidebar-scroll-shell {
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+#admin-sidebar-scroll-region {
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+#admin-sidebar-scroll-region::-webkit-scrollbar {
+    width: 6px;
+}
+
+#admin-sidebar-scroll-region::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#admin-sidebar-scroll-region::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: transparent;
+}
+
+#admin-sidebar-scroll-region:hover,
+#admin-sidebar-scroll-region:focus-within {
+    scrollbar-color: #94a3b8 transparent;
+}
+
+#admin-sidebar-scroll-region:hover::-webkit-scrollbar-thumb,
+#admin-sidebar-scroll-region:focus-within::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+}
+
+html[data-theme="dark"] #admin-sidebar-scroll-region,
+body[data-theme="dark"] #admin-sidebar-scroll-region {
+    scrollbar-color: transparent transparent;
+}
+
+html[data-theme="dark"] #admin-sidebar-scroll-region::-webkit-scrollbar-thumb,
+body[data-theme="dark"] #admin-sidebar-scroll-region::-webkit-scrollbar-thumb {
+    background: transparent;
+}
+
+html[data-theme="dark"] #admin-sidebar-scroll-region:hover,
+body[data-theme="dark"] #admin-sidebar-scroll-region:hover,
+html[data-theme="dark"] #admin-sidebar-scroll-region:focus-within,
+body[data-theme="dark"] #admin-sidebar-scroll-region:focus-within {
+    scrollbar-color: #64748b transparent;
+}
+
+html[data-theme="dark"] #admin-sidebar-scroll-region:hover::-webkit-scrollbar-thumb,
+body[data-theme="dark"] #admin-sidebar-scroll-region:hover::-webkit-scrollbar-thumb,
+html[data-theme="dark"] #admin-sidebar-scroll-region:focus-within::-webkit-scrollbar-thumb,
+body[data-theme="dark"] #admin-sidebar-scroll-region:focus-within::-webkit-scrollbar-thumb {
+    background: #64748b;
+}
+
+#admin-sidebar-fade-top {
+    position: absolute;
+    top: 0;
+    z-index: 20;
+    display: block;
+    inset-inline: 0;
+    height: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    background: linear-gradient(to bottom, #fff 10%, rgba(255, 255, 255, 0));
+}
+
+#admin-sidebar-fade-bottom {
+    position: absolute;
+    z-index: 20;
+    display: block;
+    inset-inline: 0;
+    height: 40px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+#admin-sidebar-fade-bottom {
+    bottom: 0;
+    background: linear-gradient(to top, #fff 10%, rgba(255, 255, 255, 0));
+}
+
+#admin-sidebar-scroll-shell[data-scroll-top="true"] #admin-sidebar-fade-top {
+    opacity: 1;
+}
+
+#admin-sidebar-scroll-shell[data-scroll-bottom="true"] #admin-sidebar-fade-bottom {
+    opacity: 1;
+}
+
+html[data-theme="dark"] #admin-sidebar-fade-top,
+body[data-theme="dark"] #admin-sidebar-fade-top {
+    background: linear-gradient(to bottom, #1e293b 10%, rgba(30, 41, 59, 0));
+}
+
+html[data-theme="dark"] #admin-sidebar-fade-bottom,
+body[data-theme="dark"] #admin-sidebar-fade-bottom {
+    background: linear-gradient(to top, #1e293b 10%, rgba(30, 41, 59, 0));
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #admin-sidebar-fade-top,
+    #admin-sidebar-fade-bottom {
+        transition: none;
+    }
+}
+
+@media (min-width: 1024px) {
+    #admin-sidebar {
+        width: 16rem;
+    }
+
+    #admin-main {
+        margin-inline-start: calc(16rem + 2rem);
+    }
 }

@@ -1,7 +1,7 @@
         </main>
 </div>
 <footer class="mx-auto max-w-screen-2xl px-4 pb-6 sm:px-6 lg:px-8">
-    <div class="border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+    <div class="pt-4 text-center text-xs text-slate-500">
         © <?php echo date('Y'); ?> Asep Kamaludin. All rights reserved.
     </div>
 </footer>
@@ -461,6 +461,7 @@
     function applyFilter() {
         var query = input.value.trim().toLocaleLowerCase();
         var visibleCount = 0;
+        var hasQuery = query.length > 0;
 
         items.forEach(function (item) {
             var link = item.querySelector('[data-menu-label]');
@@ -474,7 +475,6 @@
             group.hidden = !group.querySelector('li[data-admin-menu-item]:not([hidden])');
         });
 
-        var hasQuery = query.length > 0;
         noResults.hidden = !hasQuery || visibleCount !== 0;
         resultStatus.textContent = hasQuery && visibleCount > 0
             ? resultTemplate.replace('%s', String(visibleCount))
@@ -490,6 +490,63 @@
         }
     });
     applyFilter();
+}());
+</script>
+<script>
+(function () {
+    var panel = document.getElementById('admin-sidebar');
+    var fadeShell = document.getElementById('admin-sidebar-scroll-shell');
+    var scrollRegion = document.getElementById('admin-sidebar-scroll-region');
+    if (!panel || !fadeShell || !scrollRegion) return;
+
+    function updateScrollShadows() {
+        var viewport = scrollRegion.clientHeight;
+        var content = scrollRegion.scrollHeight;
+        var canScroll = viewport > 0 && content > viewport + 1;
+        fadeShell.setAttribute('data-scroll-top', String(canScroll && scrollRegion.scrollTop > 1));
+        fadeShell.setAttribute('data-scroll-bottom', String(canScroll && scrollRegion.scrollTop + viewport < content - 1));
+    }
+
+    function revealActiveMenu() {
+        if (!scrollRegion.clientHeight) return;
+        var activeLink = scrollRegion.querySelector('a[data-admin-menu-link][aria-current="page"]');
+        if (!activeLink) return;
+        var regionRect = scrollRegion.getBoundingClientRect();
+        var linkRect = activeLink.getBoundingClientRect();
+        var safeTop = regionRect.top + 24;
+        var safeBottom = regionRect.bottom - 44;
+        if (linkRect.bottom > safeBottom) {
+            scrollRegion.scrollTop += linkRect.bottom - safeBottom;
+        } else if (linkRect.top < safeTop) {
+            scrollRegion.scrollTop -= safeTop - linkRect.top;
+        }
+        updateScrollShadows();
+    }
+
+    scrollRegion.addEventListener('scroll', updateScrollShadows, {passive: true});
+    window.addEventListener('resize', updateScrollShadows);
+    window.addEventListener('load', revealActiveMenu);
+    var menuToggle = document.getElementById('admin-menu-toggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function () {
+            if (window.requestAnimationFrame) {
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(revealActiveMenu);
+                });
+            } else {
+                revealActiveMenu();
+            }
+        });
+    }
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(updateScrollShadows);
+        observer.observe(panel, {subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class']});
+    }
+    updateScrollShadows();
+    if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(updateScrollShadows);
+        window.requestAnimationFrame(revealActiveMenu);
+    }
 }());
 </script>
 </body>
