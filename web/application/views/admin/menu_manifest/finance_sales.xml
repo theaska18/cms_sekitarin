@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance_sales" name="Finance - Sales" label_key="admin_finance_sales_group" version="1.0.0" sort_order="6">
+    <menu code="fin_sales_invoices" name="Sales Invoices" label_key="admin_finance_sales_invoices" icon="list-ordered" route="/admin/finance/sales_invoices" module_key="finance_sales_invoices" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="6" status="active">
+        <access code="fin_sales_invoices_add" name="Add" />
+        <access code="fin_sales_invoices_update" name="Update" />
+    </menu>
+    <menu code="fin_customer_payments" name="Customer Payments" label_key="admin_finance_customer_payments" icon="default" route="/admin/finance/customer_payments" module_key="finance_customer_payments" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="7" status="active">
+        <access code="fin_customer_payments_add" name="Add" />
+        <access code="fin_customer_payments_update" name="Update" />
+    </menu>
+    <menu code="fin_accounts_receivable" name="Accounts Receivable" label_key="admin_finance_accounts_receivable" icon="default" route="/admin/finance/accounts_receivable" module_key="finance_accounts_receivable" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="8" status="active">
+        <access code="fin_accounts_receivable_add" name="Add" />
+        <access code="fin_accounts_receivable_update" name="Update" />
+    </menu>
+</menu-group>

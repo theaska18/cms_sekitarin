@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance" name="Finance - Dashboard" label_key="admin_finance_dashboard_group" version="1.0.0" sort_order="4">
+    <menu code="fin_dashboard" name="Dashboard" label_key="admin_finance_dashboard" icon="finance" route="/admin/finance/dashboard" module_key="finance_dashboard" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="1" status="active">
+        <access code="fin_dashboard_add" name="Add" />
+        <access code="fin_dashboard_update" name="Update" />
+    </menu>
+</menu-group>

@@ -139,6 +139,10 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                 with self.subTest(menu=item.attrib["code"], route=route):
                     self.assertEqual(3, len(route), "menu routes must have two segments after /admin/")
                     self.assertEqual("admin", route[0])
+                    if route[1] == "finance":
+                        self.assertTrue((APP / "controllers/Admin_finance.php").exists())
+                        self.assertIn("$route['admin/finance/(:any)'] = 'admin_finance/index/$1';", routes_text)
+                        continue
                     controller = APP / "controllers" / f"Admin_{route[2]}.php"
                     self.assertTrue(controller.exists(), f"missing convention controller for {item.attrib['route']}")
                     self.assertNotIn(f"$route['{'/'.join(route)}']", routes_text)
@@ -258,6 +262,86 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                     with self.subTest(file=path.name, menu=code):
                         self.assertTrue(required_access_codes.issubset(access_codes), required_access_codes - set(access_codes))
                         self.assertEqual(len(access_codes), len(set(access_codes)), "menu access codes must be unique")
+
+    def test_finance_manifest_registers_all_listed_items_without_business_logic_or_grants(self):
+        manifest = parse_xml(MANIFEST_DIR / "manifest.xml")
+        finance_groups = [
+            group for group in manifest.findall("group")
+            if group.attrib["code"].startswith("finance")
+        ]
+        items = []
+        group_names = set()
+        for group in finance_groups:
+            finance = parse_xml(MANIFEST_DIR / group.attrib["file"])
+            items.extend(finance.findall("menu"))
+            group_names.add(finance.attrib["name"])
+        self.assertEqual(33, len(items))
+        self.assertEqual(9, len(finance_groups))
+        self.assertIn("Finance - Transaction", group_names)
+        self.assertIn("Finance - Report", group_names)
+        self.assertIn("Finance - Master", group_names)
+        self.assertEqual(33, len({item.attrib["code"] for item in items}))
+        self.assertEqual(33, len({item.attrib["route"] for item in items}))
+        self.assertTrue(all(item.attrib["route"].startswith("/admin/finance/") for item in items))
+        self.assertTrue(all(item.attrib.get("module_key") for item in items))
+        self.assertIn("$this->module('finance', $slug)", (APP / "controllers/Admin_finance.php").read_text())
+        self.assertIn("$this->has_admin_menu_code($module['menu_code'])", CONTROLLER.read_text())
+        self.assertNotIn("sys_tenant_menu", (APP / "controllers/Admin_finance.php").read_text())
+        for item in items:
+            with self.subTest(code=item.attrib["code"]):
+                self.assertLessEqual(len(item.attrib["code"]), 32)
+
+    def test_finance_sidebar_labels_are_localized_in_every_admin_language(self):
+        group_keys = {
+            "admin_finance_dashboard_group", "admin_finance_transaction_group",
+            "admin_finance_sales_group", "admin_finance_purchase_group",
+            "admin_finance_cash_bank_group", "admin_finance_accounting_group",
+            "admin_finance_report_group", "admin_finance_master_group",
+            "admin_finance_setting_group",
+        }
+        item_keys = set()
+        manifest = parse_xml(MANIFEST_DIR / "manifest.xml")
+        for group in manifest.findall("group"):
+            if not group.attrib["code"].startswith("finance"):
+                continue
+            submenu = parse_xml(MANIFEST_DIR / group.attrib["file"])
+            group_keys.add(submenu.attrib["label_key"])
+            item_keys.update(item.attrib["label_key"] for item in submenu.findall("menu"))
+        required = group_keys | item_keys
+        english_text = (APP / "language/english/admin_lang.php").read_text()
+        english = dict(re.findall(r"\$lang\['([^']+)'\]\s*=\s*'([^']*)'\s*;", english_text))
+        for locale in LOCALES:
+            contents = (APP / f"language/{locale}/admin_lang.php").read_text()
+            values = dict(re.findall(r"\$lang\['([^']+)'\]\s*=\s*'([^']*)'\s*;", contents))
+            with self.subTest(locale=locale):
+                self.assertTrue(required.issubset(values))
+                self.assertTrue(all(values[key].strip() for key in required))
+                if locale != "english":
+                    self.assertNotEqual(english["admin_finance_income"], values["admin_finance_income"])
+
+    def test_saved_short_language_codes_resolve_to_finance_menu_language_packs(self):
+        controller = CONTROLLER.read_text()
+        resolver = controller.split("private function resolve_admin_locale", 1)[1].split("private function load_admin_menu_groups", 1)[0]
+        for short_code, locale in (
+            ("'ja' => 'japanese'", "japanese"), ("'zh' => 'chinese'", "chinese"),
+            ("'ar' => 'arabic'", "arabic"), ("'ko' => 'korean'", "korean"),
+            ("'es' => 'spanish'", "spanish"), ("'fr' => 'french'", "french"),
+            ("'de' => 'german'", "german"), ("'id' => 'indonesian'", "indonesian"),
+        ):
+            with self.subTest(locale=locale):
+                self.assertIn(short_code, resolver)
+                self.assertIn(f"$this->admin_languages[$language]", resolver)
+        render = controller.split("protected function render_admin", 1)[1]
+        self.assertLess(render.index("$this->lang->load('admin', $locale)"), render.index("$this->load_admin_menu_groups()"))
+
+    def test_menu_label_cache_is_keyed_by_active_locale_before_authorization_checks(self):
+        controller = CONTROLLER.read_text()
+        menu_loader = controller.split("private function load_admin_menu_groups", 1)[1].split("protected function record_admin_menu_visit", 1)[0]
+        self.assertIn("$locale = $this->resolve_admin_locale();", menu_loader)
+        self.assertIn("$this->lang->load('admin', $locale);", menu_loader)
+        self.assertIn("$this->admin_menu_groups_locale === $locale", menu_loader)
+        self.assertIn("$this->admin_menu_groups_locale = $locale;", menu_loader)
+        self.assertLess(menu_loader.index("$this->lang->load('admin', $locale);"), menu_loader.index("foreach ($groups as $group)"))
 
 
 if __name__ == "__main__":

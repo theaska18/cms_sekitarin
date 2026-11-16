@@ -22,6 +22,12 @@ $route['admin/notifications/(:num)'] = 'admin_notifications/index/$1';
 $route['admin/setting'] = 'admin/setting';
 $route['admin/profile'] = 'admin/profile';
 $route['admin/settings'] = 'admin/placeholder/admin/settings';
+$route['admin/finance/(:any)/edit/(:num)'] = 'admin_finance/edit/$1/$2';
+$route['admin/finance/(:any)/post/(:num)'] = 'admin_finance/post/$1/$2';
+$route['admin/finance/(:any)/lookup/(:any)'] = 'admin_finance/lookup/$1/$2';
+$route['admin/finance/(:any)/data'] = 'admin_finance/data/$1';
+$route['admin/finance/(:any)/new'] = 'admin_finance/new_record/$1';
+$route['admin/finance/(:any)'] = 'admin_finance/index/$1';
 
 /*
  * Generic menu/action routing. The group segment is deliberately opaque;

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance_accounting" name="Finance - Accounting" label_key="admin_finance_accounting_group" version="1.0.0" sort_order="9">
+    <menu code="fin_chart_of_accounts" name="Chart of Accounts" label_key="admin_finance_chart_of_accounts" icon="list-ordered" route="/admin/finance/chart_of_accounts" module_key="finance_chart_of_accounts" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="15" status="active">
+        <access code="fin_chart_of_accounts_add" name="Add" />
+        <access code="fin_chart_of_accounts_update" name="Update" />
+    </menu>
+    <menu code="fin_journal_entries" name="Journal Entries" label_key="admin_finance_journal_entries" icon="list-ordered" route="/admin/finance/journal_entries" module_key="finance_journal_entries" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="16" status="active">
+        <access code="fin_journal_entries_add" name="Add" />
+        <access code="fin_journal_entries_update" name="Update" />
+    </menu>
+    <menu code="fin_general_ledger" name="General Ledger" label_key="admin_finance_general_ledger" icon="list-ordered" route="/admin/finance/general_ledger" module_key="finance_general_ledger" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="17" status="active">
+        <access code="fin_general_ledger_add" name="Add" />
+        <access code="fin_general_ledger_update" name="Update" />
+    </menu>
+    <menu code="fin_opening_balances" name="Opening Balances" label_key="admin_finance_opening_balances" icon="list-ordered" route="/admin/finance/opening_balances" module_key="finance_opening_balances" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="18" status="active">
+        <access code="fin_opening_balances_add" name="Add" />
+        <access code="fin_opening_balances_update" name="Update" />
+    </menu>
+    <menu code="fin_accounting_periods" name="Accounting Periods" label_key="admin_finance_accounting_periods" icon="default" route="/admin/finance/accounting_periods" module_key="finance_accounting_periods" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="19" status="active">
+        <access code="fin_accounting_periods_add" name="Add" />
+        <access code="fin_accounting_periods_update" name="Update" />
+    </menu>
+</menu-group>

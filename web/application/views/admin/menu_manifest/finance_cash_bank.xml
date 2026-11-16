@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance_cash_bank" name="Finance - Cash &amp; Bank" label_key="admin_finance_cash_bank_group" version="1.0.0" sort_order="8">
+    <menu code="fin_cash_accounts" name="Cash Accounts" label_key="admin_finance_cash_accounts" icon="building" route="/admin/finance/cash_accounts" module_key="finance_cash_accounts" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="12" status="active">
+        <access code="fin_cash_accounts_add" name="Add" />
+        <access code="fin_cash_accounts_update" name="Update" />
+    </menu>
+    <menu code="fin_bank_accounts" name="Bank Accounts" label_key="admin_finance_bank_accounts" icon="building" route="/admin/finance/bank_accounts" module_key="finance_bank_accounts" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="13" status="active">
+        <access code="fin_bank_accounts_add" name="Add" />
+        <access code="fin_bank_accounts_update" name="Update" />
+    </menu>
+    <menu code="fin_bank_reconciliation" name="Bank Reconciliation" label_key="admin_finance_bank_reconciliation" icon="approval" route="/admin/finance/bank_reconciliation" module_key="finance_bank_reconciliation" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="14" status="active">
+        <access code="fin_bank_reconciliation_add" name="Add" />
+        <access code="fin_bank_reconciliation_update" name="Update" />
+    </menu>
+</menu-group>

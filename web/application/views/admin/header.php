@@ -27,6 +27,7 @@ $menu_icons = array(
     'hierarchy' => '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4M6 12h12M6 12v4M18 12v4"/>',
     'users' => '<circle cx="9" cy="8" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0-1-5.8M17 14a5 5 0 0 1 4 5"/>',
     'workflow' => '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 12h3m4 0h3m-2-2 2 2-2 2"/>',
+    'finance' => '<rect x="3" y="7" width="18" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2M3 12h18m-13 0v2m8-2v2"/>',
     'shield-check' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>',
     'user-round' => '<circle cx="12" cy="8" r="4"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 21a8 8 0 0 1 16 0"/>',
     'default' => '<circle cx="12" cy="12" r="8"/>',

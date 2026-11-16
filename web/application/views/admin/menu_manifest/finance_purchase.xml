@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance_purchase" name="Finance - Purchase" label_key="admin_finance_purchase_group" version="1.0.0" sort_order="7">
+    <menu code="fin_purchase_bills" name="Purchase Bills" label_key="admin_finance_purchase_bills" icon="list-ordered" route="/admin/finance/purchase_bills" module_key="finance_purchase_bills" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="9" status="active">
+        <access code="fin_purchase_bills_add" name="Add" />
+        <access code="fin_purchase_bills_update" name="Update" />
+    </menu>
+    <menu code="fin_supplier_payments" name="Supplier Payments" label_key="admin_finance_supplier_payments" icon="default" route="/admin/finance/supplier_payments" module_key="finance_supplier_payments" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="10" status="active">
+        <access code="fin_supplier_payments_add" name="Add" />
+        <access code="fin_supplier_payments_update" name="Update" />
+    </menu>
+    <menu code="fin_accounts_payable" name="Accounts Payable" label_key="admin_finance_accounts_payable" icon="default" route="/admin/finance/accounts_payable" module_key="finance_accounts_payable" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="11" status="active">
+        <access code="fin_accounts_payable_add" name="Add" />
+        <access code="fin_accounts_payable_update" name="Update" />
+    </menu>
+</menu-group>

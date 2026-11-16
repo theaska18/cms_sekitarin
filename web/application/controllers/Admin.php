@@ -6,6 +6,7 @@ class Admin extends CI_Controller
     protected $current_user;
     private $admin_menu_groups_loaded = FALSE;
     private $admin_menu_groups_cache = array();
+    private $admin_menu_groups_locale = '';
 
     private $admin_languages = array(
         'english' => array('label' => 'English', 'flag' => '🇬🇧', 'html_lang' => 'en', 'direction' => 'ltr'),
@@ -321,9 +322,24 @@ class Admin extends CI_Controller
             ->limit(1)->get();
         if ($query !== FALSE && $query->num_rows() === 1) {
             $language = strtolower(trim((string) $query->row()->language));
-            $locale_map = array('en' => 'english', 'id' => 'indonesian');
+            $locale_map = array(
+                'en' => 'english', 'en-us' => 'english', 'en-gb' => 'english',
+                'id' => 'indonesian', 'id-id' => 'indonesian',
+                'ja' => 'japanese', 'ja-jp' => 'japanese',
+                'zh' => 'chinese', 'zh-cn' => 'chinese', 'zh-hans' => 'chinese',
+                'ar' => 'arabic', 'ar-sa' => 'arabic',
+                'ko' => 'korean', 'ko-kr' => 'korean',
+                'es' => 'spanish', 'es-es' => 'spanish',
+                'fr' => 'french', 'fr-fr' => 'french',
+                'de' => 'german', 'de-de' => 'german',
+            );
             if (isset($locale_map[$language])) {
                 $language = $locale_map[$language];
+            } elseif (strpos($language, '-') !== FALSE) {
+                $base_language = substr($language, 0, 2);
+                if (isset($locale_map[$base_language])) {
+                    $language = $locale_map[$base_language];
+                }
             }
             if (isset($this->admin_languages[$language])) {
                 return $language;
@@ -352,10 +368,20 @@ class Admin extends CI_Controller
 
     private function load_admin_menu_groups()
     {
-        if ($this->admin_menu_groups_loaded) {
+        $locale = $this->resolve_admin_locale();
+        $requested_locale = $this->input->get('lang', TRUE);
+        if (is_string($requested_locale) && isset($this->admin_languages[$requested_locale])) {
+            $locale = $requested_locale;
+        }
+        if ($this->admin_menu_groups_loaded && $this->admin_menu_groups_locale === $locale) {
             return $this->admin_menu_groups_cache;
         }
 
+        // Authorization helpers can build the sidebar cache before render_admin()
+        // loads its language pack. Load the active pack here as well so the first
+        // Finance/menu authorization check cannot freeze English labels.
+        $this->load->language('admin', $locale);
+        $this->lang->load('admin', $locale);
         $this->load->library('admin_menu_manifest');
         $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
         $this->load->database();
@@ -445,6 +471,7 @@ class Admin extends CI_Controller
         $render_groups = $session_render_groups;
         $this->admin_menu_groups_cache = $render_groups;
         $this->admin_menu_groups_loaded = TRUE;
+        $this->admin_menu_groups_locale = $locale;
         return $render_groups;
     }
 

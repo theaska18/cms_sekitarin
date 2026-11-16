@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu-group code="finance_master" name="Finance - Master" label_key="admin_finance_master_group" version="1.0.0" sort_order="11">
+    <menu code="fin_customers" name="Customers" label_key="admin_finance_customers" icon="users" route="/admin/finance/customers" module_key="finance_customers" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="26" status="active">
+        <access code="fin_customers_add" name="Add" />
+        <access code="fin_customers_update" name="Update" />
+    </menu>
+    <menu code="fin_suppliers" name="Suppliers" label_key="admin_finance_suppliers" icon="users" route="/admin/finance/suppliers" module_key="finance_suppliers" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="27" status="active">
+        <access code="fin_suppliers_add" name="Add" />
+        <access code="fin_suppliers_update" name="Update" />
+    </menu>
+    <menu code="fin_categories" name="Categories" label_key="admin_finance_categories" icon="menu" route="/admin/finance/categories" module_key="finance_categories" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="28" status="active">
+        <access code="fin_categories_add" name="Add" />
+        <access code="fin_categories_update" name="Update" />
+    </menu>
+    <menu code="fin_departments" name="Departments" label_key="admin_finance_departments" icon="building" route="/admin/finance/departments" module_key="finance_departments" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="29" status="active">
+        <access code="fin_departments_add" name="Add" />
+        <access code="fin_departments_update" name="Update" />
+    </menu>
+    <menu code="fin_tax_configuration" name="Tax Configuration" label_key="admin_finance_tax_configuration" icon="sliders-horizontal" route="/admin/finance/tax_configuration" module_key="finance_tax_configuration" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="30" status="active">
+        <access code="fin_tax_configuration_add" name="Add" />
+        <access code="fin_tax_configuration_update" name="Update" />
+    </menu>
+</menu-group>
