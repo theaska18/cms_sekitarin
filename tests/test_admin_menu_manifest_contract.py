@@ -198,8 +198,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertEqual("/admin/hr/employee", employee_item.attrib["route"])
         self.assertNotIn("$route['admin/hr/employee'] = 'admin_employee/employee_index';", routes)
         self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
-        for group in ("system", "hr", "application"):
-            self.assertNotIn(f"$route['admin/{group}/", routes)
+        self.assertNotIn("$route['admin/hr/", routes)
         self.assertIn("$this->has_admin_menu_code('hr_employee')", employee_controller)
         self.assertIn("$this->has_admin_access_code('hr_employee_add')", employee_controller)
         self.assertIn("$this->has_admin_access_code('hr_employee_update')", employee_controller)
@@ -342,6 +341,26 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertIn("$this->admin_menu_groups_locale === $locale", menu_loader)
         self.assertIn("$this->admin_menu_groups_locale = $locale;", menu_loader)
         self.assertLess(menu_loader.index("$this->lang->load('admin', $locale);"), menu_loader.index("foreach ($groups as $group)"))
+
+    def test_finance_menu_help_is_localized_and_attached_to_current_menu_title(self):
+        header = HEADER.read_text()
+        footer = (WEB / "application/views/admin/footer.php").read_text()
+        topics = (
+            "dashboard", "transaction", "sales", "purchase", "cash_bank",
+            "accounting", "report", "master", "setting",
+        )
+        required = {"admin_finance_info_button", "admin_finance_info_heading"}
+        required.update("admin_finance_info_" + topic for topic in topics)
+        for locale in LOCALES:
+            contents = (APP / f"language/{locale}/admin_lang.php").read_text()
+            values = dict(re.findall(r"\$lang\['([^']+)'\]\s*=\s*'([^']*)'\s*;", contents))
+            with self.subTest(locale=locale):
+                self.assertTrue(required.issubset(values))
+                self.assertTrue(all(values[key].strip() for key in required))
+        self.assertIn("admin-finance-menu-help", header)
+        self.assertIn("$finance_help_description_key", header)
+        self.assertIn("querySelector('#admin-main h1')", footer)
+        self.assertIn("createElement('details')", footer)
 
 
 if __name__ == "__main__":

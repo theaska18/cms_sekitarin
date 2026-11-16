@@ -45,7 +45,7 @@ class Admin_sequence extends Admin
         $sort = (string) $this->input->get('sort', TRUE);
         $sort_columns = array(
             'sequence_code', 'sequence_name', 'description', 'repeat_type',
-            'last_value', 'last_sequence', 'format',
+            'menu_code', 'last_value', 'last_sequence', 'format',
         );
         $sort = in_array($sort, $sort_columns, TRUE) ? $sort : 'sequence_code';
         $direction = strtoupper((string) $this->input->get('direction', TRUE));
@@ -62,6 +62,18 @@ class Admin_sequence extends Admin
         if ($records === FALSE) {
             $backend_available = FALSE;
             $records = array();
+        }
+        $sequence_menu_labels = array();
+        if ($backend_available) {
+            foreach ($this->sequence_manifest_items() as $menu_item) {
+                $sequence_menu_labels[$menu_item['code']] = $menu_item['group'] . ' / ' . $menu_item['label']
+                    . ' (' . $menu_item['code'] . ')';
+            }
+            foreach ($records as &$sequence_record) {
+                $code = isset($sequence_record['menu_code']) ? (string) $sequence_record['menu_code'] : '';
+                $sequence_record['menu_label'] = isset($sequence_menu_labels[$code]) ? $sequence_menu_labels[$code] : $code;
+            }
+            unset($sequence_record);
         }
 
         $this->render_admin(
@@ -113,14 +125,16 @@ class Admin_sequence extends Admin
             && $this->current_user !== NULL
             && (bool) config_item('csrf_protection');
         $record = $this->empty_sequence_record($field_specs);
+        $sequence_menu_label = $this->sequence_menu_label($record['menu_code']);
         $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) {
                 show_error('Sequence writes are unavailable.', 503);
                 return;
             }
-            $record = $this->sequence_form_values();
+            $record = array_merge($record, $this->sequence_form_values());
             $errors = $this->validate_sequence_values($record, $field_specs, $repeat_type_options);
+            $sequence_menu_label = $this->sequence_menu_label($record['menu_code']);
             if (!$errors) {
                 $insert_record = $this->sequence_insert_record($record, $field_specs);
                 if ($store->insert($insert_record)) {
@@ -139,6 +153,7 @@ class Admin_sequence extends Admin
                 'sequence_record' => $record,
                 'sequence_field_specs' => $field_specs,
                 'sequence_repeat_type_options' => $repeat_type_options,
+                'sequence_menu_label' => $sequence_menu_label,
                 'sequence_errors' => $errors,
                 'sequence_backend_available' => $backend_available,
                 'sequence_write_available' => $write_available,
@@ -178,14 +193,16 @@ class Admin_sequence extends Admin
         }
         $write_available = $this->current_user !== NULL && (bool) config_item('csrf_protection');
         $record = $this->sequence_record_for_form($saved_record, $field_specs);
+        $sequence_menu_label = $this->sequence_menu_label($record['menu_code']);
         $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) {
                 show_error('Sequence writes are unavailable.', 503);
                 return;
             }
-            $record = $this->sequence_form_values();
+            $record = array_merge($record, $this->sequence_form_values());
             $errors = $this->validate_sequence_values($record, $field_specs, $repeat_type_options);
+            $sequence_menu_label = $this->sequence_menu_label($record['menu_code']);
             if (!$errors) {
                 $update_record = $this->sequence_insert_record($record, $field_specs);
                 if ($store->update((string) $sequence_code, $update_record)) {
@@ -204,6 +221,7 @@ class Admin_sequence extends Admin
                 'sequence_record' => $record,
                 'sequence_field_specs' => $field_specs,
                 'sequence_repeat_type_options' => $repeat_type_options,
+                'sequence_menu_label' => $sequence_menu_label,
                 'sequence_errors' => $errors,
                 'sequence_backend_available' => $backend_available,
                 'sequence_write_available' => $write_available,
@@ -241,6 +259,83 @@ class Admin_sequence extends Admin
         redirect('/admin/system/sequence', 'location', 303);
     }
 
+    /** Search active manifest menus available to this tenant/role. */
+    public function sequence_menu_lookup()
+    {
+        if (!$this->has_admin_menu_code('sys_sequence')) {
+            $this->output->set_status_header(403);
+            $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
+            return;
+        }
+        $term = $this->input->get('term', TRUE);
+        $length = is_string($term) && function_exists('mb_strlen')
+            ? mb_strlen($term, 'UTF-8')
+            : (is_string($term) ? strlen($term) : 0);
+        if ($length < 2 || $length > 120) {
+            $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
+            return;
+        }
+        $allowed = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? array_fill_keys($this->current_user['menu_codes'], TRUE)
+            : array();
+        $needle = function_exists('mb_strtolower') ? mb_strtolower($term, 'UTF-8') : strtolower($term);
+        $results = array();
+        foreach ($this->sequence_manifest_items() as $item) {
+            if (!isset($allowed[$item['code']])) {
+                continue;
+            }
+            $haystack = $item['code'] . ' ' . $item['label'] . ' ' . $item['group'];
+            $haystack = function_exists('mb_strtolower') ? mb_strtolower($haystack, 'UTF-8') : strtolower($haystack);
+            if (strpos($haystack, $needle) === FALSE) {
+                continue;
+            }
+            $label = $item['group'] . ' / ' . $item['label'] . ' (' . $item['code'] . ')';
+            $results[] = array('id' => $item['code'], 'label' => $label, 'value' => $label);
+            if (count($results) >= 20) {
+                break;
+            }
+        }
+        $this->output->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($results, JSON_INVALID_UTF8_SUBSTITUTE));
+    }
+
+    private function sequence_manifest_items()
+    {
+        $this->load->library('admin_menu_manifest');
+        $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
+        $items = array();
+        foreach ($groups as $group) {
+            $group_translation = preg_match('/^admin_[a-z0-9_]+$/', $group['label_key'])
+                ? $this->lang->line($group['label_key'])
+                : FALSE;
+            $group_label = $this->admin_menu_manifest->resolve_label($group_translation, $group['name'] ?: $group['code']);
+            foreach ($group['items'] as $item) {
+                $item_translation = preg_match('/^admin_[a-z0-9_]+$/', $item['label_key'])
+                    ? $this->lang->line($item['label_key'])
+                    : FALSE;
+                $items[] = array(
+                    'code' => (string) $item['code'],
+                    'label' => $this->admin_menu_manifest->resolve_label($item_translation, $item['name'] ?: $item['code']),
+                    'group' => $group_label,
+                );
+            }
+        }
+        return $items;
+    }
+
+    private function sequence_menu_label($menu_code)
+    {
+        if (!is_string($menu_code) || $menu_code === '') {
+            return '';
+        }
+        foreach ($this->sequence_manifest_items() as $item) {
+            if ($item['code'] === $menu_code) {
+                return $item['group'] . ' / ' . $item['label'] . ' (' . $item['code'] . ')';
+            }
+        }
+        return $menu_code;
+    }
+
     private function sequence_record_for_form($saved_record, $field_specs)
     {
         $record = $this->empty_sequence_record($field_specs);
@@ -263,12 +358,22 @@ class Admin_sequence extends Admin
     {
         $names = array(
             'sequence_code', 'sequence_name', 'description', 'repeat_type',
-            'last_value', 'last_sequence', 'format',
+            'menu_code', 'last_value', 'last_sequence', 'format',
         );
         $record = array();
         foreach ($names as $name) {
             $default = isset($field_specs[$name]) ? $field_specs[$name]['default'] : NULL;
             $record[$name] = is_scalar($default) ? (string) $default : '';
+            if ($name === 'last_value' && $record[$name] === '') {
+                $record[$name] = isset($field_specs[$name]['minimum']) && $field_specs[$name]['minimum'] !== NULL
+                    ? (string) $field_specs[$name]['minimum']
+                    : '0';
+            }
+            if ($name === 'last_sequence' && $record[$name] === '') {
+                $record[$name] = $this->sequence_uses_date_only(isset($field_specs[$name]) ? $field_specs[$name] : array())
+                    ? date('Y-m-d')
+                    : date('Y-m-d\TH:i');
+            }
             if ($name === 'last_sequence' && !$this->sequence_uses_date_only(isset($field_specs[$name]) ? $field_specs[$name] : array())
                 && preg_match('/^(\\d{4}-\\d{2}-\\d{2})[ T](\\d{2}:\\d{2})/', $record[$name], $match)) {
                 $record[$name] = $match[1] . 'T' . $match[2];
@@ -304,7 +409,7 @@ class Admin_sequence extends Admin
     {
         $names = array(
             'sequence_code', 'sequence_name', 'description', 'repeat_type',
-            'last_value', 'last_sequence', 'format',
+            'menu_code', 'format',
         );
         $values = array();
         foreach ($names as $name) {
@@ -340,6 +445,16 @@ class Admin_sequence extends Admin
         }
         if ($record['sequence_code'] !== '' && preg_match('/[\\x00-\\x20\\x7F]/', $record['sequence_code'])) {
             $errors[] = 'sequence_code_invalid';
+        }
+        $allowed_menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? array_fill_keys($this->current_user['menu_codes'], TRUE)
+            : array();
+        $manifest_codes = array_fill_keys(array_column($this->sequence_manifest_items(), 'code'), TRUE);
+        if (empty($record['menu_code'])) {
+            $errors[] = 'menu_code_required';
+        } elseif (!isset($manifest_codes[(string) $record['menu_code']])
+            || !isset($allowed_menu_codes[(string) $record['menu_code']])) {
+            $errors[] = 'menu_code_invalid';
         }
         if ($record['last_value'] !== '' && !preg_match('/^-?\\d+$/', $record['last_value'])) {
             $errors[] = 'last_value_invalid';

@@ -579,7 +579,35 @@ body[data-theme="dark"] #admin-sidebar-fade-bottom {
         width: 16rem;
     }
 
-    #admin-main {
-        margin-inline-start: calc(16rem + 2rem);
-    }
+#admin-main {
+    margin-inline-start: calc(16rem + 2rem);
+}
+}
+
+#admin-main .admin-finance-title-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#admin-main .admin-finance-title-row h1 {
+    min-width: 0;
+}
+
+#admin-main .admin-finance-info > summary::-webkit-details-marker {
+    display: none;
+}
+
+#admin-main .admin-finance-info[open] > summary {
+    border-color: #a5b4fc;
+    background-color: #eef2ff;
+    color: #4338ca;
+}
+
+html[data-theme="dark"] #admin-main .admin-finance-info[open] > summary,
+body[data-theme="dark"] #admin-main .admin-finance-info[open] > summary {
+    border-color: #4f46e5;
+    background-color: #312e81;
+    color: #e0e7ff;
 }

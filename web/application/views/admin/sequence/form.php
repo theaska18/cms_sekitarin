@@ -16,12 +16,6 @@ $sequence_maxlength_attribute = function ($field_name) use ($sequence_field_spec
 $sequence_required_attribute = function ($field_name) use ($sequence_field_specs) {
     return isset($sequence_field_specs[$field_name]['required']) && $sequence_field_specs[$field_name]['required'] ? ' required' : '';
 };
-$sequence_last_value_spec = isset($sequence_field_specs['last_value']) ? $sequence_field_specs['last_value'] : array();
-$sequence_last_value_type = isset($sequence_last_value_spec['sql_type']) ? strtolower($sequence_last_value_spec['sql_type']) : '';
-$sequence_last_value_numeric = (bool) preg_match('/^(?:tinyint|smallint|mediumint|int|integer|bigint|decimal|numeric|float|double|real)\b/', $sequence_last_value_type);
-$sequence_last_value_step = preg_match('/^(?:tinyint|smallint|mediumint|int|integer|bigint)\b/', $sequence_last_value_type) ? '1' : 'any';
-$sequence_last_sequence_type = isset($sequence_field_specs['last_sequence']['sql_type']) ? strtolower($sequence_field_specs['last_sequence']['sql_type']) : '';
-$sequence_last_sequence_input_type = preg_match('/^date\b/', $sequence_last_sequence_type) && !preg_match('/^(?:datetime|timestamp)\b/', $sequence_last_sequence_type) ? 'date' : 'datetime-local';
 $sequence_error_labels = array();
 foreach ($sequence_errors as $error) {
     $error_key = 'sequence_' . $error;
@@ -101,15 +95,10 @@ foreach ($sequence_errors as $error) {
             </div>
 
             <div>
-                <label for="sequence-last-value" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_last_value']) ?></label>
-                <input id="sequence-last-value" name="last_value" type="<?= $sequence_last_value_numeric ? 'number' : 'text' ?>"<?= $sequence_required_attribute('last_value') ?><?= isset($sequence_last_value_spec['minimum']) && $sequence_last_value_spec['minimum'] !== NULL ? ' min="' . html_escape($sequence_last_value_spec['minimum']) . '"' : '' ?><?= isset($sequence_last_value_spec['maximum']) && $sequence_last_value_spec['maximum'] !== NULL ? ' max="' . html_escape($sequence_last_value_spec['maximum']) . '"' : '' ?><?= $sequence_last_value_numeric ? ' step="' . $sequence_last_value_step . '" inputmode="numeric"' : '' ?> value="<?= html_escape(isset($sequence_record['last_value']) ? $sequence_record['last_value'] : '') ?>" <?= $sequence_disabled ? 'disabled' : '' ?> class="<?= $sequence_control_class ?> max-w-[100px]">
-                <p class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_last_value_help']) ?></p>
-            </div>
-
-            <div>
-                <label for="sequence-last-sequence" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_last_sequence']) ?></label>
-                <input id="sequence-last-sequence" name="last_sequence" type="<?= $sequence_last_sequence_input_type ?>"<?= $sequence_required_attribute('last_sequence') ?> value="<?= html_escape(isset($sequence_record['last_sequence']) ? $sequence_record['last_sequence'] : '') ?>" <?= $sequence_disabled ? 'disabled' : '' ?> class="<?= $sequence_control_class ?> max-w-[100px]">
-                <p class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_last_sequence_help']) ?></p>
+                <label for="sequence-menu-search" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_menu']) ?></label>
+                <input type="hidden" id="sequence-menu-code" name="menu_code" value="<?= html_escape(isset($sequence_record['menu_code']) ? $sequence_record['menu_code'] : '') ?>">
+                <input id="sequence-menu-search" type="text" value="<?= html_escape(isset($sequence_menu_label) ? $sequence_menu_label : '') ?>" autocomplete="off" placeholder="<?= html_escape($labels['sequence_menu_search']) ?>" aria-autocomplete="list" aria-describedby="sequence-menu-help" <?= $sequence_disabled ? 'disabled' : 'required' ?> class="<?= $sequence_control_class ?>">
+                <p id="sequence-menu-help" class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_menu_help']) ?></p>
             </div>
 
             <div>
@@ -119,12 +108,15 @@ foreach ($sequence_errors as $error) {
             </div>
         </div>
 
-        <div data-sequence-sticky-actions class="sticky bottom-0 z-30 -mx-5 -mb-5 mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 bg-white/10 px-5 pb-3 pt-4 backdrop-blur-sm shadow-none sm:-mx-8 sm:-mb-8 sm:flex-row sm:justify-between sm:px-8">
+        <div data-sequence-sticky-actions class="sticky bottom-0 z-30 -mx-5 -mb-5 mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 bg-white/10 px-5 pb-3 pt-4 backdrop-blur-sm sm:-mx-8 sm:-mb-8 sm:flex-row sm:justify-between sm:px-8">
             <a id="sequence_back" href="/admin/system/sequence" class="admin-back-link inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg><?= html_escape($labels['sequence_back']) ?></a>
             <button id="sequence_save" type="submit" <?= $sequence_disabled ? 'disabled aria-disabled="true"' : '' ?> class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 3.5h10l2.5 2.5v10.5H3.5v-13H4Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6.5 3.5v4h6v-4M6.5 16v-5h7v5"/></svg><?= html_escape($labels['sequence_save']) ?></button>
         </div>
     </form>
 </main>
+<link rel="stylesheet" href="/assets/css/vendor/jquery-ui.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/jquery-ui.min.css') ? filemtime(FCPATH . 'assets/css/vendor/jquery-ui.min.css') : '1' ?>">
+<script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
+<script src="/assets/js/vendor/jquery-ui.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery-ui.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery-ui.min.js') : '1' ?>"></script>
 <script>
 (function () {
     var form = document.querySelector('form[action^="/admin/system/sequence/"]');
@@ -145,6 +137,28 @@ foreach ($sequence_errors as $error) {
                 return match.toLocaleUpperCase();
             });
         });
+    }
+    var menuSearch = document.getElementById('sequence-menu-search');
+    var menuCode = document.getElementById('sequence-menu-code');
+    if (menuSearch && menuCode && !menuSearch.disabled) {
+        $(menuSearch).autocomplete({
+            minLength: 2,
+            delay: 250,
+            source: function (request, response) {
+                $.getJSON('/admin/system/sequence/menu-lookup', {term: request.term})
+                    .done(response)
+                    .fail(function () { response([]); });
+            },
+            select: function (event, item) {
+                menuCode.value = item.item.id;
+                menuSearch.value = item.item.label;
+                return false;
+            },
+            change: function (event, item) {
+                if (!item.item) menuCode.value = '';
+            }
+        });
+        menuSearch.addEventListener('input', function () { menuCode.value = ''; });
     }
 })();
 </script>

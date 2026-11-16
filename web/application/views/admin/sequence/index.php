@@ -20,6 +20,7 @@ $columns = array(
     'sequence_name' => array('label' => $labels['sequence_sequence_name'], 'class' => 'min-w-[8rem] sm:min-w-56'),
     'description' => array('label' => $labels['sequence_description'], 'class' => 'min-w-[14rem] sm:min-w-64'),
     'repeat_type' => array('label' => $labels['sequence_repeat_type'], 'class' => 'min-w-[9rem]'),
+    'menu_code' => array('label' => $labels['sequence_menu'], 'class' => 'min-w-[14rem]'),
     'last_value' => array('label' => $labels['sequence_last_value'], 'class' => 'whitespace-nowrap'),
     'last_sequence' => array('label' => $labels['sequence_last_sequence'], 'class' => 'whitespace-nowrap'),
     'format' => array('label' => $labels['sequence_format'], 'class' => 'min-w-[10rem]'),
@@ -159,6 +160,7 @@ $columns = array(
                                 <td class="min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4"><?= html_escape((string) $record['sequence_name']) ?></td>
                                 <td class="min-w-[14rem] break-words px-2 py-3 text-slate-600 sm:min-w-64 sm:px-6 sm:py-4"><?= html_escape((string) $record['description']) ?></td>
                                 <td class="whitespace-nowrap px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['repeat_type']) ?></td>
+                                <td class="min-w-[14rem] whitespace-nowrap px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['menu_label']) ?></td>
                                 <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['last_value']) ?></td>
                                 <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['last_sequence']) ?></td>
                                 <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['format']) ?></td>
@@ -166,7 +168,7 @@ $columns = array(
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="px-4 py-14 text-center sm:px-6">
+                            <td colspan="9" class="px-4 py-14 text-center sm:px-6">
                                 <div class="sticky left-0 mx-0 max-w-md sm:static sm:mx-auto rounded-none" style="width: min(448px, calc(100vw - 4rem));">
                                     <div aria-hidden="true" class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>

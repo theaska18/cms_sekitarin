@@ -22,6 +22,7 @@ $route['admin/notifications/(:num)'] = 'admin_notifications/index/$1';
 $route['admin/setting'] = 'admin/setting';
 $route['admin/profile'] = 'admin/profile';
 $route['admin/settings'] = 'admin/placeholder/admin/settings';
+$route['admin/system/sequence/menu-lookup'] = 'admin_sequence/sequence_menu_lookup';
 $route['admin/finance/(:any)/edit/(:num)'] = 'admin_finance/edit/$1/$2';
 $route['admin/finance/(:any)/post/(:num)'] = 'admin_finance/post/$1/$2';
 $route['admin/finance/(:any)/lookup/(:any)'] = 'admin_finance/lookup/$1/$2';

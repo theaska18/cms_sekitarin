@@ -494,6 +494,67 @@
 </script>
 <script>
 (function () {
+    var payload = document.getElementById('admin-finance-menu-help');
+    var heading = document.querySelector('#admin-main h1');
+    if (!payload || !heading || !heading.parentNode) return;
+
+    var info;
+    try {
+        info = JSON.parse(payload.textContent || '{}');
+    } catch (error) {
+        return;
+    }
+    if (!info || !info.title || !info.description) return;
+
+    var row = document.createElement('div');
+    row.className = 'admin-finance-title-row';
+    heading.parentNode.insertBefore(row, heading);
+    row.appendChild(heading);
+
+    var details = document.createElement('details');
+    details.className = 'admin-finance-info relative shrink-0';
+    var summary = document.createElement('summary');
+    summary.className = 'admin-finance-info-button inline-flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500';
+    summary.setAttribute('aria-label', info.button + ': ' + info.title);
+    summary.setAttribute('title', info.button);
+
+    var icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('viewBox', '0 0 20 20');
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '1.7');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.classList.add('h-5', 'w-5');
+    var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '10');
+    circle.setAttribute('cy', '10');
+    circle.setAttribute('r', '7.5');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('d', 'M10 9v5m0-8h.01');
+    icon.appendChild(circle);
+    icon.appendChild(path);
+    summary.appendChild(icon);
+
+    var popover = document.createElement('div');
+    popover.className = 'admin-finance-info-popover absolute top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white p-4 text-start text-sm text-slate-700 shadow-xl';
+    popover.classList.add(info.rtl ? 'right-0' : 'left-0');
+    var popoverHeading = document.createElement('h2');
+    popoverHeading.className = 'font-bold text-slate-900';
+    popoverHeading.textContent = info.heading + ' — ' + info.title;
+    var description = document.createElement('p');
+    description.className = 'mt-2 leading-6';
+    description.textContent = info.description;
+    popover.appendChild(popoverHeading);
+    popover.appendChild(description);
+
+    details.appendChild(summary);
+    details.appendChild(popover);
+    row.appendChild(details);
+}());
+</script>
+<script>
+(function () {
     var panel = document.getElementById('admin-sidebar');
     var fadeShell = document.getElementById('admin-sidebar-scroll-shell');
     var scrollRegion = document.getElementById('admin-sidebar-scroll-region');

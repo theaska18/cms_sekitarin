@@ -16,6 +16,45 @@ $notification_relative_time = function ($value) use ($labels) {
     }
     return $labels['notifications_time_just_now'];
 };
+$finance_help = NULL;
+$finance_help_topics = array(
+    'finance' => 'dashboard',
+    'finance_transaction' => 'transaction',
+    'finance_sales' => 'sales',
+    'finance_purchase' => 'purchase',
+    'finance_cash_bank' => 'cash_bank',
+    'finance_accounting' => 'accounting',
+    'finance_report' => 'report',
+    'finance_master' => 'master',
+    'finance_setting' => 'setting',
+);
+$normalized_current_path = '/' . trim(isset($current_path) ? (string) $current_path : '', '/');
+foreach ($menu_groups as $finance_help_group) {
+    if (strpos((string) $finance_help_group['code'], 'finance') !== 0) {
+        continue;
+    }
+    foreach ($finance_help_group['items'] as $finance_help_item) {
+        $finance_help_route = rtrim((string) $finance_help_item['route'], '/');
+        if ($normalized_current_path !== $finance_help_route
+            && strpos($normalized_current_path, $finance_help_route . '/') !== 0) {
+            continue;
+        }
+        $finance_help_topic = isset($finance_help_topics[$finance_help_group['code']])
+            ? $finance_help_topics[$finance_help_group['code']]
+            : 'dashboard';
+        $finance_help_description_key = 'finance_info_' . $finance_help_topic;
+        $finance_help = array(
+            'title' => $finance_help_item['label'],
+            'heading' => isset($labels['finance_info_heading']) ? $labels['finance_info_heading'] : 'About this menu',
+            'description' => isset($labels[$finance_help_description_key])
+                ? $labels[$finance_help_description_key]
+                : (isset($labels['finance_info_dashboard']) ? $labels['finance_info_dashboard'] : ''),
+            'button' => isset($labels['finance_info_button']) ? $labels['finance_info_button'] : 'More information',
+            'rtl' => !empty($is_rtl),
+        );
+        break 2;
+    }
+}
 $menu_icons = array(
     'dashboard' => '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
     'building' => '<rect x="4" y="2" width="16" height="20" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
@@ -59,6 +98,9 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
 </style>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 antialiased" data-theme="<?php echo $admin_theme; ?>">
+<?php if ($finance_help !== NULL): ?>
+<script type="application/json" id="admin-finance-menu-help"><?php echo json_encode($finance_help, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></script>
+<?php endif; ?>
 <div id="admin-app-shell">
 <header class="admin-topbar sticky top-0 z-30 border-b border-slate-200 text-slate-900">
     <div class="mx-auto flex min-h-16 max-w-screen-2xl items-center justify-between gap-1 px-4 sm:gap-3 sm:px-6 lg:px-8">
