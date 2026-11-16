@@ -8,13 +8,13 @@ class Admin_sequence extends Admin
 {
     const ADMIN_SEQUENCE_PATH = '/admin/system/sequence';
 
-    private function sequence_deny_access($message_key = 'sequence_no_access')
+    private function sequence_deny_access($message_key = 'sequence_no_access', $requested_path = NULL)
     {
         $this->output->set_status_header(403);
         $this->render_admin(
             'admin/sequence/access_denied',
             'sequence',
-            self::ADMIN_SEQUENCE_PATH,
+            is_string($requested_path) && $requested_path !== '' ? $requested_path : self::ADMIN_SEQUENCE_PATH,
             array('sequence_access_message_key' => $message_key)
         );
     }
@@ -22,7 +22,7 @@ class Admin_sequence extends Admin
     public function sequence_index()
     {
         if (trim($this->uri->uri_string(), '/') === 'admin/application/sequence') {
-            $this->module('application', 'sequence');
+            $this->application_sequence_index();
             return;
         }
         if (!$this->has_admin_menu_code('sys_sequence')) {
@@ -60,6 +60,10 @@ class Admin_sequence extends Admin
     /** DataTables server-side endpoint; the shared parser bounds paging and ordering. */
     public function sequence_data()
     {
+        if (trim($this->uri->uri_string(), '/') === 'admin/application/sequence/data') {
+            $this->application_sequence_data();
+            return;
+        }
         $this->load->library('datatable_server');
         if (!$this->has_admin_menu_code('sys_sequence')) {
             $this->datatable_server->error(403);
@@ -109,8 +113,78 @@ class Admin_sequence extends Admin
         );
     }
 
+    /** Tenant-scoped list of accessible system templates and existing overrides. */
+    private function application_sequence_index()
+    {
+        if (!$this->has_admin_menu_code('app_sequence')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
+        $this->load->database();
+        $this->load->library('application_sequence_store');
+        $store = $this->application_sequence_store;
+        $backend_available = $store->schema_available();
+        $this->render_admin(
+            'admin/sequence/application_index',
+            'sequence_heading',
+            '/admin/application/sequence',
+            array(
+                'backend_available' => $backend_available,
+                'write_available' => $backend_available && $this->current_user !== NULL && (bool) config_item('csrf_protection'),
+                'sequence_update_allowed' => $this->has_admin_access_code('app_sequence_update'),
+                'sequence_set_default_allowed' => $this->has_admin_access_code('app_sequence_set_default'),
+                'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
+            )
+        );
+    }
+
+    /** DataTables endpoint scoped by effective tenant/role menu visibility. */
+    private function application_sequence_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('app_sequence')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $this->load->database();
+        $this->load->library('application_sequence_store');
+        $store = $this->application_sequence_store;
+        if (!$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? $this->current_user['menu_codes']
+            : array();
+        $this->datatable_server->respond(
+            array(
+                1 => 'sequence_code',
+                2 => 'sequence_name',
+                3 => 'repeat_type',
+                4 => 'format',
+                5 => 'last_value',
+                6 => 'use_flag',
+            ),
+            function () use ($store, $tenant_id, $menu_codes) {
+                return $store->count($tenant_id, $menu_codes, '');
+            },
+            function ($search) use ($store, $tenant_id, $menu_codes) {
+                return $store->count($tenant_id, $menu_codes, $search);
+            },
+            function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $menu_codes) {
+                return $store->page($tenant_id, $menu_codes, $search, $length, $start, $order, $direction);
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'sequence_code')
+        );
+    }
+
     public function sequence_new()
     {
+        if (strpos(trim($this->uri->uri_string(), '/'), 'admin/application/sequence/') === 0) {
+            show_404();
+            return;
+        }
         if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_add')) {
             $this->sequence_deny_access('sequence_no_access');
             return;
@@ -171,6 +245,10 @@ class Admin_sequence extends Admin
 
     public function sequence_change($sequence_code)
     {
+        if (strpos(trim($this->uri->uri_string(), '/'), 'admin/application/sequence/change/') === 0) {
+            $this->application_sequence_change($sequence_code);
+            return;
+        }
         if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_update')) {
             $this->sequence_deny_access('sequence_no_access');
             return;
@@ -239,8 +317,141 @@ class Admin_sequence extends Admin
         );
     }
 
+    /** Update a tenant override, initializing it from the template when first saved. */
+    private function application_sequence_change($sequence_code)
+    {
+        if (!$this->has_admin_menu_code('app_sequence')
+            || !$this->has_admin_access_code('app_sequence_update')) {
+            $this->sequence_deny_access('sequence_no_access');
+            return;
+        }
+        $this->load->database();
+        $this->db->db_debug = FALSE;
+        $this->load->library('application_sequence_store');
+        $store = $this->application_sequence_store;
+        if (!$store->schema_available()) {
+            show_error('Application sequence storage is unavailable.', 503);
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? $this->current_user['menu_codes']
+            : array();
+        $record = $store->find_for_tenant($tenant_id, (string) $sequence_code, $menu_codes);
+        if ($record === FALSE) {
+            show_error('Application sequence storage is unavailable.', 503);
+            return;
+        }
+        if ($record === NULL) {
+            show_404();
+            return;
+        }
+        $repeat_type_options = $store->repeat_type_options();
+        if ($repeat_type_options === FALSE) {
+            show_error('Application sequence options are unavailable.', 503);
+            return;
+        }
+        $write_available = $this->current_user !== NULL && (bool) config_item('csrf_protection');
+        $errors = array();
+        if ($this->input->method(TRUE) === 'POST') {
+            if (!$write_available) {
+                show_error('Application sequence writes are unavailable.', 503);
+                return;
+            }
+            $posted_last_value = $this->input->post('last_value', TRUE);
+            $last_value = is_scalar($posted_last_value) ? trim((string) $posted_last_value) : '';
+            $posted_format = $this->input->post('format', FALSE);
+            $format = is_string($posted_format) ? trim($posted_format) : '';
+            $posted_repeat_type = $this->input->post('repeat_type', TRUE);
+            $repeat_type = is_string($posted_repeat_type) ? trim($posted_repeat_type) : '';
+            $use_flag = $this->input->post('use_flag') === '1' ? '1' : '0';
+            $record['last_value'] = $last_value;
+            $record['format'] = $format;
+            $record['repeat_type'] = $repeat_type;
+            $record['use_flag'] = $use_flag;
+
+            if ($last_value === '' || !preg_match('/^\d+$/', $last_value)
+                || $this->compare_integer_strings($last_value, '2147483647') > 0) {
+                $errors[] = 'last_value_invalid';
+            }
+            if ($format === '') {
+                $errors[] = 'format_required';
+            } elseif (strlen($format) > 45) {
+                $errors[] = 'format_too_long';
+            }
+            $valid_repeat_types = array_map(function ($option) {
+                return isset($option['option_code']) ? (string) $option['option_code'] : '';
+            }, $repeat_type_options);
+            if (!in_array($repeat_type, $valid_repeat_types, TRUE)) {
+                $errors[] = 'repeat_type_invalid';
+            }
+            if (!$errors && $store->save_for_tenant($tenant_id, (string) $sequence_code, array(
+                'last_value' => (int) $last_value,
+                'format' => $format,
+                'repeat_type' => $repeat_type,
+                'use_flag' => $use_flag,
+            ))) {
+                $this->session->set_flashdata('sequence_notice', 'sequence_application_saved');
+                redirect('/admin/application/sequence', 'location', 303);
+                return;
+            } elseif (!$errors) {
+                $errors[] = 'save_error';
+            }
+        }
+
+        $this->render_admin(
+            'admin/sequence/application_form',
+            'sequence_form_edit',
+            '/admin/application/sequence/change/' . rawurlencode((string) $sequence_code),
+            array(
+                'sequence_record' => $record,
+                'sequence_repeat_type_options' => $repeat_type_options,
+                'sequence_errors' => $errors,
+                'sequence_write_available' => $write_available,
+            )
+        );
+    }
+
+    /** Reset tenant-specific format and repeat interval from the sys_sequence template. */
+    public function sequence_set_default($sequence_code)
+    {
+        $path = trim($this->uri->uri_string(), '/');
+        if (strpos($path, 'admin/application/sequence/set_default/') !== 0) {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code('app_sequence')
+            || !$this->has_admin_access_code('app_sequence_set_default')) {
+            $this->sequence_deny_access('sequence_no_access', '/admin/application/sequence');
+            return;
+        }
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_error('Method not allowed.', 405);
+            return;
+        }
+        if ($this->current_user === NULL || !(bool) config_item('csrf_protection')) {
+            show_error('Application sequence writes are unavailable.', 503);
+            return;
+        }
+        $this->load->database();
+        $this->db->db_debug = FALSE;
+        $this->load->library('application_sequence_store');
+        $store = $this->application_sequence_store;
+        $menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
+            ? $this->current_user['menu_codes']
+            : array();
+        $result = $store->schema_available()
+            && $store->reset_to_template((int) $this->current_user['tenant_id'], (string) $sequence_code, $menu_codes);
+        $this->session->set_flashdata('sequence_notice', $result ? 'sequence_default_saved' : 'sequence_default_error');
+        redirect('/admin/application/sequence', 'location', 303);
+    }
+
     public function sequence_delete()
     {
+        if (strpos(trim($this->uri->uri_string(), '/'), 'admin/application/sequence/') === 0) {
+            show_404();
+            return;
+        }
         if (!$this->has_admin_menu_code('sys_sequence') || !$this->has_admin_access_code('sys_sequence_delete')) {
             $this->sequence_deny_access('sequence_no_access');
             return;

@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = '序列';
+$lang['sequence_auto_number_permission_required'] = '您没有权限更改自动编号设置。';
+$lang['sequence_use_flag_help'] = '启用后由系统自动生成序号；禁用后需要手动输入编号。';
+$lang['sequence_use_flag_disabled'] = '手动';
+$lang['sequence_use_flag_enabled'] = '自动';
+$lang['sequence_use_flag'] = '自动编号';
+$lang['sequence_application_saved'] = '租户序列设置已保存。';
+$lang['sequence_default_error'] = '无法恢复序列默认设置。';
+$lang['sequence_default_saved'] = '已从系统模板恢复格式和重复类型。';
+$lang['sequence_confirm_set_to_default'] = '将此租户的重复类型和格式恢复为系统模板？最后值及自动/手动设置不会更改。';
+$lang['sequence_set_to_default'] = '恢复默认值';
+$lang['sequence_application_not_configured'] = '此序列尚未为您的租户配置。保存后将根据当前显示的值创建租户设置。';
+$lang['sequence_application_not_configured_short'] = '此租户尚未配置';
+$lang['sequence_application_form_intro'] = '编辑此租户的计数器和生成设置，不会更改系统共享模板。';
+$lang['sequence_application_intro'] = '配置与您可访问菜单关联的序列模板。保存尚未配置的模板时，将创建该租户的设置。';
 $lang['sequence_no_access'] = '您无权访问此序列页面。';
 $lang['sequence_add'] = '添加';
 $lang['sequence_actions'] = '操作';

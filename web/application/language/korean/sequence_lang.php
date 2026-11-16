@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = '시퀀스';
+$lang['sequence_auto_number_permission_required'] = '자동 번호 설정을 변경할 권한이 없습니다.';
+$lang['sequence_use_flag_help'] = '사용하면 시스템이 번호를 자동 생성하고, 사용하지 않으면 번호를 직접 입력합니다.';
+$lang['sequence_use_flag_disabled'] = '수동';
+$lang['sequence_use_flag_enabled'] = '자동';
+$lang['sequence_use_flag'] = '자동 번호 매기기';
+$lang['sequence_application_saved'] = '테넌트 시퀀스 설정을 저장했습니다.';
+$lang['sequence_default_error'] = '시퀀스 기본값을 복원하지 못했습니다.';
+$lang['sequence_default_saved'] = '시스템 템플릿에서 형식과 반복 유형을 복원했습니다.';
+$lang['sequence_confirm_set_to_default'] = '테넌트의 반복 유형과 형식을 시스템 템플릿 값으로 복원할까요? 마지막 값과 자동/수동 설정은 바뀌지 않습니다.';
+$lang['sequence_set_to_default'] = '기본값으로 복원';
+$lang['sequence_application_not_configured'] = '이 시퀀스는 아직 테넌트에 설정되지 않았습니다. 저장하면 표시된 값으로 테넌트 설정이 생성됩니다.';
+$lang['sequence_application_not_configured_short'] = '이 테넌트에 미설정';
+$lang['sequence_application_form_intro'] = '이 테넌트의 카운터와 생성 설정을 수정합니다. 공통 시스템 템플릿은 변경되지 않습니다.';
+$lang['sequence_application_intro'] = '접근 가능한 메뉴에 연결된 템플릿을 기준으로 테넌트 시퀀스를 설정합니다. 미설정 템플릿을 저장하면 테넌트 설정이 생성됩니다.';
 $lang['sequence_no_access'] = '이 시퀀스 페이지에 접근할 권한이 없습니다.';
 $lang['sequence_add'] = '추가';
 $lang['sequence_actions'] = '작업';

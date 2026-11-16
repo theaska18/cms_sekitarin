@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequenzen';
+$lang['sequence_auto_number_permission_required'] = 'Sie dürfen die automatische Nummerierung nicht ändern.';
+$lang['sequence_use_flag_help'] = 'Bei Aktivierung erzeugt das System die Nummern automatisch. Bei Deaktivierung müssen sie manuell eingegeben werden.';
+$lang['sequence_use_flag_disabled'] = 'Manuell';
+$lang['sequence_use_flag_enabled'] = 'Automatisch';
+$lang['sequence_use_flag'] = 'Automatische Nummerierung';
+$lang['sequence_application_saved'] = 'Sequenzeinstellungen des Mandanten gespeichert.';
+$lang['sequence_default_error'] = 'Sequenz-Standardwerte konnten nicht wiederhergestellt werden.';
+$lang['sequence_default_saved'] = 'Format und Wiederholungstyp wurden aus der Systemvorlage wiederhergestellt.';
+$lang['sequence_confirm_set_to_default'] = 'Wiederholungstyp und Format dieses Mandanten aus der Systemvorlage wiederherstellen? Letzter Wert und Automatik/Manuell-Einstellung bleiben unverändert.';
+$lang['sequence_set_to_default'] = 'Auf Standard zurücksetzen';
+$lang['sequence_application_not_configured'] = 'Diese Sequenz ist für Ihren Mandanten noch nicht konfiguriert. Beim Speichern werden Mandanteneinstellungen mit den angezeigten Werten angelegt.';
+$lang['sequence_application_not_configured_short'] = 'Für diesen Mandanten nicht konfiguriert';
+$lang['sequence_application_form_intro'] = 'Bearbeiten Sie Zähler und Erzeugungseinstellungen dieses Mandanten. Die gemeinsame Systemvorlage bleibt unverändert.';
+$lang['sequence_application_intro'] = 'Konfigurieren Sie Sequenzen für diesen Mandanten anhand der Vorlagen, die mit Ihren zugänglichen Menüs verknüpft sind. Beim Speichern einer nicht konfigurierten Vorlage werden Mandanteneinstellungen erstellt.';
 $lang['sequence_no_access'] = 'Sie haben keinen Zugriff auf diese Sequenzseite.';
 $lang['sequence_add'] = 'Hinzufügen';
 $lang['sequence_actions'] = 'Aktionen';

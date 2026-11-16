@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequences';
+$lang['sequence_auto_number_permission_required'] = 'You do not have permission to change automatic numbering.';
+$lang['sequence_use_flag_help'] = 'When enabled, the system generates sequence values automatically. When disabled, the number must be entered manually.';
+$lang['sequence_use_flag_disabled'] = 'Manual';
+$lang['sequence_use_flag_enabled'] = 'Automatic';
+$lang['sequence_use_flag'] = 'Automatic numbering';
+$lang['sequence_application_saved'] = 'Tenant sequence settings saved.';
+$lang['sequence_default_error'] = 'Could not restore sequence defaults.';
+$lang['sequence_default_saved'] = 'Sequence format and repeat type restored from the system template.';
+$lang['sequence_confirm_set_to_default'] = 'Restore this tenant sequence’s repeat type and format from the system template? Last value and automatic/manual setting will not change.';
+$lang['sequence_set_to_default'] = 'Set to Default';
+$lang['sequence_application_not_configured'] = 'This sequence is not configured for your tenant yet. Saving will create its tenant-specific settings using the values shown.';
+$lang['sequence_application_not_configured_short'] = 'Not configured for this tenant';
+$lang['sequence_application_form_intro'] = 'Edit this tenant’s counter and generation settings. The shared system template is not changed.';
+$lang['sequence_application_intro'] = 'Configure tenant-specific sequence settings for templates linked to menus you can access. Saving an unconfigured template creates its tenant settings.';
 $lang['sequence_no_access'] = 'You do not have access to this Sequence page.';
 $lang['sequence_add'] = 'Add';
 $lang['sequence_actions'] = 'Actions';

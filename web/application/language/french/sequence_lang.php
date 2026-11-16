@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Séquences';
+$lang['sequence_auto_number_permission_required'] = 'Vous ne pouvez pas modifier la numérotation automatique.';
+$lang['sequence_use_flag_help'] = 'Activée, la séquence est générée automatiquement. Désactivée, le numéro doit être saisi manuellement.';
+$lang['sequence_use_flag_disabled'] = 'Manuelle';
+$lang['sequence_use_flag_enabled'] = 'Automatique';
+$lang['sequence_use_flag'] = 'Numérotation automatique';
+$lang['sequence_application_saved'] = 'Paramètres de séquence du tenant enregistrés.';
+$lang['sequence_default_error'] = 'Impossible de rétablir les valeurs par défaut.';
+$lang['sequence_default_saved'] = 'Le format et le type de répétition ont été rétablis depuis le modèle système.';
+$lang['sequence_confirm_set_to_default'] = 'Rétablir le type de répétition et le format du tenant depuis le modèle système ? La dernière valeur et le mode automatique/manuel resteront inchangés.';
+$lang['sequence_set_to_default'] = 'Rétablir les valeurs';
+$lang['sequence_application_not_configured'] = 'Cette séquence n’est pas encore configurée pour votre tenant. L’enregistrement créera ses paramètres avec les valeurs affichées.';
+$lang['sequence_application_not_configured_short'] = 'Non configurée pour ce tenant';
+$lang['sequence_application_form_intro'] = 'Modifiez le compteur et la génération pour ce tenant. Le modèle système partagé reste inchangé.';
+$lang['sequence_application_intro'] = 'Configurez les séquences du tenant à partir des modèles liés aux menus accessibles. Enregistrer un modèle non configuré crée les paramètres du tenant.';
 $lang['sequence_no_access'] = 'Vous n’avez pas accès à cette page des séquences.';
 $lang['sequence_add'] = 'Ajouter';
 $lang['sequence_actions'] = 'Actions';

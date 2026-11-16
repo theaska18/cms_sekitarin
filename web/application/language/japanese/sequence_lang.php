@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'シーケンス';
+$lang['sequence_auto_number_permission_required'] = '自動採番を変更する権限がありません。';
+$lang['sequence_use_flag_help'] = '有効にするとシステムが番号を自動生成します。無効の場合は番号を手動で入力します。';
+$lang['sequence_use_flag_disabled'] = '手動';
+$lang['sequence_use_flag_enabled'] = '自動';
+$lang['sequence_use_flag'] = '自動採番';
+$lang['sequence_application_saved'] = 'テナントのシーケンス設定を保存しました。';
+$lang['sequence_default_error'] = 'シーケンスの既定値を復元できませんでした。';
+$lang['sequence_default_saved'] = '形式と繰り返し種別をシステムテンプレートに戻しました。';
+$lang['sequence_confirm_set_to_default'] = 'テナントの繰り返し種別と形式をシステムテンプレートに戻しますか？最終値と自動／手動設定は変更されません。';
+$lang['sequence_set_to_default'] = '既定値に戻す';
+$lang['sequence_application_not_configured'] = 'このシーケンスはまだテナントに設定されていません。保存すると表示中の値でテナント設定が作成されます。';
+$lang['sequence_application_not_configured_short'] = 'このテナントでは未設定';
+$lang['sequence_application_form_intro'] = 'このテナントのカウンターと生成設定を編集します。システム共通テンプレートは変更されません。';
+$lang['sequence_application_intro'] = 'アクセス可能なメニューに関連付けられたテンプレートから、このテナントのシーケンスを設定します。未設定のテンプレートを保存すると、テナント設定が作成されます。';
 $lang['sequence_no_access'] = 'このシーケンスページへのアクセス権がありません。';
 $lang['sequence_add'] = '追加';
 $lang['sequence_actions'] = '操作';

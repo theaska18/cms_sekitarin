@@ -175,6 +175,9 @@ class AdminSequenceContractTests(unittest.TestCase):
             "form_new", "form_edit",
             "format_help", "format_token_n", "format_token_d", "format_token_D",
             "format_token_m", "format_token_M", "format_token_y", "format_token_Y",
+            "use_flag", "use_flag_enabled", "use_flag_disabled", "use_flag_help",
+            "auto_number_permission_required",
+            "set_to_default", "confirm_set_to_default", "default_saved", "default_error",
             "last_value", "last_sequence", "format",
         )
         for locale in locales:
@@ -283,6 +286,50 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertNotIn("'last_value', 'last_sequence', 'format'", store)
         self.assertIn("in_array('last_value', $this->sequence_fields, TRUE)", store)
         self.assertIn("if (!isset($field_specs[$name]))", controller)
+
+    def test_application_sequence_uses_accessible_templates_and_tenant_upsert(self):
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
+        store = (APP / "libraries" / "Application_sequence_store.php").read_text()
+        index = (APP / "views" / "admin" / "sequence" / "application_index.php").read_text()
+        form = (APP / "views" / "admin" / "sequence" / "application_form.php").read_text()
+        self.assertIn("has_admin_menu_code('app_sequence')", controller)
+        self.assertIn("$this->current_user['menu_codes']", controller)
+        self.assertIn("application_sequence_data", controller)
+        self.assertIn("where_in('sm.menu_code', $menu_codes)", store)
+        self.assertIn("a.tenant_id = ' . (int) $tenant_id", store)
+        self.assertIn("COALESCE(a.repeat_type, s.repeat_type)", store)
+        self.assertIn("COALESCE(a.format, s.format)", store)
+        self.assertIn("ON DUPLICATE KEY UPDATE", store)
+        self.assertIn("app_sequence_update", controller)
+        self.assertIn("app_sequence_set_default", controller)
+        manifest = (APP / "views" / "admin" / "menu_manifest" / "application.xml").read_text()
+        self.assertIn('access code="app_sequence_set_default" name="Set to Default"', manifest)
+        self.assertIn("ON DUPLICATE KEY UPDATE", store)
+        self.assertIn("admin/application/sequence/", controller)
+        self.assertIn("function sequence_set_default", controller)
+        self.assertIn("reset_to_template", controller)
+        self.assertIn("set_default/", index)
+        self.assertIn("data-web-confirm", index)
+        self.assertIn("repeat_type' => (string) $template->row()->repeat_type", store)
+        self.assertIn("format' => (string) $template->row()->format", store)
+        self.assertIn("$this->input->method(TRUE) !== 'POST'", controller)
+        reset_method = store[store.index("public function reset_to_template"):store.index("private function sequence_query")]
+        self.assertNotIn("'last_value' =>", reset_method)
+        self.assertNotIn("'use_flag' =>", reset_method)
+        self.assertIn("serverSide: true", index)
+        self.assertIn("configured", index)
+        self.assertIn("data-application-sequence-actions-toggle", index)
+        self.assertIn("data-application-sequence-actions-menu", index)
+        self.assertIn("class=\"fixed z-[60] mt-1 w-40", index)
+        self.assertIn("language.paginate = {", index)
+        self.assertIn("language.aria = {paginate: pagingLabels}", index)
+        theme_css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text()
+        self.assertIn("#application-sequence-data-table_wrapper div.dt-layout-row", theme_css)
+        self.assertIn("padding: .9rem 1.5rem", theme_css)
+        for field in ("last_value", "format", "repeat_type", "use_flag"):
+            self.assertIn(f'name="{field}"', form)
+        for forbidden in ('name="sequence_code"', 'name="sequence_name"', 'name="tenant_id"', 'name="sequence_id"'):
+            self.assertNotIn(forbidden, form)
 
     def test_list_exposes_create_update_and_post_only_remove_actions(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()

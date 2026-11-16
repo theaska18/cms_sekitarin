@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Secuencias';
+$lang['sequence_auto_number_permission_required'] = 'No tienes permiso para cambiar la numeración automática.';
+$lang['sequence_use_flag_help'] = 'Al activarla, el sistema genera los números automáticamente. Al desactivarla, deben introducirse manualmente.';
+$lang['sequence_use_flag_disabled'] = 'Manual';
+$lang['sequence_use_flag_enabled'] = 'Automática';
+$lang['sequence_use_flag'] = 'Numeración automática';
+$lang['sequence_application_saved'] = 'Se guardó la configuración de secuencia del tenant.';
+$lang['sequence_default_error'] = 'No se pudieron restaurar los valores predeterminados.';
+$lang['sequence_default_saved'] = 'Se restauraron el formato y el tipo de repetición de la plantilla del sistema.';
+$lang['sequence_confirm_set_to_default'] = '¿Restaurar el tipo de repetición y el formato del tenant desde la plantilla del sistema? El último valor y el modo automático/manual no cambiarán.';
+$lang['sequence_set_to_default'] = 'Restablecer valores';
+$lang['sequence_application_not_configured'] = 'Esta secuencia aún no está configurada para tu tenant. Al guardar se crearán los ajustes con los valores mostrados.';
+$lang['sequence_application_not_configured_short'] = 'Sin configurar para este tenant';
+$lang['sequence_application_form_intro'] = 'Edita el contador y la generación de secuencias de este tenant. La plantilla del sistema no cambia.';
+$lang['sequence_application_intro'] = 'Configura secuencias del tenant con plantillas vinculadas a menús accesibles. Al guardar una plantilla sin configurar, se crearán los ajustes del tenant.';
 $lang['sequence_no_access'] = 'No tienes permiso para acceder a esta página de secuencias.';
 $lang['sequence_add'] = 'Añadir';
 $lang['sequence_actions'] = 'Acciones';

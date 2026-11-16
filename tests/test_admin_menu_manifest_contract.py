@@ -103,7 +103,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertEqual("sequence", app_sequence.attrib["module_key"])
         sequence = SEQUENCE_CONTROLLER.read_text()
         self.assertIn("admin/application/sequence", sequence)
-        self.assertIn("$this->module('application', 'sequence')", sequence)
+        self.assertIn("$this->application_sequence_index()", sequence)
 
     def test_manifest_labels_resolve_in_all_nine_locales_and_fall_back_to_xml_name(self):
         groups = parse_xml(MANIFEST_DIR / "manifest.xml").findall("group")

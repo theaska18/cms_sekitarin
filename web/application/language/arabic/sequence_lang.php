@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'التسلسلات';
+$lang['sequence_auto_number_permission_required'] = 'لا تملك صلاحية تغيير إعداد الترقيم التلقائي.';
+$lang['sequence_use_flag_help'] = 'عند التفعيل ينشئ النظام الأرقام تلقائياً؛ وعند التعطيل يجب إدخال الرقم يدوياً.';
+$lang['sequence_use_flag_disabled'] = 'يدوي';
+$lang['sequence_use_flag_enabled'] = 'تلقائي';
+$lang['sequence_use_flag'] = 'الترقيم التلقائي';
+$lang['sequence_application_saved'] = 'تم حفظ إعدادات تسلسل المستأجر.';
+$lang['sequence_default_error'] = 'تعذرت استعادة إعدادات التسلسل الافتراضية.';
+$lang['sequence_default_saved'] = 'تمت استعادة التنسيق ونوع التكرار من قالب النظام.';
+$lang['sequence_confirm_set_to_default'] = 'هل تريد استعادة نوع التكرار والتنسيق من قالب النظام؟ لن تتغير القيمة الأخيرة أو إعداد الترقيم التلقائي/اليدوي.';
+$lang['sequence_set_to_default'] = 'استعادة الافتراضي';
+$lang['sequence_application_not_configured'] = 'لم يتم إعداد هذا التسلسل لهذا المستأجر بعد. سيؤدي الحفظ إلى إنشاء إعدادات المستأجر بالقيم المعروضة.';
+$lang['sequence_application_not_configured_short'] = 'غير مُعد لهذا المستأجر';
+$lang['sequence_application_form_intro'] = 'عدّل العداد وإعدادات الإنشاء لهذا المستأجر. لن يتغير قالب النظام المشترك.';
+$lang['sequence_application_intro'] = 'اضبط التسلسلات الخاصة بالمستأجر من القوالب المرتبطة بالقوائم التي يمكنك الوصول إليها. سيؤدي حفظ قالب غير مُعد إلى إنشاء إعدادات المستأجر.';
 $lang['sequence_no_access'] = 'ليس لديك صلاحية الوصول إلى صفحة التسلسلات هذه.';
 $lang['sequence_add'] = 'إضافة';
 $lang['sequence_actions'] = 'الإجراءات';

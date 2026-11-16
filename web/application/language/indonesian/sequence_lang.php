@@ -1,6 +1,20 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequence';
+$lang['sequence_auto_number_permission_required'] = 'Anda tidak memiliki izin untuk mengubah pengaturan penomoran otomatis.';
+$lang['sequence_use_flag_help'] = 'Jika diaktifkan, sistem menghasilkan nomor secara otomatis. Jika dinonaktifkan, nomor harus dimasukkan secara manual.';
+$lang['sequence_use_flag_disabled'] = 'Manual';
+$lang['sequence_use_flag_enabled'] = 'Otomatis';
+$lang['sequence_use_flag'] = 'Penomoran otomatis';
+$lang['sequence_application_saved'] = 'Pengaturan sequence tenant berhasil disimpan.';
+$lang['sequence_default_error'] = 'Gagal mengembalikan pengaturan sequence ke template.';
+$lang['sequence_default_saved'] = 'Format dan repeat type berhasil dikembalikan ke template sistem.';
+$lang['sequence_confirm_set_to_default'] = 'Kembalikan repeat type dan format tenant ke template sistem? Nilai terakhir dan pengaturan otomatis/manual tidak berubah.';
+$lang['sequence_set_to_default'] = 'Kembalikan ke Bawaan';
+$lang['sequence_application_not_configured'] = 'Sequence ini belum dikonfigurasi untuk tenant Anda. Menyimpan akan membuat pengaturan tenant berdasarkan nilai yang ditampilkan.';
+$lang['sequence_application_not_configured_short'] = 'Belum dikonfigurasi untuk tenant ini';
+$lang['sequence_application_form_intro'] = 'Ubah penghitung dan format sequence untuk tenant ini. Perubahan tidak mengubah template sistem.';
+$lang['sequence_application_intro'] = 'Atur sequence untuk tenant ini dari template yang terhubung ke menu yang dapat Anda akses. Menyimpan template yang belum dikonfigurasi akan membuat pengaturan tenant.';
 $lang['sequence_no_access'] = 'Anda tidak memiliki akses ke halaman Sequence ini.';
 $lang['sequence_add'] = 'Tambah';
 $lang['sequence_actions'] = 'Aksi';
