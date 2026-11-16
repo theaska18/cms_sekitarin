@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'حفظ';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'مستأجر';
 
+$lang['tenant_dt_empty'] = 'لا يوجد مستأجرون متاحون.';
+$lang['tenant_dt_zero'] = 'لم يتم العثور على مستأجرين مطابقين.';
+$lang['tenant_dt_info'] = 'عرض _START_ إلى _END_ من أصل _TOTAL_';
+$lang['tenant_dt_info_empty'] = 'عرض 0 إلى 0 من أصل 0';
+$lang['tenant_dt_info_filtered'] = '(مصفّى من إجمالي _MAX_)';
+$lang['tenant_dt_length'] = 'عرض _MENU_ عناصر';
+$lang['tenant_dt_loading'] = 'جارٍ تحميل المستأجرين…';
+$lang['tenant_dt_processing'] = 'جارٍ المعالجة…';
+$lang['tenant_dt_search'] = 'البحث عن المستأجرين: _INPUT_';
+$lang['tenant_dt_first'] = 'الأولى';
+$lang['tenant_dt_last'] = 'الأخيرة';
+
 $lang['tenant_email_label'] = 'البريد الإلكتروني';
 $lang['tenant_phone_label'] = 'رقم الهاتف';
 $lang['tenant_due_on_label'] = 'تاريخ الاستحقاق';

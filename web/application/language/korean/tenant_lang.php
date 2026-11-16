@@ -59,6 +59,18 @@ $lang['tenant_save'] = '저장';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = '테넌트';
 
+$lang['tenant_dt_empty'] = '사용 가능한 테넌트가 없습니다.';
+$lang['tenant_dt_zero'] = '일치하는 테넌트가 없습니다.';
+$lang['tenant_dt_info'] = '_TOTAL_개 중 _START_–_END_개 표시';
+$lang['tenant_dt_info_empty'] = '0개 중 0–0개 표시';
+$lang['tenant_dt_info_filtered'] = '(전체 _MAX_개에서 필터링됨)';
+$lang['tenant_dt_length'] = '_MENU_개씩 표시';
+$lang['tenant_dt_loading'] = '테넌트 로드 중…';
+$lang['tenant_dt_processing'] = '처리 중…';
+$lang['tenant_dt_search'] = '테넌트 검색: _INPUT_';
+$lang['tenant_dt_first'] = '처음';
+$lang['tenant_dt_last'] = '마지막';
+
 $lang['tenant_email_label'] = '이메일 주소';
 $lang['tenant_phone_label'] = '전화번호';
 $lang['tenant_due_on_label'] = '만기일';

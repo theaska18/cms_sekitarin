@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'Simpan';
 $lang['tenant_actions'] = 'Tindakan';
 $lang['tenant_search_label'] = 'Cari tenant';
 
+$lang['tenant_dt_empty'] = 'Belum ada tenant.';
+$lang['tenant_dt_zero'] = 'Tidak ada tenant yang cocok.';
+$lang['tenant_dt_info'] = 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data';
+$lang['tenant_dt_info_empty'] = 'Menampilkan 0 sampai 0 dari 0 data';
+$lang['tenant_dt_info_filtered'] = '(disaring dari total _MAX_ data)';
+$lang['tenant_dt_length'] = 'Tampilkan _MENU_ data';
+$lang['tenant_dt_loading'] = 'Memuat tenant…';
+$lang['tenant_dt_processing'] = 'Memproses…';
+$lang['tenant_dt_search'] = 'Cari tenant: _INPUT_';
+$lang['tenant_dt_first'] = 'Pertama';
+$lang['tenant_dt_last'] = 'Terakhir';
+
 $lang['tenant_email_label'] = 'Alamat email';
 $lang['tenant_phone_label'] = 'Nomor telepon';
 $lang['tenant_due_on_label'] = 'Tanggal jatuh tempo';

@@ -59,6 +59,18 @@ $lang['tenant_save'] = '保存';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = '租户';
 
+$lang['tenant_dt_empty'] = '暂无租户。';
+$lang['tenant_dt_zero'] = '没有匹配的租户。';
+$lang['tenant_dt_info'] = '显示第 _START_ 至 _END_ 条，共 _TOTAL_ 条';
+$lang['tenant_dt_info_empty'] = '显示第 0 至 0 条，共 0 条';
+$lang['tenant_dt_info_filtered'] = '（从总计 _MAX_ 条中筛选）';
+$lang['tenant_dt_length'] = '显示 _MENU_ 条';
+$lang['tenant_dt_loading'] = '正在加载租户…';
+$lang['tenant_dt_processing'] = '正在处理…';
+$lang['tenant_dt_search'] = '搜索租户：_INPUT_';
+$lang['tenant_dt_first'] = '首页';
+$lang['tenant_dt_last'] = '末页';
+
 $lang['tenant_email_label'] = '电子邮箱';
 $lang['tenant_phone_label'] = '电话号码';
 $lang['tenant_due_on_label'] = '到期日期';

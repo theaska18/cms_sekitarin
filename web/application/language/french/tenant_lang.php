@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'Enregistrer';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'locataire';
 
+$lang['tenant_dt_empty'] = 'Aucun locataire disponible.';
+$lang['tenant_dt_zero'] = 'Aucun locataire correspondant.';
+$lang['tenant_dt_info'] = 'Affichage de _START_ à _END_ sur _TOTAL_ éléments';
+$lang['tenant_dt_info_empty'] = 'Affichage de 0 à 0 sur 0 élément';
+$lang['tenant_dt_info_filtered'] = '(filtré sur _MAX_ éléments au total)';
+$lang['tenant_dt_length'] = 'Afficher _MENU_ éléments';
+$lang['tenant_dt_loading'] = 'Chargement des locataires…';
+$lang['tenant_dt_processing'] = 'Traitement…';
+$lang['tenant_dt_search'] = 'Rechercher des locataires : _INPUT_';
+$lang['tenant_dt_first'] = 'Première';
+$lang['tenant_dt_last'] = 'Dernière';
+
 $lang['tenant_email_label'] = 'Adresse e-mail';
 $lang['tenant_phone_label'] = 'Numéro de téléphone';
 $lang['tenant_due_on_label'] = 'Date d’échéance';

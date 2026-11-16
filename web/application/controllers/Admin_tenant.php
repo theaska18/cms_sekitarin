@@ -73,6 +73,42 @@ class Admin_tenant extends Admin
         );
     }
 
+    /** DataTables server-side endpoint for the tenant listing. */
+    public function tenant_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('sys_tenant')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+
+        $store = $this->tenant_store();
+        if ($store === NULL || !$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+
+        $this->datatable_server->respond(
+            array(1 => 'tenant_code', 2 => 'tenant_name'),
+            function () use ($store) {
+                return $store->count(array('search' => ''));
+            },
+            function ($search) use ($store) {
+                return $store->count(array('search' => $this->tenant_filter($search)));
+            },
+            function ($search, $length, $start, $order, $direction) use ($store) {
+                return $store->page(
+                    array('search' => $this->tenant_filter($search)),
+                    $length,
+                    $start,
+                    $this->tenant_sort_field($order),
+                    $this->tenant_sort_direction($direction)
+                );
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'tenant_code')
+        );
+    }
+
     public function tenant_new()
     {
         if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_add')) {

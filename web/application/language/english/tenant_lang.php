@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'Save';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'Search tenants';
 
+$lang['tenant_dt_empty'] = 'No tenants available.';
+$lang['tenant_dt_zero'] = 'No matching tenants found.';
+$lang['tenant_dt_info'] = 'Showing _START_ to _END_ of _TOTAL_ entries';
+$lang['tenant_dt_info_empty'] = 'Showing 0 to 0 of 0 entries';
+$lang['tenant_dt_info_filtered'] = '(filtered from _MAX_ total entries)';
+$lang['tenant_dt_length'] = 'Show _MENU_ entries';
+$lang['tenant_dt_loading'] = 'Loading tenants…';
+$lang['tenant_dt_processing'] = 'Processing…';
+$lang['tenant_dt_search'] = 'Search tenants: _INPUT_';
+$lang['tenant_dt_first'] = 'First';
+$lang['tenant_dt_last'] = 'Last';
+
 $lang['tenant_email_label'] = 'Tenant email address';
 $lang['tenant_phone_label'] = 'Tenant phone number';
 $lang['tenant_due_on_label'] = 'Due date';

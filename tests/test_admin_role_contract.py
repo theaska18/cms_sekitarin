@@ -126,9 +126,6 @@ class AdminRoleContractTest(unittest.TestCase):
             '<main class="-mx-4 w-[calc(100%+2rem)]',
             '<nav aria-label="Breadcrumb"',
             'mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between',
-            'rounded-2xl border border-slate-200 bg-white shadow-sm',
-            'flex flex-col gap-4 border-b border-slate-200',
-            'data-tenant-live-filter',
             'data-tenant-actions-toggle',
             'id="tenant-delete-dialog"',
         ):
@@ -141,7 +138,7 @@ class AdminRoleContractTest(unittest.TestCase):
             '<main class="-mx-4 w-[calc(100%+2rem)]',
             '<nav aria-label="Breadcrumb"',
             'text-3xl font-bold tracking-tight text-slate-950',
-            'w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8',
+            'w-full rounded-t-2xl rounded-b-none border border-slate-200 bg-white p-5 shadow-sm sm:p-8',
         ):
             with self.subTest(view="form", marker=marker):
                 self.assertIn(marker, tenant_form)

@@ -5,7 +5,7 @@ html[data-theme="dark"] #admin-app-shell .bg-white { background-color: #1e293b !
 html[data-theme="dark"] #admin-app-shell .bg-slate-50 { background-color: #0f172a !important; }
 html[data-theme="dark"] #admin-app-shell .bg-slate-100 { background-color: #334155 !important; }
 html[data-theme="dark"] #admin-app-shell .bg-slate-900 { background-color: #020617 !important; }
-html[data-theme="dark"] #admin-app-shell .text-slate-900, html[data-theme="dark"] #admin-app-shell .text-slate-800, html[data-theme="dark"] #admin-app-shell .text-slate-700 { color: #e2e8f0 !important; }
+html[data-theme="dark"] #admin-app-shell .text-slate-950, html[data-theme="dark"] #admin-app-shell .text-slate-900, html[data-theme="dark"] #admin-app-shell .text-slate-800, html[data-theme="dark"] #admin-app-shell .text-slate-700 { color: #e2e8f0 !important; }
 html[data-theme="dark"] #admin-app-shell .text-slate-600, html[data-theme="dark"] #admin-app-shell .text-slate-500 { color: #cbd5e1 !important; }
 html[data-theme="dark"] #admin-app-shell .text-slate-400 { color: #94a3b8 !important; }
 html[data-theme="dark"] #admin-app-shell .border-slate-100, html[data-theme="dark"] #admin-app-shell .border-slate-200, html[data-theme="dark"] #admin-app-shell .border-slate-300 { border-color: #334155 !important; }
@@ -18,6 +18,7 @@ html[data-theme="dark"] #admin-app-shell .ring-emerald-100 { --tw-ring-color: #0
 html[data-theme="dark"] #admin-app-shell .bg-rose-50 { background-color: #4c0519 !important; }
 html[data-theme="dark"] #admin-app-shell .text-rose-900 { color: #fecdd3 !important; }
 html[data-theme="dark"] footer { color: #cbd5e1; }
+html[data-theme="dark"] #admin-app-shell .parameter-option-mobile-label { color: #cbd5e1 !important; }
 
 html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dashboard"] img,
 html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dasbor"] img,
@@ -308,6 +309,7 @@ html[data-theme="dark"] #admin-app-shell #org-delete-dialog button:not([type="su
 html[data-theme="dark"] #admin-app-shell .org-chart-card__menu button.is-danger { color: #fda4af; }
 
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper,
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper {
@@ -317,6 +319,7 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper {
     --dt-column-ordering: 255, 255, 255;
 }
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper .dt-paging-button,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper .dt-paging-button,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper .dt-paging-button,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper .dt-paging-button,
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-paging-button {
@@ -326,6 +329,8 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
 }
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper .dt-paging-button:hover,
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper .dt-paging-button.current,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper .dt-paging-button:hover,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper .dt-paging-button.current,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper .dt-paging-button:hover,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper .dt-paging-button.current,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper .dt-paging-button:hover,
@@ -337,12 +342,14 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
     color: #fff !important;
 }
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper .dt-paging-button.disabled,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper .dt-paging-button.disabled,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper .dt-paging-button.disabled,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper .dt-paging-button.disabled,
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-paging-button.disabled {
     color: #64748b !important;
 }
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper .dt-processing,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper .dt-processing,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper .dt-processing,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper .dt-processing,
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-processing {
@@ -352,6 +359,7 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
 }
 
 #property-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
+#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
 #sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
 #application-sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
 #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table) {
@@ -365,6 +373,7 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
     padding: .9rem 1.5rem;
 }
 #property-data-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell,
+#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell,
 #sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell,
 #application-sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell,
 #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell {
@@ -375,12 +384,14 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
     text-align: start;
 }
 #property-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
+#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 #sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 #application-sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child {
     border-top: 1px solid #e2e8f0;
 }
 #property-data-table_wrapper table.dataTable > thead > tr > th,
+#tenant-data-table_wrapper table.dataTable > thead > tr > th,
 #sequence-data-table_wrapper table.dataTable > thead > tr > th,
 #application-sequence-data-table_wrapper table.dataTable > thead > tr > th,
 #my-approval-history-table_wrapper table.dataTable > thead > tr > th {
@@ -388,15 +399,18 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper .dt-
 }
 @media (max-width: 640px) {
     #property-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
+    #tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
     #sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
     #application-sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table),
     #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table) { padding-inline: 1rem; }
     #property-data-table_wrapper table.dataTable > thead > tr > th,
+    #tenant-data-table_wrapper table.dataTable > thead > tr > th,
     #sequence-data-table_wrapper table.dataTable > thead > tr > th,
     #application-sequence-data-table_wrapper table.dataTable > thead > tr > th,
     #my-approval-history-table_wrapper table.dataTable > thead > tr > th { padding-inline: .75rem; }
 }
 html[data-theme="dark"] #admin-app-shell #property-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
+html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 html[data-theme="dark"] #admin-app-shell #sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child,
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child {

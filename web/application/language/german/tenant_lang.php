@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'Speichern';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'Mandant';
 
+$lang['tenant_dt_empty'] = 'Keine Mandanten verfügbar.';
+$lang['tenant_dt_zero'] = 'Keine passenden Mandanten gefunden.';
+$lang['tenant_dt_info'] = '_START_ bis _END_ von _TOTAL_ Einträgen';
+$lang['tenant_dt_info_empty'] = '0 bis 0 von 0 Einträgen';
+$lang['tenant_dt_info_filtered'] = '(gefiltert aus insgesamt _MAX_ Einträgen)';
+$lang['tenant_dt_length'] = '_MENU_ Einträge anzeigen';
+$lang['tenant_dt_loading'] = 'Mandanten werden geladen…';
+$lang['tenant_dt_processing'] = 'Wird verarbeitet…';
+$lang['tenant_dt_search'] = 'Mandanten suchen: _INPUT_';
+$lang['tenant_dt_first'] = 'Erste';
+$lang['tenant_dt_last'] = 'Letzte';
+
 $lang['tenant_email_label'] = 'E-Mail-Adresse';
 $lang['tenant_phone_label'] = 'Telefonnummer';
 $lang['tenant_due_on_label'] = 'Fälligkeitsdatum';

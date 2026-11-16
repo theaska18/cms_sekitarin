@@ -63,10 +63,26 @@ class AdminUserContractTests(unittest.TestCase):
         view = (APP / "views/admin/user/form.php").read_text()
         self.assertIn("where('tenant_id', (int) $tenant_id)", store)
         self.assertIn("/admin/application/user/roles/", view)
-        self.assertIn("/admin/application/user/employees?", view)
+        self.assertIn("/admin/application/user/employees", view)
         self.assertIn("employee-search", view)
-        self.assertIn("employee-suggestions", view)
+        self.assertIn("employee_id", view)
         self.assertIn("flag.checked", view)
+
+    def test_employee_lookup_uses_jquery_ui_autocomplete(self):
+        view = (APP / "views/admin/user/form.php").read_text()
+        self.assertIn("/assets/js/vendor/jquery-ui.min.js", view)
+        self.assertIn("/assets/css/vendor/jquery-ui.min.css", view)
+        self.assertLess(view.index('vendor/jquery.min.js'), view.index('vendor/jquery-ui.min.js'))
+        self.assertIn("$(search).autocomplete({", view)
+        self.assertIn("minLength: 2", view)
+        self.assertIn("source: function (request, response)", view)
+        self.assertIn("label: row.employee_code + ' — ' + row.employee_name", view)
+        self.assertIn("value: row.employee_name", view)
+        self.assertIn("id: row.employee_id", view)
+        self.assertIn("select: function (event, ui)", view)
+        self.assertIn("hidden.value = ui.item.id;", view)
+        self.assertNotIn("role=\"combobox\"", view)
+        self.assertNotIn("employee-suggestions", view)
 
     def test_change_password_requires_matching_confirmation(self):
         controller = (APP / "controllers/Admin_user.php").read_text()
@@ -105,11 +121,11 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn("employee_name", controller)
         self.assertIn("'full_name' => $record['full_name']", store)
         self.assertIn('id="full_name" name="full_name"', view)
-        self.assertIn("fullName.disabled=enabled", view)
-        self.assertIn("fullName.required=!enabled", view)
-        self.assertIn("fullName.value=hidden.value?search.dataset.employeeName", view)
-        self.assertIn("button.addEventListener('click'", view)
-        self.assertIn("fullName.value=row.employee_name", view)
+        self.assertIn("fullName.disabled = enabled;", view)
+        self.assertIn("fullName.required = !enabled;", view)
+        self.assertIn("fullName.value = hidden.value ? search.value : '';", view)
+        self.assertIn("flag.addEventListener('change', toggle);", view)
+        self.assertIn("fullName.value = ui.item.value;", view)
 
     def test_employee_autocomplete_excludes_employees_already_assigned_to_users(self):
         controller = (APP / "controllers/Admin_user.php").read_text()
@@ -217,7 +233,7 @@ class AdminUserContractTests(unittest.TestCase):
 
     def test_user_action_menu_is_fixed_and_positioned_outside_table_scroller(self):
         view = (APP / "views/admin/user/index.php").read_text()
-        self.assertIn('role="menu" class="fixed z-30', view)
+        self.assertIn('role="menu" class="fixed z-[60]', view)
         self.assertIn("top=Math.max(8,Math.min(top,maxTop))", view)
         self.assertIn("left=Math.max(8,Math.min(trigger.right-size.width,maxLeft))", view)
         self.assertIn("menu.style.top=top+'px'", view)

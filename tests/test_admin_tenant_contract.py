@@ -14,16 +14,20 @@ class AdminTenantContractTest(unittest.TestCase):
         routes = (APP / "config/routes.php").read_text(encoding="utf-8")
         admin = (APP / "controllers/Admin.php").read_text(encoding="utf-8")
         for route in (
-            "admin/system/tenant", "admin/system/tenant/new",
-            "admin/system/tenant/change/(:any)", "admin/system/tenant/delete",
+            "$route['admin/(:any)/tenant/menu/(:any)'] = 'admin_tenant/tenant_menu/$2';",
+            "$route['admin/(:any)/(:any)/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3/$4/$5';",
+            "$route['admin/(:any)/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3/$4';",
+            "$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';",
+            "$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';",
         ):
             self.assertIn(route, routes)
-        self.assertIn("$this->lang->load('tenant', $locale)", admin)
+        self.assertIn("$this->lang->load($view_language_pack, $locale)", admin)
         self.assertIn("foreach ($this->lang->language as $key => $value)", admin)
         self.assertIn("$labels[substr($key, 6)] = $value", admin)
-        self.assertIn("'tenant_code_label'", admin)
-        self.assertIn("'tenant_address_label'", admin)
-        self.assertIn("'due_on_label'", admin)
+        tenant_lang = (APP / "language/english/tenant_lang.php").read_text(encoding="utf-8")
+        self.assertIn("'tenant_code_label'", tenant_lang)
+        self.assertIn("'tenant_address_label'", tenant_lang)
+        self.assertIn("'due_on_label'", tenant_lang)
 
     def test_controller_store_and_views_use_sys_tenant_fields(self):
         controller = (APP / "controllers/Admin_tenant.php").read_text(encoding="utf-8")
@@ -111,7 +115,7 @@ console.log(JSON.stringify(results));
         admin = (APP / "controllers/Admin.php").read_text(encoding="utf-8")
         form = (APP / "views/admin/tenant/form.php").read_text(encoding="utf-8")
         self.assertIn("&& (!isset($values['due_on']) || trim($values['due_on']) === '')", controller)
-        self.assertIn("'due_on_required'", admin)
+        self.assertIn("'due_on_required'", controller)
         self.assertIn("dueOn.required = dueFlag.checked", form)
         self.assertIn("$labels[$error_key]", form)
         locale_files = sorted((APP / "language").glob("*/tenant_lang.php"))
@@ -145,43 +149,78 @@ console.log(JSON.stringify(results));
     def test_tenant_actions_include_menu_access_for_selected_tenant(self):
         view = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
         admin = (APP / "controllers/Admin.php").read_text(encoding="utf-8")
-        self.assertIn('/admin/system/tenant/menu/<?= html_escape(rawurlencode($tenant_code)) ?>', view)
+        self.assertIn("\"/admin/system/tenant/menu/' + encodeURIComponent(code)", view)
         self.assertIn("$labels['tenant_menu_access']", view)
         self.assertIn('data-tenant-menu-access-action', view)
-        self.assertIn("'menu_access'", admin)
+        controller = (APP / "controllers/Admin_tenant.php").read_text(encoding="utf-8")
+        self.assertIn("'tenant_menu_access_authorized'", controller)
         locale_files = sorted((APP / "language").glob("*/tenant_lang.php"))
         self.assertEqual(9, len(locale_files))
         for path in locale_files:
             with self.subTest(locale=path.parent.name):
                 self.assertIn("$lang['tenant_menu_access']", path.read_text(encoding="utf-8"))
 
-    def test_tenant_list_filter_and_table_headers_stick_below_admin_topbar(self):
+    def test_tenant_list_uses_server_side_datatable(self):
         view = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
-        self.assertIn('data-tenant-sticky-filter', view)
-        self.assertIn('data-tenant-sticky-table-head', view)
-        self.assertIn("filterBar.style.top = topbarHeight + 'px'", view)
-        self.assertIn("tableHead.style.top = (topbarHeight + filterBar.getBoundingClientRect().height) + 'px'", view)
-        self.assertIn("table.scrollWidth <= tableScroll.clientWidth", view)
-        self.assertIn("data-tenant-floating-table-head", view)
-        self.assertIn("stickyHeadLayer.style.display = 'block'", view)
-        self.assertIn("stickyHeadTable.style.transform", view)
-        self.assertIn("tableHead.style.visibility = 'hidden'", view)
-        sticky_filter = view.split('<div data-tenant-sticky-filter', 1)[1].split('<div class="overflow-x-auto">', 1)[0]
-        self.assertIn('<form id="tenant-filter-form"', sticky_filter)
-        filter_class = re.search(r'<div data-tenant-sticky-filter class="([^"]+)"', view).group(1)
-        self.assertIn("sm:justify-end", filter_class.split())
-        self.assertNotIn('<h2 id="tenant-list-heading"', sticky_filter)
-        self.assertNotIn('<p class="mt-1 text-sm text-slate-500"', sticky_filter)
-        section = re.search(r'<section aria-label="[^"]+" class="([^"]+)', view).group(1)
-        self.assertNotIn("overflow-hidden", section)
+        controller = (APP / "controllers/Admin_tenant.php").read_text(encoding="utf-8")
+        datatable_server = (APP / "libraries/Datatable_server.php").read_text(encoding="utf-8")
+        self.assertIn('id="tenant-data-table"', view)
+        self.assertIn("processing: true", view)
+        self.assertIn("serverSide: true", view)
+        self.assertIn("deferRender: true", view)
+        self.assertIn("autoWidth: false", view)
+        self.assertIn("lengthMenu: [[10, 25, 50], [10, 25, 50]]", view)
+        self.assertIn("ajax: {url: '/admin/system/tenant/data', type: 'GET', dataSrc: 'data'}", view)
+        self.assertIn("public function tenant_data()", controller)
+        self.assertIn("$this->datatable_server->respond(", controller)
+        self.assertIn("array(1 => 'tenant_code', 2 => 'tenant_name')", controller)
+        self.assertIn("'default_order' => 'tenant_code'", controller)
+        endpoint = controller.split("public function tenant_data()", 1)[1].split("public function tenant_new()", 1)[0]
+        self.assertIn("$this->has_admin_menu_code('sys_tenant')", endpoint)
+        self.assertIn("$this->datatable_server->error(403)", endpoint)
+        self.assertIn("$this->datatable_server->error(503)", endpoint)
+        self.assertIn("$CI->input->get('search', TRUE)", datatable_server)
+        self.assertIn("$length = $length <= 0 ? $max_length : min($max_length, $length)", datatable_server)
+        self.assertIn("$start >= (int) $records_filtered", datatable_server)
+        self.assertIn("count($tenant_records) > 0", view)
+        self.assertNotIn("data-tenant-sticky-filter", view)
+        self.assertNotIn("data-tenant-floating-table-head", view)
 
-    def test_tenant_sticky_surfaces_use_translucent_backgrounds(self):
-        index = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
+    def test_tenant_datatable_uses_local_assets_and_localized_controls(self):
+        view = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
+        self.assertIn('/assets/css/vendor/datatables.min.css', view)
+        self.assertIn('/assets/js/vendor/datatables.min.js', view)
+        self.assertLess(view.index('vendor/jquery.min.js'), view.index('vendor/datatables.min.js'))
+        for key in ('tenant_dt_search', 'tenant_dt_length', 'tenant_dt_info', 'tenant_dt_zero', 'tenant_dt_first', 'tenant_dt_last'):
+            with self.subTest(key=key):
+                self.assertIn("$labels['" + key + "']", view)
+
+    def test_tenant_datatable_controls_use_the_shared_card_padding(self):
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
+        self.assertIn("#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table)", css)
+        self.assertIn("#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell", css)
+        self.assertIn("#tenant-data-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child", css)
+        self.assertIn("#tenant-data-table_wrapper table.dataTable > thead > tr > th", css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell #tenant-data-table_wrapper', css)
+
+    def test_tenant_datatables_language_is_complete_across_nine_locales(self):
+        dt_keys = (
+            "tenant_dt_empty", "tenant_dt_zero", "tenant_dt_info", "tenant_dt_info_empty",
+            "tenant_dt_info_filtered", "tenant_dt_length", "tenant_dt_loading",
+            "tenant_dt_processing", "tenant_dt_search", "tenant_dt_first", "tenant_dt_last",
+        )
+        locale_files = sorted((APP / "language").glob("*/tenant_lang.php"))
+        self.assertEqual(9, len(locale_files))
+        for path in locale_files:
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(locale=path.parent.name):
+                for key in dt_keys:
+                    self.assertIn("$lang['" + key + "']", content)
+
+    def test_tenant_sticky_form_and_menu_surfaces_use_translucent_backgrounds(self):
         form = (APP / "views/admin/tenant/form.php").read_text(encoding="utf-8")
         menu = (APP / "views/admin/tenant/menu.php").read_text(encoding="utf-8")
         surfaces = (
-            (index, r'<div data-tenant-sticky-filter class="([^"]+)"', "bg-white/10"),
-            (index, r'<thead data-tenant-sticky-table-head class="([^"]+)"', "bg-slate-50/10"),
             (form, r'<div data-tenant-sticky-actions class="([^"]+)"', "bg-white/10"),
             (menu, r'<div data-tenant-menu-sticky-actions class="([^"]+)"', "bg-white/10"),
         )
@@ -190,11 +229,6 @@ console.log(JSON.stringify(results));
                 classes = re.search(pattern, view).group(1).split()
                 self.assertIn(background, classes)
                 self.assertIn("backdrop-blur-sm", classes)
-
-    def test_tenant_sticky_filter_has_no_shadow(self):
-        view = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
-        filter_class = re.search(r'<div data-tenant-sticky-filter class="([^"]+)"', view).group(1)
-        self.assertFalse(any(token == "shadow" or token.startswith("shadow-") for token in filter_class.split()))
 
     def test_tenant_form_back_and_save_actions_are_sticky_opposite_sides(self):
         form = (APP / "views/admin/tenant/form.php").read_text(encoding="utf-8")
@@ -231,9 +265,12 @@ console.log(JSON.stringify(results));
         self.assertIn("if ($write_available && $tenant_has_actions)", index)
         self.assertIn("if ($write_available && $tenant_delete_authorized)", index)
         self.assertRegex(index, r"if \(\$tenant_add_authorized && \$write_available\)")
-        self.assertRegex(index, r"if \(\$tenant_update_authorized\).*?data-tenant-edit-action")
-        self.assertRegex(index, r"if \(\$tenant_menu_access_authorized\).*?data-tenant-menu-access-action")
-        self.assertRegex(index, r"if \(\$tenant_delete_authorized\).*?data-tenant-delete-open")
+        self.assertIn("var canUpdate = <?= $write_available && $tenant_update_authorized ? 'true' : 'false' ?>;", index)
+        self.assertIn("var canMenu = <?= $write_available && $tenant_menu_access_authorized ? 'true' : 'false' ?>;", index)
+        self.assertIn("var canDelete = <?= $write_available && $tenant_delete_authorized ? 'true' : 'false' ?>;", index)
+        self.assertRegex(index, r"(?s)if \(canUpdate\).*?data-tenant-edit-action")
+        self.assertRegex(index, r"(?s)if \(canMenu\).*?data-tenant-menu-access-action")
+        self.assertRegex(index, r"(?s)if \(canDelete\).*?data-tenant-delete-open")
         self.assertIn("tenant_no_access", controller)
         self.assertIn("tenant_add_denied", controller)
         self.assertIn("tenant_update_denied", controller)

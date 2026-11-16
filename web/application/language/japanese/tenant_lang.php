@@ -59,6 +59,18 @@ $lang['tenant_save'] = '保存';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'テナント';
 
+$lang['tenant_dt_empty'] = 'テナントはありません。';
+$lang['tenant_dt_zero'] = '一致するテナントはありません。';
+$lang['tenant_dt_info'] = '_TOTAL_ 件中 _START_～_END_ 件を表示';
+$lang['tenant_dt_info_empty'] = '0 件中 0～0 件を表示';
+$lang['tenant_dt_info_filtered'] = '（全 _MAX_ 件から絞り込み）';
+$lang['tenant_dt_length'] = '_MENU_ 件を表示';
+$lang['tenant_dt_loading'] = 'テナントを読み込み中…';
+$lang['tenant_dt_processing'] = '処理中…';
+$lang['tenant_dt_search'] = 'テナントを検索：_INPUT_';
+$lang['tenant_dt_first'] = '最初';
+$lang['tenant_dt_last'] = '最後';
+
 $lang['tenant_email_label'] = 'メールアドレス';
 $lang['tenant_phone_label'] = '電話番号';
 $lang['tenant_due_on_label'] = '支払期日';

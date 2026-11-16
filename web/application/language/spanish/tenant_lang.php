@@ -59,6 +59,18 @@ $lang['tenant_save'] = 'Guardar';
 $lang['tenant_actions'] = 'Actions';
 $lang['tenant_search_label'] = 'inquilino';
 
+$lang['tenant_dt_empty'] = 'No hay inquilinos disponibles.';
+$lang['tenant_dt_zero'] = 'No se encontraron inquilinos coincidentes.';
+$lang['tenant_dt_info'] = 'Mostrando _START_ a _END_ de _TOTAL_ elementos';
+$lang['tenant_dt_info_empty'] = 'Mostrando 0 a 0 de 0 elementos';
+$lang['tenant_dt_info_filtered'] = '(filtrado de _MAX_ elementos en total)';
+$lang['tenant_dt_length'] = 'Mostrar _MENU_ elementos';
+$lang['tenant_dt_loading'] = 'Cargando inquilinos…';
+$lang['tenant_dt_processing'] = 'Procesando…';
+$lang['tenant_dt_search'] = 'Buscar inquilinos: _INPUT_';
+$lang['tenant_dt_first'] = 'Primera';
+$lang['tenant_dt_last'] = 'Última';
+
 $lang['tenant_email_label'] = 'Correo electrónico';
 $lang['tenant_phone_label'] = 'Número de teléfono';
 $lang['tenant_due_on_label'] = 'Fecha de vencimiento';
