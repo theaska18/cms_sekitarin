@@ -96,15 +96,34 @@ foreach ($sequence_errors as $error) {
 
             <div>
                 <label for="sequence-menu-search" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_menu']) ?></label>
-                <input type="hidden" id="sequence-menu-code" name="menu_code" value="<?= html_escape(isset($sequence_record['menu_code']) ? $sequence_record['menu_code'] : '') ?>">
-                <input id="sequence-menu-search" type="text" value="<?= html_escape(isset($sequence_menu_label) ? $sequence_menu_label : '') ?>" autocomplete="off" placeholder="<?= html_escape($labels['sequence_menu_search']) ?>" aria-autocomplete="list" aria-describedby="sequence-menu-help" <?= $sequence_disabled ? 'disabled' : 'required' ?> class="<?= $sequence_control_class ?>">
+                <div id="sequence-menu-selected" class="mb-2 flex flex-wrap gap-2">
+                    <?php foreach ((isset($sequence_menu_labels) && is_array($sequence_menu_labels) ? $sequence_menu_labels : array()) as $menu_code => $menu_label): ?>
+                        <span data-menu-token class="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 py-1 pl-3 pr-1 text-sm text-indigo-950">
+                            <input type="hidden" name="menu_codes[]" value="<?= html_escape($menu_code) ?>">
+                            <span><?= html_escape($menu_label) ?></span>
+                            <button type="button" data-remove-menu aria-label="<?= html_escape($labels['sequence_remove_menu']) ?>" class="flex h-7 w-7 items-center justify-center rounded-full text-indigo-700 hover:bg-indigo-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500" <?= $sequence_disabled ? 'disabled' : '' ?>>&times;</button>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+                <input id="sequence-menu-search" type="text" autocomplete="off" placeholder="<?= html_escape($labels['sequence_menu_search']) ?>" aria-autocomplete="list" aria-describedby="sequence-menu-help" <?= $sequence_disabled ? 'disabled' : '' ?> class="<?= $sequence_control_class ?>">
                 <p id="sequence-menu-help" class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_menu_help']) ?></p>
             </div>
 
             <div>
                 <label for="sequence-format" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_format']) ?></label>
-                <input id="sequence-format" name="format" type="text"<?= $sequence_required_attribute('format') ?><?= $sequence_maxlength_attribute('format') ?> value="<?= html_escape(isset($sequence_record['format']) ? $sequence_record['format'] : '') ?>" <?= $sequence_disabled ? 'disabled' : '' ?> class="<?= $sequence_control_class ?>">
-                <p class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_format_help']) ?></p>
+                <input id="sequence-format" name="format" type="text"<?= $sequence_required_attribute('format') ?><?= $sequence_maxlength_attribute('format') ?> aria-describedby="sequence-format-help" value="<?= html_escape(isset($sequence_record['format']) ? $sequence_record['format'] : '') ?>" <?= $sequence_disabled ? 'disabled' : '' ?> class="<?= $sequence_control_class ?>">
+                <div id="sequence-format-help" class="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+                    <p><?= html_escape($labels['sequence_format_help']) ?></p>
+                    <ul class="mt-2 grid gap-x-5 gap-y-1 sm:grid-cols-2">
+                        <li class="sm:col-span-2"><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">N</code> — <?= html_escape($labels['sequence_format_token_n']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">d</code> — <?= html_escape($labels['sequence_format_token_d']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">D</code> — <?= html_escape($labels['sequence_format_token_D']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">m</code> — <?= html_escape($labels['sequence_format_token_m']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">M</code> — <?= html_escape($labels['sequence_format_token_M']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">y</code> — <?= html_escape($labels['sequence_format_token_y']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">Y</code> — <?= html_escape($labels['sequence_format_token_Y']) ?></li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -139,8 +158,38 @@ foreach ($sequence_errors as $error) {
         });
     }
     var menuSearch = document.getElementById('sequence-menu-search');
-    var menuCode = document.getElementById('sequence-menu-code');
-    if (menuSearch && menuCode && !menuSearch.disabled) {
+    var menuSelected = document.getElementById('sequence-menu-selected');
+    var appendMenuToken = function (item) {
+        if (!menuSelected) { return; }
+        var selectedCodes = menuSelected.querySelectorAll('input[name="menu_codes[]"]');
+        for (var i = 0; i < selectedCodes.length; i++) {
+            if (selectedCodes[i].value === item.id) return;
+        }
+        var token = document.createElement('span');
+        token.setAttribute('data-menu-token', '');
+        token.className = 'inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 py-1 pl-3 pr-1 text-sm text-indigo-950';
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'menu_codes[]';
+        input.value = item.id;
+        var label = document.createElement('span');
+        label.textContent = item.label;
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.setAttribute('data-remove-menu', '');
+        remove.setAttribute('aria-label', <?= json_encode($labels['sequence_remove_menu']) ?>);
+        remove.className = 'flex h-7 w-7 items-center justify-center rounded-full text-indigo-700 hover:bg-indigo-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500';
+        remove.textContent = '×';
+        token.append(input, label, remove);
+        menuSelected.appendChild(token);
+    };
+    if (menuSelected) {
+        menuSelected.addEventListener('click', function (event) {
+            var remove = event.target.closest('[data-remove-menu]');
+            if (remove) remove.closest('[data-menu-token]').remove();
+        });
+    }
+    if (menuSearch && menuSelected && !menuSearch.disabled) {
         $(menuSearch).autocomplete({
             minLength: 2,
             delay: 250,
@@ -150,15 +199,20 @@ foreach ($sequence_errors as $error) {
                     .fail(function () { response([]); });
             },
             select: function (event, item) {
-                menuCode.value = item.item.id;
-                menuSearch.value = item.item.label;
+                appendMenuToken(item.item);
+                menuSearch.value = '';
                 return false;
             },
-            change: function (event, item) {
-                if (!item.item) menuCode.value = '';
+        });
+        menuSearch.addEventListener('keydown', function (event) {
+            if (event.key === 'Backspace' && menuSearch.value === '') {
+                var tokens = menuSelected.querySelectorAll('[data-menu-token]');
+                if (tokens.length) {
+                    tokens[tokens.length - 1].remove();
+                    event.preventDefault();
+                }
             }
         });
-        menuSearch.addEventListener('input', function () { menuCode.value = ''; });
     }
 })();
 </script>

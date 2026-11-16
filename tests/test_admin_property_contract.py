@@ -128,6 +128,9 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn('property_dt_zero', self.view)
         self.assertIn('property_dt_first', self.view)
         self.assertIn('property_dt_last', self.view)
+        self.assertIn("tableLanguage.paginate = pagingIcons", self.view)
+        self.assertIn("tableLanguage.aria = {paginate: pagingLabels}", self.view)
+        self.assertIn("aria-hidden=\"true\"", self.view)
         for language in sorted(LANGUAGES.glob('*/property_lang.php')):
             content = language.read_text(encoding='utf-8')
             with self.subTest(locale=language.parent.name):

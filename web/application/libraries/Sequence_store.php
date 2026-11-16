@@ -7,6 +7,7 @@ class Sequence_store
     private $db;
     private $schema_checked = FALSE;
     private $schema_available = FALSE;
+    private $sequence_fields = array();
 
     private $sort_columns = array(
         'sequence_code' => 's.sequence_code',
@@ -14,8 +15,6 @@ class Sequence_store
         'description' => 's.description',
         'repeat_type' => 'COALESCE(o.option_name, s.repeat_type)',
         'menu_codes' => 'COALESCE(sm.menu_codes, \'\')',
-        'last_value' => 's.last_value',
-        'last_sequence' => 's.last_sequence',
         'format' => 's.format',
     );
 
@@ -259,7 +258,7 @@ class Sequence_store
         return $row === NULL ? FALSE : (int) $row['total'];
     }
 
-    public function page($search, $page, $per_page, $sort, $direction)
+    public function page($search, $length, $start, $sort, $direction)
     {
         if (!$this->has_expected_schema()) {
             return FALSE;
@@ -267,20 +266,19 @@ class Sequence_store
 
         $sort = isset($this->sort_columns[$sort]) ? $sort : 'sequence_code';
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $page = max(1, (int) $page);
-        $per_page = in_array((int) $per_page, array(10, 25, 50), TRUE) ? (int) $per_page : 10;
-        $offset = ($page - 1) * $per_page;
+        $length = max(1, min(50, (int) $length));
+        $offset = max(0, (int) $start);
 
         $this->db->select(
             's.sequence_code, s.sequence_name, s.description, ' .
             'COALESCE(o.option_name, s.repeat_type) AS repeat_type, ' .
-            'COALESCE(sm.menu_codes, \'\') AS menu_codes, s.last_value, s.last_sequence, s.format',
+            'COALESCE(sm.menu_codes, \'\') AS menu_codes, s.format',
             FALSE
         );
         $this->from_sequence();
         $this->apply_search($search);
         $this->db->order_by($this->sort_columns[$sort], $direction, FALSE);
-        $this->db->limit($per_page, $offset);
+        $this->db->limit($length, $offset);
         $query = $this->db->get();
         return $query === FALSE ? FALSE : $query->result_array();
     }
@@ -317,8 +315,12 @@ class Sequence_store
         $this->db->or_like('s.repeat_type', $search);
         $this->db->or_like('o.option_name', $search);
         $this->db->or_like('sm.menu_codes', $search);
-        $this->db->or_like('s.last_value', $search);
-        $this->db->or_like('s.last_sequence', $search);
+        if (in_array('last_value', $this->sequence_fields, TRUE)) {
+            $this->db->or_like('s.last_value', $search);
+        }
+        if (in_array('last_sequence', $this->sequence_fields, TRUE)) {
+            $this->db->or_like('s.last_sequence', $search);
+        }
         $this->db->or_like('s.format', $search);
         $this->db->group_end();
     }
@@ -340,10 +342,10 @@ class Sequence_store
         $sequence_fields = is_array($sequence_fields) ? $sequence_fields : array();
         $option_fields = is_array($option_fields) ? $option_fields : array();
         $sequence_menu_fields = is_array($sequence_menu_fields) ? $sequence_menu_fields : array();
+        $this->sequence_fields = $sequence_fields;
 
         $required_sequence_fields = array(
-            'sequence_code', 'sequence_name', 'description', 'repeat_type',
-            'last_value', 'last_sequence', 'format',
+            'sequence_code', 'sequence_name', 'description', 'repeat_type', 'format',
         );
         $this->schema_available = count(array_diff($required_sequence_fields, $sequence_fields)) === 0
             && count(array_diff(array('option_code', 'option_name', 'parameter_code', 'line'), $option_fields)) === 0
@@ -353,6 +355,9 @@ class Sequence_store
 
     private function normalize_menu_codes($menu_codes)
     {
+        if (count($menu_codes) > 50) {
+            return array();
+        }
         $normalized = array();
         foreach ($menu_codes as $menu_code) {
             if (is_string($menu_code) && $menu_code !== '') {

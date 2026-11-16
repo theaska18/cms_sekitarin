@@ -28,7 +28,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertRegex(store, r"repeat_type.{0,100}option_code|option_code.{0,100}repeat_type")
         for column in (
             "sequence_code", "sequence_name", "description", "repeat_type",
-            "menu_code", "last_value", "last_sequence", "format",
+            "menu_codes", "last_value", "last_sequence", "format",
         ):
             self.assertIn(column, store)
         self.assertIn("sys_sequence_menu", store)
@@ -48,12 +48,15 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("divide-y divide-slate-100", view)
         self.assertIn("overflow-x-auto", view)
         self.assertIn("aria-label", view)
-        self.assertIn("focus-visible:", view)
+        self.assertIn("focus:ring-2", view)
         for column in (
             "sequence_code", "sequence_name", "description", "repeat_type",
-            "menu_code", "last_value", "last_sequence", "format",
+            "menu_code", "format",
         ):
             self.assertIn(column, view)
+        self.assertNotIn("$labels['sequence_last_value']", view)
+        self.assertNotIn("$labels['sequence_last_sequence']", view)
+        self.assertNotIn("colspan=\"9\"", view)
         self.assertIn("font-mono", view)
 
     def test_list_layout_and_controls_match_the_property_list(self):
@@ -62,50 +65,43 @@ class AdminSequenceContractTests(unittest.TestCase):
             '<main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">',
             'aria-label="Breadcrumb"',
             'rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm',
-            'bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500',
-            'transition hover:bg-slate-50/80',
-            'focus-visible:ring-2 focus-visible:ring-emerald-500',
-            'data-sequence-live-filter',
-            'maxlength="120"',
-            'autocomplete="off"',
+            'id="sequence-data-table"',
+            '/assets/css/vendor/datatables.min.css',
+            '/assets/js/vendor/datatables.min.js',
         ):
             with self.subTest(token=token):
                 self.assertIn(token, view)
 
     def test_search_reopens_focused_with_caret_at_end_and_filters_live(self):
+        controller = (APP / "controllers" / "Admin_sequence.php").read_text()
+        store = (APP / "libraries" / "Sequence_store.php").read_text()
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertNotIn("autofocus", view)
-        self.assertIn("setSelectionRange", view)
-        self.assertIn("value.length", view)
-        self.assertIn("search_label", view)
-        self.assertIn("addEventListener('input'", view)
-        self.assertIn("requestSubmit", view)
-        self.assertIn("}, 350)", view)
+        self.assertIn("serverSide: true", view)
+        self.assertIn("searchDelay: 350", view)
+        self.assertIn("sequence_data", controller)
+        self.assertIn("$store->count($search)", controller)
+        self.assertIn("$store->page($search, $length, $start, $order, $direction)", controller)
+        self.assertIn("max_length' => 50", controller)
+        self.assertIn("max_search_length' => 120", controller)
+        self.assertIn("$this->datatable_server->respond(", controller)
+        self.assertIn("1 => 'sequence_code'", controller)
+        self.assertIn("'menu_codes' => 'COALESCE(sm.menu_codes", store)
 
     def test_list_filter_and_table_header_stick_below_the_admin_topbar(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        topbar_css = (ROOT / "web" / "assets" / "css" / "admin-topbar-actions.css").read_text()
-        self.assertIn('sticky top-16 z-30', view)
-        self.assertIn('.admin-topbar{z-index:40!important}', topbar_css)
-        self.assertIn('id="sequence-filter-bar"', view)
-        self.assertIn('bg-white/10', view)
-        self.assertIn('data-sequence-sticky-header', view)
-        self.assertIn('bg-slate-50/10', view)
-        self.assertIn('id="sequence-sticky-header-clone"', view)
-        self.assertIn('filterRect.bottom', view)
-        self.assertIn('sourceCells[0].getBoundingClientRect().left - clonedCells[0].getBoundingClientRect().left', view)
-        self.assertNotIn('section aria-labelledby="sequence-list-heading" class="overflow-hidden', view)
-        self.assertIn('aria-label="<?= html_escape($sequence_title) ?>"', view)
-        self.assertNotIn('id="sequence-list-heading"', view)
-        self.assertIn('sm:justify-end', view)
+        self.assertIn("serverSide: true", view)
+        self.assertIn("processing: true", view)
+        self.assertIn("lengthMenu: [[10, 25, 50], [10, 25, 50]]", view)
+        self.assertIn("order: [[1, 'asc']]", view)
 
     def test_action_menu_escapes_the_horizontal_scroll_container(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertIn('class="fixed z-50 w-40', view)
-        self.assertIn("summary.getBoundingClientRect()", view)
+        self.assertIn('data-sequence-actions-toggle', view)
+        self.assertIn('data-sequence-actions-menu', view)
+        self.assertIn('class="fixed z-[60] mt-1 w-40', view)
         self.assertIn("menu.style.top", view)
         self.assertIn("menu.style.left", view)
-        self.assertIn("window.innerHeight - menuBounds.height - 8", view)
+        self.assertIn("encodeURIComponent(code)", view)
 
     def test_sequence_form_save_and_back_actions_stick_to_viewport_bottom(self):
         view = (APP / "views" / "admin" / "sequence" / "form.php").read_text()
@@ -120,28 +116,22 @@ class AdminSequenceContractTests(unittest.TestCase):
 
     def test_footer_aligns_pagination_controls_to_the_right(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertIn("$backend_available && $total_records > 0", view)
-        for token in ("per_page", "sequence_page_of", "page_count", "previous", "next", 'rel="prev"', 'rel="next"'):
-            with self.subTest(token=token):
-                self.assertIn(token, view)
-        self.assertIn('name="per_page"', view)
-        self.assertIn("sprintf($labels['sequence_page_of'], $page, $page_count, number_format((int) $total_records, 0, ',', '.'))", view)
-        self.assertIn('aria-label="<?= html_escape($labels[\'sequence_previous\']) ?>"', view)
-        self.assertIn('aria-label="<?= html_escape($labels[\'sequence_next\']) ?>"', view)
-        self.assertIn('viewBox="0 0 20 20" fill="none" stroke="currentColor"', view)
-        self.assertIn('class="min-w-[11rem] text-center text-sm text-slate-600"', view)
-        self.assertNotIn("$labels['sequence_total']", view)
-        self.assertIn('class="flex w-full items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:flex-1 sm:justify-end"', view)
-        self.assertIn("if ($page > 1)", view)
-        self.assertIn("if ($page < $page_count)", view)
+        self.assertIn("lengthMenu: [[10, 25, 50], [10, 25, 50]]", view)
+        self.assertIn("'paginate' => array(", view)
+        self.assertIn("$labels['sequence_dt_first']", view)
+        self.assertIn("$labels['sequence_dt_last']", view)
+        self.assertIn("language.paginate = pagingIcons", view)
+        self.assertIn("language.aria = {paginate: pagingLabels}", view)
 
     def test_action_menu_closes_when_pointer_is_outside_menu_and_trigger(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertIn("document.addEventListener('pointerdown'", view)
-        self.assertIn("!menu.contains(event.target)", view)
-        self.assertIn("!trigger.contains(event.target)", view)
-        self.assertIn("details.open = false", view)
+        self.assertIn("canUpdate", view)
+        self.assertIn("canDelete", view)
+        self.assertIn("document.addEventListener('click'", view)
+        self.assertIn("closeActionMenus()", view)
         self.assertIn("event.key === 'Escape'", view)
+        self.assertIn("data-sequence-delete-open", view)
+        self.assertIn("sequence-delete-dialog", view)
 
     def test_compact_action_labels_are_localized_for_every_admin_locale(self):
         expected = {
@@ -164,10 +154,8 @@ class AdminSequenceContractTests(unittest.TestCase):
 
     def test_empty_state_matches_property_list_structure(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertIn("colspan=\"9\"", view)
-        self.assertIn("mx-auto mb-3 flex h-11 w-11", view)
-        self.assertIn("sequence_empty", view)
-        self.assertIn("sequence_no_results", view)
+        self.assertIn("$labels['sequence_dt_empty']", view)
+        self.assertIn("$labels['sequence_dt_zero']", view)
 
     def test_sequence_translation_keys_are_passed_for_every_admin_locale(self):
         controller = (APP / "controllers" / "Admin.php").read_text()
@@ -181,7 +169,12 @@ class AdminSequenceContractTests(unittest.TestCase):
             "heading", "intro", "search_label", "search_hint", "total", "empty",
             'no_results', 'empty_hint', 'no_results_hint', 'unavailable', 'page', 'page_of', 'previous', 'next',
             "per_page", "sequence_code", "sequence_name", "description", "repeat_type",
-            "menu", "menu_help", "menu_search", "menu_code_required", "menu_code_invalid",
+            "menu", "menu_help", "menu_search", "remove_menu", "menu_code_required", "menu_code_invalid",
+            "dt_empty", "dt_zero", "dt_info", "dt_info_empty", "dt_info_filtered", "dt_length",
+            "dt_loading", "dt_processing", "dt_search", "dt_first", "dt_last",
+            "form_new", "form_edit",
+            "format_help", "format_token_n", "format_token_d", "format_token_D",
+            "format_token_m", "format_token_M", "format_token_y", "format_token_Y",
             "last_value", "last_sequence", "format",
         )
         for locale in locales:
@@ -219,7 +212,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         view = view_path.read_text()
         for field in (
             "sequence_code", "sequence_name", "description", "repeat_type",
-            "menu_code", "format",
+            "menu_codes[]", "format",
         ):
             with self.subTest(field=field):
                 self.assertIn(f'name="{field}"', view)
@@ -243,6 +236,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertNotIn("ENVIRONMENT !== 'development'", controller)
         self.assertIn("preg_replace", controller)
         self.assertIn("if ($name === 'last_sequence' && $value !== '')", controller)
+        self.assertIn("isset($field_specs['last_sequence'], $record['last_sequence'])", controller)
 
     def test_schema_metadata_drives_required_fields_and_option_join_scope(self):
         store = (APP / "libraries" / "Sequence_store.php").read_text()
@@ -261,9 +255,15 @@ class AdminSequenceContractTests(unittest.TestCase):
                 self.assertIn(width_class, control_line)
         self.assertNotIn('name="last_value"', view)
         self.assertNotIn('name="last_sequence"', view)
-        self.assertIn('name="menu_code"', view)
+        self.assertIn('name="menu_codes[]"', view)
         self.assertIn("autocomplete({", view)
         self.assertIn("menu-lookup", view)
+        self.assertIn("appendMenuToken", view)
+        self.assertIn("input[name=\"menu_codes[]\"]", view)
+        self.assertIn('aria-describedby="sequence-format-help"', view)
+        for token in ('>N</code>', '>d</code>', '>D</code>', '>m</code>', '>M</code>', '>y</code>', '>Y</code>'):
+            self.assertIn(token, view)
+        self.assertIn("NNNNN", (APP / "language" / "indonesian" / "sequence_lang.php").read_text())
 
     def test_sequence_menu_lookup_and_relation_persistence_are_scoped_and_atomic(self):
         controller = (APP / "controllers" / "Admin_sequence.php").read_text()
@@ -272,12 +272,17 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("$this->current_user['menu_codes']", controller)
         self.assertIn("count($results) >= 20", controller)
         self.assertIn("function sequence_manifest_items", controller)
+        self.assertIn("array_slice($submitted_menu_codes, 0, 50)", controller)
         self.assertIn("array_merge($record, $this->sequence_form_values())", controller)
         self.assertIn("sys_sequence_menu", store)
+        self.assertIn("foreach ($menu_codes as $menu_code)", store)
         self.assertIn("$this->db->trans_begin()", store)
         self.assertIn("$this->db->trans_rollback()", store)
         self.assertIn("$this->db->trans_commit()", store)
-        self.assertIn("'last_value', 'last_sequence'", store)
+        self.assertIn("$this->sequence_fields = $sequence_fields", store)
+        self.assertNotIn("'last_value', 'last_sequence', 'format'", store)
+        self.assertIn("in_array('last_value', $this->sequence_fields, TRUE)", store)
+        self.assertIn("if (!isset($field_specs[$name]))", controller)
 
     def test_list_exposes_create_update_and_post_only_remove_actions(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
@@ -295,13 +300,14 @@ class AdminSequenceContractTests(unittest.TestCase):
         for method in ("find", "update", "delete"):
             self.assertIn(f"function {method}", store)
         self.assertIn("csrf_token_name", view)
-        self.assertIn("data-web-confirm", view)
+        self.assertIn('id="sequence-delete-dialog"', view)
+        self.assertIn('data-sequence-delete-code', view)
 
     def test_sequence_action_labels_are_available_in_all_admin_locales(self):
         locales = ("english", "indonesian", "japanese", "chinese", "arabic", "korean", "spanish", "french", "german")
         for locale in locales:
             content = (APP / "language" / locale / "sequence_lang.php").read_text()
-            for key in ("add", "actions", "edit", "delete", "confirm_delete", "created", "saved", "deleted"):
+            for key in ("add", "actions", "edit", "delete", "cancel", "confirm_delete", "created", "saved", "deleted"):
                 with self.subTest(locale=locale, key=key):
                     self.assertRegex(content, rf"\$lang\['sequence_{key}'\]")
 
@@ -343,11 +349,9 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("$sequence_add_allowed", view)
         self.assertIn("$sequence_update_allowed", view)
         self.assertIn("$sequence_delete_allowed", view)
-        self.assertIn("$sequence_actions_available", view)
         self.assertIn("<?php if ($sequence_add_allowed): ?>", view)
-        self.assertIn("<?php if ($sequence_update_allowed): ?>", view)
-        self.assertIn("<?php if ($sequence_delete_allowed): ?>", view)
-        self.assertIn("<?php if ($sequence_actions_available): ?>", view)
+        self.assertIn("$sequence_update_allowed ? 'true' : 'false'", view)
+        self.assertIn("$sequence_delete_allowed ? 'true' : 'false'", view)
 
     def test_sequence_access_denied_message_is_localized_in_all_admin_locales(self):
         locales = ("english", "indonesian", "japanese", "chinese", "arabic", "korean", "spanish", "french", "german")

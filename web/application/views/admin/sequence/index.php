@@ -2,30 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $sequence_title = $labels['sequence_heading'];
-$page_params = array('search' => $search, 'per_page' => $per_page, 'sort' => $sort, 'direction' => $direction);
-$make_sort_url = function ($column) use ($search, $per_page, $sort, $direction) {
-    $next_direction = $sort === $column && $direction === 'ASC' ? 'DESC' : 'ASC';
-    return '/admin/system/sequence?' . http_build_query(array(
-        'search' => $search,
-        'per_page' => $per_page,
-        'sort' => $column,
-        'direction' => $next_direction,
-    ));
-};
-$has_active_filter = trim((string) $search) !== '';
-$empty_message = $has_active_filter ? $labels['sequence_no_results'] : $labels['sequence_empty'];
-$empty_hint = $has_active_filter ? $labels['sequence_no_results_hint'] : $labels['sequence_empty_hint'];
-$columns = array(
-    'sequence_code' => array('label' => $labels['sequence_sequence_code'], 'class' => 'whitespace-nowrap'),
-    'sequence_name' => array('label' => $labels['sequence_sequence_name'], 'class' => 'min-w-[8rem] sm:min-w-56'),
-    'description' => array('label' => $labels['sequence_description'], 'class' => 'min-w-[14rem] sm:min-w-64'),
-    'repeat_type' => array('label' => $labels['sequence_repeat_type'], 'class' => 'min-w-[9rem]'),
-    'menu_code' => array('label' => $labels['sequence_menu'], 'class' => 'min-w-[14rem]'),
-    'last_value' => array('label' => $labels['sequence_last_value'], 'class' => 'whitespace-nowrap'),
-    'last_sequence' => array('label' => $labels['sequence_last_sequence'], 'class' => 'whitespace-nowrap'),
-    'format' => array('label' => $labels['sequence_format'], 'class' => 'min-w-[10rem]'),
-);
 ?>
+<link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') ?>">
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <ol class="flex flex-wrap items-center gap-2">
@@ -42,15 +20,11 @@ $columns = array(
         </div>
         <?php if ($sequence_add_allowed): ?>
             <?php if ($write_available): ?>
-                <a href="/admin/system/sequence/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
+                <a href="/admin/system/sequence/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                     <?= html_escape($labels['sequence_add']) ?>
                 </a>
             <?php else: ?>
-                <span aria-disabled="true" class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500">
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                    <?= html_escape($labels['sequence_add']) ?>
-                </span>
+                <span aria-disabled="true" class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 text-sm font-semibold text-slate-500"><?= html_escape($labels['sequence_add']) ?></span>
             <?php endif; ?>
         <?php endif; ?>
     </header>
@@ -60,302 +34,235 @@ $columns = array(
             <p class="font-semibold"><?= html_escape($labels['sequence_unavailable']) ?></p>
         </div>
     <?php endif; ?>
-
     <?php if (isset($sequence_notice) && in_array($sequence_notice, array('sequence_created', 'sequence_saved', 'sequence_deleted', 'sequence_delete_error'), TRUE)): ?>
         <?php $sequence_notice_error = $sequence_notice === 'sequence_delete_error'; ?>
-        <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border p-4 text-sm <?= $sequence_notice_error ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900' ?>">
-            <span aria-hidden="true" class="mt-0.5">
-                <?= $sequence_notice_error ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M10 6v4.5m0 3h.01"/></svg>' : '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m6.5 10 2.3 2.3 4.7-4.7"/></svg>' ?>
-            </span>
-            <p><?= html_escape($labels[$sequence_notice]) ?></p>
+        <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $sequence_notice_error ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900' ?>">
+            <?= html_escape($labels[$sequence_notice]) ?>
         </div>
     <?php endif; ?>
-
     <?php if (!$write_available): ?>
-        <div role="note" class="mb-5 flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            <span aria-hidden="true" class="mt-0.5 text-indigo-600"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M10 9v4m0-7h.01"/></svg></span>
-            <p><?= html_escape($labels['sequence_write_disabled']) ?></p>
-        </div>
+        <div role="note" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape($labels['sequence_write_disabled']) ?></div>
     <?php endif; ?>
 
-    <section id="sequence-list" data-sequence-list aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
-        <?php if ($backend_available): ?>
-            <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="sequence-filter-form">
-        <?php endif; ?>
-        <div id="sequence-filter-bar" class="sticky top-16 z-30 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 shadow-none backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
-            <?php if (!$backend_available): ?>
-                <p class="text-sm text-slate-500 sm:ml-auto" role="status" aria-live="polite"><?= html_escape($labels['sequence_unavailable']) ?></p>
-            <?php endif; ?>
-            <?php if ($backend_available): ?>
-                <form id="sequence-filter-form" action="/admin/system/sequence" method="get" data-sequence-live-filter class="w-full sm:ml-auto sm:w-64 sm:shrink-0">
-                    <label for="sequence-filter-search" class="sr-only"><?= html_escape($labels['sequence_search_label']) ?></label>
-                    <div class="relative">
-                        <svg data-sequence-search-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
-                        <input id="sequence-filter-search" type="search" name="search" value="<?= html_escape($search) ?>" maxlength="120" autocomplete="off" placeholder="<?= html_escape($labels['sequence_search_hint']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-base text-slate-900 placeholder:text-slate-400 sm:text-sm focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                    </div>
-                    <input type="hidden" name="sort" value="<?= html_escape($sort) ?>">
-                    <input type="hidden" name="direction" value="<?= html_escape($direction) ?>">
-                </form>
-            <?php endif; ?>
-        </div>
-
-        <div data-sequence-table-scroll class="overflow-x-auto rounded-b-2xl">
-            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+    <section aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table id="sequence-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <caption class="sr-only"><?= html_escape($sequence_title) ?></caption>
-                <thead data-sequence-sticky-header class="bg-slate-50/10 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
-                        <th scope="col" class="w-16 px-2 py-3.5 text-right sm:px-6"><span class="sr-only"><?= html_escape($labels['sequence_actions']) ?></span></th>
-                        <?php foreach ($columns as $column => $meta): ?>
-                            <?php $sort_active = $sort === $column; $sort_aria = !$sort_active ? 'none' : ($direction === 'ASC' ? 'ascending' : 'descending'); ?>
-                            <th scope="col" aria-sort="<?= html_escape($sort_aria) ?>" class="<?= $meta['class'] ?> px-2 py-3.5 sm:px-6">
-                                <a href="<?= html_escape($make_sort_url($column)) ?>" class="inline-flex min-h-8 items-center gap-1.5 rounded-md hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                                    <?= html_escape($meta['label']) ?>
-                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-3.5 w-3.5 <?= $sort_active && $direction === 'DESC' ? 'rotate-180' : '' ?> <?= $sort_active ? 'text-indigo-600' : 'text-slate-400' ?>"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v10m0 0 3.5-3.5M8 13l-3.5-3.5"/></svg>
-                                </a>
-                            </th>
-                        <?php endforeach; ?>
+                        <th scope="col" aria-label="<?= html_escape($labels['sequence_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
+                        <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_sequence_code']) ?></th>
+                        <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['sequence_sequence_name']) ?></th>
+                        <th scope="col" class="min-w-[14rem] px-2 py-3.5 sm:min-w-64 sm:px-6"><?= html_escape($labels['sequence_description']) ?></th>
+                        <th scope="col" class="min-w-[9rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_repeat_type']) ?></th>
+                        <th scope="col" class="min-w-[14rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_menu']) ?></th>
+                        <th scope="col" class="min-w-[10rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_format']) ?></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <?php if ($backend_available && count($records) > 0): ?>
-                        <?php foreach ($records as $record): ?>
-                            <tr class="transition hover:bg-slate-50/80">
-                                <td class="w-16 px-2 py-2 sm:px-6">
-                                    <?php if ($sequence_actions_available): ?>
-                                    <details class="relative" data-sequence-actions>
-                                        <summary aria-label="<?= html_escape($labels['sequence_actions']) ?>: <?= html_escape((string) $record['sequence_code']) ?>" class="ml-auto flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 [&::-webkit-details-marker]:hidden">
-                                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="16" r="1.5"/></svg>
-                                        </summary>
-                                        <div data-sequence-actions-menu class="fixed z-50 w-40 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-                                            <?php if ($sequence_update_allowed): ?>
-                                                <?php if ($write_available): ?>
-                                                <a href="/admin/system/sequence/change/<?= rawurlencode((string) $record['sequence_code']) ?>" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
-                                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m13.5 3.5 3 3M4 16l3.6-.7L16 6.9a2.1 2.1 0 0 0-3-3L4.7 12.3 4 16Z"/></svg>
-                                                    <?= html_escape($labels['sequence_edit']) ?>
-                                                </a>
-                                                <?php else: ?>
-                                                    <span class="flex min-h-10 items-center px-3 text-sm text-slate-400" aria-disabled="true"><?= html_escape($labels['sequence_write_disabled']) ?></span>
-                                                <?php endif; ?>
-                                            <?php endif; ?>
-                                            <?php if ($sequence_delete_allowed): ?>
-                                                <?php if ($write_available): ?>
-                                                <form action="/admin/system/sequence/delete" method="post" data-web-confirm data-web-confirm-title="<?= html_escape($labels['sequence_delete']) ?>" data-web-confirm-message="<?= html_escape($labels['sequence_confirm_delete']) ?>" data-web-confirm-accept="<?= html_escape($labels['sequence_delete']) ?>">
-                                                    <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
-                                                    <input type="hidden" name="sequence_code" value="<?= html_escape((string) $record['sequence_code']) ?>">
-                                                    <button type="submit" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
-                                                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6h11m-9.5 0 .7 10h7.6l.7-10M8 6V4h4v2m-3 3v4m2-4v4"/></svg>
-                                                        <?= html_escape($labels['sequence_delete']) ?>
-                                                    </button>
-                                                </form>
-                                                <?php else: ?>
-                                                    <span class="flex min-h-10 items-center px-3 text-sm text-slate-400" aria-disabled="true"><?= html_escape($labels['sequence_write_disabled']) ?></span>
-                                                <?php endif; ?>
-                                            <?php else: ?>
-                                            <?php endif; ?>
-                                        </div>
-                                    </details>
-                                    <?php endif; ?>
-                                </td>
-                                <th scope="row" class="whitespace-nowrap px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['sequence_code']) ?></th>
-                                <td class="min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4"><?= html_escape((string) $record['sequence_name']) ?></td>
-                                <td class="min-w-[14rem] break-words px-2 py-3 text-slate-600 sm:min-w-64 sm:px-6 sm:py-4"><?= html_escape((string) $record['description']) ?></td>
-                                <td class="whitespace-nowrap px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['repeat_type']) ?></td>
-                                <td class="min-w-[14rem] whitespace-nowrap px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['menu_label']) ?></td>
-                                <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['last_value']) ?></td>
-                                <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['last_sequence']) ?></td>
-                                <td class="whitespace-nowrap px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4"><?= html_escape((string) $record['format']) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="9" class="px-4 py-14 text-center sm:px-6">
-                                <div class="sticky left-0 mx-0 max-w-md sm:static sm:mx-auto rounded-none" style="width: min(448px, calc(100vw - 4rem));">
-                                    <div aria-hidden="true" class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
-                                    </div>
-                                    <p class="font-medium text-slate-800"><?= html_escape($backend_available ? $empty_message : $labels['sequence_unavailable']) ?></p>
-                                    <?php if ($backend_available): ?><p class="mt-1 text-sm text-slate-500"><?= html_escape($empty_hint) ?></p><?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
+                <tbody class="divide-y divide-slate-100"></tbody>
             </table>
         </div>
-
-        <?php if ($backend_available && $total_records > 0): ?>
-            <div class="flex flex-col gap-3 border-t border-slate-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <form action="/admin/system/sequence" method="get" class="flex items-center justify-center gap-2 sm:justify-start">
-                    <input type="hidden" name="search" value="<?= html_escape($search) ?>">
-                    <input type="hidden" name="sort" value="<?= html_escape($sort) ?>">
-                    <input type="hidden" name="direction" value="<?= html_escape($direction) ?>">
-                    <label for="sequence-page-size" class="whitespace-nowrap text-sm font-medium text-slate-600"><?= html_escape($labels['sequence_per_page']) ?></label>
-                    <select id="sequence-page-size" name="per_page" onchange="this.form.submit()" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
-                        <?php foreach (array(10, 25, 50) as $choice): ?>
-                            <option value="<?= (int) $choice ?>"<?= $choice === $per_page ? ' selected' : '' ?>><?= (int) $choice ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-                <nav aria-label="<?= html_escape($sequence_title) ?> — <?= html_escape($labels['sequence_page']) ?>" class="flex w-full items-center justify-end gap-2 sm:ml-auto sm:w-auto sm:flex-1 sm:justify-end">
-                    <?php if ($page > 1): ?>
-                        <?php $page_params['page'] = $page - 1; ?>
-                        <a rel="prev" aria-label="<?= html_escape($labels['sequence_previous']) ?>" title="<?= html_escape($labels['sequence_previous']) ?>" href="/admin/system/sequence?<?= html_escape(http_build_query($page_params)) ?>" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['sequence_previous']) ?>" title="<?= html_escape($labels['sequence_previous']) ?>" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                    <span class="min-w-[11rem] text-center text-sm text-slate-600" aria-live="polite"><?= html_escape(sprintf($labels['sequence_page_of'], $page, $page_count, number_format((int) $total_records, 0, ',', '.'))) ?></span>
-                    <?php if ($page < $page_count): ?>
-                        <?php $page_params['page'] = $page + 1; ?>
-                        <a rel="next" aria-label="<?= html_escape($labels['sequence_next']) ?>" title="<?= html_escape($labels['sequence_next']) ?>" href="/admin/system/sequence?<?= html_escape(http_build_query($page_params)) ?>" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['sequence_next']) ?>" title="<?= html_escape($labels['sequence_next']) ?>" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                </nav>
-            </div>
-        <?php endif; ?>
     </section>
 </main>
-<div id="sequence-sticky-header-clone" aria-hidden="true" hidden class="fixed z-20 overflow-hidden border-b border-slate-200 bg-slate-50/10 shadow-sm"></div>
+<?php if ($write_available): ?>
+    <div id="sequence-delete-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="sequence-delete-title" aria-describedby="sequence-delete-description" tabindex="-1" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
+            <div aria-hidden="true" class="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-lg font-bold text-rose-700">!</div>
+            <h2 id="sequence-delete-title" class="text-xl font-semibold text-slate-950"><?= html_escape($labels['sequence_delete']) ?></h2>
+            <p id="sequence-delete-description" class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape($labels['sequence_confirm_delete']) ?></p>
+            <p class="mt-3 break-all rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm text-slate-800" data-sequence-delete-label></p>
+            <form action="/admin/system/sequence/delete" method="post" class="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
+                <input type="hidden" name="sequence_code" value="" data-sequence-delete-code>
+                <button type="button" data-sequence-delete-cancel class="min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"><?= html_escape($labels['sequence_cancel']) ?></button>
+                <button type="submit" class="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-semibold text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"><?= html_escape($labels['sequence_delete']) ?></button>
+            </form>
+        </div>
+    </div>
+<?php endif; ?>
+<script src="/assets/js/vendor/jquery.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') ?>"></script>
+<script src="/assets/js/vendor/datatables.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') ?>"></script>
 <script>
 (function () {
-    var list = document.querySelector('[data-sequence-list]');
-    var filterBar = document.getElementById('sequence-filter-bar');
-    var thead = document.querySelector('[data-sequence-sticky-header]');
-    var tableScroll = document.querySelector('[data-sequence-table-scroll]');
-    var cloneHost = document.getElementById('sequence-sticky-header-clone');
-    var table = thead ? thead.closest('table') : null;
-    if (list && filterBar && thead && tableScroll && cloneHost && table) {
-        var clonedTable = table.cloneNode(false);
-        var clonedHead = thead.cloneNode(true);
-        clonedHead.removeAttribute('data-sequence-sticky-header');
-        clonedHead.querySelectorAll('a').forEach(function (link) { link.tabIndex = -1; });
-        clonedTable.setAttribute('aria-hidden', 'true');
-        clonedTable.appendChild(clonedHead);
-        cloneHost.appendChild(clonedTable);
+    var table = $('#sequence-data-table');
+    var enabled = <?= $backend_available ? 'true' : 'false' ?>;
+    if (!table.length || !enabled) return;
 
-        var updateStickyHeader = function () {
-            var filterRect = filterBar.getBoundingClientRect();
-            var headerRect = thead.getBoundingClientRect();
-            var listRect = list.getBoundingClientRect();
-            var tableScrollRect = tableScroll.getBoundingClientRect();
-            var headerHeight = headerRect.height;
-            var stickyTop = filterRect.bottom;
-            var visible = headerHeight > 0 && headerRect.top <= stickyTop && listRect.bottom > stickyTop + headerHeight && stickyTop < window.innerHeight;
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
 
-            if (!visible) {
-                cloneHost.hidden = true;
-                return;
-            }
+    var canUpdate = <?= $write_available && $sequence_update_allowed ? 'true' : 'false' ?>;
+    var canDelete = <?= $write_available && $sequence_delete_allowed ? 'true' : 'false' ?>;
+    var labels = {
+        actions: <?= json_encode($labels['sequence_actions'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        edit: <?= json_encode($labels['sequence_edit'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        delete: <?= json_encode($labels['sequence_delete'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+    };
+    var language = <?= json_encode(array(
+        'emptyTable' => $labels['sequence_dt_empty'],
+        'info' => $labels['sequence_dt_info'],
+        'infoEmpty' => $labels['sequence_dt_info_empty'],
+        'infoFiltered' => $labels['sequence_dt_info_filtered'],
+        'lengthMenu' => $labels['sequence_dt_length'],
+        'loadingRecords' => $labels['sequence_dt_loading'],
+        'processing' => $labels['sequence_dt_processing'],
+        'search' => $labels['sequence_dt_search'],
+        'zeroRecords' => $labels['sequence_dt_zero'],
+        'paginate' => array(
+            'first' => $labels['sequence_dt_first'],
+            'last' => $labels['sequence_dt_last'],
+            'next' => $labels['sequence_next'],
+            'previous' => $labels['sequence_previous']
+        )
+    ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var pagingLabels = language.paginate;
+    var pagingIcons = {
+        first: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m11.5 4.5-5.5 5.5 5.5 5.5M17 4.5 11.5 10l5.5 5.5"/></svg>',
+        previous: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg>',
+        next: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>',
+        last: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m8.5 4.5 5.5 5.5-5.5 5.5M3 4.5 8.5 10 3 15.5"/></svg>'
+    };
+    language.paginate = pagingIcons;
+    language.aria = {paginate: pagingLabels};
 
-            cloneHost.hidden = false;
-            cloneHost.style.top = stickyTop + 'px';
-            cloneHost.style.left = (tableScrollRect.left + tableScroll.clientLeft) + 'px';
-            cloneHost.style.width = tableScroll.clientWidth + 'px';
-            cloneHost.style.height = headerHeight + 'px';
-            var tableWidth = table.getBoundingClientRect().width;
-            clonedTable.style.width = tableWidth + 'px';
-            clonedTable.style.minWidth = tableWidth + 'px';
-
-            var sourceCells = thead.querySelectorAll('th');
-            var clonedCells = clonedHead.querySelectorAll('th');
-            sourceCells.forEach(function (cell, index) {
-                if (clonedCells[index]) {
-                    var width = cell.getBoundingClientRect().width;
-                    clonedCells[index].style.width = width + 'px';
-                    clonedCells[index].style.minWidth = width + 'px';
-                    clonedCells[index].style.maxWidth = width + 'px';
+    table.DataTable({
+        processing: true,
+        serverSide: true,
+        deferRender: true,
+        autoWidth: false,
+        searchDelay: 350,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+        order: [[1, 'asc']],
+        language: language,
+        ajax: {url: '/admin/system/sequence/data', type: 'GET', dataSrc: 'data'},
+        columns: [
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function (data, type, row, meta) {
+                    if (type !== 'display' || (!canUpdate && !canDelete)) return '';
+                    var code = String(row.sequence_code || '');
+                    var safeCode = escapeHtml(code);
+                    var menuId = 'sequence-actions-menu-' + meta.row;
+                    var menuItems = '';
+                    if (canUpdate) {
+                        menuItems += '<a href="/admin/system/sequence/change/' + encodeURIComponent(code) + '" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m13.5 3.5 3 3M4 16l3.6-.7L16 6.9a2.1 2.1 0 0 0-3-3L4.7 12.3 4 16Z"/></svg>' + escapeHtml(labels.edit) + '</a>';
+                    }
+                    if (canDelete) {
+                        menuItems += '<button type="button" data-sequence-delete-open="1" data-sequence-code="' + safeCode + '" data-sequence-name="' + escapeHtml(row.sequence_name || code) + '" aria-haspopup="dialog" aria-controls="sequence-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 6h12m-10 0 .8 11h6.4L14 6M8 6V4h4v2m-3 3v5m2-5v5"/></svg>' + escapeHtml(labels.delete) + '</button>';
+                    }
+                    return '<div class="relative inline-flex"><button type="button" data-sequence-actions-toggle aria-label="' + escapeHtml(labels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-sequence-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + menuItems + '</div></div>';
                 }
-            });
-            clonedTable.style.transform = 'translateX(0px)';
-            if (sourceCells.length && clonedCells.length) {
-                var horizontalOffset = sourceCells[0].getBoundingClientRect().left - clonedCells[0].getBoundingClientRect().left;
-                clonedTable.style.transform = 'translateX(' + horizontalOffset + 'px)';
-            }
-        };
-        var scheduleStickyHeaderUpdate = function () { window.requestAnimationFrame(updateStickyHeader); };
-        window.addEventListener('scroll', scheduleStickyHeaderUpdate, { passive: true });
-        window.addEventListener('resize', scheduleStickyHeaderUpdate, { passive: true });
-        tableScroll.addEventListener('scroll', scheduleStickyHeaderUpdate, { passive: true });
-        if (typeof ResizeObserver === 'function') {
-            var stickyHeaderResizeObserver = new ResizeObserver(scheduleStickyHeaderUpdate);
-            stickyHeaderResizeObserver.observe(list);
-            stickyHeaderResizeObserver.observe(filterBar);
-            stickyHeaderResizeObserver.observe(tableScroll);
-        }
-        scheduleStickyHeaderUpdate();
-    }
+            },
+            {data: 'sequence_code', name: 'sequence_code', className: 'whitespace-nowrap px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }},
+            {data: 'sequence_name', name: 'sequence_name', className: 'min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }},
+            {data: 'description', name: 'description', className: 'min-w-[14rem] break-words px-2 py-3 text-slate-600 sm:min-w-64 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }},
+            {data: 'repeat_type', name: 'repeat_type', className: 'whitespace-nowrap px-2 py-3 text-slate-700 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }},
+            {data: 'menu_label', name: 'menu_codes', className: 'min-w-[14rem] break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }},
+            {data: 'format', name: 'format', className: 'min-w-[10rem] break-words px-2 py-3 font-mono text-xs text-slate-700 sm:px-6 sm:py-4', render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }}
+        ]
+    });
 
-    var actionMenus = Array.prototype.slice.call(document.querySelectorAll('[data-sequence-actions]'));
-    var positionActionMenu = function (details) {
-        if (!details.open) { return; }
-        var summary = details.querySelector('summary');
-        var menu = details.querySelector('[data-sequence-actions-menu]');
-        if (!summary || !menu) { return; }
-        var anchor = summary.getBoundingClientRect();
-        var menuBounds = menu.getBoundingClientRect();
-        var left = Math.min(anchor.right - menuBounds.width, window.innerWidth - menuBounds.width - 8);
-        var top = anchor.bottom + 4;
-        if (top + menuBounds.height > window.innerHeight - 8) {
-            top = anchor.top - menuBounds.height - 4;
+    var dialog = document.getElementById('sequence-delete-dialog');
+    var opener = null;
+    var cancelButton = dialog ? dialog.querySelector('[data-sequence-delete-cancel]') : null;
+    var sequenceLabel = dialog ? dialog.querySelector('[data-sequence-delete-label]') : null;
+    var sequenceCode = dialog ? dialog.querySelector('[data-sequence-delete-code]') : null;
+    function actionToggle(menu) {
+        return document.querySelector('[aria-controls="' + menu.id + '"][data-sequence-actions-toggle]');
+    }
+    function closeActionMenus() {
+        document.querySelectorAll('[data-sequence-actions-menu]').forEach(function (menu) {
+            menu.hidden = true;
+            var toggle = actionToggle(menu);
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+    function openActionMenu(toggle, menu) {
+        closeActionMenus();
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        var triggerRect = toggle.getBoundingClientRect();
+        var menuRect = menu.getBoundingClientRect();
+        var top = triggerRect.bottom + 4;
+        if (top + menuRect.height > window.innerHeight - 8 && triggerRect.top - menuRect.height - 4 >= 8) {
+            top = triggerRect.top - menuRect.height - 4;
         }
-        top = Math.max(8, Math.min(top, window.innerHeight - menuBounds.height - 8));
+        var left = Math.min(Math.max(8, triggerRect.right - menuRect.width), window.innerWidth - menuRect.width - 8);
+        menu.style.top = Math.max(8, top) + 'px';
         menu.style.left = Math.max(8, left) + 'px';
-        menu.style.top = top + 'px';
-    };
-    actionMenus.forEach(function (details) {
-        details.addEventListener('toggle', function () { positionActionMenu(details); });
-    });
-    document.addEventListener('pointerdown', function (event) {
-        actionMenus.forEach(function (details) {
-            if (!details.open) { return; }
-            var menu = details.querySelector('[data-sequence-actions-menu]');
-            var trigger = details.querySelector('summary');
-            if ((!menu || !menu.contains(event.target)) && (!trigger || !trigger.contains(event.target))) {
-                details.open = false;
-            }
-        });
-    }, true);
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            actionMenus.forEach(function (details) {
-                if (!details.open) { return; }
-                details.open = false;
-                var trigger = details.querySelector('summary');
-                if (trigger) { trigger.focus(); }
-            });
-        }
-    });
-    var repositionActionMenus = function () {
-        actionMenus.forEach(positionActionMenu);
-    };
-    window.addEventListener('scroll', repositionActionMenus, true);
-    window.addEventListener('resize', repositionActionMenus, { passive: true });
-
-    var filterForm = document.querySelector('[data-sequence-live-filter]');
-    var searchInput = filterForm ? filterForm.querySelector('[name="search"]') : null;
-    var filterTimer = null;
-    if (filterForm && searchInput) {
-        if (searchInput.value.length) {
-            searchInput.focus();
-            if (typeof searchInput.setSelectionRange === 'function') {
-                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
-            }
-        }
-        searchInput.addEventListener('input', function () {
-            window.clearTimeout(filterTimer);
-            filterTimer = window.setTimeout(function () {
-                if (typeof filterForm.requestSubmit === 'function') { filterForm.requestSubmit(); }
-                else { filterForm.submit(); }
-            }, 350);
-        });
+        var firstItem = menu.querySelector('[role="menuitem"]');
+        if (firstItem) firstItem.focus();
     }
+    function closeDialog() {
+        if (!dialog) return;
+        dialog.hidden = true;
+        dialog.classList.remove('flex');
+        if (opener) opener.focus();
+    }
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-sequence-actions-toggle]');
+        if (toggle) {
+            var menu = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (menu && menu.hidden) openActionMenu(toggle, menu);
+            else { closeActionMenus(); toggle.focus(); }
+            return;
+        }
+        var menuItem = event.target.closest('[data-sequence-actions-menu] [role="menuitem"]');
+        if (menuItem || !event.target.closest('[data-sequence-actions-menu]')) closeActionMenus();
+        if (!dialog) return;
+        var openButton = event.target.closest('[data-sequence-delete-open]');
+        if (openButton) {
+            var menuContainer = openButton.closest('[data-sequence-actions-menu]');
+            opener = menuContainer ? actionToggle(menuContainer) : openButton;
+            sequenceLabel.textContent = openButton.getAttribute('data-sequence-name') || openButton.getAttribute('data-sequence-code') || '';
+            sequenceCode.value = openButton.getAttribute('data-sequence-code') || '';
+            dialog.hidden = false;
+            dialog.classList.add('flex');
+            cancelButton.focus();
+            return;
+        }
+        if (event.target.closest('[data-sequence-delete-cancel]')) closeDialog();
+    });
+    document.addEventListener('keydown', function (event) {
+        var currentItem = event.target.closest('[data-sequence-actions-menu] [role="menuitem"]');
+        if (currentItem && ['ArrowDown', 'ArrowUp', 'Home', 'End'].indexOf(event.key) !== -1) {
+            event.preventDefault();
+            var items = Array.prototype.slice.call(currentItem.closest('[role="menu"]').querySelectorAll('[role="menuitem"]'));
+            var index = items.indexOf(currentItem);
+            var next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+                : (index + (event.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
+            items[next].focus();
+            return;
+        }
+        if (event.key === 'Escape' && event.target.closest('[data-sequence-actions-menu]')) {
+            var menu = event.target.closest('[data-sequence-actions-menu]');
+            var toggle = actionToggle(menu);
+            closeActionMenus();
+            if (toggle) toggle.focus();
+            event.preventDefault();
+            return;
+        }
+        if (event.key === 'Tab' && event.target.closest('[data-sequence-actions-menu]')) closeActionMenus();
+    });
+    document.addEventListener('scroll', closeActionMenus, true);
+    window.addEventListener('resize', closeActionMenus);
+    if (!dialog) return;
+    dialog.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') { event.preventDefault(); closeDialog(); return; }
+        if (event.key === 'Tab') {
+            var focusable = Array.prototype.slice.call(dialog.querySelectorAll('button:not([disabled])'));
+            if (!focusable.length) return;
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+    });
 }());
 </script>
