@@ -81,21 +81,88 @@ class Admin_user extends Admin
         $available = $store !== NULL && $store->schema_available();
         $write_available = $this->user_write_available($store);
         $tenants = $available ? $store->tenant_options() : FALSE;
-        $default_tenant = $available ? $store->tenant_id() : FALSE;
+        $default_tenant = $available ? $this->selected_tenant($store) : FALSE;
         $record = array('tenant_id' => $default_tenant === FALSE ? '' : (string) $default_tenant, 'user_code' => '', 'username' => '', 'role_id' => '', 'employee_flag' => 0, 'employee_id' => '', 'password' => '', 'access_api_flag' => 0, 'api_secret' => '', 'chat_flag' => 0);
         $errors = array();
+        $sequence_state = $available && $default_tenant !== FALSE
+            ? $this->user_code_sequence_state($default_tenant)
+            : array('valid' => FALSE, 'automatic' => FALSE, 'preview' => '');
+        if (!empty($sequence_state['automatic'])) {
+            $record['user_code'] = (string) $sequence_state['preview'];
+        }
+        if ($available && $default_tenant !== FALSE && empty($sequence_state['valid'])) {
+            $errors[] = 'sequence_generation';
+        }
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) { show_error('User writes are unavailable.', 503); return; }
             $record = $this->form_values(TRUE);
-            $errors = $this->validate_record($record, $store, TRUE);
-            if (!$errors && $store->insert($record)) {
+            $sequence_state = $this->user_code_sequence_state($record['tenant_id']);
+            $automatic_user_code = !empty($sequence_state['automatic']);
+            if (!$automatic_user_code || empty($sequence_state['valid'])) {
+                $record['user_code'] = $automatic_user_code ? (string) $sequence_state['preview'] : $record['user_code'];
+            } else {
+                $record['user_code'] = '';
+            }
+            $errors = empty($sequence_state['valid']) ? array('sequence_generation') : array();
+            $errors = array_merge($errors, $this->validate_record($record, $store, TRUE, NULL, $automatic_user_code));
+            if (!$errors && $automatic_user_code) {
+                $this->db->db_debug = FALSE;
+                $this->db->trans_begin();
+                $next = $this->application_sequence_store->next_code_for_update((int) $record['tenant_id'], 'user_code');
+                $code_available = FALSE;
+                $specs = $store->field_specs();
+                for ($attempt = 0; is_array($next) && $attempt < 1000; $attempt++) {
+                    $record['user_code'] = $next['code'];
+                    $max_code_length = isset($specs['user_code']['max_length']) ? (int) $specs['user_code']['max_length'] : 0;
+                    $code_length = function_exists('mb_strlen') ? mb_strlen($record['user_code'], 'UTF-8') : strlen($record['user_code']);
+                    if ($max_code_length > 0 && $code_length > $max_code_length) {
+                        $errors[] = 'user_code_too_long';
+                        break;
+                    }
+                    $duplicate = $store->user_code_exists($record['user_code'], $record['tenant_id']);
+                    if ($duplicate === NULL) {
+                        $errors[] = 'sequence_generation';
+                        break;
+                    }
+                    if (!$duplicate) {
+                        $code_available = TRUE;
+                        break;
+                    }
+                    $next = $this->application_sequence_store->next_code_after($next);
+                }
+                if (!$errors && !$code_available) {
+                    $errors[] = 'sequence_exhausted';
+                }
+                if (!$errors) {
+                    $inserted = $store->insert($record);
+                    $advanced = $inserted && $this->application_sequence_store->advance_sequence(
+                        (int) $record['tenant_id'],
+                        'user_code',
+                        $next
+                    );
+                    if ($inserted && $advanced && $this->db->trans_status() !== FALSE) {
+                        $this->db->trans_commit();
+                    } else {
+                        $this->db->trans_rollback();
+                        $errors[] = 'save_error';
+                    }
+                } else {
+                    $this->db->trans_rollback();
+                }
+            } elseif (!$errors) {
+                if ($store->insert($record)) {
+                    $this->session->set_flashdata('admin_user_status', 'created');
+                    redirect('/admin/application/user', 'location', 303); return;
+                }
+                $errors[] = 'save_error';
+            }
+            if (!$errors && $automatic_user_code) {
                 $this->session->set_flashdata('admin_user_status', 'created');
                 redirect('/admin/application/user', 'location', 303); return;
             }
-            if (!$errors) { $errors[] = 'save_error'; }
         }
         $roles = $available && $record['tenant_id'] !== '' ? $store->role_options($record['tenant_id']) : array();
-        $this->render_user_form($store, $available, $write_available, 'new', NULL, $record, $errors, is_array($tenants) ? $tenants : array(), is_array($roles) ? $roles : array());
+        $this->render_user_form($store, $available, $write_available, 'new', NULL, $record, $errors, is_array($tenants) ? $tenants : array(), is_array($roles) ? $roles : array(), !empty($sequence_state['automatic']), isset($sequence_state['preview']) ? $sequence_state['preview'] : '');
     }
 
     public function user_change($user_id = '')
@@ -208,6 +275,40 @@ class Admin_user extends Admin
         $this->json_response(is_array($items) ? $items : array(), $items === FALSE ? 500 : 200);
     }
 
+    /** Check whether a selected tenant uses automatic user_code numbering. */
+    public function user_sequence_config($tenant_id = '')
+    {
+        if (!$this->has_admin_menu_code('app_user') || !$this->has_admin_access_code('app_user_add')) {
+            $this->json_response(array(), 403);
+            return;
+        }
+        if ($this->input->method(TRUE) !== 'GET') {
+            $this->json_response(array(), 405);
+            return;
+        }
+        $store = $this->user_store();
+        if (!$store || !$store->schema_available()) {
+            $this->json_response(array(), 503);
+            return;
+        }
+        if (!$this->has_admin_access_code('app_user_tenant')) {
+            $tenant_id = $store->tenant_id();
+        }
+        if (!$store->tenant_exists($tenant_id)) {
+            $this->json_response(array(), 400);
+            return;
+        }
+        $state = $this->user_code_sequence_state((int) $tenant_id);
+        if (empty($state['valid'])) {
+            $this->json_response(array(), 503);
+            return;
+        }
+        $this->json_response(array(
+            'automatic' => !empty($state['automatic']),
+            'preview' => isset($state['preview']) ? (string) $state['preview'] : '',
+        ), 200);
+    }
+
     public function user_delete()
     {
 
@@ -257,14 +358,57 @@ class Admin_user extends Admin
             && (bool) config_item('csrf_protection') && $store !== NULL && $store->schema_available();
     }
 
-    private function render_user_form($store, $available, $write_available, $mode, $user_id, $record, $errors, $tenants, $roles)
+    private function render_user_form($store, $available, $write_available, $mode, $user_id, $record, $errors, $tenants, $roles, $auto_user_code = FALSE, $user_code_preview = '')
     {
         $this->render_admin('admin/user/form', 'user_heading', $mode === 'new' ? '/admin/application/user/new' : '/admin/application/user/change/' . (int) $user_id, array(
             'user_mode' => $mode, 'user_id' => $user_id, 'user_record' => $record, 'user_errors' => $errors,
             'user_field_specs' => $available ? $store->field_specs() : array(), 'user_tenants' => $tenants,
             'user_roles' => $roles, 'user_backend_available' => $available, 'user_write_available' => $write_available,
+            'user_code_auto_numbered' => $mode === 'new' && (bool) $auto_user_code,
+            'user_code_preview' => (string) $user_code_preview,
             'user_has_chat_flag' => $available && $store->has_chat_flag(),
         ) + $this->user_access_flags());
+    }
+
+    /** Return tenant-scoped user_code generation state for initial render and tenant switching. */
+    private function user_code_sequence_state($tenant_id)
+    {
+        if (!is_numeric($tenant_id) || (int) $tenant_id < 1) {
+            return array('valid' => FALSE, 'automatic' => FALSE, 'preview' => '');
+        }
+        $store = $this->user_store();
+        if (!$store || !$store->tenant_exists($tenant_id)) {
+            return array('valid' => FALSE, 'automatic' => FALSE, 'preview' => '');
+        }
+        $this->load->library('application_sequence_store');
+        $sequence = $this->application_sequence_store->sequence_config((int) $tenant_id, 'user_code');
+        if ($sequence === FALSE) {
+            return array('valid' => FALSE, 'automatic' => FALSE, 'preview' => '');
+        }
+        if ($sequence === NULL || (string) $sequence['use_flag'] !== '1') {
+            return array('valid' => TRUE, 'automatic' => FALSE, 'preview' => '');
+        }
+        $preview = $this->application_sequence_store->preview_code((int) $tenant_id, 'user_code');
+        if (!is_array($preview)) {
+            return array('valid' => FALSE, 'automatic' => TRUE, 'preview' => '');
+        }
+        for ($attempt = 0; $attempt < 1000; $attempt++) {
+            $duplicate = $store->user_code_exists($preview['code'], (int) $tenant_id);
+            if ($duplicate === NULL) {
+                return array('valid' => FALSE, 'automatic' => TRUE, 'preview' => '');
+            }
+            if (!$duplicate) {
+                return array('valid' => TRUE, 'automatic' => TRUE, 'preview' => $preview['code']);
+            }
+            $preview = $this->application_sequence_store->next_code_after($preview);
+            if (!is_array($preview)) {
+                break;
+            }
+        }
+        if (!is_array($preview)) {
+            return array('valid' => FALSE, 'automatic' => TRUE, 'preview' => '');
+        }
+        return array('valid' => FALSE, 'automatic' => TRUE, 'preview' => '');
     }
 
     private function form_values($include_identity)
@@ -291,17 +435,20 @@ class Admin_user extends Admin
         return $values;
     }
 
-    private function validate_record(&$record, $store, $include_identity, $except_id = NULL)
+    private function validate_record(&$record, $store, $include_identity, $except_id = NULL, $auto_user_code = FALSE)
     {
         $errors = array(); $specs = $store->field_specs();
         if ($include_identity) {
             if (!$store->tenant_exists($record['tenant_id'])) { $errors[] = 'tenant_invalid'; }
             foreach (array('user_code', 'username') as $field) {
+                if ($field === 'user_code' && $auto_user_code) { continue; }
                 if ($record[$field] === '') { $errors[] = $field . '_required'; }
                 elseif (!empty($specs[$field]['max_length']) && strlen($record[$field]) > $specs[$field]['max_length']) { $errors[] = $field . '_too_long'; }
             }
-            $duplicate = $store->user_code_exists($record['user_code'], $record['tenant_id']);
-            if ($duplicate === TRUE) { $errors[] = 'user_code_duplicate'; } elseif ($duplicate === NULL) { $errors[] = 'save_error'; }
+            if (!$auto_user_code) {
+                $duplicate = $store->user_code_exists($record['user_code'], $record['tenant_id']);
+                if ($duplicate === TRUE) { $errors[] = 'user_code_duplicate'; } elseif ($duplicate === NULL) { $errors[] = 'save_error'; }
+            }
             $duplicate = $store->username_exists($record['username']);
             if ($duplicate === TRUE) { $errors[] = 'username_duplicate'; } elseif ($duplicate === NULL) { $errors[] = 'save_error'; }
             if (!is_string($record['password']) || $record['password'] === '') { $errors[] = 'password_required'; }

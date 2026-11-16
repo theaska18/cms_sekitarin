@@ -5,6 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Application_sequence_store
 {
     private $db;
+    private $format_generator;
     private $schema_checked = FALSE;
     private $schema_available = FALSE;
     private $sort_columns = array(
@@ -18,7 +19,10 @@ class Application_sequence_store
 
     public function __construct()
     {
-        $this->db = get_instance()->db;
+        $CI =& get_instance();
+        $this->db = $CI->db;
+        $CI->load->library('sequence_format');
+        $this->format_generator = $CI->sequence_format;
     }
 
     public function schema_available()
@@ -63,6 +67,107 @@ class Application_sequence_store
             ->order_by('option_code', 'ASC')
             ->get();
         return $query === FALSE ? FALSE : $query->result_array();
+    }
+
+    public function sequence_config($tenant_id, $sequence_code)
+    {
+        if (!$this->schema_available() || (int) $tenant_id < 1 || !is_string($sequence_code) || $sequence_code === '') {
+            return FALSE;
+        }
+        $previous_db_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $query = $this->db->where('tenant_id', (int) $tenant_id)
+            ->where('sequence_code', $sequence_code)
+            ->limit(1)
+            ->get('app_sequence');
+        $this->db->db_debug = $previous_db_debug;
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        return $query->num_rows() ? $query->row_array() : NULL;
+    }
+
+    /** Preview a code without consuming the counter. */
+    public function preview_code($tenant_id, $sequence_code)
+    {
+        $row = $this->sequence_config($tenant_id, $sequence_code);
+        if ($row === FALSE) {
+            return FALSE;
+        }
+        if ($row === NULL || (string) $row['use_flag'] !== '1') {
+            return NULL;
+        }
+        return $this->next_code_from_row($row);
+    }
+
+    /** Lock and calculate the next value; caller must commit/rollback its transaction. */
+    public function next_code_for_update($tenant_id, $sequence_code)
+    {
+        if (!$this->schema_available() || (int) $tenant_id < 1 || !is_string($sequence_code) || $sequence_code === '') {
+            return FALSE;
+        }
+        $previous_db_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $query = $this->db->query(
+            'SELECT sequence_code, repeat_type, format, `last_value`, last_repeat, use_flag '
+            . 'FROM app_sequence WHERE tenant_id = ? AND sequence_code = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant_id, $sequence_code)
+        );
+        $this->db->db_debug = $previous_db_debug;
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        if (!$query->num_rows() || (string) $query->row()->use_flag !== '1') {
+            return NULL;
+        }
+        $next = $this->next_code_from_row($query->row_array());
+        if (is_array($next)) {
+            $next['format'] = (string) $query->row()->format;
+        }
+        return $next;
+    }
+
+    /** Advance a locked in-memory candidate after its generated code is already used. */
+    public function next_code_after($current)
+    {
+        if (!is_array($current) || !isset($current['last_value'], $current['last_repeat'], $current['format'])) {
+            return FALSE;
+        }
+        $next_value = (int) $current['last_value'] + 1;
+        if ($next_value < 1 || $next_value > 2147483647) {
+            return FALSE;
+        }
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', (string) $current['last_repeat']);
+        if (!$date instanceof DateTimeImmutable) {
+            return FALSE;
+        }
+        $code = $this->format_generator->generate((string) $current['format'], $next_value, $date);
+        if (!is_string($code) || $code === '') {
+            return FALSE;
+        }
+        $current['code'] = $code;
+        $current['last_value'] = $next_value;
+        return $current;
+    }
+
+    public function advance_sequence($tenant_id, $sequence_code, $next)
+    {
+        if (!$this->schema_available() || (int) $tenant_id < 1 || !is_string($sequence_code)
+            || !is_array($next) || !isset($next['last_value'], $next['last_repeat'])) {
+            return FALSE;
+        }
+        $previous_db_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $result = $this->db->where('tenant_id', (int) $tenant_id)
+            ->where('sequence_code', $sequence_code)
+            ->update('app_sequence', array(
+                'last_value' => (int) $next['last_value'],
+                'last_repeat' => $next['last_repeat'],
+            ));
+        $error = $this->db->error();
+        $this->db->db_debug = $previous_db_debug;
+        return $result === TRUE && (!is_array($error) || empty($error['code']))
+            && $this->db->affected_rows() === 1;
     }
 
     public function count($tenant_id, $menu_codes, $search = '')
@@ -143,6 +248,9 @@ class Application_sequence_store
     {
         if (!$this->schema_available() || (int) $tenant_id < 1 || !is_string($sequence_code)
             || $sequence_code === '' || !is_array($values)) {
+            return FALSE;
+        }
+        if (!isset($values['format']) || !$this->format_generator->is_valid((string) $values['format'])) {
             return FALSE;
         }
         $previous_db_debug = $this->db->db_debug;
@@ -242,4 +350,53 @@ class Application_sequence_store
             ->or_like('a.use_flag', $search)
             ->group_end();
     }
+
+    private function next_code_from_row($row)
+    {
+        $repeat_type = isset($row['repeat_type']) ? (string) $row['repeat_type'] : '';
+        $format = isset($row['format']) ? (string) $row['format'] : '';
+        if ($format === '' || !in_array($repeat_type, array(
+            'repeat_type_no', 'repeat_type_daily', 'repeat_type_weekly',
+            'repeat_type_monthly', 'repeat_type_yearly',
+        ), TRUE)) {
+            return FALSE;
+        }
+
+        $today = new DateTimeImmutable('today');
+        $current_period = $this->repeat_period($repeat_type, $today);
+        $last_repeat = isset($row['last_repeat']) && is_string($row['last_repeat']) ? $row['last_repeat'] : '';
+        $last_period = '';
+        if ($last_repeat !== '' && $last_repeat !== '0000-00-00') {
+            $last_date = DateTimeImmutable::createFromFormat('!Y-m-d', $last_repeat);
+            if ($last_date instanceof DateTimeImmutable) {
+                $last_period = $this->repeat_period($repeat_type, $last_date);
+            }
+        }
+        $last_value = max(0, (int) $row['last_value']);
+        $next_value = $repeat_type === 'repeat_type_no' || $last_period === $current_period
+            ? $last_value + 1
+            : 1;
+        if ($next_value < 1 || $next_value > 2147483647) {
+            return FALSE;
+        }
+        $code = $this->format_generator->generate($format, $next_value, $today);
+        if (!is_string($code) || $code === '') {
+            return FALSE;
+        }
+        return array(
+            'code' => $code,
+            'last_value' => $next_value,
+            'last_repeat' => $today->format('Y-m-d'),
+        );
+    }
+
+    private function repeat_period($repeat_type, $date)
+    {
+        if ($repeat_type === 'repeat_type_daily') return $date->format('Y-m-d');
+        if ($repeat_type === 'repeat_type_weekly') return $date->format('o-W');
+        if ($repeat_type === 'repeat_type_monthly') return $date->format('Y-m');
+        if ($repeat_type === 'repeat_type_yearly') return $date->format('Y');
+        return '';
+    }
+
 }

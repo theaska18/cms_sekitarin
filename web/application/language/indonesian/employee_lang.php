@@ -69,3 +69,6 @@ $lang['employee_birth_place_too_long'] = 'Tempat lahir melebihi batas panjang.';
 $lang['employee_image_invalid'] = 'Foto tidak valid. Gunakan format yang didukung dan ukuran maksimum 2 MB.';
 $lang['employee_save_error'] = 'Data karyawan tidak dapat disimpan. Periksa kembali isian dan izin akses.';
 $lang['employee_access_denied'] = 'Anda tidak memiliki izin untuk mengakses fitur ini.';
+$lang['employee_code_auto_help'] = 'Kode berikutnya dibuat otomatis dari format sequence tenant saat data disimpan.';
+$lang['employee_sequence_generation'] = 'Kode employee otomatis tidak dapat dibuat. Periksa konfigurasi sequence employee_code.';
+$lang['employee_sequence_exhausted'] = 'Tidak ditemukan kode employee yang belum digunakan setelah 1000 percobaan. Periksa nilai terakhir sequence employee_code.';

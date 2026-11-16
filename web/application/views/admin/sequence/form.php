@@ -115,13 +115,13 @@ foreach ($sequence_errors as $error) {
                 <div id="sequence-format-help" class="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
                     <p><?= html_escape($labels['sequence_format_help']) ?></p>
                     <ul class="mt-2 grid gap-x-5 gap-y-1 sm:grid-cols-2">
-                        <li class="sm:col-span-2"><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">N</code> — <?= html_escape($labels['sequence_format_token_n']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">d</code> — <?= html_escape($labels['sequence_format_token_d']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">D</code> — <?= html_escape($labels['sequence_format_token_D']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">m</code> — <?= html_escape($labels['sequence_format_token_m']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">M</code> — <?= html_escape($labels['sequence_format_token_M']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">y</code> — <?= html_escape($labels['sequence_format_token_y']) ?></li>
-                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">Y</code> — <?= html_escape($labels['sequence_format_token_Y']) ?></li>
+                        <li class="sm:col-span-2"><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{NNNNN}</code> — <?= html_escape($labels['sequence_format_token_n']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{d}</code> — <?= html_escape($labels['sequence_format_token_d']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{D}</code> — <?= html_escape($labels['sequence_format_token_D']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{m}</code> — <?= html_escape($labels['sequence_format_token_m']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{M}</code> — <?= html_escape($labels['sequence_format_token_M']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{y}</code> — <?= html_escape($labels['sequence_format_token_y']) ?></li>
+                        <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{Y}</code> — <?= html_escape($labels['sequence_format_token_Y']) ?></li>
                     </ul>
                 </div>
             </div>

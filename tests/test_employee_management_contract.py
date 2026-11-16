@@ -25,6 +25,27 @@ class EmployeeManagementContractTests(unittest.TestCase):
             with self.subTest(field=field):
                 self.assertRegex(FORM, rf'name=[\"\']{field}[\"\']')
 
+    def test_employee_code_uses_tenant_employee_code_sequence_when_automatic(self):
+        sequence_store = (APP / "libraries" / "Application_sequence_store.php").read_text()
+        self.assertIn("sequence_config($tenant_id, 'employee_code')", CONTROLLER)
+        self.assertIn("next_code_for_update($tenant_id, 'employee_code')", CONTROLLER)
+        self.assertIn("next_code_after($next)", CONTROLLER)
+        self.assertIn("$attempt < 1000", CONTROLLER)
+        self.assertIn("advance_sequence(", CONTROLLER)
+        self.assertIn("trans_begin()", CONTROLLER)
+        self.assertIn("trans_rollback()", CONTROLLER)
+        self.assertIn("FOR UPDATE", sequence_store)
+        self.assertIn("format, `last_value`, last_repeat", sequence_store)
+        self.assertIn("format_generator->generate", sequence_store)
+        formatter = (APP / "libraries" / "Sequence_format.php").read_text()
+        self.assertIn("preg_match('/\\AN+\\z/'", formatter)
+        self.assertIn("return FALSE", formatter)
+        self.assertIn("repeat_type_daily", sequence_store)
+        self.assertIn("repeat_type_weekly", sequence_store)
+        self.assertIn("employee_auto_numbered", FORM)
+        self.assertIn("'disabled aria-disabled=\"true\"'", FORM)
+        self.assertIn("employee_code_auto_help", FORM)
+
     def test_store_reads_gender_options_and_persists_schema_fields(self):
         self.assertIn("function gender_options", STORE)
         for field in ("identity_id", "email_address", "gender", "birth_date", "birth_place", "image", "create_on", "update_on"):

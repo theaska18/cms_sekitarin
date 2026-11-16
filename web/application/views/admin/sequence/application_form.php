@@ -66,22 +66,21 @@ foreach ($sequence_errors as $error) {
                 <input id="application-sequence-format" name="format" type="text" maxlength="45" required value="<?= html_escape($sequence_record['format']) ?>" <?= $sequence_write_available ? '' : 'disabled' ?> class="min-h-12 w-full max-w-xl rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 sm:text-sm">
                 <p class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_format_help']) ?></p>
                 <ul class="mt-2 grid gap-x-5 gap-y-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-600 sm:grid-cols-2">
-                    <li class="sm:col-span-2"><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">N</code> — <?= html_escape($labels['sequence_format_token_n']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">d</code> — <?= html_escape($labels['sequence_format_token_d']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">D</code> — <?= html_escape($labels['sequence_format_token_D']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">m</code> — <?= html_escape($labels['sequence_format_token_m']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">M</code> — <?= html_escape($labels['sequence_format_token_M']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">y</code> — <?= html_escape($labels['sequence_format_token_y']) ?></li>
-                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">Y</code> — <?= html_escape($labels['sequence_format_token_Y']) ?></li>
+                    <li class="sm:col-span-2"><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{NNNNN}</code> — <?= html_escape($labels['sequence_format_token_n']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{d}</code> — <?= html_escape($labels['sequence_format_token_d']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{D}</code> — <?= html_escape($labels['sequence_format_token_D']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{m}</code> — <?= html_escape($labels['sequence_format_token_m']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{M}</code> — <?= html_escape($labels['sequence_format_token_M']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{y}</code> — <?= html_escape($labels['sequence_format_token_y']) ?></li>
+                    <li><code class="rounded bg-white px-1.5 py-0.5 font-semibold text-slate-800">{Y}</code> — <?= html_escape($labels['sequence_format_token_Y']) ?></li>
                 </ul>
             </div>
             <div>
                 <span class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['sequence_use_flag']) ?></span>
                 <label class="flex min-h-11 items-center gap-3 text-sm text-slate-700">
-                    <input type="checkbox" name="use_flag" value="1" <?= (string) $sequence_record['use_flag'] === '1' ? 'checked' : '' ?> <?= $sequence_write_available && $sequence_auto_number_allowed ? '' : 'disabled' ?> class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60">
+                    <input type="checkbox" name="use_flag" value="1" <?= (string) $sequence_record['use_flag'] === '1' ? 'checked' : '' ?> <?= $sequence_write_available ? '' : 'disabled' ?> class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-60">
                     <span><?= html_escape($labels['sequence_use_flag_help']) ?></span>
                 </label>
-                <?php if (!$sequence_auto_number_allowed): ?><p class="mt-1.5 text-sm text-slate-500"><?= html_escape($labels['sequence_auto_number_permission_required']) ?></p><?php endif; ?>
             </div>
         </div>
         <div class="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:justify-between">

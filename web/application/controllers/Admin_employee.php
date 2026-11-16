@@ -129,24 +129,42 @@ class Admin_employee extends Admin
         $store = $this->employee_store();
         $tenant_id = (int) $this->current_user['tenant_id'];
         $write_available = $this->employee_write_available($store);
+        $employee_auto_numbered = FALSE;
+        $application_sequence_store = NULL;
         $record = array(
             'employee_code' => '', 'identity_id' => '', 'employee_name' => '',
             'email_address' => '', 'gender' => '', 'birth_date' => '', 'birth_place' => '', 'image' => NULL,
         );
+        $errors = array();
+        if ($employee_id === NULL && $store !== NULL && $store->schema_available()) {
+            $this->load->library('application_sequence_store');
+            $application_sequence_store = $this->application_sequence_store;
+            $employee_sequence = $application_sequence_store->sequence_config($tenant_id, 'employee_code');
+            if (is_array($employee_sequence) && (string) $employee_sequence['use_flag'] === '1') {
+                $employee_auto_numbered = TRUE;
+                $preview = $application_sequence_store->preview_code($tenant_id, 'employee_code');
+                if (is_array($preview)) {
+                    $record['employee_code'] = $preview['code'];
+                } else {
+                    $errors[] = 'sequence_generation';
+                }
+            }
+        }
         if ($employee_id !== NULL) {
             $existing = $store && $store->schema_available() ? $store->find($employee_id, $tenant_id) : FALSE;
             if (!$existing) { show_404(); return; }
             foreach ($record as $field => $value) { $record[$field] = isset($existing[$field]) ? (string) $existing[$field] : $value; }
         }
-        $errors = array();
         if ($this->input->method(TRUE) === 'POST') {
             if (!$write_available) { show_error('Employee writes are unavailable.', 503); return; }
             foreach (array_keys($record) as $field) {
                 if ($field === 'image') { continue; }
+                if ($field === 'employee_code' && $employee_id === NULL && $employee_auto_numbered) { continue; }
                 $record[$field] = trim((string) $this->input->post($field, TRUE));
             }
             $specs = $store->field_specs();
             foreach (array('employee_code', 'identity_id', 'employee_name', 'email_address', 'gender', 'birth_date', 'birth_place') as $field) {
+                if ($field === 'employee_code' && $employee_id === NULL && $employee_auto_numbered) { continue; }
                 if ($record[$field] === '') { $errors[] = $field . '_required'; }
                 $max = isset($specs[$field]['max_length']) ? (int) $specs[$field]['max_length'] : 0;
                 $length = function_exists('mb_strlen') ? mb_strlen($record[$field], 'UTF-8') : strlen($record[$field]);
@@ -161,7 +179,10 @@ class Admin_employee extends Admin
                 if (isset($option['option_code']) && hash_equals((string) $option['option_code'], $record['gender'])) { $valid_gender = TRUE; break; }
             }
             if (!$valid_gender) { $errors[] = 'gender_invalid'; }
-            if ($record['employee_code'] !== '' && $store->code_exists($record['employee_code'], $tenant_id, $employee_id ?: 0)) { $errors[] = 'employee_code_duplicate'; }
+            if (!($employee_id === NULL && $employee_auto_numbered)
+                && $record['employee_code'] !== '' && $store->code_exists($record['employee_code'], $tenant_id, $employee_id ?: 0)) {
+                $errors[] = 'employee_code_duplicate';
+            }
 
             $new_image = NULL;
             $upload = isset($_FILES['image']) ? $_FILES['image'] : NULL;
@@ -199,7 +220,61 @@ class Admin_employee extends Admin
             }
 
             if (!$errors) {
-                $ok = $employee_id === NULL ? $store->insert($record, $tenant_id) : $store->update($employee_id, $tenant_id, $record);
+                $ok = FALSE;
+                if ($employee_id === NULL && $employee_auto_numbered && $application_sequence_store !== NULL) {
+                    $previous_db_debug = $this->db->db_debug;
+                    $this->db->db_debug = FALSE;
+                    $this->db->trans_begin();
+                    $next = $application_sequence_store->next_code_for_update($tenant_id, 'employee_code');
+                    if (!is_array($next)) {
+                        $this->db->trans_rollback();
+                        $errors[] = 'sequence_generation';
+                    } else {
+                        $max_code_length = isset($specs['employee_code']['max_length']) ? (int) $specs['employee_code']['max_length'] : 0;
+                        $available_code = FALSE;
+                        for ($attempt = 0; is_array($next) && $attempt < 1000; $attempt++) {
+                            $record['employee_code'] = $next['code'];
+                            $code_length = function_exists('mb_strlen')
+                                ? mb_strlen($record['employee_code'], 'UTF-8')
+                                : strlen($record['employee_code']);
+                            if ($max_code_length > 0 && $code_length > $max_code_length) {
+                                $errors[] = 'employee_code_too_long';
+                                break;
+                            }
+                            if (!$store->code_exists($record['employee_code'], $tenant_id)) {
+                                $available_code = TRUE;
+                                break;
+                            }
+                            $next = $application_sequence_store->next_code_after($next);
+                        }
+                        if (!$errors && !$available_code) {
+                            $errors[] = 'sequence_exhausted';
+                        }
+                        if ($errors) {
+                            $this->db->trans_rollback();
+                        } else {
+                            $inserted = $store->insert($record, $tenant_id);
+                            $advanced = $inserted && $application_sequence_store->advance_sequence(
+                                $tenant_id,
+                                'employee_code',
+                                $next
+                            );
+                            if ($inserted && $advanced && $this->db->trans_status() !== FALSE) {
+                                $this->db->trans_commit();
+                                $ok = TRUE;
+                            } else {
+                                $this->db->trans_rollback();
+                                $errors[] = 'save_error';
+                            }
+                        }
+                    }
+                    $this->db->db_debug = $previous_db_debug;
+                } else {
+                    $ok = $employee_id === NULL
+                        ? $store->insert($record, $tenant_id)
+                        : $store->update($employee_id, $tenant_id, $record);
+                    if (!$ok) { $errors[] = 'save_error'; }
+                }
                 if ($ok) {
                     if ($employee_id !== NULL && isset($existing['image']) && $existing['image'] !== $record['image']) { $this->employee_remove_image($existing['image']); }
                     $this->session->set_flashdata('admin_employee_status', $employee_id === NULL ? 'created' : 'saved');
@@ -207,11 +282,11 @@ class Admin_employee extends Admin
                     return;
                 }
                 if ($new_image !== NULL) { $this->employee_remove_image($new_image); }
-                $errors[] = 'save_error';
             }
         }
         $this->render_admin('admin/employee/form', 'employee_heading', $employee_id === NULL ? '/admin/hr/employee/new' : '/admin/hr/employee/change/' . $employee_id, array(
             'employee_mode' => $employee_id === NULL ? 'new' : 'edit',
+            'employee_auto_numbered' => $employee_id === NULL && $employee_auto_numbered,
             'employee_id' => $employee_id,
             'employee_record' => $record,
             'employee_errors' => $errors,

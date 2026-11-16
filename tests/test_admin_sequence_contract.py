@@ -175,6 +175,7 @@ class AdminSequenceContractTests(unittest.TestCase):
             "form_new", "form_edit",
             "format_help", "format_token_n", "format_token_d", "format_token_D",
             "format_token_m", "format_token_M", "format_token_y", "format_token_Y",
+            "format_invalid",
             "use_flag", "use_flag_enabled", "use_flag_disabled", "use_flag_help",
             "auto_number_permission_required",
             "set_to_default", "confirm_set_to_default", "default_saved", "default_error",
@@ -264,9 +265,10 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("appendMenuToken", view)
         self.assertIn("input[name=\"menu_codes[]\"]", view)
         self.assertIn('aria-describedby="sequence-format-help"', view)
-        for token in ('>N</code>', '>d</code>', '>D</code>', '>m</code>', '>M</code>', '>y</code>', '>Y</code>'):
+        for token in ('>{NNNNN}</code>', '>{d}</code>', '>{D}</code>', '>{m}</code>', '>{M}</code>', '>{y}</code>', '>{Y}</code>'):
             self.assertIn(token, view)
-        self.assertIn("NNNNN", (APP / "language" / "indonesian" / "sequence_lang.php").read_text())
+        self.assertIn("EMP_{NNNNNN}", (APP / "language" / "indonesian" / "sequence_lang.php").read_text())
+        self.assertIn("class Sequence_format", (APP / "libraries" / "Sequence_format.php").read_text())
 
     def test_sequence_menu_lookup_and_relation_persistence_are_scoped_and_atomic(self):
         controller = (APP / "controllers" / "Admin_sequence.php").read_text()
@@ -330,6 +332,7 @@ class AdminSequenceContractTests(unittest.TestCase):
             self.assertIn(f'name="{field}"', form)
         for forbidden in ('name="sequence_code"', 'name="sequence_name"', 'name="tenant_id"', 'name="sequence_id"'):
             self.assertNotIn(forbidden, form)
+        self.assertNotIn("sequence_auto_number_allowed", form)
 
     def test_list_exposes_create_update_and_post_only_remove_actions(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()

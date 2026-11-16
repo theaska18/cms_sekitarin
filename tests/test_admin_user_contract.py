@@ -43,7 +43,7 @@ class AdminUserContractTests(unittest.TestCase):
         store = (APP / "libraries/User_store.php").read_text()
         self.assertIn("'user_code'", controller)
         self.assertIn("'employee_flag'", controller)
-        self.assertIn("validate_record($record, $store, TRUE)", controller)
+        self.assertIn("validate_record($record, $store, TRUE, NULL, $automatic_user_code)", controller)
         self.assertIn("validate_record($record, $store, FALSE", controller)
         update_start = store.index("public function update(")
         update_end = store.index("public function change_password(", update_start)
@@ -203,7 +203,7 @@ class AdminUserContractTests(unittest.TestCase):
         role_form = (APP / "views/admin/role/form.php").read_text()
         user_form = (APP / "views/admin/user/form.php").read_text()
         self.assertIn('class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 lg:px-8"', role_form)
-        self.assertIn('class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8"', user_form)
+        self.assertIn('class="-mx-4 w-[calc(100%+2rem)] px-4 pt-6 pb-0 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:pt-8 sm:pb-0 lg:px-8"', user_form)
         view = (APP / "views/admin/user/index.php").read_text()
         self.assertIn('data-user-menu-toggle', view)
         self.assertIn('data-user-filter-header', view)
@@ -213,7 +213,7 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertLess(view.index('data-user-live-filter'), view.index('data-user-filter-toggle'))
         self.assertIn('id="user-column-filter-panel"', view)
         self.assertIn('setTimeout(function(){if(typeof searchForm.requestSubmit', view)
-        self.assertIn("'filter_columns', 'apply_filter'", (APP / "controllers/Admin.php").read_text())
+        self.assertIn("$this->lang->load($view_language_pack, $locale);", (APP / "controllers/Admin.php").read_text())
 
     def test_user_action_menu_is_fixed_and_positioned_outside_table_scroller(self):
         view = (APP / "views/admin/user/index.php").read_text()
@@ -232,7 +232,7 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn('data-user-pagination', view)
         self.assertIn('foreach ($user_per_page_choices as $option)', view)
         admin = (APP / "controllers/Admin.php").read_text()
-        self.assertIn("'pagination', 'pagination_summary'", admin)
+        self.assertIn("$this->lang->load($view_language_pack, $locale);", admin)
         self.assertIn('aria-label="<?= html_escape($labels[\'user_pagination\']) ?>"', view)
         self.assertIn('aria-live="polite"', view)
         self.assertIn("sprintf($labels['user_pagination_summary']", view)
@@ -266,11 +266,10 @@ class AdminUserContractTests(unittest.TestCase):
 
     def test_user_access_denied_label_is_mapped_for_the_view(self):
         admin = (APP / "controllers/Admin.php").read_text()
-        user_keys = admin.split("$user_keys = array(", 1)[1].split(");", 1)[0]
         view = (APP / "views/admin/user/access_denied.php").read_text()
         index_view = (APP / "views/admin/user/index.php").read_text()
 
-        self.assertIn("'no_access'", user_keys)
+        self.assertIn("$this->lang->load($view_language_pack, $locale);", admin)
         self.assertIn("$labels['user_no_access']", view)
         self.assertIn("$labels['user_no_access']", index_view)
         for locale in ("english", "indonesian"):
@@ -384,6 +383,25 @@ class AdminUserContractTests(unittest.TestCase):
         self.assertIn("public function delete($user_id, $tenant_id)", store)
         self.assertIn("public function user_delete()", controller)
         self.assertIn("$this->session->set_flashdata('admin_user_status'", controller)
+
+    def test_new_user_code_uses_tenant_user_sequence_when_auto_numbering_is_enabled(self):
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        form = (APP / "views/admin/user/form.php").read_text()
+        sequence_store = (APP / "libraries/Application_sequence_store.php").read_text()
+        self.assertIn("sequence_config((int) $tenant_id, 'user_code')", controller)
+        self.assertIn("next_code_for_update((int) $record['tenant_id'], 'user_code')", controller)
+        self.assertIn("advance_sequence(", controller)
+        self.assertIn("user_code_exists($record['user_code'], $record['tenant_id'])", controller)
+        self.assertIn("$attempt < 1000", controller)
+        self.assertIn("user_sequence_config", controller)
+        self.assertIn("user_code_auto_numbered", form)
+        self.assertIn("disabled aria-disabled=\"true\"", form)
+        self.assertIn("ON DUPLICATE KEY UPDATE", sequence_store)
+        for locale in ("english", "indonesian"):
+            language = (APP / f"language/{locale}/user_lang.php").read_text()
+            self.assertIn("$lang['user_code_auto_help']", language)
+            self.assertIn("$lang['user_sequence_generation']", language)
+            self.assertIn("$lang['user_sequence_exhausted']", language)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ $is_new = $user_mode === 'new';
 $heading = $labels[$is_new ? 'user_form_new' : 'user_form_edit'];
 $record = is_array($user_record) ? $user_record : array();
 $errors = is_array($user_errors) ? $user_errors : array();
-$error_labels = array('tenant_invalid', 'user_code_required', 'user_code_too_long', 'user_code_duplicate', 'username_required', 'username_too_long', 'username_duplicate', 'full_name_required', 'full_name_too_long', 'password_required', 'password_too_long', 'role_invalid', 'employee_invalid', 'api_secret_required', 'api_secret_too_long', 'save_error');
+$error_labels = array('tenant_invalid', 'user_code_required', 'user_code_too_long', 'user_code_duplicate', 'sequence_generation', 'sequence_exhausted', 'username_required', 'username_too_long', 'username_duplicate', 'full_name_required', 'full_name_too_long', 'password_required', 'password_too_long', 'role_invalid', 'employee_invalid', 'api_secret_required', 'api_secret_too_long', 'save_error');
 ?>
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 pt-6 pb-0 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:pt-8 sm:pb-0 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500"><ol class="flex items-center gap-2"><li><?= html_escape($labels['application']) ?></li><li aria-hidden="true">/</li><li><a class="hover:text-slate-900" href="/admin/application/user"><?= html_escape($labels['user_heading']) ?></a></li><li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800"><?= html_escape($heading) ?></li></ol></nav>
@@ -16,7 +16,11 @@ $error_labels = array('tenant_invalid', 'user_code_required', 'user_code_too_lon
         <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
         <?php if (!$is_new): ?><input type="hidden" name="tenant_id" value="<?= (int) $record['tenant_id'] ?>"><?php endif; ?>
         <?php if ($is_new): ?><?php if (!empty($user_can_tenant)): ?><div><label for="tenant_id" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['user_tenant']) ?> <span class="text-rose-600" aria-hidden="true">*</span></label><?php if ($user_tenants): ?><select id="tenant_id" name="tenant_id" required class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3 text-base sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"><?php foreach ($user_tenants as $tenant): ?><option value="<?= (int) $tenant['tenant_id'] ?>"<?= (string) $record['tenant_id'] === (string) $tenant['tenant_id'] ? ' selected' : '' ?>><?= html_escape($tenant['tenant_code'] . ' — ' . $tenant['tenant_name']) ?></option><?php endforeach; ?></select><?php else: ?><p role="alert" class="text-sm text-rose-700"><?= html_escape($labels['user_unavailable']) ?></p><?php endif; ?></div><?php else: ?><input type="hidden" name="tenant_id" value="<?= (int) $record['tenant_id'] ?>"><?php endif; ?>
-        <div><label for="user_code" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['user_code']) ?> <span class="text-rose-600" aria-hidden="true">*</span></label><input id="user_code" name="user_code" type="text" required <?php if (!empty($user_field_specs['user_code']['max_length'])): ?>maxlength="<?= (int) $user_field_specs['user_code']['max_length'] ?>"<?php endif; ?> value="<?= html_escape($record['user_code']) ?>" class="min-h-12 w-full rounded-lg border border-slate-300 px-3 text-base sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></div>
+        <div>
+            <label for="user_code" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['user_code']) ?><?php if (empty($user_code_auto_numbered)): ?> <span class="text-rose-600" aria-hidden="true">*</span><?php endif; ?></label>
+            <input id="user_code" name="user_code" type="text"<?= empty($user_code_auto_numbered) ? ' required' : ' disabled aria-disabled="true"' ?><?php if (!empty($user_field_specs['user_code']['max_length'])): ?> maxlength="<?= (int) $user_field_specs['user_code']['max_length'] ?>"<?php endif; ?> value="<?= html_escape(!empty($user_code_auto_numbered) ? $user_code_preview : $record['user_code']) ?>" aria-describedby="user-code-sequence-help" class="min-h-12 w-full rounded-lg border border-slate-300 px-3 text-base sm:text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 disabled:opacity-70">
+            <p id="user-code-sequence-help" class="mt-1.5 text-sm text-slate-500" <?= empty($user_code_auto_numbered) ? 'hidden' : '' ?>><?= html_escape(!empty($user_code_auto_numbered) ? $labels['user_code_auto_help'] : $labels['user_code_manual_help']) ?></p>
+        </div>
         <?php else: ?><div><label for="user_code" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['user_code']) ?></label><input id="user_code" type="text" readonly value="<?= html_escape($record['user_code']) ?>" class="min-h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-base sm:text-sm text-slate-600"><p class="mt-1 text-xs text-slate-500"><?= html_escape($labels['user_tenant']) ?>: <?= html_escape((string) $record['tenant_id']) ?></p></div><?php endif; ?>
         <div><label for="username" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($labels['user_name']) ?> <span class="text-rose-600" aria-hidden="true">*</span></label><input id="username" name="username" type="text" required <?php if (!empty($user_field_specs['username']['max_length'])): ?>maxlength="<?= (int) $user_field_specs['username']['max_length'] ?>"<?php endif; ?> value="<?= html_escape($record['username']) ?>" autocapitalize="none" spellcheck="false" class="min-h-12 w-full rounded-lg border border-slate-300 px-3 text-base sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"></div>
         <?php if (!empty($user_has_chat_flag)): ?><div class="rounded-xl border border-slate-200 p-4"><label for="chat_flag" class="flex min-h-6 items-center gap-3 text-sm font-medium text-slate-800"><input id="chat_flag" name="chat_flag" type="checkbox" value="1"<?= !empty($record['chat_flag']) ? ' checked' : '' ?> class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"><span><?= html_escape($labels['user_chat_flag']) ?></span></label></div><?php endif; ?>
@@ -31,3 +35,89 @@ $error_labels = array('tenant_invalid', 'user_code_required', 'user_code_too_lon
 <script>(function(){var form=document.querySelector('main form[method="post"]');if(!form)return;var fields=Array.prototype.slice.call(form.querySelectorAll('input:not([type="hidden"]),select,textarea'));function reflectState(field){var muted=field.disabled||field.readOnly;field.classList.toggle('bg-slate-50',muted);field.classList.toggle('text-slate-500',muted);field.classList.toggle('opacity-70',muted);}fields.forEach(function(field){reflectState(field);if(field.id==='user_code')field.addEventListener('blur',function(){field.value=field.value.toLowerCase().replace(/\s+/g,'');sizeFields();});if(field.id==='username')field.addEventListener('input',function(){var start=field.selectionStart,clean=field.value.toLowerCase().replace(/\s+/g,'');if(field.value!==clean){field.value=clean;field.setSelectionRange(Math.max(0,start-(field.value.length-clean.length)),Math.max(0,start-(field.value.length-clean.length)));}sizeFields();});if(field.id==='full_name')field.addEventListener('blur',function(){field.value=field.value.replace(/\S+/g,function(word){var chars=Array.from(word);chars[0]=chars[0].toLocaleUpperCase();return chars.join('');});sizeFields();});});if(window.MutationObserver){var observer=new MutationObserver(function(records){records.forEach(function(record){reflectState(record.target);});});fields.forEach(function(field){observer.observe(field,{attributes:true,attributeFilter:['disabled','readonly']});});}function sizeFields(){var mobile=window.matchMedia('(max-width: 639px)').matches;fields.forEach(function(field){if(field.tagName!=='INPUT'||field.type!=='text'||field.readOnly||field.disabled)return;if(mobile){field.style.width='100%';return;}var canvas=document.createElement('canvas'),ctx=canvas.getContext('2d'),style=window.getComputedStyle(field);ctx.font=style.font;var text=field.value||field.placeholder||'';var px=Math.min(672,Math.max(192,ctx.measureText(text).width+32));field.style.width=px+'px';field.style.maxWidth='100%';});}fields.forEach(function(field){field.addEventListener('input',sizeFields);});window.addEventListener('resize',sizeFields);sizeFields();var field=fields.find(function(field){return field.tagName==='INPUT'&&!field.disabled&&!field.readOnly&&field.type!=='hidden'&&field.getClientRects().length;});if(field){field.focus({preventScroll:true});}})();</script>
 <script>(function(){var flag=document.getElementById('access_api_flag'),secret=document.getElementById('api_secret'),generate=document.getElementById('generate-api-secret'),fields=document.getElementById('api-secret-fields');if(!flag||!secret||!generate)return;function toggle(){var on=flag.checked;secret.disabled=!on;secret.required=on;generate.disabled=!on;fields.classList.toggle('opacity-50',!on);if(!on)secret.value='';}flag.addEventListener('change',toggle);generate.addEventListener('click',function(){if(!flag.checked)return;var bytes=new Uint8Array(32);window.crypto.getRandomValues(bytes);secret.value=Array.prototype.map.call(bytes,function(byte){return byte.toString(16).padStart(2,'0');}).join('');secret.dispatchEvent(new Event('input',{bubbles:true}));});toggle();})();</script>
 <script>(function(){var tenant=document.getElementById('tenant_id'),flag=document.getElementById('employee_flag'),fields=document.getElementById('employee-fields'),search=document.getElementById('employee-search'),hidden=document.getElementById('employee_id'),list=document.getElementById('employee-suggestions'),roles=document.getElementById('role_id'),fullName=document.getElementById('full_name');if(!flag||!fields||!search||!hidden||!list||!fullName)return;function toggle(){var enabled=flag.checked;search.disabled=!enabled;search.required=enabled;fullName.disabled=enabled;fullName.required=!enabled;if(enabled){fullName.value=hidden.value?search.dataset.employeeName||'':'';}fields.classList.toggle('opacity-50',!enabled);if(!enabled){hidden.value='';search.dataset.employeeName='';search.value='';list.hidden=true;}}flag.addEventListener('change',toggle);toggle();if(tenant){tenant.addEventListener('change',function(){roles.innerHTML='<option value=""><?= html_escape($labels['user_role_choose']) ?></option>';hidden.value='';search.dataset.employeeName='';fullName.value='';search.value='';if(!tenant.value)return;fetch('/admin/application/user/roles/'+encodeURIComponent(tenant.value),{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(rows){rows.forEach(function(row){var option=document.createElement('option');option.value=row.role_id;option.textContent=row.role_name;roles.appendChild(option);});}).catch(function(){});});}var timer;search.addEventListener('input',function(){hidden.value='';search.dataset.employeeName='';fullName.value='';clearTimeout(timer);var term=search.value.trim();if(term.length<2||!flag.checked){list.hidden=true;return;}timer=setTimeout(function(){var qs=new URLSearchParams({term:term,tenant_id:tenant?tenant.value:'<?= (int) (isset($record['tenant_id']) ? $record['tenant_id'] : 0) ?>',user_id:'<?= (int) (isset($record['user_id']) ? $record['user_id'] : 0) ?>'});fetch('/admin/application/user/employees?'+qs.toString(),{headers:{'Accept':'application/json'}}).then(function(r){return r.json();}).then(function(rows){list.replaceChildren();rows.forEach(function(row){var li=document.createElement('li');li.setAttribute('role','option');li.setAttribute('aria-selected','false');var button=document.createElement('button');button.type='button';button.className='block min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-slate-50 focus:bg-slate-50 focus:outline-none';button.textContent=row.employee_code+' — '+row.employee_name;button.addEventListener('click',function(){hidden.value=row.employee_id;search.value=row.employee_name;search.dataset.employeeName=row.employee_name;fullName.value=row.employee_name;list.hidden=true;search.setAttribute('aria-expanded','false');});li.appendChild(button);list.appendChild(li);});list.hidden=rows.length===0;search.setAttribute('aria-expanded',rows.length?'true':'false');}).catch(function(){list.hidden=true;});},250);});document.addEventListener('click',function(e){if(!list.contains(e.target)&&e.target!==search){list.hidden=true;search.setAttribute('aria-expanded','false');}});})();</script>
+
+<script>
+(function () {
+    var field = document.getElementById('user_code');
+    var tenant = document.getElementById('tenant_id');
+    var help = document.getElementById('user-code-sequence-help');
+    if (!field || !tenant || !help || <?= $is_new ? 'false' : 'true' ?>) return;
+    var messages = {
+        automatic: <?= json_encode($labels['user_code_auto_help'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        manual: <?= json_encode($labels['user_code_manual_help'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        unavailable: <?= json_encode($labels['user_sequence_generation'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+    };
+    function applyState(state) {
+        if (!state || typeof state.automatic !== 'boolean') {
+            field.value = '';
+            field.disabled = true;
+            field.required = false;
+            help.hidden = false;
+            help.textContent = messages.unavailable;
+            return;
+        }
+        field.disabled = state.automatic;
+        field.required = !state.automatic;
+        field.value = state.automatic ? String(state.preview || '') : '';
+        help.hidden = false;
+        help.textContent = state.automatic ? messages.automatic : messages.manual;
+    }
+    tenant.addEventListener('change', function () {
+        if (!tenant.value) {
+            applyState({automatic: false, preview: ''});
+            return;
+        }
+        field.disabled = true;
+        field.required = false;
+        fetch('/admin/application/user/sequence_config/' + encodeURIComponent(tenant.value), {
+            headers: {'Accept': 'application/json'}
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Sequence settings unavailable');
+            return response.json();
+        }).then(applyState).catch(function () { applyState(null); });
+    });
+}());
+</script>
+<script>
+(function () {
+    var tenant = document.getElementById('tenant_id');
+    var code = document.getElementById('user_code');
+    var help = document.getElementById('user-code-sequence-help');
+    if (!tenant || tenant.tagName !== 'SELECT' || !code || !help || <?= $is_new ? 'false' : 'true' ?>) return;
+    var messages = {
+        automatic: <?= json_encode($labels['user_code_auto_help'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        manual: <?= json_encode($labels['user_code_manual_help'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        unavailable: <?= json_encode($labels['user_sequence_generation'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+    };
+    function applyState(state) {
+        if (!state || typeof state.automatic !== 'boolean') {
+            code.value = '';
+            code.disabled = true;
+            code.required = false;
+            help.hidden = false;
+            help.textContent = messages.unavailable;
+            return;
+        }
+        code.disabled = state.automatic;
+        code.required = !state.automatic;
+        code.value = state.automatic ? String(state.preview || '') : '';
+        help.hidden = false;
+        help.textContent = state.automatic ? messages.automatic : messages.manual;
+    }
+    tenant.addEventListener('change', function () {
+        if (!tenant.value) {
+            applyState({automatic: false, preview: ''});
+            return;
+        }
+        code.value = '';
+        code.disabled = true;
+        code.required = false;
+        fetch('/admin/application/user/sequence_config/' + encodeURIComponent(tenant.value), {
+            headers: {'Accept': 'application/json'}
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Sequence configuration is unavailable');
+            return response.json();
+        }).then(applyState).catch(function () { applyState(null); });
+    });
+}());
+</script>

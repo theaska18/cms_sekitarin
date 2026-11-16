@@ -69,3 +69,6 @@ $lang['employee_birth_place_too_long'] = 'Place of birth exceeds the allowed len
 $lang['employee_image_invalid'] = 'The photo is invalid. Use a supported format and a maximum size of 2 MB.';
 $lang['employee_save_error'] = 'Employee information could not be saved. Check the fields and your access permissions.';
 $lang['employee_access_denied'] = 'You do not have permission to access this feature.';
+$lang['employee_code_auto_help'] = 'The next code is generated from the tenant sequence format when you save.';
+$lang['employee_sequence_generation'] = 'An employee code could not be generated. Check the employee_code sequence settings.';
+$lang['employee_sequence_exhausted'] = 'No unused employee code was found after 1000 attempts. Check the employee_code sequence counter.';

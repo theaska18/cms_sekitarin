@@ -378,6 +378,11 @@ class Admin_sequence extends Admin
                 $errors[] = 'format_required';
             } elseif (strlen($format) > 45) {
                 $errors[] = 'format_too_long';
+            } else {
+                $this->load->library('sequence_format');
+                if (!$this->sequence_format->is_valid($format)) {
+                    $errors[] = 'format_invalid';
+                }
             }
             $valid_repeat_types = array_map(function ($option) {
                 return isset($option['option_code']) ? (string) $option['option_code'] : '';
@@ -697,6 +702,12 @@ class Admin_sequence extends Admin
         }
         if ($record['sequence_code'] !== '' && preg_match('/[\\x00-\\x20\\x7F]/', $record['sequence_code'])) {
             $errors[] = 'sequence_code_invalid';
+        }
+        if ($record['format'] !== '') {
+            $this->load->library('sequence_format');
+            if (!$this->sequence_format->is_valid($record['format'])) {
+                $errors[] = 'format_invalid';
+            }
         }
         $allowed_menu_codes = isset($this->current_user['menu_codes']) && is_array($this->current_user['menu_codes'])
             ? array_fill_keys($this->current_user['menu_codes'], TRUE)
