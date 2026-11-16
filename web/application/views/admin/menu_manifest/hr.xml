@@ -33,10 +33,21 @@
           label_key="admin_approval_flow"
           icon="workflow"
           route="/admin/hr/approvalFlow"
-          sort_order="2"
+          sort_order="3"
           status="active">
         <access code="hr_approval_flow_add" name="Add" />
         <access code="hr_approval_flow_update" name="Update"/>
         <access code="hr_approval_flow_set_deafult" name="Set to Default"/>
+    </menu>
+    <menu code="sys_approval"
+          name="Approval"
+          label_key="admin_approval"
+          icon="approval"
+          route="/admin/system/approval"
+          sort_order="4"
+          status="active">
+        <access code="sys_approval_add" name="Add" />
+        <access code="sys_approval_update" name="Update"/>
+        <access code="sys_approval_delete" name="Delete" />
     </menu>
 </menu-group>

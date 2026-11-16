@@ -193,10 +193,11 @@ class Approval_workflow_store
         if (!$this->org_exists($parent) || $code === '' || strlen($code) > 32 || $name === ''
             || (function_exists('mb_strlen') ? mb_strlen($name, 'UTF-8') : strlen($name)) > 64
             || preg_match('/[\\x00-\\x1F\\x7F]/', $code . $name)) { return FALSE; }
-        return $this->db->insert('hr_org', array(
+        if (!$this->db->insert('hr_org', array(
             'parent_org' => $parent, 'tenant_id' => $this->tenant, 'org_code' => $code,
             'org_name' => $name, 'head_employee_id' => NULL, 'create_on' => date('Y-m-d H:i:s'),
-        ));
+        ))) { return FALSE; }
+        return (int) $this->db->insert_id();
     }
 
     public function create_root_org($code, $name)
@@ -206,14 +207,22 @@ class Approval_workflow_store
         if (!$this->hierarchy_available() || $code === '' || strlen($code) > 32
             || $name === '' || (function_exists('mb_strlen') ? mb_strlen($name, 'UTF-8') : strlen($name)) > 64
             || preg_match('/[\x00-\x1F\x7F]/', $code . $name)) { return FALSE; }
-        return $this->db->insert('hr_org', array(
+        if (!$this->db->insert('hr_org', array(
             'parent_org' => NULL,
             'tenant_id' => $this->tenant,
             'org_code' => $code,
             'org_name' => $name,
             'head_employee_id' => NULL,
             'create_on' => date('Y-m-d H:i:s'),
-        ));
+        ))) { return FALSE; }
+        return (int) $this->db->insert_id();
+    }
+
+    public function hierarchy_org_code_exists($code)
+    {
+        if (!$this->hierarchy_available() || !is_string($code) || $code === '') { return TRUE; }
+        return (int)$this->db->where(array('tenant_id' => $this->tenant, 'org_code' => $code))
+            ->count_all_results('hr_org') > 0;
     }
 
     public function set_parent_org($org, $parent)

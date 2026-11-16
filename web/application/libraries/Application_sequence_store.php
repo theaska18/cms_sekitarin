@@ -387,6 +387,7 @@ class Application_sequence_store
             'code' => $code,
             'last_value' => $next_value,
             'last_repeat' => $today->format('Y-m-d'),
+            'format' => $format,
         );
     }
 

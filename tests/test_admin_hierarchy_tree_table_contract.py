@@ -29,6 +29,12 @@ class AdminHierarchyTreeTableContractTests(unittest.TestCase):
         self.assertIn("if ($this->input->method(TRUE) !== 'POST')", controller)
         self.assertIn('hierarchy_org_exists(', controller)
         self.assertIn('create_child_org(', controller)
+        self.assertIn("'hierarchy_can_delete' => $this->has_admin_access_code('hr_hierarchy_delete')", controller)
+        self.assertIn("$action === 'delete' ? 'hr_hierarchy_delete'", controller)
+        self.assertIn("$hierarchy_can_delete && !$children", view)
+        self.assertIn("<?php if ($hierarchy_can_delete): ?>", view)
+        routes = (ROOT / "web/application/config/routes.php").read_text()
+        self.assertIn("$route['admin/hr/hierarchy/action'] = 'admin_hierarchy/action';", routes)
         self.assertNotIn('data-panel="update"', view)
         self.assertIn('role="treeitem"', view)
         self.assertIn('aria-level=', view)
@@ -44,6 +50,29 @@ class AdminHierarchyTreeTableContractTests(unittest.TestCase):
         self.assertIn("$org['member_names']", view)
         self.assertIn("AS member_names", store)
         self.assertIn("$labels['hierarchy_unassigned']", view)
+
+    def test_hierarchy_add_uses_tenant_org_code_sequence_when_enabled(self):
+        controller = (ROOT / "web/application/controllers/Admin_hierarchy.php").read_text()
+        store = (ROOT / "web/application/libraries/Approval_workflow_store.php").read_text()
+        form = (ROOT / "web/application/views/admin/hierarchy/new.php").read_text()
+        self.assertIn("sequence_config((int) $this->current_user['tenant_id'], 'org_code')", controller)
+        self.assertIn("next_code_for_update((int)$tenant_id, 'org_code')", controller)
+        self.assertIn("advance_sequence((int)$tenant_id, 'org_code', $next)", controller)
+        self.assertIn("hierarchy_org_code_exists", store)
+        self.assertIn("hierarchy_auto_org_code", form)
+        self.assertIn("disabled aria-disabled=\"true\"", form)
+
+    def test_hierarchy_delete_refreshes_csrf_before_posting_and_has_explicit_route(self):
+        controller = (ROOT / "web/application/controllers/Admin_hierarchy.php").read_text()
+        view = (ROOT / "web/application/views/admin/hierarchy/index.php").read_text()
+        routes = (ROOT / "web/application/config/routes.php").read_text()
+        self.assertIn("public function hierarchy_csrf_token()", controller)
+        self.assertIn("get_csrf_hash()", controller)
+        self.assertIn("$route['admin/hr/hierarchy/action'] = 'admin_hierarchy/action';", routes)
+        self.assertIn("$route['admin/hr/hierarchy/csrf_token'] = 'admin_hierarchy/hierarchy_csrf_token';", routes)
+        self.assertIn("data-csrf-refresh-url", view)
+        self.assertIn("fetch(dlg.dataset.csrfRefreshUrl", view)
+        self.assertIn("csrf.value=tokens.hash", view)
 
     def test_tree_table_styles_are_in_admin_theme(self):
         css = (ROOT / "web/assets/css/admin-theme.css").read_text()

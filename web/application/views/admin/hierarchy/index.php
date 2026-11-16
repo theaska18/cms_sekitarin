@@ -9,15 +9,25 @@ foreach ($org_by_id as $org_id => $org) {
 }
 $rendered_ids = array();
 $render_node = NULL;
-$render_node = function ($org_id, $level = 1) use (&$render_node, &$rendered_ids, $org_by_id, $children_by_parent, $hierarchy_can_update, $labels) {
+$render_node = function ($org_id, $level = 1) use (&$render_node, &$rendered_ids, $org_by_id, $children_by_parent, $hierarchy_can_update, $hierarchy_can_add, $hierarchy_can_delete, $labels) {
     if (!isset($org_by_id[$org_id]) || isset($rendered_ids[$org_id])) { return; }
     $rendered_ids[$org_id] = TRUE;
     $org = $org_by_id[$org_id];
     $children = isset($children_by_parent[$org_id]) ? $children_by_parent[$org_id] : array();
     $name = trim((string)$org['org_name']);
     $tools = '';
-    if ($hierarchy_can_update) {
-        $tools = '<div class="hierarchy-tree-table__tools"><button type="button" class="hierarchy-tree-table__menu-button" aria-label="'.html_escape(sprintf($labels['hierarchy_menu_aria'], $name)).'" aria-expanded="false" title="'.html_escape($labels['hierarchy_menu_title']).'"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div class="org-chart-card__menu hierarchy-tree-table__action-menu" hidden><a href="/admin/hr/hierarchy/new?parent_org='.(int)$org_id.'" data-parent-org="'.(int)$org_id.'"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg><span>'.html_escape($labels['hierarchy_add_child']).'</span></a><a href="/admin/hr/hierarchy/new?org_id='.(int)$org_id.'" data-edit-org="'.(int)$org_id.'"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 13 9-9 3 3-9 9-4 1 1-4Z"/></svg><span>'.html_escape($labels['hierarchy_edit']).'</span></a>'.(!$children ? '<button type="button" data-delete-org="'.(int)$org_id.'" data-delete-name="'.html_escape($name).'" class="is-danger"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12m-10 0 1 11h6l1-11M8 6V4h4v2"/></svg><span>'.html_escape($labels['hierarchy_delete']).'</span></button>' : '').'</div></div>';
+    if ($hierarchy_can_update || $hierarchy_can_add || ($hierarchy_can_delete && !$children)) {
+        $menu_items = '';
+        if ($hierarchy_can_add) {
+            $menu_items .= '<a href="/admin/hr/hierarchy/new?parent_org='.(int)$org_id.'" data-parent-org="'.(int)$org_id.'"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg><span>'.html_escape($labels['hierarchy_add_child']).'</span></a>';
+        }
+        if ($hierarchy_can_update) {
+            $menu_items .= '<a href="/admin/hr/hierarchy/new?org_id='.(int)$org_id.'" data-edit-org="'.(int)$org_id.'"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 13 9-9 3 3-9 9-4 1 1-4Z"/></svg><span>'.html_escape($labels['hierarchy_edit']).'</span></a>';
+        }
+        if ($hierarchy_can_delete && !$children) {
+            $menu_items .= '<button type="button" data-delete-org="'.(int)$org_id.'" data-delete-name="'.html_escape($name).'" class="is-danger"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12m-10 0 1 11h6l1-11M8 6V4h4v2"/></svg><span>'.html_escape($labels['hierarchy_delete']).'</span></button>';
+        }
+        $tools = '<div class="hierarchy-tree-table__tools"><button type="button" class="hierarchy-tree-table__menu-button" aria-label="'.html_escape(sprintf($labels['hierarchy_menu_aria'], $name)).'" aria-expanded="false" title="'.html_escape($labels['hierarchy_menu_title']).'"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div class="org-chart-card__menu hierarchy-tree-table__action-menu" hidden>'.$menu_items.'</div></div>';
     }
     ?>
     <tr role="row" data-org-card data-org-id="<?= (int)$org_id ?>" data-tree-row data-level="<?= (int)$level ?>" aria-level="<?= (int)$level ?>"<?= $children ? ' aria-expanded="true"' : '' ?>>
@@ -63,7 +73,7 @@ foreach ($org_by_id as $org_id => $org) { if (!isset($has_parent[$org_id])) { $r
     </section>
   <?php endif; ?>
 </main>
-<?php if ($hierarchy_can_update): ?><dialog id="org-delete-dialog" class="org-delete-dialog" data-delete-body-template="<?= html_escape($labels['hierarchy_delete_body']) ?>"><form method="post" action="/admin/hr/hierarchy/action"><input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>"><input type="hidden" name="action" value="delete"><input type="hidden" name="org_id" value=""><h2 class="text-lg font-semibold"><?= html_escape($labels['hierarchy_delete_title']) ?></h2><p class="my-3 text-sm text-slate-600" data-delete-message></p><div class="flex justify-end gap-2"><button type="button" data-close-dialog class="rounded-lg border px-4 py-2"><?= html_escape($labels['hierarchy_cancel']) ?></button><button type="submit" class="rounded-lg bg-rose-700 px-4 py-2 font-semibold text-white"><?= html_escape($labels['hierarchy_confirm_delete']) ?></button></div></form></dialog>
+<?php if ($hierarchy_can_delete): ?><dialog id="org-delete-dialog" class="org-delete-dialog" data-delete-body-template="<?= html_escape($labels['hierarchy_delete_body']) ?>" data-csrf-refresh-url="/admin/hr/hierarchy/csrf_token"><form method="post" action="/admin/hr/hierarchy/action"><input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>"><input type="hidden" name="action" value="delete"><input type="hidden" name="org_id" value=""><h2 class="text-lg font-semibold"><?= html_escape($labels['hierarchy_delete_title']) ?></h2><p class="my-3 text-sm text-slate-600" data-delete-message></p><p hidden role="status" class="mb-3 text-sm text-rose-700" data-delete-error><?= html_escape($labels['hierarchy_csrf_refresh_error']) ?></p><div class="flex justify-end gap-2"><button type="button" data-close-dialog class="rounded-lg border px-4 py-2"><?= html_escape($labels['hierarchy_cancel']) ?></button><button type="submit" data-delete-submit class="rounded-lg bg-rose-700 px-4 py-2 font-semibold text-white"><?= html_escape($labels['hierarchy_confirm_delete']) ?></button></div></form></dialog>
 <script>
 (()=>{
   const root=document.querySelector('.hierarchy-tree-table');
@@ -78,7 +88,7 @@ foreach ($org_by_id as $org_id => $org) { if (!isset($has_parent[$org_id])) { $r
  });
  document.addEventListener('click',e=>{document.querySelectorAll('.org-chart-card__menu').forEach(m=>{const b=m.__hierarchyTrigger;if(!m.hidden&&!m.contains(e.target)&&!b?.contains(e.target))closeMenu(m,b);});});
  addEventListener('resize',()=>document.querySelectorAll('.org-chart-card__menu').forEach(m=>{if(!m.hidden&&m.__hierarchyTrigger)placeMenu(m,m.__hierarchyTrigger);}));
-  const dlg=document.getElementById('org-delete-dialog');if(dlg){document.querySelectorAll('[data-delete-org]').forEach(b=>b.addEventListener('click',()=>{dlg.querySelector('[name="org_id"]').value=b.dataset.deleteOrg;dlg.querySelector('[data-delete-message]').textContent=dlg.dataset.deleteBodyTemplate.replace('%s',b.dataset.deleteName);dlg.showModal();}));dlg.querySelector('[data-close-dialog]')?.addEventListener('click',()=>dlg.close());}
+   const dlg=document.getElementById('org-delete-dialog');if(dlg){document.querySelectorAll('[data-delete-org]').forEach(b=>b.addEventListener('click',()=>{dlg.querySelector('[name="org_id"]').value=b.dataset.deleteOrg;dlg.querySelector('[data-delete-message]').textContent=dlg.dataset.deleteBodyTemplate.replace('%s',b.dataset.deleteName);dlg.querySelector('[data-delete-error]').hidden=true;dlg.showModal();}));dlg.querySelector('[data-close-dialog]')?.addEventListener('click',()=>dlg.close());const deleteForm=dlg.querySelector('form'),csrf=deleteForm.querySelector('input[name="<?= html_escape($csrf_token_name) ?>"]'),submit=deleteForm.querySelector('[data-delete-submit]');deleteForm.addEventListener('submit',event=>{if(deleteForm.dataset.csrfReady==='true'){delete deleteForm.dataset.csrfReady;return;}event.preventDefault();submit.disabled=true;fetch(dlg.dataset.csrfRefreshUrl,{credentials:'same-origin',headers:{'Accept':'application/json'}}).then(response=>{if(!response.ok)throw new Error('CSRF refresh failed');return response.json();}).then(tokens=>{if(!tokens.name||!tokens.hash)throw new Error('CSRF token missing');csrf.name=tokens.name;csrf.value=tokens.hash;deleteForm.dataset.csrfReady='true';submit.disabled=false;deleteForm.requestSubmit(submit);}).catch(()=>{dlg.querySelector('[data-delete-error]').hidden=false;}).finally(()=>{submit.disabled=false;});});}
  
 })();
 

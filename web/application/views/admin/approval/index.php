@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') ?>">
 <link rel="stylesheet" href="/assets/css/jquery-ui.css?v=<?= filemtime(FCPATH . 'assets/css/jquery-ui.css') ?>">
 <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-approval-request-form data-request-type-search-url="/admin/system/approval/request_type_search">
-    <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">System / Approval</nav>
+    <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">Human Resource / Approval Flow / Approval</nav>
     <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold tracking-tight text-slate-950">Persetujuan</h1>

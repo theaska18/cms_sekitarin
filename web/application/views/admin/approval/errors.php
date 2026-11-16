@@ -4,7 +4,7 @@
 <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-approval-error-page data-employee-search-url="/admin/system/approval/employee_search">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <ol class="flex flex-wrap items-center gap-2">
-            <li>System</li><li aria-hidden="true">/</li>
+            <li>Human Resource</li><li aria-hidden="true">/</li>
             <li><a href="/admin/system/approval" class="hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Approval</a></li>
             <li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800">Error Approval</li>
         </ol>
