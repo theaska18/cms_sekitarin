@@ -32,6 +32,9 @@ Run from repository root:
 - `tests/test_*.py`: `unittest.TestCase` classes and `test_*` methods; tests commonly assert source contracts.
 - Admin views are grouped under `web/application/views/admin/<feature>/`; controller/store names follow feature names (e.g. `Admin_hierarchy`, `Approval_workflow_store`).
 - Views use PHP templates and CI helpers such as `html_escape`; follow adjacent feature patterns and preserve tenant/permission checks on data paths.
+- For fields backed by potentially large datasets, do not render every option in an HTML `<select>` or rely on native browser autocomplete/`<datalist>`. Use the jQuery UI Autocomplete widget (https://jqueryui.com/autocomplete/) with server-side, tenant-scoped search, a minimum query length, and a bounded result count. Load jQuery before jQuery UI and preserve keyboard/accessibility behavior.
+- For tabular list views, use DataTables (https://datatables.net/) rather than hand-built sorting and pagination. Prefer server-side processing for potentially large datasets, with bounded page lengths, allow-listed ordering, localized controls, and existing access/tenant checks. Use the System Property list as the project reference implementation.
+- Reuse `web/application/libraries/Datatable_server.php` for DataTables server-side request parsing, allow-listed ordering, bounded paging, and response envelopes; keep each feature's permission checks and schema-scoped query callbacks in its controller/store.
 
 ## Pitfalls
 

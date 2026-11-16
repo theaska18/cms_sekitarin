@@ -68,6 +68,42 @@ class Admin_property extends Admin
         );
     }
 
+    /** DataTables server-side endpoint for the property listing. */
+    public function property_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('sys_property')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+
+        $store = $this->property_store();
+        if ($store === NULL || !$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+
+        $this->datatable_server->respond(
+            array(1 => 'property_code', 2 => 'property_name'),
+            function () use ($store) {
+                return $store->count(array('search' => ''));
+            },
+            function ($search) use ($store) {
+                return $store->count(array('search' => $this->property_filter($search)));
+            },
+            function ($search, $length, $start, $order, $direction) use ($store) {
+                return $store->page(
+                    array('search' => $this->property_filter($search)),
+                    $length,
+                    $start,
+                    $this->property_sort_field($order),
+                    $this->property_sort_direction($direction)
+                );
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'property_code')
+        );
+    }
+
     public function property_new()
     {
         if (!$this->has_admin_access_code('sys_property_add')) {

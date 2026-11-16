@@ -16,6 +16,7 @@ HEADER = ROOT / "web/application/views/admin/header.php"
 PROPERTY_VIEW = ROOT / "web/application/views/admin/property/index.php"
 PROPERTY_FORM_VIEW = ROOT / "web/application/views/admin/property/form.php"
 PROPERTY_STORE = ROOT / "web/application/libraries/Property_store.php"
+DATATABLE_SERVER = ROOT / "web/application/libraries/Datatable_server.php"
 LANGUAGES = ROOT / "web/application/language"
 MANIFEST_FILE = ROOT / "web/application/views/admin/menu_manifest/system.xml"
 
@@ -30,6 +31,7 @@ class AdminPropertyContractTests(unittest.TestCase):
         cls.view = PROPERTY_VIEW.read_text(encoding="utf-8")
         cls.form_view = PROPERTY_FORM_VIEW.read_text(encoding="utf-8") if PROPERTY_FORM_VIEW.exists() else ""
         cls.store = PROPERTY_STORE.read_text(encoding="utf-8") if PROPERTY_STORE.exists() else ""
+        cls.datatable_server = DATATABLE_SERVER.read_text(encoding="utf-8") if DATATABLE_SERVER.exists() else ""
 
     def test_property_access_permissions_gate_routes_and_visible_actions(self):
         for access_code in ("sys_property", "sys_property_add", "sys_property_update", "sys_property_delete"):
@@ -52,14 +54,11 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn("$this->has_admin_access_code('sys_property_delete')", self.property_controller)
 
     def test_property_routes_use_the_dedicated_controller(self):
-        expected = {
-            "admin/system/property/new": "admin_property/property_new",
-            "admin/system/property/change/(:any)": "admin_property/property_change/$1",
-            "admin/system/property/delete": "admin_property/property_delete",
-        }
-        for uri, target in expected.items():
-            with self.subTest(uri=uri):
-                self.assertRegex(self.routes, rf"(?m)^\$route\['{re.escape(uri)}'\]\s*=\s*'{re.escape(target)}';")
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';", self.routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3/$4';", self.routes)
+        self.assertIn("class Admin_property extends Admin", self.property_controller)
+        for method in ("property_new", "property_change", "property_delete", "property_data"):
+            self.assertRegex(self.property_controller, rf"function\s+{method}\s*\(")
 
     def test_property_menu_route_is_preserved_and_admin_navigation_remains_generic(self):
         manifest = ET.fromstring(MANIFEST_FILE.read_text(encoding="utf-8").lstrip())
@@ -94,77 +93,56 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn("strpos($property_code, '\\\\') === FALSE", self.property_controller)
         self.assertIn(r"preg_match('/[\x00-\x1F\x7F]/', $property_code)", self.property_controller)
 
-    def test_property_filters_and_empty_state_are_distinct_and_localized(self):
-        self.assertIn("$labels['property_search_hint']", self.view)
-        self.assertIn('name="search"', self.view)
-        self.assertNotIn('name="code"', self.view)
-        self.assertNotIn('name="name"', self.view)
-        self.assertIn("$has_active_filters", self.view)
-        self.assertIn("$empty_title_key = $has_active_filters ? 'property_no_results' : 'property_empty'", self.view)
-        self.assertIn("$empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_empty_hint'", self.view)
-        self.assertIn("$labels[$empty_title_key]", self.view)
-        self.assertIn("$labels[$empty_hint_key]", self.view)
+    def test_property_datatable_uses_server_side_search_and_bounded_paging(self):
+        self.assertIn('id="property-data-table"', self.view)
+        self.assertIn('serverSide: true', self.view)
+        self.assertIn("url: '/admin/system/property/data'", self.view)
+        self.assertIn('lengthMenu: [[10, 25, 50], [10, 25, 50]]', self.view)
+        self.assertIn('function property_data()', self.property_controller)
+        self.assertIn("$this->datatable_server->respond(", self.property_controller)
+        self.assertIn("array(1 => 'property_code', 2 => 'property_name')", self.property_controller)
+        self.assertIn("function ($search, $length, $start, $order, $direction)", self.property_controller)
+        self.assertIn("$CI->input->get('search', TRUE)", self.datatable_server)
+        self.assertIn("$length = $length <= 0 ? $max_length : min($max_length, $length)", self.datatable_server)
+        self.assertIn("'recordsFiltered' => (int) $records_filtered", self.datatable_server)
+        self.assertIn("$start >= (int) $records_filtered", self.datatable_server)
+        self.assertIn('->limit(min(50, max(1, (int) $limit))', self.store)
 
-    def test_property_filter_is_inline_and_applies_automatically(self):
-        self.assertNotIn('property-filter-heading', self.view)
-        header = self.view.split('<header', 1)[1].split('</header>', 1)[0]
-        self.assertNotIn('<svg', header.split('<h1', 1)[0])
-        filter_guard = re.search(r'<\?php if \(([^)]*)\): \?>\s*<form id="property-filter-form"', self.view, re.S)
-        self.assertIsNotNone(filter_guard)
-        self.assertEqual('$backend_available', filter_guard.group(1).strip())
-        per_page_guard = re.search(r'<\?php if \(([^)]*)\): \?>\s*<input type="hidden" name="per_page"', self.view, re.S)
-        self.assertIsNotNone(per_page_guard)
-        self.assertEqual('$backend_available', per_page_guard.group(1).strip())
-        filter_form = re.search(r'<form[^>]*data-property-live-filter[^>]*>.*?</form>', self.view, re.S)
-        self.assertIsNotNone(filter_form)
-        self.assertIn('name="search"', filter_form.group(0))
-        self.assertIn('name="sort"', filter_form.group(0))
-        self.assertIn('name="direction"', filter_form.group(0))
-        self.assertGreater(filter_form.start(), self.view.index('<section aria-labelledby="property-list-heading"'))
-        self.assertGreater(filter_form.start(), self.view.index('id="property-list-heading"'))
-        self.assertLess(filter_form.end(), self.view.index('<table'))
-        self.assertNotRegex(filter_form.group(0), r'<button[^>]*type="submit"')
-        self.assertIn('focus:border-emerald-600', filter_form.group(0))
-        self.assertIn('focus-visible:ring-2 focus-visible:ring-emerald-500', filter_form.group(0))
-        self.assertNotIn('autofocus', filter_form.group(0))
-        self.assertIn('text-base', filter_form.group(0))
-        self.assertIn('sm:text-sm', filter_form.group(0))
-        self.assertIn("if (searchInput.value.length)", self.view)
-        self.assertIn("searchInput.focus()", self.view)
-        self.assertIn("searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length)", self.view)
-        self.assertIn("searchInput.addEventListener('input'", self.view)
-        self.assertIn('filterForm.requestSubmit()', self.view)
+    def test_datatable_server_helper_is_reusable_and_uses_allowlisted_columns(self):
+        self.assertIn("class Datatable_server", self.datatable_server)
+        self.assertIn("public function respond($columns, $count_total, $count_filtered, $fetch", self.datatable_server)
+        self.assertIn("in_array($order, $columns, TRUE)", self.datatable_server)
+        self.assertIn("call_user_func($fetch, $search, $length, $start, $order, $direction)", self.datatable_server)
+        self.assertIn("'recordsTotal'", self.datatable_server)
+        self.assertIn("'recordsFiltered'", self.datatable_server)
+        self.assertIn("'data' => $records", self.datatable_server)
 
-    def test_property_list_filter_header_sticks_below_admin_topbar(self):
-        section = self.view.split('<section aria-labelledby="property-list-heading"', 1)[1].split('</section>', 1)[0]
-        self.assertNotIn('overflow-hidden', section.split('>', 1)[0])
-        filter_header = section.split('<form id="property-filter-form"', 1)[0]
-        self.assertIn('sticky top-16 z-20', filter_header)
-        self.assertIn('bg-white/10', filter_header)
-        self.assertIn('backdrop-blur', filter_header)
+    def test_property_datatable_uses_local_assets_and_localized_controls(self):
+        self.assertIn('/assets/js/vendor/jquery.min.js', self.view)
+        self.assertIn('/assets/js/vendor/datatables.min.js', self.view)
+        self.assertIn('/assets/css/vendor/datatables.min.css', self.view)
+        self.assertLess(self.view.index('vendor/jquery.min.js'), self.view.index('vendor/datatables.min.js'))
+        self.assertIn('property_dt_search', self.view)
+        self.assertIn('property_dt_length', self.view)
+        self.assertIn('property_dt_info', self.view)
+        self.assertIn('property_dt_zero', self.view)
+        self.assertIn('property_dt_first', self.view)
+        self.assertIn('property_dt_last', self.view)
+        for language in sorted(LANGUAGES.glob('*/property_lang.php')):
+            content = language.read_text(encoding='utf-8')
+            with self.subTest(locale=language.parent.name):
+                for key in ('property_dt_search', 'property_dt_length', 'property_dt_info', 'property_dt_zero'):
+                    self.assertIn(f"$lang['{key}']", content)
 
-    def test_property_list_filter_header_shows_only_filter_not_property_title(self):
-        filter_header = self.view.split('data-property-filter-header', 1)[1].split('<div class="overflow-x-auto">', 1)[0]
-        self.assertIn('property-filter-form', filter_header)
-        self.assertNotRegex(filter_header, r'<h2\b[^>]*>')
-        self.assertRegex(self.view, r'<h2 id="property-list-heading" class="sr-only">.*?</h2>')
-
-    def test_property_filter_header_has_no_shadow_when_sticky(self):
-        filter_header = re.search(r'<div[^>]*data-property-filter-header[^>]*>', self.view)
-        self.assertIsNotNone(filter_header)
-        self.assertNotIn('shadow-sm', filter_header.group(0))
-        self.assertNotIn('data-property-filter-sentinel', self.view)
-        script_match = re.search(r"<script>\s*(.*?)\s*</script>", self.view, re.DOTALL)
-        self.assertIsNotNone(script_match)
-        self.assertNotIn('IntersectionObserver', script_match.group(1))
-        self.assertNotIn('setFilterHeaderShadow', script_match.group(1))
-
-    def test_page_status_and_page_size_are_rendered_in_table_footer(self):
-        table_end = self.view.index('</table>')
-        self.assertGreater(self.view.index('id="property-page-size"'), table_end)
-        self.assertGreater(self.view.index("$labels['property_page']", table_end), table_end)
-        self.assertIn('name="per_page"', self.view[table_end:])
-
+    def test_property_list_uses_datatables_controls_instead_of_custom_pagination(self):
+        self.assertIn('property_dt_info_empty', self.view)
+        self.assertIn("$labels['property_dt_empty']", self.view)
+        self.assertIn("$labels['property_unavailable']", self.view)
+        self.assertNotIn('data-property-live-filter', self.view)
+        self.assertNotIn('id="property-page-size"', self.view)
+        self.assertNotIn('property_sort_url', self.view)
+        self.assertNotIn('http_build_query($page_params)', self.view)
+        self.assertIn('id="property-list-heading"', self.view)
 
     def test_row_actions_use_three_dot_dropdown_with_update_and_delete(self):
         self.assertIn('data-property-actions-toggle', self.view)
@@ -184,27 +162,22 @@ class AdminPropertyContractTests(unittest.TestCase):
 
     def test_list_view_is_localized_responsive_and_accessible(self):
         for key in ("property_code_label", "property_name_label", "property_actions",
-                    "property_from_data", "property_page", "property_add", "property_edit",
-                    "property_delete", "property_confirm_title", "property_confirm_body", "property_cancel"):
+                    "property_add", "property_edit", "property_delete", "property_confirm_title",
+                    "property_confirm_body", "property_cancel", "property_dt_search", "property_dt_info"):
             with self.subTest(key=key):
                 self.assertIn(f"$labels['{key}']", self.view)
-        self.assertIn('name="search"', self.view)
+        self.assertIn('id="property-data-table"', self.view)
+        self.assertIn('serverSide: true', self.view)
+        self.assertIn("search: {search:", self.view)
         self.assertNotIn('name="code"', self.view)
         self.assertNotIn('name="name"', self.view)
-        self.assertIn('name="per_page"', self.view)
-        self.assertIn("http_build_query($page_params)", self.view)
-        self.assertIn("html_escape($filters['search'])", self.view)
-        self.assertEqual(1, self.view.count('type="search"'))
-        self.assertIn("$labels[$empty_title_key]", self.view)
+        self.assertNotIn('id="property-page-size"', self.view)
+        self.assertIn("'property_code'", self.view)
+        self.assertIn("'property_name'", self.view)
         self.assertIn('overflow-x-auto', self.view)
         self.assertIn('role="dialog"', self.view)
-        list_section = self.view.split('aria-labelledby="property-list-heading"', 1)[1]
-        self.assertLess(list_section.index('name="per_page"'), list_section.index('<table'))
-        self.assertGreater(self.view.index('name="per_page"'), self.view.index('aria-labelledby="property-list-heading"'))
-        self.assertIn('data-property-search-icon', self.view)
         self.assertIn('data-property-edit-icon', self.view)
         self.assertIn('data-property-delete-icon', self.view)
-        self.assertIn('form="property-filter-form"', list_section)
         self.assertIn('aria-modal="true"', self.view)
         self.assertIn('data-property-delete-cancel', self.view)
         self.assertNotRegex(self.view, r"(?i)\b(?:prompt|confirm)\s*\(")
@@ -231,9 +204,9 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn("$labels[$label_key]", self.form_view)
 
     def test_property_form_save_back_actions_stick_to_viewport_bottom(self):
-        actions = re.search(r'<div[^>]*data-property-form-actions[^>]*>.*?</div>', self.form_view, re.DOTALL)
+        actions = re.search(r'<div[^>]*sticky bottom-0[^>]*>.*?</div>', self.form_view, re.DOTALL)
         self.assertIsNotNone(actions)
-        actions_tag = re.search(r'<div[^>]*data-property-form-actions[^>]*>', actions.group(0))
+        actions_tag = re.search(r'<div[^>]*sticky bottom-0[^>]*>', actions.group(0))
         self.assertIsNotNone(actions_tag)
         self.assertNotIn('shadow-[', actions_tag.group(0))
         self.assertIn('sticky bottom-0 z-20', actions.group(0))
@@ -380,24 +353,19 @@ console.log(JSON.stringify({{ unchangedBeforeBlur, preservedCase, exampleValue: 
         self.assertIn("->or_like('property_name', $filters['search'])", self.store)
         self.assertIn("->group_end()", self.store)
 
-    def test_property_footer_keeps_controls_compact_and_right_aligned(self):
-        header = self.view.split('<h2 id="property-list-heading"', 1)[1].split('<form id="property-filter-form"', 1)[0]
-        self.assertNotIn("property_total", header)
-        footer = self.view.split("<?php if ($backend_available && $total_records > 0): ?>", 1)[1].split("    </section>", 1)[0]
-        self.assertIn("property_from_data", footer)
-        self.assertIn("sprintf($labels['property_from_data']", footer)
-        self.assertIn("$current_page", footer)
-        self.assertIn("$page_count", footer)
-        self.assertIn("aria-label=\"<?= html_escape($labels['property_previous']) ?>\"", footer)
-        self.assertIn("aria-label=\"<?= html_escape($labels['property_next']) ?>\"", footer)
-        self.assertIn("aria-hidden=\"true\"", footer)
-        self.assertIn("<svg", footer)
-        self.assertNotIn("<?= html_escape($labels['property_previous']) ?>", footer.split("aria-label=", 1)[0])
-        self.assertNotIn("<?= html_escape($labels['property_next']) ?>", footer.split("aria-label=", 1)[0])
-        self.assertNotIn("if ($page_count > 1)", footer)
-        self.assertIn('class="flex w-full items-center justify-end gap-1 sm:flex-1"', footer)
-        self.assertEqual(footer.count("w-10 flex-none"), 4)
-        self.assertIn('class="whitespace-nowrap text-center text-xs text-slate-600 sm:text-sm"', footer)
+    def test_property_datatables_language_is_complete_across_nine_locales(self):
+        dt_keys = (
+            "property_dt_empty", "property_dt_zero", "property_dt_info", "property_dt_info_empty",
+            "property_dt_info_filtered", "property_dt_length", "property_dt_loading",
+            "property_dt_processing", "property_dt_search", "property_dt_first", "property_dt_last",
+        )
+        locale_files = sorted(LANGUAGES.glob("*/property_lang.php"))
+        self.assertEqual(9, len(locale_files))
+        for locale in locale_files:
+            content = locale.read_text(encoding="utf-8")
+            with self.subTest(locale=locale.parent.name):
+                for key in dt_keys:
+                    self.assertIn(f"$lang['{key}']", content)
 
     def test_property_action_labels_are_short_and_localized(self):
         expected = {
@@ -431,6 +399,9 @@ console.log(JSON.stringify({{ unchangedBeforeBlur, preservedCase, exampleValue: 
             "property_not_found", "property_save_error", "property_delete_error", "property_invalid",
             "property_name_required", "property_form_new", "property_form_edit",
             "property_description_label", "property_value_label", "property_back", "property_save",
+            "property_dt_empty", "property_dt_zero", "property_dt_info", "property_dt_info_empty",
+            "property_dt_info_filtered", "property_dt_length", "property_dt_loading",
+            "property_dt_processing", "property_dt_search", "property_dt_first", "property_dt_last",
         )
         locale_files = sorted(LANGUAGES.glob("*/property_lang.php"))
         self.assertEqual(9, len(locale_files))
@@ -443,11 +414,9 @@ console.log(JSON.stringify({{ unchangedBeforeBlur, preservedCase, exampleValue: 
                 self.assertNotRegex(admin_content, r"\['admin_property_(?:code_label|name_label|filter|add|edit|delete)'")
 
     def test_property_rendering_loads_menu_language_file_for_active_locale(self):
-        self.assertIn("$this->lang->load('property', $locale)", self.admin_controller)
-        for key in ("code_label", "name_label", "filter_code_hint", "filter_name_hint",
-                    "no_results", "no_results_hint"):
-            with self.subTest(key=key):
-                self.assertIn(f"'{key}'", self.admin_controller)
+        self.assertIn("$view_language_pack = isset($view_parts[1]) ? $view_parts[1] : ''", self.admin_controller)
+        self.assertIn("APPPATH . 'language/' . $locale . '/' . $view_language_pack . '_lang.php'", self.admin_controller)
+        self.assertTrue((LANGUAGES / "english/property_lang.php").is_file())
 
     def test_store_fails_closed_on_wrong_schema_and_deletes_one_key(self):
         self.assertIn("field_data('sys_property')", self.store)

@@ -1,9 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i ./tailwind/input.css -o ./web/assets/css/tailwind.css --minify"
+    "build:css": "tailwindcss -i ./tailwind/input.css -o ./web/assets/css/tailwind.css --minify && npm run build:vendor",
+    "build:vendor": "mkdir -p web/assets/js/vendor web/assets/css/vendor && cp node_modules/jquery/dist/jquery.min.js web/assets/js/vendor/jquery.min.js && cp node_modules/datatables.net/js/dataTables.min.js web/assets/js/vendor/datatables.min.js && cp node_modules/datatables.net-dt/css/dataTables.dataTables.min.css web/assets/css/vendor/datatables.min.css"
   },
   "devDependencies": {
+    "datatables.net": "^2.3.8",
+    "datatables.net-dt": "^2.3.8",
+    "jquery": "^3.7.1",
     "tailwindcss": "^3.4.17"
   }
 }

@@ -14,20 +14,8 @@ if (!empty($access_denied)) {
 $property_title = $labels['property_heading'];
 $status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error', 'invalid');
 $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
-$page_params = array('search' => $filters['search'], 'per_page' => $per_page, 'sort' => $sort, 'direction' => $direction);
-$property_sort_url = function ($field) use ($filters, $per_page, $sort, $direction) {
-    $next_direction = $sort === $field && $direction === 'ASC' ? 'DESC' : 'ASC';
-    return '/admin/system/property?' . http_build_query(array(
-        'search' => $filters['search'],
-        'per_page' => $per_page,
-        'sort' => $field,
-        'direction' => $next_direction,
-    ));
-};
-$has_active_filters = trim((string) $filters['search']) !== '';
-$empty_title_key = $has_active_filters ? 'property_no_results' : 'property_empty';
-$empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_empty_hint';
 ?>
+<link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') ?>">
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <ol class="flex flex-wrap items-center gap-2">
@@ -80,39 +68,13 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
 
     <section aria-labelledby="property-list-heading" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
         <h2 id="property-list-heading" class="sr-only"><?= html_escape($property_title) ?></h2>
-        <?php if ($backend_available): ?>
-            <input type="hidden" name="per_page" value="<?= (int) $per_page ?>" form="property-filter-form">
-        <?php endif; ?>
-        <div data-property-filter-header class="sticky top-16 z-20 flex flex-col gap-4 border-b border-slate-200 bg-white/10 px-3 py-4 backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6 rounded-none">
-            <?php if (!$backend_available): ?>
-                <p class="text-sm text-slate-500"><?= html_escape($labels['property_unavailable']) ?></p>
-            <?php endif; ?>
-            <?php if ($backend_available): ?>
-                <form id="property-filter-form" action="/admin/system/property" method="get" data-property-live-filter class="w-full sm:w-64 sm:shrink-0">
-                    <label for="property-filter-search" class="sr-only"><?= html_escape($labels['property_search_label']) ?></label>
-                    <div class="relative">
-                        <svg data-property-search-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
-                        <input id="property-filter-search" type="search" name="search" value="<?= html_escape($filters['search']) ?>" maxlength="120" autocomplete="off" placeholder="<?= html_escape($labels['property_search_hint']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-base text-slate-900 placeholder:text-slate-400 sm:text-sm focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                    </div>
-                    <input type="hidden" name="sort" value="<?= html_escape($sort) ?>">
-                    <input type="hidden" name="direction" value="<?= html_escape($direction) ?>">
-                </form>
-            <?php endif; ?>
-        </div>
         <div class="overflow-x-auto rounded-b-2xl">
-            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <table id="property-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['property_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
-                        <?php foreach (array('property_code' => $labels['property_code_label'], 'property_name' => $labels['property_name_label']) as $sort_field => $sort_label): ?>
-                            <?php $sort_active = $sort === $sort_field; $sort_aria = !$sort_active ? 'none' : ($direction === 'ASC' ? 'ascending' : 'descending'); ?>
-                            <th scope="col" aria-sort="<?= html_escape($sort_aria) ?>" class="<?= $sort_field === 'property_code' ? 'whitespace-nowrap' : 'min-w-[8rem] sm:min-w-56' ?> px-2 py-3.5 sm:px-6">
-                                <a href="<?= html_escape($property_sort_url($sort_field)) ?>" class="inline-flex min-h-8 items-center gap-1.5 rounded-md hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                                    <?= html_escape($sort_label) ?>
-                                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-3.5 w-3.5 <?= $sort_active && $direction === 'DESC' ? 'rotate-180' : '' ?> <?= $sort_active ? 'text-indigo-600' : 'text-slate-400' ?>"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v10m0 0 3.5-3.5M8 13l-3.5-3.5"/></svg>
-                                </a>
-                            </th>
-                        <?php endforeach; ?>
+                        <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['property_code_label']) ?></th>
+                        <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['property_name_label']) ?></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -149,63 +111,17 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
                                 <td class="min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4"><?= html_escape($property['property_name']) ?></td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php else: ?>
+                    <?php elseif (!$backend_available): ?>
                         <tr>
-                            <td colspan="3" class="px-4 py-14 text-center sm:px-6">
-                                <div class="mx-auto max-w-md">
-                                    <div aria-hidden="true" class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
-                                    </div>
-                                    <p class="font-medium text-slate-800"><?= html_escape($backend_available ? $labels[$empty_title_key] : $labels['property_unavailable']) ?></p>
-                                    <?php if ($backend_available): ?><p class="mt-1 text-sm text-slate-500"><?= html_escape($labels[$empty_hint_key]) ?></p><?php endif; ?>
-                                </div>
-                            </td>
+                            <td class="px-4 py-6 text-center text-sm text-slate-500"><?= html_escape($labels['property_unavailable']) ?></td>
+                            <td></td>
+                            <td></td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
-        <?php if ($backend_available && $total_records > 0): ?>
-            <div class="flex flex-col gap-3 border-t border-slate-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <form action="/admin/system/property" method="get" class="flex items-center gap-2 self-center sm:flex-1 sm:self-auto">
-                    <input type="hidden" name="search" value="<?= html_escape($filters['search']) ?>">
-                    <input type="hidden" name="sort" value="<?= html_escape($sort) ?>">
-                    <input type="hidden" name="direction" value="<?= html_escape($direction) ?>">
-                    <label for="property-page-size" class="whitespace-nowrap text-sm font-medium text-slate-600"><?= html_escape($labels['property_per_page']) ?></label>
-                    <select id="property-page-size" name="per_page" onchange="this.form.submit()" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
-                        <?php foreach ($per_page_choices as $choice): ?>
-                            <option value="<?= (int) $choice ?>"<?= $choice === $per_page ? ' selected' : '' ?>><?= (int) $choice ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-                <div class="flex flex-col gap-3 sm:flex-[2] sm:flex-row sm:items-center sm:justify-end">
-                    <nav aria-label="<?= html_escape($labels['property_heading']) ?> — <?= html_escape($labels['property_page']) ?>" class="flex w-full items-center justify-end gap-1 sm:flex-1" role="navigation">
-                    <?php if ($current_page > 1): ?>
-                        <?php $page_params['page'] = $current_page - 1; ?>
-                        <a rel="prev" href="/admin/system/property?<?= html_escape(http_build_query($page_params)) ?>" aria-label="<?= html_escape($labels['property_previous']) ?>" title="<?= html_escape($labels['property_previous']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['property_previous']) ?>" title="<?= html_escape($labels['property_previous']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                    <p class="whitespace-nowrap text-center text-xs text-slate-600 sm:text-sm" aria-live="polite"><?= html_escape($labels['property_page']) ?> <?= (int) $current_page ?> <?= html_escape($labels['property_page_of']) ?> <?= (int) $page_count ?> <?= html_escape(sprintf($labels['property_from_data'], number_format((int) $total_records, 0, ',', '.'))) ?></p>
-                    <?php if ($current_page < $page_count): ?>
-                        <?php $page_params['page'] = $current_page + 1; ?>
-                        <a rel="next" href="/admin/system/property?<?= html_escape(http_build_query($page_params)) ?>" aria-label="<?= html_escape($labels['property_next']) ?>" title="<?= html_escape($labels['property_next']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['property_next']) ?>" title="<?= html_escape($labels['property_next']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                    </nav>
-                </div>
-            </div>
-        <?php endif; ?>
     </section>
 
     <?php if ($write_available): ?>
@@ -225,24 +141,90 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
         </div>
     <?php endif; ?>
 </main>
+<script src="/assets/js/vendor/jquery.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') ?>"></script>
+<script src="/assets/js/vendor/datatables.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') ?>"></script>
 <script>
 (function () {
-    var filterForm = document.querySelector('[data-property-live-filter]');
-    var searchInput = filterForm ? filterForm.querySelector('[name="search"]') : null;
-    var filterTimer = null;
-    if (filterForm && searchInput) {
-        if (searchInput.value.length) {
-            searchInput.focus();
-            if (typeof searchInput.setSelectionRange === 'function') {
-                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
-            }
-        }
-        searchInput.addEventListener('input', function () {
-            window.clearTimeout(filterTimer);
-            filterTimer = window.setTimeout(function () {
-                if (typeof filterForm.requestSubmit === 'function') { filterForm.requestSubmit(); }
-                else { filterForm.submit(); }
-            }, 350);
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
+
+    var propertyTable = $('#property-data-table');
+    var tableLanguage = <?= json_encode(array(
+        'emptyTable' => $labels['property_dt_empty'],
+        'info' => $labels['property_dt_info'],
+        'infoEmpty' => $labels['property_dt_info_empty'],
+        'infoFiltered' => $labels['property_dt_info_filtered'],
+        'lengthMenu' => $labels['property_dt_length'],
+        'loadingRecords' => $labels['property_dt_loading'],
+        'processing' => $labels['property_dt_processing'],
+        'search' => $labels['property_dt_search'],
+        'zeroRecords' => $labels['property_dt_zero'],
+        'paginate' => array(
+            'first' => $labels['property_dt_first'],
+            'last' => $labels['property_dt_last'],
+            'next' => $labels['property_next'],
+            'previous' => $labels['property_previous'],
+        ),
+    ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var canUpdate = <?= $write_available && $can_update ? 'true' : 'false' ?>;
+    var canDelete = <?= $write_available && $can_delete ? 'true' : 'false' ?>;
+    var actionLabels = {
+        actions: <?= json_encode($labels['property_actions'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        edit: <?= json_encode($labels['property_edit'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+        delete: <?= json_encode($labels['property_delete'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+    };
+
+    if (propertyTable.length && <?= $backend_available ? 'true' : 'false' ?>) {
+        propertyTable.DataTable({
+            processing: true,
+            serverSide: true,
+            deferRender: true,
+            autoWidth: false,
+            pageLength: <?= (int) $per_page ?>,
+            lengthMenu: [[10, 25, 50], [10, 25, 50]],
+            displayStart: <?= max(0, ($current_page - 1) * $per_page) ?>,
+            search: {search: <?= json_encode($filters['search'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>},
+            order: [[<?= $sort === 'property_name' ? 2 : 1 ?>, <?= json_encode(strtolower($direction)) ?>]],
+            language: tableLanguage,
+            ajax: {url: '/admin/system/property/data', type: 'GET', dataSrc: 'data'},
+            columns: [
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        if (type !== 'display') return '';
+                        if (!canUpdate && !canDelete) return '<span class="text-xs text-slate-400">—</span>';
+                        var code = String(row.property_code || '');
+                        var codeAttr = escapeHtml(code);
+                        var nameAttr = escapeHtml(row.property_name || code);
+                        var menuId = 'property-actions-menu-' + meta.row;
+                        var menuItems = '';
+                        if (canUpdate) {
+                            menuItems += '<a href="/admin/system/property/change/' + encodeURIComponent(code) + '" data-property-edit-action role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"><svg data-property-edit-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>' + escapeHtml(actionLabels.edit) + '</a>';
+                        }
+                        if (canDelete) {
+                            menuItems += '<button type="button" data-property-delete-open="1" data-property-code="' + codeAttr + '" data-property-name="' + nameAttr + '" aria-haspopup="dialog" aria-controls="property-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"><svg data-property-delete-icon viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>' + escapeHtml(actionLabels.delete) + '</button>';
+                        }
+                        return '<div class="relative inline-flex"><button type="button" data-property-actions-toggle aria-label="' + escapeHtml(actionLabels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg data-property-actions-icon viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-property-actions-menu hidden role="menu" class="fixed z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + menuItems + '</div></div>';
+                    }
+                },
+                {
+                    data: 'property_code',
+                    name: 'property_code',
+                    className: 'whitespace-nowrap px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4',
+                    render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }
+                },
+                {
+                    data: 'property_name',
+                    name: 'property_name',
+                    className: 'min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4',
+                    render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }
+                }
+            ]
         });
     }
 
@@ -251,14 +233,13 @@ $empty_hint_key = $has_active_filters ? 'property_no_results_hint' : 'property_e
     var cancelButton = dialog ? dialog.querySelector('[data-property-delete-cancel]') : null;
     var propertyLabel = dialog ? dialog.querySelector('[data-property-delete-label]') : null;
     var propertyCode = dialog ? dialog.querySelector('[data-property-delete-code]') : null;
-    var actionMenus = Array.prototype.slice.call(document.querySelectorAll('[data-property-actions-menu]'));
 
     function actionToggle(menu) {
         return document.querySelector('[aria-controls="' + menu.id + '"][data-property-actions-toggle]');
     }
 
     function closeActionMenus() {
-        actionMenus.forEach(function (menu) {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-property-actions-menu]'), function (menu) {
             menu.hidden = true;
             var toggle = actionToggle(menu);
             if (toggle) { toggle.setAttribute('aria-expanded', 'false'); }
