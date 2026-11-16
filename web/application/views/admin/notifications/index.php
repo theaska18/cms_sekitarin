@@ -42,6 +42,28 @@ foreach ($notifications as $notification) {
         break;
     }
 }
+$approval_notification = function ($message) {
+    $actions = array();
+    $lines = preg_split('/\r?\n/', (string) $message);
+    $body = array();
+    $expected_host = strtolower((string) parse_url(site_url(), PHP_URL_HOST));
+    foreach ($lines as $line) {
+        if (preg_match('/^(Setuju|Tidak setuju):\s*(https?:\/\/\S+)$/u', trim($line), $matches)) {
+            $parts = parse_url($matches[2]);
+            $query = array();
+            if (is_array($parts) && strtolower(isset($parts['host']) ? $parts['host'] : '') === $expected_host && isset($parts['path']) && $parts['path'] === '/admin/system/approval') {
+                parse_str(isset($parts['query']) ? $parts['query'] : '', $query);
+                $decision = $matches[1] === 'Setuju' ? 'approved' : 'rejected';
+                if (isset($query['approval_token'], $query['approval_decision']) && preg_match('/^[a-f0-9]{64}$/', $query['approval_token']) && $query['approval_decision'] === $decision) {
+                    $actions[] = array('label' => $matches[1], 'url' => $matches[2], 'decision' => $decision);
+                    continue;
+                }
+            }
+        }
+        $body[] = $line;
+    }
+    return array(implode("\n", $body), $actions);
+};
 $message_preview = function ($message) {
     $message = trim(preg_replace('/\\s+/u', ' ', strip_tags((string) $message)));
     if ($message === '') {
@@ -157,7 +179,18 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
                             </div>
                         </div>
                         <div class="mt-6 border-t border-slate-100 pt-5">
-                            <p class="whitespace-pre-line break-words text-sm leading-7 text-slate-700"><?php echo html_escape($selected_notification['message']); ?></p>
+                        <?php list($notification_body, $approval_actions) = $approval_notification($selected_notification['message']); ?>
+                        <p class="whitespace-pre-line break-words text-sm leading-7 text-slate-700"><?php echo html_escape($notification_body); ?></p>
+                        <?php if (!empty($approval_actions)): ?>
+                            <div class="mt-5 flex flex-wrap gap-3" aria-label="Tindakan persetujuan">
+                                <?php foreach ($approval_actions as $action): ?>
+                                    <a href="<?php echo html_escape($action['url']); ?>" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 <?php echo $action['decision'] === 'approved' ? 'bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-emerald-500' : 'bg-red-600 hover:bg-red-700 focus-visible:ring-red-500'; ?>">
+                                        <?php if ($action['decision'] === 'approved'): ?><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"/></svg><?php else: ?><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 6 12 12M18 6 6 18"/></svg><?php endif; ?>
+                                        <?php echo html_escape($action['label']); ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
                         </div>
                     </article>
                 <?php else: ?>

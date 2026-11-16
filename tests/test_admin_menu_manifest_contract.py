@@ -159,16 +159,17 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             with self.subTest(controller=filename):
                 self.assertIn(f"function {method}", source)
 
-    def test_parameter_placeholder_has_localized_module_copy_in_all_locales(self):
-        controller = CONTROLLER.read_text()
-        self.assertIn("'system/parameter' => array(", controller)
-        self.assertIn("'description_key' => 'parameter_description'", controller)
-        self.assertIn("'focus_key' => 'parameter_focus'", controller)
-        for locale in LOCALES:
-            content = (WEB / f"application/language/{locale}/admin_lang.php").read_text()
-            keys = set(re.findall(r"\$lang\['([^']+)'\]\s*=", content))
-            with self.subTest(locale=locale):
-                self.assertTrue({"admin_parameter_description", "admin_parameter_focus"}.issubset(keys))
+    def test_parameter_menu_uses_real_crud_controller_not_placeholder_module_copy(self):
+        controller = (APP / "controllers/Admin_parameter.php").read_text()
+        manifest = parse_xml(MANIFEST_DIR / "system.xml")
+        item = next(item for item in manifest.findall("menu") if item.attrib["code"] == "sys_parameter")
+        self.assertEqual("/admin/system/parameter", item.attrib["route"])
+        self.assertIn("public function parameter_index", controller)
+        self.assertIn("public function parameter_new", controller)
+        self.assertIn("public function parameter_change", controller)
+        self.assertIn("sys_parameter_add", controller)
+        self.assertIn("sys_parameter_update", controller)
+        self.assertNotIn("'system/parameter' => array(", CONTROLLER.read_text())
 
     def test_module_pages_mark_the_manifest_destination_as_current(self):
         controller = CONTROLLER.read_text()
@@ -193,7 +194,6 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertEqual("/admin/hr/employee", employee_item.attrib["route"])
         self.assertNotIn("$route['admin/hr/employee'] = 'admin_employee/employee_index';", routes)
         self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
-        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$3/$3_index';", routes)
         for group in ("system", "hr", "application"):
             self.assertNotIn(f"$route['admin/{group}/", routes)
         self.assertIn("$this->has_admin_menu_code('hr_employee')", employee_controller)

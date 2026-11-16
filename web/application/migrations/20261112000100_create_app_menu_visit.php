@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Migration_202611120001_create_app_menu_visit extends CI_Migration
+class Migration_Create_app_menu_visit extends CI_Migration
 {
     public function up()
     {

@@ -312,6 +312,123 @@
             margin: 0;
         }
     }
+
+    /* Modern organization hierarchy chart with clear levels and soft connectors. */
+    .org-chart {
+        overflow: auto;
+        padding: 2.5rem 1.5rem 3rem;
+        background-color: #f8fafc;
+        background-image: radial-gradient(#cbd5e1 0.7px, transparent 0.7px);
+        background-size: 18px 18px;
+        overscroll-behavior-x: contain;
+    }
+
+    .org-chart ul {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin: 0;
+        padding: 1.75rem 0 0;
+    }
+
+    .org-chart > ul {
+        padding-top: 0;
+    }
+
+    .org-chart li {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 15rem;
+        padding: 1.75rem 0.75rem 0;
+        list-style: none;
+        text-align: center;
+    }
+
+    .org-chart > ul > li {
+        padding-top: 0;
+    }
+
+    .org-chart li > ul::before {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        height: 1.75rem;
+        border-left: 2px solid #94a3b8;
+        content: "";
+    }
+
+    .org-chart li > ul > li::before,
+    .org-chart li > ul > li::after {
+        position: absolute;
+        top: 0;
+        right: 50%;
+        width: 50%;
+        height: 1.75rem;
+        border-top: 2px solid #cbd5e1;
+        content: "";
+    }
+
+    .org-chart li > ul > li::after {
+        right: auto;
+        left: 50%;
+        border-top: 0;
+        border-left: 2px solid #94a3b8;
+    }
+
+    .org-chart li > ul > li:first-child::before,
+    .org-chart li > ul > li:last-child::after,
+    .org-chart li > ul > li:only-child::before,
+    .org-chart li > ul > li:only-child::after {
+        border: 0;
+    }
+
+    .org-chart li > ul > li:only-child {
+        padding-top: 1.75rem;
+    }
+
+    .org-chart-card {
+        position: relative;
+        z-index: 1;
+        width: 16rem;
+        border: 1px solid #dbe4ee;
+        border-top: 3px solid #0f766e;
+        border-radius: 1rem;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fffe 100%);
+        padding: 1.125rem 1.25rem;
+        text-align: left;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.05);
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    .org-chart-card:hover {
+        border-color: #99f6e4;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .org-chart-card__avatar {
+        display: grid;
+        width: 2.75rem;
+        height: 2.75rem;
+        flex: none;
+        place-items: center;
+        border-radius: 9999px;
+        background: #ccfbf1;
+        color: #115e59;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .org-chart-card {
+            transition: none;
+        }
+        .org-chart-card:hover {
+            transform: none;
+        }
+    }
 }
 
 @media (max-width: 767px) {
