@@ -137,6 +137,34 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn("$lang['finance_transaction_date']", content)
                 self.assertIn("$lang['finance_created_at']", content)
 
+    def test_finance_document_payment_and_reconciliation_approval_support(self):
+        migration = (APP / "migrations/20261117000700_link_finance_documents_to_approval.php").read_text()
+        approval = (APP / "libraries/Approval_workflow_store.php").read_text()
+        controller = FINANCE_CONTROLLER.read_text()
+        document = (APP / "libraries/Finance_document_store.php").read_text()
+        payment = (APP / "libraries/Finance_payment_store.php").read_text()
+        journal = (APP / "libraries/Finance_journal_store.php").read_text()
+        reconciliation = (APP / "libraries/Finance_reconciliation_store.php").read_text()
+        for table in ("fin_sales_invoice", "fin_purchase_bill", "fin_customer_payment", "fin_supplier_payment", "fin_bank_reconciliation"):
+            with self.subTest(table=table):
+                self.assertIn("'" + table + "'", migration)
+        for source in ("fin_sales_invoice", "fin_purchase_bill", "fin_customer_payment", "fin_supplier_payment", "fin_bank_reconciliation"):
+            with self.subTest(source=source):
+                self.assertIn("'" + source + "' => array('table'", approval)
+        for method in ("finance_manual_journal_start_approval", "finance_document_start_approval", "finance_payment_start_approval", "finance_reconciliation_start_approval"):
+            with self.subTest(method=method):
+                self.assertIn("private function " + method, controller)
+        self.assertIn("sales_invoice_code", document)
+        self.assertIn("purchase_bill_code", document)
+        self.assertIn("customer_payment_code", payment)
+        self.assertIn("supplier_payment_code", payment)
+        self.assertIn("journal_manual", journal)
+        self.assertIn("bank_reconciliation_code", reconciliation)
+        self.assertIn("$required_status = 'approved';", journal)
+        self.assertIn("if ($payment['status'] !== 'approved')", payment)
+        self.assertIn("$doc['status'] !== 'approved'", document)
+        self.assertIn("$row['status']!=='approved'", reconciliation)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()

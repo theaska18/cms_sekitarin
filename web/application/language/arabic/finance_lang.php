@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = 'المعتمد';
 $lang['finance_transfer_amount'] = 'المبلغ';
 $lang['finance_transaction_date'] = 'تاريخ المعاملة';
 $lang['finance_created_at'] = 'تاريخ الإنشاء';
+$lang['finance_reconciliation_number'] = 'المطابقة';
 $lang['finance_journal_form_error'] = 'تعذر حفظ مسودة دفتر اليومية.';
 $lang['finance_add'] = 'إضافة';
 $lang['finance_save'] = 'حفظ';

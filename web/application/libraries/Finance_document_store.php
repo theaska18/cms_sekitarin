@@ -65,13 +65,21 @@ class Finance_document_store
         $spec = $this->spec($kind);
         $allowed = array($spec['number'], $spec['date'], 'due_date', 'total_amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : $spec['date'];
-        $this->db->select($spec['id'] . ',' . $spec['number'] . ',' . $spec['date'] . ',due_date,total_amount,currency_code,status,memo')
-            ->from($spec['header'])->where('tenant_id', (int) $tenant_id);
+        $this->db->select('d.' . $spec['id'] . ',d.' . $spec['number'] . ',d.' . $spec['date'] . ',d.due_date,d.total_amount,d.currency_code,d.status,d.memo,d.approval_request_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = d.tenant_id AND a.request_id = d.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
+            ->from($spec['header'] . ' d')
+            ->join('app_user u', 'u.user_id = d.created_by AND u.tenant_id = d.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = d.approval_request_id AND ar.tenant_id = d.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
+            ->where('d.tenant_id', (int) $tenant_id);
         if (trim((string) $search) !== '') {
-            $this->db->group_start()->like($spec['number'], $search)->or_like('memo', $search)->group_end();
+            $this->db->group_start()->like('d.' . $spec['number'], $search)->or_like('d.memo', $search)->group_end();
         }
-        $query = $this->db->order_by($order, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
-            ->order_by($spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
+        $order_column = in_array($order, array('created_by_name'), TRUE) ? $order : 'd.' . $order;
+        $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
+            ->order_by('d.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();
     }
 
@@ -150,7 +158,7 @@ class Finance_document_store
                 $this->db->trans_rollback();
                 return $existing === NULL ? 'not_found' : 'unavailable';
             }
-            if ($existing['status'] !== 'draft') {
+            if (!in_array((string) $existing['status'], array('draft', 'revise'), TRUE)) {
                 $this->db->trans_rollback();
                 return 'not_editable';
             }
@@ -161,19 +169,35 @@ class Finance_document_store
             $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], $doc_id)->delete($spec['line_table']);
         } else {
             $header_values = $this->header_values($spec, $tenant_id, $values, $currency, $rate, $subtotal, $tax_amount, $total, $base_total);
-            $header_values[$spec['number']] = 'TMP-' . strtoupper($kind) . '-' . bin2hex(random_bytes(6));
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $sequence_code = $kind === 'sales' ? 'sales_invoice_code' : 'purchase_bill_code';
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant_id, $sequence_code);
+            if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            for ($attempt = 0; $attempt < 10 && $this->number_exists($spec['header'], $spec['number'], $tenant_id, (string) $next_code['code']); $attempt++) {
+                $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                if (!is_array($next_code) || !isset($next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            }
+            if ($this->number_exists($spec['header'], $spec['number'], $tenant_id, (string) $next_code['code'])) {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            $header_values[$spec['number']] = (string) $next_code['code'];
             $header_values['status'] = 'draft';
             $header_values['create_on'] = date('Y-m-d H:i:s');
             $header_values['created_by'] = (int) $user_id;
             $this->db->insert($spec['header'], $header_values);
             $doc_id = (int) $this->db->insert_id();
-            if ($doc_id < 1) {
+            if ($doc_id < 1 || !$CI->application_sequence_store->advance_sequence($tenant_id, $sequence_code, $next_code)) {
                 $this->db->trans_rollback();
-                return 'save_error';
+                return 'sequence_unavailable';
             }
-            $prefix = $kind === 'sales' ? 'INV-' : 'BILL-';
-            $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], $doc_id)
-                ->update($spec['header'], array($spec['number'] => $prefix . date('Ymd') . '-' . str_pad((string) $doc_id, 6, '0', STR_PAD_LEFT)));
         }
         $line_values = array(
             'tenant_id' => (int) $tenant_id,
@@ -209,7 +233,7 @@ class Finance_document_store
         if (!is_array($doc)) {
             return $doc === NULL ? 'not_found' : 'unavailable';
         }
-        if ($doc['status'] !== 'draft' || !$doc['line']) {
+        if ($doc['status'] !== 'approved' || !$doc['line']) {
             return 'not_postable';
         }
         $settings = $this->db->where('tenant_id', (int) $tenant_id)->limit(1)->get('fin_settings');
@@ -317,7 +341,7 @@ class Finance_document_store
                 'exchange_rate' => $doc['exchange_rate'],
             )));
         }
-        $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], (int) $id)->where('status', 'draft')
+        $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], (int) $id)->where('status', 'approved')
             ->update($spec['header'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user_id));
         if ($this->db->trans_status() === FALSE) {
             $this->db->trans_rollback();
@@ -382,6 +406,12 @@ class Finance_document_store
         }
         $row = $query->row_array();
         return $row[$map['code']] . ' — ' . $row[$map['name']];
+    }
+
+    private function number_exists($table, $column, $tenant_id, $number)
+    {
+        return $this->db->from($table)->where('tenant_id', (int) $tenant_id)
+            ->where($column, (string) $number)->count_all_results() > 0;
     }
 
     private function header_values($spec, $tenant_id, $values, $currency, $rate, $subtotal, $tax_amount, $total, $base_total)

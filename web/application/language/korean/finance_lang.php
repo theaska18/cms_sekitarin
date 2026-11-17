@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = '승인자';
 $lang['finance_transfer_amount'] = '금액';
 $lang['finance_transaction_date'] = '거래일';
 $lang['finance_created_at'] = '생성일시';
+$lang['finance_reconciliation_number'] = '조정';
 $lang['finance_journal_form_error'] = '분개 초안을 저장할 수 없습니다.';
 $lang['finance_add'] = '추가';
 $lang['finance_save'] = '저장';

@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = '审批人';
 $lang['finance_transfer_amount'] = '金额';
 $lang['finance_transaction_date'] = '交易日期';
 $lang['finance_created_at'] = '创建时间';
+$lang['finance_reconciliation_number'] = '对账';
 $lang['finance_journal_form_error'] = '日记账草稿无法保存。';
 $lang['finance_add'] = '添加';
 $lang['finance_save'] = '保存';

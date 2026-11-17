@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = 'Approver';
 $lang['finance_transfer_amount'] = 'Jumlah';
 $lang['finance_transaction_date'] = 'Tanggal Transaksi';
 $lang['finance_created_at'] = 'Tanggal Dibuat';
+$lang['finance_reconciliation_number'] = 'Rekonsiliasi';
 $lang['finance_journal_form_error'] = 'Draf jurnal tidak dapat disimpan.';
 $lang['finance_add'] = 'Tambah';
 $lang['finance_save'] = 'Simpan';

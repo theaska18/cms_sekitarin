@@ -33,16 +33,30 @@ class Finance_reconciliation_store
         return $n === FALSE ? FALSE : (int) $n;
     }
 
+    private function reconciliation_number_exists($tenant, $number)
+    {
+        return $this->db->from('fin_bank_reconciliation')->where('tenant_id', (int) $tenant)
+            ->where('reconciliation_number', (string) $number)->count_all_results() > 0;
+    }
+
     public function page($tenant, $search, $limit, $offset, $order, $direction)
     {
         if (!$this->available()) return FALSE;
-        $allowed = array('statement_date','statement_reference','closing_balance','status');
+        $allowed = array('reconciliation_number','statement_date','statement_reference','closing_balance','status','created_by_name');
         $order = in_array($order,$allowed,TRUE)?$order:'statement_date';
-        $this->db->select('reconciliation_id,cash_account_id,statement_date,statement_reference,opening_balance,closing_balance,status')
-            ->from('fin_bank_reconciliation')->where('tenant_id',(int)$tenant);
-        if($search!=='')$this->db->like('statement_reference',$search);
-        $q=$this->db->order_by($order,strtoupper($direction)==='ASC'?'ASC':'DESC')
-            ->order_by('reconciliation_id','DESC')->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset))->get();
+        $this->db->select('r.reconciliation_id,r.reconciliation_number,r.cash_account_id,r.statement_date,r.statement_reference,r.opening_balance,r.closing_balance,r.status,r.approval_request_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = r.tenant_id AND a.request_id = r.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
+            ->from('fin_bank_reconciliation r')
+            ->join('app_user u', 'u.user_id = r.created_by AND u.tenant_id = r.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = r.approval_request_id AND ar.tenant_id = r.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
+            ->where('r.tenant_id', (int) $tenant);
+        if ($search !== '') $this->db->like('r.statement_reference', $search);
+        $order_column = $order === 'created_by_name' || $order === 'reconciliation_number' ? $order : 'r.' . $order;
+        $q = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
+            ->order_by('r.reconciliation_id', 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $q===FALSE?FALSE:$q->result_array();
     }
 
@@ -131,13 +145,22 @@ class Finance_reconciliation_store
         $this->db->trans_begin();
         if($id!==NULL){
             $existing=$this->find($tenant,$id);
-            if(!is_array($existing)||$existing['status']!=='draft'){$this->db->trans_rollback();return 'not_editable';}
+            if(!is_array($existing)||!in_array($existing['status'],array('draft','revise'),TRUE)){$this->db->trans_rollback();return 'not_editable';}
             $this->db->where('tenant_id',(int)$tenant)->where('reconciliation_id',(int)$id)->update('fin_bank_reconciliation',$data);
             $recon_id=(int)$id;$this->db->where('tenant_id',(int)$tenant)->where('reconciliation_id',$recon_id)->delete('fin_bank_reconciliation_line');
         }else{
-            $data['tenant_id']=(int)$tenant;$data['status']='draft';$data['create_on']=date('Y-m-d H:i:s');$data['created_by']=(int)$user;
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant, 'bank_reconciliation_code');
+            if(!is_array($next_code)||!isset($next_code['code'])||$next_code['code']===''){$this->db->trans_rollback();return 'sequence_unavailable';}
+            for($attempt=0;$attempt<10&&$this->reconciliation_number_exists($tenant,(string)$next_code['code']);$attempt++){
+                $next_code=$CI->application_sequence_store->next_code_after($next_code);
+                if(!is_array($next_code)||!isset($next_code['code'])){$this->db->trans_rollback();return 'sequence_unavailable';}
+            }
+            if($this->reconciliation_number_exists($tenant,(string)$next_code['code'])){$this->db->trans_rollback();return 'sequence_unavailable';}
+            $data['tenant_id']=(int)$tenant;$data['reconciliation_number']=(string)$next_code['code'];$data['status']='draft';$data['create_on']=date('Y-m-d H:i:s');$data['created_by']=(int)$user;
             $this->db->insert('fin_bank_reconciliation',$data);$recon_id=(int)$this->db->insert_id();
-            if(!$recon_id){$this->db->trans_rollback();return 'save_error';}
+            if(!$recon_id||!$CI->application_sequence_store->advance_sequence($tenant,'bank_reconciliation_code',$next_code)){$this->db->trans_rollback();return 'sequence_unavailable';}
         }
         foreach($clean as $line){$line['tenant_id']=(int)$tenant;$line['reconciliation_id']=$recon_id;$line['matched_flag']=1;$this->db->insert('fin_bank_reconciliation_line',$line);}
         if($this->db->trans_status()===FALSE){$this->db->trans_rollback();return 'save_error';}
@@ -147,10 +170,10 @@ class Finance_reconciliation_store
     public function complete($tenant,$user,$id)
     {
         $row=$this->find($tenant,$id);if(!is_array($row))return $row===NULL?'not_found':'unavailable';
-        if($row['status']!=='draft'||!$row['lines'])return 'not_completable';
+        if($row['status']!=='approved'||!$row['lines'])return 'not_completable';
         $sum=0.0;foreach($row['lines'] as $line){if((int)$line['matched_flag']!==1)return 'unmatched_lines';$sum+=(float)$line['statement_amount'];}
         if(abs(round((float)$row['opening_balance']+$sum,6)-(float)$row['closing_balance'])>0.000001)return 'closing_balance_mismatch';
-        $this->db->where('tenant_id',(int)$tenant)->where('reconciliation_id',(int)$id)->where('status','draft')
+        $this->db->where('tenant_id',(int)$tenant)->where('reconciliation_id',(int)$id)->where('status','approved')
             ->update('fin_bank_reconciliation',array('status'=>'completed','completed_on'=>date('Y-m-d H:i:s'),'completed_by'=>(int)$user));
         return $this->db->trans_status()===FALSE?'complete_error':'completed';
     }

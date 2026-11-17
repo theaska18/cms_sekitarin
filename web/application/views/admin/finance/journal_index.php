@@ -116,17 +116,12 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
                 var editIcon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>';
                 var submitIcon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0 4-4m-4 4-4-4M4 17h12"/></svg>';
                 var postIcon='<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 10.5 8 14l8-8"/></svg>';
-                if(isOpening){
-                    if(row.status==='draft'||row.status==='revise'){
-                        items+='<a href="'+escapeHtml(base+'/edit/'+id)+'" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">'+editIcon+escapeHtml(labels.edit)+'</a>';
-                        if(row.status==='draft'){
-                            items+=postMenuItem(id,'submit_approval',labels.submit,'text-amber-700 hover:bg-amber-50 focus:bg-amber-50',submitIcon);
-                        }
-                    } else if(row.status==='approved'){
-                        items+=postMenuItem(id,'post',labels.post,'text-emerald-700 hover:bg-emerald-50 focus:bg-emerald-50',postIcon);
-                    }
-                } else if(row.status==='draft'){
+                if(row.status==='draft'||row.status==='revise'){
                     items+='<a href="'+escapeHtml(base+'/edit/'+id)+'" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">'+editIcon+escapeHtml(labels.edit)+'</a>';
+                    if(row.status==='draft'){
+                        items+=postMenuItem(id,'submit_approval',labels.submit,'text-amber-700 hover:bg-amber-50 focus:bg-amber-50',submitIcon);
+                    }
+                } else if(row.status==='approved'){
                     items+=postMenuItem(id,'post',labels.post,'text-emerald-700 hover:bg-emerald-50 focus:bg-emerald-50',postIcon);
                 }
                 if(!items)return '';
@@ -145,7 +140,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
                     + '<span class="inline-flex w-fit items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide '+style.badge+'">'
                     + '<span aria-hidden="true" class="h-1.5 w-1.5 rounded-full '+style.dot+'"></span>'
                     + escapeHtml(label)+'</span>';
-                if(isOpening&&v==='pending_approval'){
+                if(v==='pending_approval'){
                     var approver=String(row.current_approver_name||'').trim();
                     if(approver){
                         html+='<div class="flex max-w-xs items-start gap-1.5 text-xs text-slate-500">'
@@ -157,7 +152,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
                             + '<span>'+escapeHtml(labels.pendingUnassigned)+'</span></div>';
                     }
                 }
-                if(isOpening&&v==='revise'&&row.revise_note){
+                if(v==='revise'&&row.revise_note){
                     html+='<div class="max-w-xs border-l-2 border-amber-300 pl-2 text-xs leading-5 text-amber-800" title="'+escapeHtml(row.revise_note)+'">'
                         + '<span class="font-medium">'+escapeHtml(labels.reviseReason)+':</span> '+escapeHtml(row.revise_note)+'</div>';
                 }

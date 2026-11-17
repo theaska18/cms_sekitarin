@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = 'Approbateur';
 $lang['finance_transfer_amount'] = 'Montant';
 $lang['finance_transaction_date'] = 'Date de transaction';
 $lang['finance_created_at'] = 'Créé le';
+$lang['finance_reconciliation_number'] = 'Rapprochement';
 $lang['finance_journal_form_error'] = 'Le brouillon du journal n’a pas pu être enregistré.';
 $lang['finance_add'] = 'Ajouter';
 $lang['finance_save'] = 'Enregistrer';

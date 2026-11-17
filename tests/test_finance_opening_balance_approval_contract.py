@@ -32,7 +32,7 @@ class FinanceOpeningBalanceApprovalContractTests(unittest.TestCase):
         self.assertIn("journal_opening_balance", save)
         self.assertIn("sequence_unavailable", save)
         self.assertIn("array('draft', 'revise')", save)
-        self.assertIn("$source_type === 'opening_balance' ? 'approved' : 'draft'", post)
+        self.assertIn("$required_status = 'approved';", post)
         self.assertIn("where('status', $required_status)", post)
 
     def test_controller_submits_opening_balance_to_the_configured_flow(self):

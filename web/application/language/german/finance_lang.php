@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = 'Genehmiger';
 $lang['finance_transfer_amount'] = 'Betrag';
 $lang['finance_transaction_date'] = 'Transaktionsdatum';
 $lang['finance_created_at'] = 'Erstellt am';
+$lang['finance_reconciliation_number'] = 'Abstimmung';
 $lang['finance_journal_form_error'] = 'Der Journalentwurf konnte nicht gespeichert werden.';
 $lang['finance_add'] = 'Hinzufügen';
 $lang['finance_save'] = 'Speichern';

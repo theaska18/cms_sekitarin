@@ -945,6 +945,11 @@ class Approval_workflow_store
             'fin_transaction' => array('table' => 'fin_transaction', 'id' => 'transaction_id'),
             'fin_cash_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id'),
             'fin_journal_entry' => array('table' => 'fin_journal_entry', 'id' => 'journal_entry_id'),
+            'fin_sales_invoice' => array('table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id'),
+            'fin_purchase_bill' => array('table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id'),
+            'fin_customer_payment' => array('table' => 'fin_customer_payment', 'id' => 'customer_payment_id'),
+            'fin_supplier_payment' => array('table' => 'fin_supplier_payment', 'id' => 'supplier_payment_id'),
+            'fin_bank_reconciliation' => array('table' => 'fin_bank_reconciliation', 'id' => 'reconciliation_id'),
         );
         if (!isset($targets[$type]) || $id < 1
             || !in_array($status, array('approved','revise','rejected'), TRUE)

@@ -277,24 +277,39 @@ class Admin_finance extends Admin
 
     public function submit_approval($slug = '', $id = 0)
     {
-        if (!in_array($slug, array('income', 'expenses', 'cash_bank_transfer', 'opening_balances'), TRUE)
+        if (!in_array($slug, array('income', 'expenses', 'cash_bank_transfer', 'opening_balances', 'journal_entries', 'sales_invoices', 'purchase_bills', 'customer_payments', 'supplier_payments', 'bank_reconciliation'), TRUE)
             || !is_numeric($id) || (int) $id < 1
             || $this->input->method(TRUE) !== 'POST') {
             show_404();
             return;
         }
         $menu_code = $slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer'
-            : ($slug === 'opening_balances' ? 'fin_opening_balances' : $this->finance_transaction_menu_code($slug));
+            : ($slug === 'opening_balances' ? 'fin_opening_balances'
+                : ($slug === 'journal_entries' ? 'fin_journal_entries'
+                    : ($slug === 'bank_reconciliation' ? 'fin_bank_reconciliation'
+                        : ($slug === 'sales_invoices' || $slug === 'purchase_bills'
+                            ? $this->finance_document_menu_code($slug)
+                            : $this->finance_payment_menu_code($slug)))));
         if (!$this->has_admin_menu_code($menu_code)
             || !$this->has_admin_access_code($menu_code . '_update')) {
             $this->finance_forbidden();
             return;
         }
-        $result = $slug === 'cash_bank_transfer'
-            ? $this->finance_transfer_start_approval((int) $id)
-            : ($slug === 'opening_balances'
-                ? $this->finance_opening_balance_start_approval((int) $id)
-                : $this->finance_transaction_start_approval($slug, (int) $id));
+        if ($slug === 'cash_bank_transfer') {
+            $result = $this->finance_transfer_start_approval((int) $id);
+        } elseif ($slug === 'opening_balances') {
+            $result = $this->finance_opening_balance_start_approval((int) $id);
+        } elseif ($slug === 'journal_entries') {
+            $result = $this->finance_manual_journal_start_approval((int) $id);
+        } elseif ($slug === 'sales_invoices' || $slug === 'purchase_bills') {
+            $result = $this->finance_document_start_approval($slug, (int) $id);
+        } elseif ($slug === 'customer_payments' || $slug === 'supplier_payments') {
+            $result = $this->finance_payment_start_approval($slug, (int) $id);
+        } elseif ($slug === 'bank_reconciliation') {
+            $result = $this->finance_reconciliation_start_approval((int) $id);
+        } else {
+            $result = $this->finance_transaction_start_approval($slug, (int) $id);
+        }
         $this->session->set_flashdata('finance_status', $result);
         redirect('/admin/finance/' . $slug, 'location', 303);
     }
@@ -450,6 +465,164 @@ class Admin_finance extends Admin
         $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
             ->where('source_type', 'opening_balance')
             ->update('fin_journal_entry', array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_manual_journal_start_approval($id)
+    {
+        $this->load->library('finance_journal_store');
+        $store = $this->finance_journal_store;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $record = $store->available() ? $store->find($tenant_id, (int) $id, 'manual') : FALSE;
+        if (!is_array($record)) return 'not_found';
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) return 'not_submittable';
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) return 'approval_unavailable';
+        $steps = $approval->effective_steps('finance_manual_journal');
+        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+            ->where('source_type', 'manual')->update('fin_journal_entry', array('status' => 'pending_approval'));
+        $subject = 'Manual Journal';
+        $details = 'Nomor: ' . (string) $record['journal_number']
+            . "\n" . 'Tanggal: ' . (string) $record['journal_date']
+            . "\n" . 'Total Debit: ' . $this->finance_approval_amount($record['debit_total'])
+            . "\n" . 'Total Kredit: ' . $this->finance_approval_amount($record['credit_total'])
+            . "\n" . 'Keterangan: ' . (string) $record['description'];
+        $result = $approval->submit('finance_manual_journal', $subject, $details, 'fin_journal_entry', (int) $id, (int) $record['created_by']);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+                ->where('source_type', 'manual')->update('fin_journal_entry', array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+            ->where('source_type', 'manual')->update('fin_journal_entry', array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_document_start_approval($slug, $id)
+    {
+        $kind = $slug === 'sales_invoices' ? 'sales' : 'purchase';
+        $this->load->library('finance_document_store');
+        $store = $this->finance_document_store;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $record = $store->available($kind) ? $store->find($tenant_id, $kind, (int) $id) : FALSE;
+        if (!is_array($record)) return 'not_found';
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) return 'not_submittable';
+        $flow_code = $kind === 'sales' ? 'finance_sales_invoice' : 'finance_purchase_bill';
+        $subject = $kind === 'sales' ? 'Sales Invoice' : 'Purchase Bill';
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) return 'approval_unavailable';
+        $steps = $approval->effective_steps($flow_code);
+        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
+        $spec = $kind === 'sales'
+            ? array('number' => 'invoice_number', 'date' => 'invoice_date', 'table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id')
+            : array('number' => 'bill_number', 'date' => 'bill_date', 'table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id');
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)
+            ->update($spec['table'], array('status' => 'pending_approval'));
+        $details = 'Nomor: ' . (string) $record[$spec['number']]
+            . "\n" . 'Tanggal: ' . (string) $record[$spec['date']]
+            . "\n" . 'Jumlah: ' . $this->finance_approval_amount($record['total_amount']) . ' ' . (string) $record['currency_code']
+            . "\n" . 'Jatuh Tempo: ' . (string) $record['due_date']
+            . "\n" . 'Keterangan: ' . (string) $record['memo'];
+        $result = $approval->submit($flow_code, $subject, $details, $spec['table'], (int) $id, (int) $record['created_by']);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)
+                ->update($spec['table'], array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)
+            ->update($spec['table'], array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_payment_start_approval($slug, $id)
+    {
+        $kind = $slug === 'customer_payments' ? 'customer' : 'supplier';
+        $this->load->library('finance_payment_store');
+        $store = $this->finance_payment_store;
+        $tenant = (int) $this->current_user['tenant_id'];
+        $record = $store->available($kind) ? $store->find($tenant, $kind, (int) $id) : FALSE;
+        if (!is_array($record)) return 'not_found';
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) return 'not_submittable';
+        $flow_code = $kind === 'customer' ? 'finance_customer_payment' : 'finance_supplier_payment';
+        $subject = $kind === 'customer' ? 'Customer Payment' : 'Supplier Payment';
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) return 'approval_unavailable';
+        $steps = $approval->effective_steps($flow_code);
+        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
+        $table = $kind === 'customer' ? 'fin_customer_payment' : 'fin_supplier_payment';
+        $id_column = $kind === 'customer' ? 'customer_payment_id' : 'supplier_payment_id';
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant)->where($id_column, (int) $id)
+            ->update($table, array('status' => 'pending_approval'));
+        $details = 'Nomor: ' . (string) $record['payment_number']
+            . "\n" . 'Tanggal: ' . (string) $record['payment_date']
+            . "\n" . 'Jumlah: ' . $this->finance_approval_amount($record['amount']) . ' ' . (string) $record['currency_code']
+            . "\n" . 'Referensi: ' . (string) $record['reference'];
+        $result = $approval->submit($flow_code, $subject, $details, $table, (int) $id, (int) $record['created_by']);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant)->where($id_column, (int) $id)
+                ->update($table, array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant)->where($id_column, (int) $id)
+            ->update($table, array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_reconciliation_start_approval($id)
+    {
+        $this->load->library('finance_reconciliation_store');
+        $store = $this->finance_reconciliation_store;
+        $tenant = (int) $this->current_user['tenant_id'];
+        $record = $store->available() ? $store->find($tenant, (int) $id) : FALSE;
+        if (!is_array($record)) return 'not_found';
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) return 'not_submittable';
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) return 'approval_unavailable';
+        $steps = $approval->effective_steps('finance_bank_reconciliation');
+        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant)->where('reconciliation_id', (int) $id)
+            ->update('fin_bank_reconciliation', array('status' => 'pending_approval'));
+        $details = 'Referensi: ' . (string) $record['statement_reference']
+            . "\n" . 'Tanggal Rekening: ' . (string) $record['statement_date']
+            . "\n" . 'Saldo Awal: ' . $this->finance_approval_amount($record['opening_balance'])
+            . "\n" . 'Saldo Akhir: ' . $this->finance_approval_amount($record['closing_balance']);
+        $result = $approval->submit('finance_bank_reconciliation', 'Bank Reconciliation', $details, 'fin_bank_reconciliation', (int) $id, (int) $record['created_by']);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant)->where('reconciliation_id', (int) $id)
+                ->update('fin_bank_reconciliation', array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant)->where('reconciliation_id', (int) $id)
+            ->update('fin_bank_reconciliation', array(
                 'status' => $approved ? 'approved' : 'pending_approval',
                 'approval_request_id' => $request_id > 0 ? $request_id : NULL,
             ));
@@ -964,7 +1137,7 @@ class Admin_finance extends Admin
             }
             if ($saved === FALSE) {
                 $available = FALSE;
-            } elseif (!in_array($saved['status'], $source_type === 'opening_balance' ? array('draft', 'revise') : array('draft'), TRUE)) {
+            } elseif (!in_array($saved['status'], array('draft', 'revise'), TRUE)) {
                 show_error('Only draft or revised journal entries can be edited.', 409);
                 return;
             } else {
@@ -1001,8 +1174,10 @@ class Admin_finance extends Admin
                 $this->db->db_debug = $previous_db_debug;
                 if ($result === 'saved') {
                     $status = 'draft_saved';
-                    if ($source_type === 'opening_balance' && $was_revise && !$is_new) {
-                        $status = $this->finance_opening_balance_start_approval((int) $id);
+                    if ($was_revise && !$is_new) {
+                        $status = $source_type === 'opening_balance'
+                            ? $this->finance_opening_balance_start_approval((int) $id)
+                            : $this->finance_manual_journal_start_approval((int) $id);
                     }
                     $this->session->set_flashdata('finance_status', $status);
                     redirect('/admin/finance/' . $slug, 'location', 303);
@@ -1229,6 +1404,7 @@ class Admin_finance extends Admin
         $this->load->library('finance_document_store');
         $store = $this->finance_document_store;
         $available = $store->available($kind);
+        $was_revise = FALSE;
         $record = array(
             'document_date' => date('Y-m-d'), 'due_date' => '', 'person_id' => '',
             'account_id' => '', 'tax_id' => '', 'department_id' => '',
@@ -1243,10 +1419,11 @@ class Admin_finance extends Admin
             }
             if ($saved === FALSE) {
                 $available = FALSE;
-            } elseif ($saved['status'] !== 'draft') {
+            } elseif (!in_array($saved['status'], array('draft', 'revise'), TRUE)) {
                 show_error('Posted Finance documents cannot be edited.', 409);
                 return;
             } else {
+                $was_revise = $saved['status'] === 'revise';
                 $spec = $kind === 'sales'
                     ? array('number' => 'invoice_number', 'date' => 'invoice_date')
                     : array('number' => 'bill_number', 'date' => 'bill_date');
@@ -1288,7 +1465,8 @@ class Admin_finance extends Admin
                 );
                 $this->db->db_debug = $previous_db_debug;
                 if ($result === 'saved') {
-                    $this->session->set_flashdata('finance_status', 'draft_saved');
+                    $status = $was_revise && !$is_new ? $this->finance_document_start_approval($slug, (int) $id) : 'draft_saved';
+                    $this->session->set_flashdata('finance_status', $status);
                     redirect('/admin/finance/' . $slug, 'location', 303);
                     return;
                 }
@@ -1444,6 +1622,7 @@ class Admin_finance extends Admin
         $available = $store->available($kind);
         $record = array('payment_date' => date('Y-m-d'), 'document_id' => '', 'cash_account_id' => '', 'amount' => '', 'exchange_rate' => '1', 'reference' => '', 'status' => 'draft');
         $labels = array('document_id' => '', 'cash_account_id' => '');
+        $was_revise = FALSE;
         $tenant = (int) $this->current_user['tenant_id'];
         if (!$is_new && $available) {
             $saved = $store->find($tenant, $kind, (int) $id);
@@ -1453,10 +1632,11 @@ class Admin_finance extends Admin
             }
             if ($saved === FALSE) {
                 $available = FALSE;
-            } elseif ($saved['status'] !== 'draft') {
+            } elseif (!in_array($saved['status'], array('draft', 'revise'), TRUE)) {
                 show_error('Posted payments cannot be edited.', 409);
                 return;
             } else {
+                $was_revise = $saved['status'] === 'revise';
                 $record = array_merge($record, $saved);
                 if (!empty($saved['allocation'])) $record['document_id'] = $saved['allocation'][$kind === 'customer' ? 'sales_invoice_id' : 'purchase_bill_id'];
                 $labels['document_id'] = !empty($record['document_id']) ? $store->lookup_label($tenant, $kind, $record['document_id']) : '';
@@ -1484,7 +1664,8 @@ class Admin_finance extends Admin
                 $result = $store->save_draft($tenant, (int) $this->current_user['user_id'], $kind, $is_new ? NULL : (int) $id, $values);
                 $this->db->db_debug = $previous;
                 if ($result === 'saved') {
-                    $this->session->set_flashdata('finance_status', 'draft_saved');
+                    $status = $was_revise && !$is_new ? $this->finance_payment_start_approval($slug, (int) $id) : 'draft_saved';
+                    $this->session->set_flashdata('finance_status', $status);
                     redirect('/admin/finance/' . $slug, 'location', 303);
                     return;
                 }
@@ -1648,7 +1829,7 @@ class Admin_finance extends Admin
         if(!$store->available()){$this->datatable_server->error(503);return;}
         $tenant=(int)$this->current_user['tenant_id'];
         $this->datatable_server->respond(
-            array(1=>'statement_date',2=>'statement_reference',3=>'closing_balance',4=>'status'),
+            array(1=>'reconciliation_number',2=>'statement_date',3=>'statement_reference',4=>'closing_balance',5=>'status'),
             function()use($store,$tenant){return $store->count($tenant);},
             function($search)use($store,$tenant){return $store->count($tenant,$search);},
             function($search,$length,$offset,$order,$direction)use($store,$tenant){return $store->page($tenant,$search,$length,$offset,$order,$direction);},
@@ -1662,13 +1843,13 @@ class Admin_finance extends Admin
         if(!$this->has_admin_menu_code($menu)||!$this->has_admin_access_code($menu.($is_new?'_add':'_update'))){$this->finance_forbidden();return;}
         $this->load->library('finance_reconciliation_store');$store=$this->finance_reconciliation_store;
         $record=array('cash_account_id'=>'','statement_date'=>date('Y-m-d'),'statement_reference'=>'','opening_balance'=>'','closing_balance'=>'','lines'=>array());
-        $labels=array('cash_account_id'=>'','lines'=>array());$available=$store->available();
+        $labels=array('cash_account_id'=>'','lines'=>array());$available=$store->available();$was_revise=FALSE;
         if(!$is_new&&$available){
             $saved=$store->find((int)$this->current_user['tenant_id'],(int)$id);
             if($saved===NULL){show_404();return;}
             if($saved===FALSE){$available=FALSE;}
-            elseif($saved['status']!=='draft'){show_error('Completed reconciliations cannot be edited.',409);return;}
-            else{$record=array_merge($record,$saved);$this->load->library('finance_transfer_store');$labels['cash_account_id']=$this->finance_transfer_store->cash_label((int)$this->current_user['tenant_id'],$record['cash_account_id']);foreach($record['lines'] as $i=>$line)$labels['lines'][$i]=$store->line_label((int)$this->current_user['tenant_id'],$line['journal_line_id']);}
+            elseif(!in_array($saved['status'],array('draft','revise'),TRUE)){show_error('Completed reconciliations cannot be edited.',409);return;}
+            else{$was_revise=$saved['status']==='revise';$record=array_merge($record,$saved);$this->load->library('finance_transfer_store');$labels['cash_account_id']=$this->finance_transfer_store->cash_label((int)$this->current_user['tenant_id'],$record['cash_account_id']);foreach($record['lines'] as $i=>$line)$labels['lines'][$i]=$store->line_label((int)$this->current_user['tenant_id'],$line['journal_line_id']);}
         }
         $errors=array();$write=$available&&$this->finance_write_available();
         if($this->input->method(TRUE)==='POST'){
@@ -1684,7 +1865,7 @@ class Admin_finance extends Admin
             if(count($clean)<1)$errors[]='statement_lines_required';
             foreach($clean as $line){$ld=DateTime::createFromFormat('!Y-m-d',$line['statement_on']);if($ld===FALSE||$ld->format('Y-m-d')!==$line['statement_on']||$line['statement_on']>$raw['statement_date'])$errors[]='statement_line_date_invalid';if(!preg_match('/^-?\d{1,14}(?:\.\d{1,6})?$/',$line['statement_amount']))$errors[]='statement_line_amount_invalid';}
             $values=array_merge($raw,array('lines'=>$clean));
-            if(!$errors){$previous=$this->db->db_debug;$this->db->db_debug=FALSE;$result=$store->save_draft((int)$this->current_user['tenant_id'],(int)$this->current_user['user_id'],$is_new?NULL:(int)$id,$values);$this->db->db_debug=$previous;if($result==='saved'){$this->session->set_flashdata('finance_status','draft_saved');redirect('/admin/finance/bank_reconciliation','location',303);return;}$errors[]='reconciliation_'.$result;}
+            if(!$errors){$previous=$this->db->db_debug;$this->db->db_debug=FALSE;$result=$store->save_draft((int)$this->current_user['tenant_id'],(int)$this->current_user['user_id'],$is_new?NULL:(int)$id,$values);$this->db->db_debug=$previous;if($result==='saved'){$status=$was_revise&&!$is_new?$this->finance_reconciliation_start_approval((int)$id):'draft_saved';$this->session->set_flashdata('finance_status',$status);redirect('/admin/finance/bank_reconciliation','location',303);return;}$errors[]='reconciliation_'.$result;}
             $record=array_merge($record,$values);$this->load->library('finance_transfer_store');$labels['cash_account_id']=$store->cash_label((int)$this->current_user['tenant_id'],$record['cash_account_id']);foreach($record['lines'] as $i=>$line)$labels['lines'][$i]=$store->line_label((int)$this->current_user['tenant_id'],$line['journal_line_id']);
         }
         $this->render_admin('admin/finance/reconciliation_form','finance_bank_reconciliation','/admin/finance/bank_reconciliation'.($is_new?'/new':'/edit/'.(int)$id),array(

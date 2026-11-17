@@ -52,13 +52,21 @@ class Finance_payment_store
         $spec = $this->spec($kind);
         $allowed = array('payment_number', 'payment_date', 'amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : 'payment_date';
-        $this->db->select($spec['id'] . ',payment_number,payment_date,amount,currency_code,status,reference')
-            ->from($spec['table'])->where('tenant_id', (int) $tenant);
+        $this->db->select('p.' . $spec['id'] . ',p.payment_number,p.payment_date,p.amount,p.currency_code,p.status,p.reference,p.approval_request_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = p.tenant_id AND a.request_id = p.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
+            ->from($spec['table'] . ' p')
+            ->join('app_user u', 'u.user_id = p.created_by AND u.tenant_id = p.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = p.approval_request_id AND ar.tenant_id = p.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
+            ->where('p.tenant_id', (int) $tenant);
         if (trim((string) $search) !== '') {
-            $this->db->group_start()->like('payment_number', $search)->or_like('reference', $search)->group_end();
+            $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)->group_end();
         }
-        $query = $this->db->order_by($order, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
-            ->order_by($spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
+        $order_column = $order === 'created_by_name' ? 'created_by_name' : 'p.' . $order;
+        $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
+            ->order_by('p.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();
     }
 
@@ -107,7 +115,7 @@ class Finance_payment_store
         $this->db->trans_begin();
         if ($id !== NULL) {
             $existing = $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->limit(1)->get($spec['table']);
-            if ($existing === FALSE || !$existing->num_rows() || $existing->row()->status !== 'draft') {
+            if ($existing === FALSE || !$existing->num_rows() || !in_array((string) $existing->row()->status, array('draft', 'revise'), TRUE)) {
                 $this->db->trans_rollback();
                 return 'not_editable';
             }
@@ -124,11 +132,30 @@ class Finance_payment_store
             ));
             $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], $payment_id)->delete($spec['allocation']);
         } else {
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $sequence_code = $kind === 'customer' ? 'customer_payment_code' : 'supplier_payment_code';
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant, $sequence_code);
+            if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            for ($attempt = 0; $attempt < 10 && $this->payment_number_exists($tenant, $spec['table'], (string) $next_code['code']); $attempt++) {
+                $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                if (!is_array($next_code) || !isset($next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            }
+            if ($this->payment_number_exists($tenant, $spec['table'], (string) $next_code['code'])) {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
             $this->db->insert($spec['table'], array(
                 'tenant_id' => (int) $tenant,
                 $spec['person_id'] => (int) $doc[$spec['person_id']],
                 'cash_account_id' => (int) $cash['cash_account_id'],
-                'payment_number' => 'TMP-' . strtoupper($kind) . '-' . bin2hex(random_bytes(6)),
+                'payment_number' => (string) $next_code['code'],
                 'payment_date' => $values['payment_date'],
                 'currency_code' => $doc['currency_code'],
                 'exchange_rate' => $rate,
@@ -140,13 +167,10 @@ class Finance_payment_store
                 'created_by' => (int) $user,
             ));
             $payment_id = (int) $this->db->insert_id();
-            if (!$payment_id) {
+            if ($payment_id < 1 || !$CI->application_sequence_store->advance_sequence($tenant, $sequence_code, $next_code)) {
                 $this->db->trans_rollback();
-                return 'save_error';
+                return 'sequence_unavailable';
             }
-            $prefix = $kind === 'customer' ? 'REC-' : 'PAY-';
-            $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], $payment_id)
-                ->update($spec['table'], array('payment_number' => $prefix . date('Ymd') . '-' . $payment_id));
         }
         $this->db->insert($spec['allocation'], array(
             'tenant_id' => (int) $tenant,
@@ -170,7 +194,7 @@ class Finance_payment_store
         $payment_q = $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->limit(1)->get($spec['table']);
         if ($payment_q === FALSE || !$payment_q->num_rows()) return 'not_found';
         $payment = $payment_q->row_array();
-        if ($payment['status'] !== 'draft') return 'not_postable';
+        if ($payment['status'] !== 'approved') return 'not_postable';
         $alloc_q = $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->limit(1)->get($spec['allocation']);
         if ($alloc_q === FALSE || !$alloc_q->num_rows()) return 'allocation_invalid';
         $alloc = $alloc_q->row_array();
@@ -269,7 +293,7 @@ class Finance_payment_store
                 'debit_base_amount' => $line['debit_base_amount'], 'credit_base_amount' => $line['credit_base_amount'],
             ));
         }
-        $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->where('status', 'draft')
+        $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->where('status', 'approved')
             ->update($spec['table'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user));
         if ($journal_id < 1 || $this->db->trans_status() === FALSE) {
             $this->db->trans_rollback();
@@ -324,6 +348,12 @@ class Finance_payment_store
         return $query !== FALSE && $query->num_rows()
             ? $query->row()->{$spec['document_number']} . ' — ' . $query->row()->currency_code
             : '';
+    }
+
+    private function payment_number_exists($tenant, $table, $number)
+    {
+        return $this->db->from($table)->where('tenant_id', (int) $tenant)
+            ->where('payment_number', (string) $number)->count_all_results() > 0;
     }
 
     private function spec($kind)

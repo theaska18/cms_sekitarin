@@ -150,7 +150,7 @@ class Finance_journal_store
                 $this->db->trans_rollback();
                 return $existing === NULL ? 'not_found' : 'unavailable';
             }
-            if (!in_array($existing['status'], $source_type === 'opening_balance' ? array('draft', 'revise') : array('draft'), TRUE)) {
+            if (!in_array($existing['status'], array('draft', 'revise'), TRUE)) {
                 $this->db->trans_rollback();
                 return 'not_editable';
             }
@@ -165,28 +165,26 @@ class Finance_journal_store
             $this->db->where('tenant_id', (int) $tenant_id)->where('journal_entry_id', $entry_id)
                 ->delete('fin_journal_line');
         } else {
-            $journal_number = 'TMP-' . strtoupper($source_type) . '-' . bin2hex(random_bytes(6));
-            if ($source_type === 'opening_balance') {
-                $CI =& get_instance();
-                $CI->load->library('application_sequence_store');
-                $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant_id, 'journal_opening_balance');
-                if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
-                    $this->db->trans_rollback();
-                    return 'sequence_unavailable';
-                }
-                for ($attempt = 0; $attempt < 10 && $this->journal_number_exists($tenant_id, (string) $next_code['code']); $attempt++) {
-                    $next_code = $CI->application_sequence_store->next_code_after($next_code);
-                    if (!is_array($next_code) || !isset($next_code['code'])) {
-                        $this->db->trans_rollback();
-                        return 'sequence_unavailable';
-                    }
-                }
-                if ($this->journal_number_exists($tenant_id, (string) $next_code['code'])) {
-                    $this->db->trans_rollback();
-                    return 'sequence_unavailable';
-                }
-                $journal_number = (string) $next_code['code'];
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $sequence_code = $source_type === 'opening_balance' ? 'journal_opening_balance' : 'journal_manual';
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant_id, $sequence_code);
+            if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
             }
+            for ($attempt = 0; $attempt < 10 && $this->journal_number_exists($tenant_id, (string) $next_code['code']); $attempt++) {
+                $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                if (!is_array($next_code) || !isset($next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            }
+            if ($this->journal_number_exists($tenant_id, (string) $next_code['code'])) {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            $journal_number = (string) $next_code['code'];
             $this->db->insert('fin_journal_entry', array(
                 'tenant_id' => (int) $tenant_id,
                 'period_id' => NULL,
@@ -202,18 +200,10 @@ class Finance_journal_store
                 'created_by' => (int) $user_id,
             ));
             $entry_id = (int) $this->db->insert_id();
-            if ($entry_id < 1) {
+            if ($entry_id < 1
+                || !$CI->application_sequence_store->advance_sequence($tenant_id, $sequence_code, $next_code)) {
                 $this->db->trans_rollback();
-                return 'save_error';
-            }
-            if ($source_type === 'opening_balance') {
-                if (!$CI->application_sequence_store->advance_sequence($tenant_id, 'journal_opening_balance', $next_code)) {
-                    $this->db->trans_rollback();
-                    return 'sequence_unavailable';
-                }
-            } else {
-                $this->db->where('tenant_id', (int) $tenant_id)->where('journal_entry_id', $entry_id)
-                    ->update('fin_journal_entry', array('journal_number' => 'MAN-' . $entry_id));
+                return 'sequence_unavailable';
             }
         }
         foreach ($clean_lines as $index => $line) {
@@ -236,7 +226,7 @@ class Finance_journal_store
         if (!is_array($entry)) {
             return $entry === NULL ? 'not_found' : 'unavailable';
         }
-        $required_status = $source_type === 'opening_balance' ? 'approved' : 'draft';
+        $required_status = 'approved';
         if ($entry['status'] !== $required_status || count($entry['lines']) < 2) {
             return 'not_postable';
         }

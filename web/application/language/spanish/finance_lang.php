@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = 'Aprobador';
 $lang['finance_transfer_amount'] = 'Importe';
 $lang['finance_transaction_date'] = 'Fecha de transacción';
 $lang['finance_created_at'] = 'Creado el';
+$lang['finance_reconciliation_number'] = 'Conciliación';
 $lang['finance_journal_form_error'] = 'No se pudo guardar el borrador del diario.';
 $lang['finance_add'] = 'Añadir';
 $lang['finance_save'] = 'Guardar';

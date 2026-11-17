@@ -425,6 +425,7 @@ $lang['finance_approver_label'] = '承認者';
 $lang['finance_transfer_amount'] = '金額';
 $lang['finance_transaction_date'] = '取引日';
 $lang['finance_created_at'] = '作成日時';
+$lang['finance_reconciliation_number'] = '照合';
 $lang['finance_journal_form_error'] = '仕訳下書きを保存できませんでした。';
 $lang['finance_add'] = '追加';
 $lang['finance_save'] = '保存';
