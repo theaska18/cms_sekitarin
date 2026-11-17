@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'Departemen';
 $lang['admin_finance_tax_configuration'] = 'Konfigurasi Pajak';
 $lang['admin_finance_financial_settings'] = 'Pengaturan Keuangan';
 $lang['admin_finance_fiscal_year'] = 'Tahun Fiskal';
-$lang['admin_finance_numbering_config'] = 'Konfigurasi Penomoran';
 $lang['admin_finance_info_button'] = 'Informasi menu';
 $lang['admin_finance_info_heading'] = 'Tentang menu ini';
 $lang['admin_finance_info_dashboard'] = 'Menampilkan saldo kas dan bank, pendapatan dan beban tahun berjalan, serta jurnal terbaru yang telah diposting. Draft tidak dihitung.';

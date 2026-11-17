@@ -17,7 +17,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
     def test_finance_foundation_is_tenant_scoped_and_idempotent(self):
         source = FOUNDATION.read_text()
         tables = re.findall(r"^\s*'(fin_[a-z_]+)' => array\(", source, re.MULTILINE)
-        self.assertEqual(27, len(tables))
+        self.assertEqual(26, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertTrue(all(name.startswith("fin_") for name in tables))
         self.assertIn("create_if_missing", source)
@@ -50,7 +50,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
             "fin_chart_of_accounts", "fin_customers", "fin_suppliers", "fin_categories",
             "fin_departments", "fin_tax_configuration", "fin_fiscal_year",
             "fin_accounting_periods", "fin_cash_accounts", "fin_bank_accounts",
-            "fin_financial_settings", "fin_numbering_config",
+            "fin_financial_settings",
         ):
             with self.subTest(menu_code=menu_code):
                 self.assertIn(menu_code, controller)

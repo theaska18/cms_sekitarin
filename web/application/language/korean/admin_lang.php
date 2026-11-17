@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = '부서';
 $lang['admin_finance_tax_configuration'] = '세금 설정';
 $lang['admin_finance_financial_settings'] = '재무 설정';
 $lang['admin_finance_fiscal_year'] = '회계연도';
-$lang['admin_finance_numbering_config'] = '번호 설정';
 $lang['admin_finance_info_button'] = '메뉴 정보';
 $lang['admin_finance_info_heading'] = '메뉴 안내';
 $lang['admin_finance_info_dashboard'] = '현금·은행 잔액, 연간 수익과 비용, 최근 전기된 분개를 표시합니다. 초안은 포함되지 않습니다.';

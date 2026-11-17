@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'Departamentos';
 $lang['admin_finance_tax_configuration'] = 'Configuración de impuestos';
 $lang['admin_finance_financial_settings'] = 'Configuración financiera';
 $lang['admin_finance_fiscal_year'] = 'Año fiscal';
-$lang['admin_finance_numbering_config'] = 'Configuración de numeración';
 $lang['admin_finance_info_button'] = 'Información del menú';
 $lang['admin_finance_info_heading'] = 'Acerca de este menú';
 $lang['admin_finance_info_dashboard'] = 'Muestra saldos de caja y bancos, ingresos y gastos del año y los asientos contabilizados recientes. Excluye borradores.';

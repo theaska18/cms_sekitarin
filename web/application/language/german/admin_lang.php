@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'Abteilungen';
 $lang['admin_finance_tax_configuration'] = 'Steuereinstellungen';
 $lang['admin_finance_financial_settings'] = 'Finanzeinstellungen';
 $lang['admin_finance_fiscal_year'] = 'Geschäftsjahr';
-$lang['admin_finance_numbering_config'] = 'Nummernkreise';
 $lang['admin_finance_info_button'] = 'Menüinfo';
 $lang['admin_finance_info_heading'] = 'Information zu diesem Menü';
 $lang['admin_finance_info_dashboard'] = 'Zeigt Kassen- und Banksalden, Einnahmen und Ausgaben seit Jahresbeginn sowie letzte gebuchte Journale. Entwürfe sind ausgeschlossen.';

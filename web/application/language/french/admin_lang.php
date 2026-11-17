@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'Départements';
 $lang['admin_finance_tax_configuration'] = 'Configuration fiscale';
 $lang['admin_finance_financial_settings'] = 'Paramètres financiers';
 $lang['admin_finance_fiscal_year'] = 'Exercice fiscal';
-$lang['admin_finance_numbering_config'] = 'Configuration de numérotation';
 $lang['admin_finance_info_button'] = 'Informations du menu';
 $lang['admin_finance_info_heading'] = 'À propos de ce menu';
 $lang['admin_finance_info_dashboard'] = 'Affiche les soldes de trésorerie, les revenus et dépenses de l’année et les écritures récentes validées. Les brouillons sont exclus.';

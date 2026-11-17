@@ -23,20 +23,6 @@ class Migration_Create_finance_foundation extends CI_Migration
                 ),
                 'indexes' => array(array('tenant_id', TRUE)),
             ),
-            'fin_numbering' => array(
-                'id' => 'numbering_id',
-                'fields' => array(
-                    'tenant_id' => $this->bigint(),
-                    'document_type' => $this->varchar(40),
-                    'prefix' => $this->varchar(24),
-                    'next_number' => $this->bigint_default(1),
-                    'number_width' => $this->int_default(6),
-                    'active_flag' => $this->tinyint(1),
-                    'create_on' => $this->datetime(),
-                    'update_on' => $this->nullable_datetime(),
-                ),
-                'indexes' => array(array('tenant_id', 'document_type', TRUE)),
-            ),
             'fin_exchange_rate' => array(
                 'id' => 'exchange_rate_id',
                 'fields' => array(

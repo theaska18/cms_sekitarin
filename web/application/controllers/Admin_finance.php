@@ -3099,24 +3099,6 @@ class Admin_finance extends Admin
                         'hint_key' => 'finance_field_fx_loss_account_id_hint'),
                 ),
             ),
-            'numbering_config' => array(
-                'slug' => 'numbering_config', 'menu_code' => 'fin_numbering_config', 'table' => 'fin_numbering',
-                'id' => 'numbering_id', 'title_key' => 'finance_numbering_config',
-                'search' => array('document_type', 'prefix'),
-                'columns' => array(
-                    array('name' => 'document_type', 'label' => 'Document type'),
-                    array('name' => 'prefix', 'label' => 'Prefix'),
-                    array('name' => 'next_number', 'label' => 'Next number'),
-                    array('name' => 'active_flag', 'label' => 'Active'),
-                ),
-                'fields' => array(
-                    array('name' => 'document_type', 'label' => 'Document type', 'type' => 'text', 'required' => TRUE, 'maxlength' => 40, 'normalize' => 'code'),
-                    array('name' => 'prefix', 'label' => 'Prefix', 'type' => 'text', 'required' => TRUE, 'maxlength' => 24),
-                    array('name' => 'next_number', 'label' => 'Next number', 'type' => 'number', 'required' => TRUE, 'default' => '1'),
-                    array('name' => 'number_width', 'label' => 'Number width', 'type' => 'number', 'required' => TRUE, 'default' => '6'),
-                    $active,
-                ),
-            ),
         );
 
         $cash_fields = array();

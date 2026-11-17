@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = '部门';
 $lang['admin_finance_tax_configuration'] = '税务配置';
 $lang['admin_finance_financial_settings'] = '财务设置';
 $lang['admin_finance_fiscal_year'] = '会计年度';
-$lang['admin_finance_numbering_config'] = '编号配置';
 $lang['admin_finance_info_button'] = '菜单说明';
 $lang['admin_finance_info_heading'] = '菜单说明';
 $lang['admin_finance_info_dashboard'] = '显示现金与银行余额、本年度收入和支出以及最近过账的分录；草稿不计入。';

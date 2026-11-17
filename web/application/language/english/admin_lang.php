@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'Departments';
 $lang['admin_finance_tax_configuration'] = 'Tax Configuration';
 $lang['admin_finance_financial_settings'] = 'Financial Settings';
 $lang['admin_finance_fiscal_year'] = 'Fiscal Year';
-$lang['admin_finance_numbering_config'] = 'Numbering Configuration';
 $lang['admin_finance_info_button'] = 'Menu information';
 $lang['admin_finance_info_heading'] = 'About this menu';
 $lang['admin_finance_info_dashboard'] = 'Shows cash and bank balances, year-to-date revenue and expenses, and recent posted journals. Drafts are excluded.';

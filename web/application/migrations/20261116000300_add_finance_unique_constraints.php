@@ -8,7 +8,6 @@ class Migration_Add_finance_unique_constraints extends CI_Migration
     {
         $unique_keys = array(
             'fin_settings' => array(array('tenant_id')),
-            'fin_numbering' => array(array('tenant_id', 'document_type')),
             'fin_exchange_rate' => array(array('tenant_id', 'from_currency', 'to_currency', 'effective_on')),
             'fin_account' => array(array('tenant_id', 'account_code')),
             'fin_fiscal_year' => array(array('tenant_id', 'year_code')),

@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = 'الأقسام';
 $lang['admin_finance_tax_configuration'] = 'إعدادات الضرائب';
 $lang['admin_finance_financial_settings'] = 'الإعدادات المالية';
 $lang['admin_finance_fiscal_year'] = 'السنة المالية';
-$lang['admin_finance_numbering_config'] = 'إعدادات الترقيم';
 $lang['admin_finance_info_button'] = 'معلومات القائمة';
 $lang['admin_finance_info_heading'] = 'حول هذه القائمة';
 $lang['admin_finance_info_dashboard'] = 'يعرض أرصدة النقد والبنوك وإيرادات ومصروفات السنة والقيود المرحلة حديثًا. لا تُحتسب المسودات.';

@@ -50,7 +50,6 @@ $lang['admin_finance_departments'] = '部門';
 $lang['admin_finance_tax_configuration'] = '税設定';
 $lang['admin_finance_financial_settings'] = '財務設定';
 $lang['admin_finance_fiscal_year'] = '会計年度';
-$lang['admin_finance_numbering_config'] = '採番設定';
 $lang['admin_finance_info_button'] = 'メニュー情報';
 $lang['admin_finance_info_heading'] = 'このメニューについて';
 $lang['admin_finance_info_dashboard'] = '現金・銀行残高、年度累計の収益と費用、最近の転記済み仕訳を表示します。下書きは含みません。';

@@ -8,8 +8,4 @@
         <access code="fin_fiscal_year_add" name="Add" />
         <access code="fin_fiscal_year_update" name="Update" />
     </menu>
-    <menu code="fin_numbering_config" name="Numbering Configuration" label_key="admin_finance_numbering_config" icon="list-ordered" route="/admin/finance/numbering_config" module_key="finance_numbering_config" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="33" status="active">
-        <access code="fin_numbering_config_add" name="Add" />
-        <access code="fin_numbering_config_update" name="Update" />
-    </menu>
 </menu-group>
