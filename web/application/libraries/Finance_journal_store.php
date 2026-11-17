@@ -245,13 +245,12 @@ class Finance_journal_store
 
     public function lookup_accounts($tenant_id, $term)
     {
-        if (strlen($term) < 2) {
-            return array();
-        }
         $this->db->select('account_id,account_code,account_name')->from('fin_account')
-            ->where('tenant_id', (int) $tenant_id)->where('active_flag', 1)
-            ->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end()
-            ->order_by('account_code', 'ASC')->limit(20);
+            ->where('tenant_id', (int) $tenant_id)->where('active_flag', 1);
+        if ($term !== '') {
+            $this->db->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end();
+        }
+        $this->db->order_by('account_code', 'ASC')->limit(20);
         $query = $this->db->get();
         $results = array();
         if ($query !== FALSE) {

@@ -458,8 +458,7 @@ class Finance_transaction_store
     public function lookup($tenant_id, $kind, $term)
     {
         $map = $this->lookup_map($kind);
-        $term_length = function_exists('mb_strlen') ? mb_strlen($term, 'UTF-8') : strlen($term);
-        if ($map === NULL || $term_length < 2) {
+        if ($map === NULL) {
             return array();
         }
         $this->db->select($map['id'] . ',' . $map['code'] . ',' . $map['name'])
@@ -474,10 +473,12 @@ class Finance_transaction_store
                 $this->db->where($column, $value);
             }
         }
-        $this->db->group_start()
-            ->like($map['code'], $term)
-            ->or_like($map['name'], $term)
-            ->group_end();
+        if ($term !== '') {
+            $this->db->group_start()
+                ->like($map['code'], $term)
+                ->or_like($map['name'], $term)
+                ->group_end();
+        }
         $query = $this->db->order_by($map['code'], 'ASC')->limit(20)->get();
         if ($query === FALSE) {
             return array();

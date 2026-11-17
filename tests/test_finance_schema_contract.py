@@ -77,7 +77,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("->where('tenant_id', (int) $tenant_id)", transaction_store)
         self.assertIn("$this->finance_transaction_store->post(", controller)
         self.assertIn("'admin_finance/post/$1/$2'", routes)
-        self.assertIn("minLength: 2", form_view)
+        self.assertIn("minLength: 0", form_view)
         self.assertIn("jquery-ui.min.js", form_view)
         self.assertIn("serverSide: true", index_view)
 
@@ -101,7 +101,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("abs($debits - $credits) > 0.000001", journal_store)
         self.assertIn("'status' => 'posted'", journal_store)
         self.assertIn("$this->finance_journal_form($slug", controller)
-        self.assertIn("minLength: 2", journal_form)
+        self.assertIn("minLength: 0", journal_form)
         self.assertIn("serverSide: true", (APP / "views/admin/finance/journal_index.php").read_text())
 
     def test_sales_and_purchase_documents_post_through_configured_control_accounts(self):
@@ -124,7 +124,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("fx_gain_account_id", payment_store)
         self.assertIn("fx_loss_account_id", payment_store)
         self.assertIn("$this->finance_payment_form($slug", controller)
-        self.assertIn("minLength:2", payment_form)
+        self.assertIn("minLength:0", payment_form)
 
     def test_transfer_requires_base_value_parity_and_all_transactions_uses_multiple_documents(self):
         controller = FINANCE_CONTROLLER.read_text()
@@ -144,7 +144,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("matched_flag", reconciliation_store)
         self.assertIn("closing_balance_mismatch", reconciliation_store)
         self.assertIn("je.status','posted'", reconciliation_store)
-        self.assertIn("minLength:2", reconciliation_form)
+        self.assertIn("minLength:0", reconciliation_form)
         self.assertIn("$this->finance_reconciliation_form($id)", controller)
 
 

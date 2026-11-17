@@ -54,10 +54,12 @@ class Finance_transfer_store
 
     public function lookup_cash($tenant, $term)
     {
-        if (strlen($term)<2) return array();
-        $q=$this->db->select('cash_account_id,account_code,account_name,currency_code')->where('tenant_id',(int)$tenant)
-            ->where('active_flag',1)->group_start()->like('account_code',$term)->or_like('account_name',$term)->group_end()
-            ->order_by('account_code','ASC')->limit(20)->get('fin_cash_account');
+        $this->db->select('cash_account_id,account_code,account_name,currency_code')->where('tenant_id',(int)$tenant)
+            ->where('active_flag',1);
+        if ($term !== '') {
+            $this->db->group_start()->like('account_code',$term)->or_like('account_name',$term)->group_end();
+        }
+        $q=$this->db->order_by('account_code','ASC')->limit(20)->get('fin_cash_account');
         $result=array();
         if($q!==FALSE) foreach($q->result_array() as $row) {
             $label=$row['account_code'].' — '.$row['account_name'].' ('.$row['currency_code'].')';

@@ -25,8 +25,10 @@ $account_kind = 'account';
                     <div>
                         <label for="<?= html_escape($field) ?>-lookup" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($label) ?><?= $required?' *':'' ?></label>
                         <input type="hidden" id="<?= html_escape($field) ?>" name="<?= html_escape($field) ?>" value="<?= html_escape($finance_document_record[$field]) ?>">
-                        <input type="text" id="<?= html_escape($field) ?>-lookup" data-document-lookup="<?= html_escape($kind) ?>" data-target="<?= html_escape($field) ?>" value="<?= html_escape(isset($finance_document_lookup_labels[$field])?$finance_document_lookup_labels[$field]:'') ?>" autocomplete="off" aria-autocomplete="list" <?= $required?'required':'' ?> class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
-                        <p class="mt-1 text-xs text-slate-500">Type at least 2 characters to search tenant records.</p>
+                        <div class="relative">
+                            <input type="text" id="<?= html_escape($field) ?>-lookup" data-document-lookup="<?= html_escape($kind) ?>" data-target="<?= html_escape($field) ?>" value="<?= html_escape(isset($finance_document_lookup_labels[$field])?$finance_document_lookup_labels[$field]:'') ?>" autocomplete="off" aria-autocomplete="list" <?= $required?'required':'' ?> class="w-full rounded-lg border border-slate-300 pe-10 ps-3 py-2.5 text-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
+                        </div>
                     </div>
                 <?php endforeach; ?>
                 <div><label for="currency-code" class="mb-1.5 block text-sm font-semibold text-slate-800">Currency code *</label><input id="currency-code" name="currency_code" value="<?= html_escape($finance_document_record['currency_code']) ?>" maxlength="3" required data-currency class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></div>
@@ -46,11 +48,11 @@ $account_kind = 'account';
     $('[data-document-lookup]').each(function(){
         var input=$(this),hidden=$('#'+input.attr('data-target'));
         input.autocomplete({
-            minLength:2,delay:250,
+            minLength:0,delay:250,
             source:function(request,response){$.getJSON('/admin/finance/<?= html_escape($finance_document_slug) ?>/lookup/'+encodeURIComponent(input.attr('data-document-lookup')),{term:request.term}).done(response).fail(function(){response([]);});},
             select:function(event,item){hidden.val(item.item.id);input.val(item.item.label);return false;},
             change:function(event,item){if(!item.item)hidden.val('');}
-        }).on('input',function(){hidden.val('');});
+        }).on('focus',function(){if(input.val()==='')input.autocomplete('search','');}).on('input',function(){hidden.val('');});
     });
     var currency=document.getElementById('currency-code');currency.addEventListener('blur',function(){currency.value=currency.value.toUpperCase().replace(/\s+/g,'');});
 })();

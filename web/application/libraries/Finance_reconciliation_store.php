@@ -76,7 +76,7 @@ class Finance_reconciliation_store
 
     public function lookup_lines($tenant,$cash_id,$term)
     {
-        if(strlen($term)<2||(int)$cash_id<1)return array();
+        if((int)$cash_id<1)return array();
         $cash=$this->db->where('tenant_id',(int)$tenant)->where('cash_account_id',(int)$cash_id)->where('active_flag',1)->limit(1)->get('fin_cash_account');
         if($cash===FALSE||!$cash->num_rows())return array();
         $cash_account_id=(int)$cash->row()->account_id;
@@ -84,8 +84,8 @@ class Finance_reconciliation_store
             ->from('fin_journal_line jl')->join('fin_journal_entry je','je.journal_entry_id=jl.journal_entry_id AND je.tenant_id=jl.tenant_id')
             ->join('fin_bank_reconciliation_line rl','rl.journal_line_id=jl.journal_line_id AND rl.tenant_id=jl.tenant_id AND rl.matched_flag=1','left')
             ->where('jl.tenant_id',(int)$tenant)->where('jl.account_id',$cash_account_id)->where('je.status','posted')
-            ->where('rl.reconciliation_line_id IS NULL',NULL,FALSE)
-            ->group_start()->like('je.journal_number',$term)->or_like('jl.description',$term)->group_end();
+            ->where('rl.reconciliation_line_id IS NULL',NULL,FALSE);
+        if($term!=='')$this->db->group_start()->like('je.journal_number',$term)->or_like('jl.description',$term)->group_end();
         $q=$this->db->order_by('je.journal_date','DESC')->limit(20)->get();
         $results=array();
         if($q!==FALSE)foreach($q->result_array() as $row){

@@ -50,7 +50,11 @@ $can_edit = $finance_can_update && $finance_write_available;
                     <thead><tr>
                         <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>
                         <?php foreach ($finance_resource['columns'] as $column): ?>
-                            <th scope="col"><?= html_escape($column['label']) ?></th>
+                            <?php
+                                $column_label_key = isset($column['label_key']) ? $column['label_key'] : '';
+                                $column_label = $column_label_key !== '' && isset($labels[$column_label_key]) ? $labels[$column_label_key] : $column['label'];
+                            ?>
+                            <th scope="col"><?= html_escape($column_label) ?></th>
                         <?php endforeach; ?>
                     </tr></thead>
                 </table>

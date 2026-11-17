@@ -330,8 +330,7 @@ class Finance_document_store
     public function lookup($tenant_id, $document_kind, $kind, $term)
     {
         $spec = $this->spec($document_kind);
-        $term_length = function_exists('mb_strlen') ? mb_strlen($term, 'UTF-8') : strlen($term);
-        if ($spec === NULL || $term_length < 2) {
+        if ($spec === NULL) {
             return array();
         }
         $maps = array(
@@ -348,7 +347,9 @@ class Finance_document_store
         if (isset($map['type'])) {
             $this->db->where('account_type', $map['type']);
         }
-        $this->db->group_start()->like($map['code'], $term)->or_like($map['name'], $term)->group_end();
+        if ($term !== '') {
+            $this->db->group_start()->like($map['code'], $term)->or_like($map['name'], $term)->group_end();
+        }
         $query = $this->db->order_by($map['code'], 'ASC')->limit(20)->get();
         $results = array();
         if ($query !== FALSE) {

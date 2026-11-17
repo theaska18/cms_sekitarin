@@ -268,10 +268,12 @@ class Finance_payment_store
     public function lookup($tenant, $kind, $term)
     {
         if ($kind === 'cash_account') {
-            if (strlen($term) < 2) return array();
-            $query = $this->db->select('cash_account_id,account_code,account_name,currency_code')->where('tenant_id', (int) $tenant)
-                ->where('active_flag', 1)->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end()
-                ->order_by('account_code', 'ASC')->limit(20)->get('fin_cash_account');
+            $this->db->select('cash_account_id,account_code,account_name,currency_code')->where('tenant_id', (int) $tenant)
+                ->where('active_flag', 1);
+            if ($term !== '') {
+                $this->db->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end();
+            }
+            $query = $this->db->order_by('account_code', 'ASC')->limit(20)->get('fin_cash_account');
             $results = array();
             if ($query !== FALSE) foreach ($query->result_array() as $row) {
                 $label = $row['account_code'] . ' — ' . $row['account_name'] . ' (' . $row['currency_code'] . ')';
@@ -280,11 +282,13 @@ class Finance_payment_store
             return $results;
         }
         $spec = $this->spec($kind);
-        if (!$spec || strlen($term) < 2) return array();
-        $query = $this->db->select($spec['document_id'] . ',' . $spec['document_number'] . ',currency_code,total_amount')
-            ->where('tenant_id', (int) $tenant)->where('status', 'posted')
-            ->group_start()->like($spec['document_number'], $term)->group_end()
-            ->order_by($spec['document_number'], 'ASC')->limit(20)->get($spec['document_table']);
+        if (!$spec) return array();
+        $this->db->select($spec['document_id'] . ',' . $spec['document_number'] . ',currency_code,total_amount')
+            ->where('tenant_id', (int) $tenant)->where('status', 'posted');
+        if ($term !== '') {
+            $this->db->group_start()->like($spec['document_number'], $term)->group_end();
+        }
+        $query = $this->db->order_by($spec['document_number'], 'ASC')->limit(20)->get($spec['document_table']);
         $results = array();
         if ($query !== FALSE) foreach ($query->result_array() as $row) {
             $label = $row[$spec['document_number']] . ' — ' . $row['currency_code'] . ' ' . $row['total_amount'];

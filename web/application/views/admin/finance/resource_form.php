@@ -17,10 +17,10 @@ foreach ($finance_resource['fields'] as $finance_field) {
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <a href="/admin/finance/<?= html_escape($finance_resource['slug']) ?>" class="hover:text-indigo-700"><?= html_escape($title) ?></a>
         <span aria-hidden="true" class="mx-2">/</span>
-        <span aria-current="page" class="font-medium text-slate-800"><?= html_escape($is_edit ? 'Edit' : 'New') ?></span>
+        <span aria-current="page" class="font-medium text-slate-800"><?= html_escape($is_edit ? (isset($labels['finance_edit']) ? $labels['finance_edit'] : 'Edit') : (isset($labels['finance_add']) ? $labels['finance_add'] : 'New')) ?></span>
     </nav>
     <header class="mb-6">
-        <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($is_edit ? 'Edit ' . $title : 'Add ' . $title) ?></h1>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape(($is_edit ? (isset($labels['finance_edit']) ? $labels['finance_edit'] : 'Edit') : (isset($labels['finance_add']) ? $labels['finance_add'] : 'Add')) . ' ' . $title) ?></h1>
     </header>
     <?php if (!$finance_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['module_backend_unavailable']) ? $labels['module_backend_unavailable'] : 'Finance storage is unavailable.') ?></div>
@@ -41,25 +41,43 @@ foreach ($finance_resource['fields'] as $finance_field) {
                 <?php
                     $name = $field['name'];
                     $value = isset($finance_record[$name]) ? (string) $finance_record[$name] : (isset($field['default']) ? (string) $field['default'] : '');
-                    $label = isset($labels[$field['label_key'] ?? '']) ? $labels[$field['label_key']] : $field['label'];
+                    $label_key = isset($field['label_key']) ? $field['label_key'] : '';
+                    $label = $label_key !== '' && isset($labels[$label_key]) ? $labels[$label_key] : $field['label'];
+                    $hint = '';
+                    if (isset($field['hint_key']) && isset($labels[$field['hint_key']])) {
+                        $hint = (string) $labels[$field['hint_key']];
+                    } elseif (isset($field['hint']) && $field['hint'] !== '') {
+                        $hint = (string) $field['hint'];
+                    }
+                    $option_label_keys = isset($field['option_label_keys']) && is_array($field['option_label_keys']) ? $field['option_label_keys'] : array();
+                    $hint_id = 'finance-' . $name . '-hint';
+                    $described_by = $hint !== '' ? ' aria-describedby="' . html_escape($hint_id) . '"' : '';
                 ?>
                 <div>
                     <label for="finance-<?= html_escape($name) ?>" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($label) ?><?= !empty($field['required']) ? ' *' : '' ?></label>
                     <?php if ($field['type'] === 'account_lookup'): ?>
                         <input type="hidden" id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" value="<?= html_escape($value) ?>">
-                        <input type="text" id="finance-<?= html_escape($name) ?>-label" data-finance-account-lookup data-account-target="finance-<?= html_escape($name) ?>" value="<?= html_escape(isset($finance_lookup_labels[$name]) ? $finance_lookup_labels[$name] : '') ?>" autocomplete="off" aria-autocomplete="list" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
-                        <p class="mt-1 text-xs text-slate-500">Type at least 2 characters to search active tenant accounts.</p>
+                        <div class="relative">
+                            <input type="text" id="finance-<?= html_escape($name) ?>-label" data-finance-account-lookup data-account-target="finance-<?= html_escape($name) ?>" value="<?= html_escape(isset($finance_lookup_labels[$name]) ? $finance_lookup_labels[$name] : '') ?>" autocomplete="off" aria-autocomplete="list"<?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white pe-10 ps-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
+                        </div>
                     <?php elseif ($field['type'] === 'textarea'): ?>
-                        <textarea id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" rows="4" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"><?= html_escape($value) ?></textarea>
+                        <textarea id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" rows="4"<?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"><?= html_escape($value) ?></textarea>
                     <?php elseif ($field['type'] === 'select'): ?>
-                        <select id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" <?= !empty($field['required']) ? 'required' : '' ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                        <select id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" <?= !empty($field['required']) ? 'required' : '' ?><?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
                             <?php foreach ($field['options'] as $option => $option_label): ?>
+                                <?php if (isset($option_label_keys[$option]) && isset($labels[$option_label_keys[$option]])): ?>
+                                    <?php $option_label = $labels[$option_label_keys[$option]]; ?>
+                                <?php endif; ?>
                                 <option value="<?= html_escape($option) ?>" <?= (string) $option === $value ? 'selected' : '' ?>><?= html_escape($option_label) ?></option>
                             <?php endforeach; ?>
                         </select>
                     <?php else: ?>
                         <?php $input_type = in_array($field['type'], array('date', 'email', 'number', 'decimal', 'currency'), TRUE) ? ($field['type'] === 'decimal' || $field['type'] === 'currency' ? 'text' : $field['type']) : 'text'; ?>
-                        <input id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" type="<?= html_escape($input_type) ?>" value="<?= html_escape($value) ?>" <?= !empty($field['required']) ? 'required' : '' ?> <?= isset($field['maxlength']) ? 'maxlength="' . (int) $field['maxlength'] . '"' : '' ?> <?= isset($field['normalize']) ? 'data-normalize="' . html_escape($field['normalize']) . '"' : '' ?> <?= $field['type'] === 'decimal' ? 'inputmode="decimal"' : '' ?> <?= $field['type'] === 'number' ? 'inputmode="numeric" min="1"' : '' ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                        <input id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" type="<?= html_escape($input_type) ?>" value="<?= html_escape($value) ?>" <?= !empty($field['required']) ? 'required' : '' ?> <?= isset($field['maxlength']) ? 'maxlength="' . (int) $field['maxlength'] . '"' : '' ?> <?= isset($field['normalize']) ? 'data-normalize="' . html_escape($field['normalize']) . '"' : '' ?> <?= $field['type'] === 'decimal' ? 'inputmode="decimal"' : '' ?> <?= $field['type'] === 'number' ? 'inputmode="numeric" min="1"' : '' ?><?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                    <?php endif; ?>
+                    <?php if ($hint !== ''): ?>
+                        <p id="<?= html_escape($hint_id) ?>" class="mt-1 text-xs text-slate-500"><?= html_escape($hint) ?></p>
                     <?php endif; ?>
                 </div>
             <?php endforeach; ?>
@@ -96,7 +114,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
         var input = $(this);
         var hidden = $('#' + input.attr('data-account-target'));
         input.autocomplete({
-            minLength: 2,
+            minLength: 0,
             delay: 250,
             source: function (request, response) {
                 $.getJSON('/admin/finance/financial_settings/lookup/account', {term: request.term})
@@ -104,6 +122,8 @@ foreach ($finance_resource['fields'] as $finance_field) {
             },
             select: function (event, item) { hidden.val(item.item.id); input.val(item.item.label); return false; },
             change: function (event, item) { if (!item.item) hidden.val(''); }
+        }).on('focus', function () {
+            if (input.val() === '') input.autocomplete('search', '');
         }).on('input', function () { hidden.val(''); });
     });
 })();

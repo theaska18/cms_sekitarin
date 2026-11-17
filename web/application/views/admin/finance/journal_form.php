@@ -29,7 +29,7 @@ $title = isset($labels['finance_' . ($finance_journal_slug === 'opening_balances
                     <tbody id="finance-journal-lines">
                     <?php foreach ($finance_journal_record['lines'] as $index => $line): ?>
                         <tr data-journal-line class="border-t border-slate-100">
-                            <td class="min-w-56 p-2"><input type="hidden" name="lines[<?= (int) $index ?>][account_id]" value="<?= html_escape($line['account_id']) ?>"><input type="text" data-account-lookup data-account-target="lines[<?= (int) $index ?>][account_id]" value="<?= html_escape(isset($finance_journal_account_labels[$index]) ? $finance_journal_account_labels[$index] : '') ?>" autocomplete="off" aria-label="Account on journal line <?= (int) $index + 1 ?>" required class="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"></td>
+                            <td class="min-w-56 p-2"><input type="hidden" name="lines[<?= (int) $index ?>][account_id]" value="<?= html_escape($line['account_id']) ?>"><div class="relative"><input type="text" data-account-lookup data-account-target="lines[<?= (int) $index ?>][account_id]" value="<?= html_escape(isset($finance_journal_account_labels[$index]) ? $finance_journal_account_labels[$index] : '') ?>" autocomplete="off" aria-autocomplete="list" aria-label="Account on journal line <?= (int) $index + 1 ?>" required class="w-full rounded-lg border border-slate-300 pe-8 ps-2.5 py-2 text-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg></div></td>
                             <td class="min-w-40 p-2"><input name="lines[<?= (int) $index ?>][description]" value="<?= html_escape($line['description']) ?>" maxlength="240" class="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"></td>
                             <td class="w-24 p-2"><input name="lines[<?= (int) $index ?>][currency_code]" value="<?= html_escape($line['currency_code']) ?>" maxlength="3" required data-currency class="w-20 rounded-lg border border-slate-300 px-2 py-2 text-sm"></td>
                             <td class="w-28 p-2"><input name="lines[<?= (int) $index ?>][exchange_rate]" value="<?= html_escape($line['exchange_rate']) ?>" inputmode="decimal" required class="w-24 rounded-lg border border-slate-300 px-2 py-2 text-sm"></td>
@@ -59,7 +59,7 @@ $title = isset($labels['finance_' . ($finance_journal_slug === 'opening_balances
         var account = $(row).find('[data-account-lookup]');
         var hidden = $(row).find('input[type="hidden"]');
         account.autocomplete({
-            minLength: 2,
+            minLength: 0,
             delay: 250,
             source: function (request, response) {
                 $.getJSON('/admin/finance/<?= html_escape($finance_journal_slug) ?>/lookup/account', {term: request.term})
@@ -67,6 +67,8 @@ $title = isset($labels['finance_' . ($finance_journal_slug === 'opening_balances
             },
             select: function (event, item) { hidden.val(item.item.id); account.val(item.item.label); return false; },
             change: function (event, item) { if (!item.item) hidden.val(''); }
+        }).on('focus', function () {
+            if (account.val() === '') account.autocomplete('search', '');
         }).on('input', function () { hidden.val(''); });
         $(row).find('[data-currency]').on('blur', function () { this.value = this.value.toUpperCase().replace(/\s+/g, ''); });
         $(row).find('[data-debit]').on('input', function () { if (this.value !== '' && parseFloat(this.value) > 0) $(row).find('[data-credit]').val('0'); });
@@ -83,7 +85,7 @@ $title = isset($labels['finance_' . ($finance_journal_slug === 'opening_balances
         var row = document.createElement('tr');
         row.setAttribute('data-journal-line', '');
         row.className = 'border-t border-slate-100';
-        row.innerHTML = '<td class="min-w-56 p-2"><input type="hidden" name="lines['+index+'][account_id]" value=""><input type="text" data-account-lookup data-account-target="lines['+index+'][account_id]" autocomplete="off" aria-label="Account on journal line '+(index+1)+'" required class="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"></td>'
+        row.innerHTML = '<td class="min-w-56 p-2"><input type="hidden" name="lines['+index+'][account_id]" value=""><div class="relative"><input type="text" data-account-lookup data-account-target="lines['+index+'][account_id]" autocomplete="off" aria-autocomplete="list" aria-label="Account on journal line '+(index+1)+'" required class="w-full rounded-lg border border-slate-300 pe-8 ps-2.5 py-2 text-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg></div></td>'
             + '<td class="min-w-40 p-2"><input name="lines['+index+'][description]" maxlength="240" class="w-full rounded-lg border border-slate-300 px-2.5 py-2 text-sm"></td>'
             + '<td class="w-24 p-2"><input name="lines['+index+'][currency_code]" value="'+String(currency).replace(/[^A-Za-z]/g,'')+'" maxlength="3" required data-currency class="w-20 rounded-lg border border-slate-300 px-2 py-2 text-sm"></td>'
             + '<td class="w-28 p-2"><input name="lines['+index+'][exchange_rate]" value="1" inputmode="decimal" required class="w-24 rounded-lg border border-slate-300 px-2 py-2 text-sm"></td>'
