@@ -218,8 +218,8 @@ class Finance_payment_store
         $control_type = $kind === 'customer' ? 'asset' : 'liability';
         if (!$control || !$cash || !$cash_gl || $control['account_type'] !== $control_type
             || $cash_gl['account_type'] !== 'asset'
-            || (int) $control['active_flag'] !== 1 || (int) $cash['active_flag'] !== 1
-            || (int) $cash_gl['active_flag'] !== 1
+            || (int) $control['active_flag'] !== 1 || (int) $control['posting_flag'] !== 1 || (int) $cash['active_flag'] !== 1
+            || (int) $cash_gl['active_flag'] !== 1 || (int) $cash_gl['posting_flag'] !== 1
             || $cash['currency_code'] !== $payment['currency_code']) return 'account_invalid';
         $fx_difference = round((float) $payment['base_amount'] - (float) $alloc['base_amount'], 6);
         $fx_account = NULL;
@@ -230,7 +230,7 @@ class Finance_payment_store
             $fx_account = $this->tenant_row('fin_account', 'account_id', $tenant, $fx_id);
             $gain = ($kind === 'customer') ? $fx_difference > 0 : $fx_difference < 0;
             $expected_fx_type = $gain ? 'revenue' : 'expense';
-            if (!$fx_account || (int) $fx_account['active_flag'] !== 1 || $fx_account['account_type'] !== $expected_fx_type) return 'fx_account_missing';
+            if (!$fx_account || (int) $fx_account['active_flag'] !== 1 || (int) $fx_account['posting_flag'] !== 1 || $fx_account['account_type'] !== $expected_fx_type) return 'fx_account_missing';
         }
         $period = $this->db->where('tenant_id', (int) $tenant)->where('start_on <=', $payment['payment_date'])
             ->where('end_on >=', $payment['payment_date'])->where('status', 'open')->get('fin_accounting_period');

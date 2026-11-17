@@ -96,7 +96,7 @@ class Finance_transfer_store
         if(!$from||!$to||(int)$from['active_flag']!==1||(int)$to['active_flag']!==1||(int)$from['cash_account_id']===(int)$to['cash_account_id'])return 'account_invalid';
         $from_gl=$this->tenant_row('fin_account','account_id',$tenant,$from['account_id']);
         $to_gl=$this->tenant_row('fin_account','account_id',$tenant,$to['account_id']);
-        if(!$from_gl||!$to_gl||(int)$from_gl['active_flag']!==1||(int)$to_gl['active_flag']!==1||$from_gl['account_type']!=='asset'||$to_gl['account_type']!=='asset')return 'account_invalid';
+        if(!$from_gl||!$to_gl||(int)$from_gl['active_flag']!==1||(int)$from_gl['posting_flag']!==1||(int)$to_gl['active_flag']!==1||(int)$to_gl['posting_flag']!==1||$from_gl['account_type']!=='asset'||$to_gl['account_type']!=='asset')return 'account_invalid';
         $settings=$this->db->where('tenant_id',(int)$tenant)->limit(1)->get('fin_settings');
         if($settings===FALSE||!$settings->num_rows())return 'settings_missing';
         $base=strtoupper((string)$settings->row()->base_currency);
@@ -158,7 +158,7 @@ class Finance_transfer_store
         $from_gl=$from?$this->tenant_row('fin_account','account_id',$tenant,$from['account_id']):NULL;
         $to_gl=$to?$this->tenant_row('fin_account','account_id',$tenant,$to['account_id']):NULL;
         if(!$from||!$to||!$from_gl||!$to_gl||(int)$from['active_flag']!==1||(int)$to['active_flag']!==1
-            ||(int)$from_gl['active_flag']!==1||(int)$to_gl['active_flag']!==1
+            ||(int)$from_gl['active_flag']!==1||(int)$from_gl['posting_flag']!==1||(int)$to_gl['active_flag']!==1||(int)$to_gl['posting_flag']!==1
             ||$from_gl['account_type']!=='asset'||$to_gl['account_type']!=='asset'
             ||$from['currency_code']!==$row['from_currency']||$to['currency_code']!==$row['to_currency'])return 'account_invalid';
         $debit=(float)$row['base_to_amount'];$credit=(float)$row['base_from_amount'];

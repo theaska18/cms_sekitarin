@@ -260,6 +260,63 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn("$lang['finance_chart_of_accounts_tree_intro']", content)
                 self.assertIn("$lang['finance_coa_tree_empty']", content)
 
+    def test_group_accounts_are_excluded_from_posting_lookups(self):
+        migration = (APP / "migrations/20261117000800_add_account_posting_flag.php").read_text()
+        journal = (APP / "libraries/Finance_journal_store.php").read_text()
+        transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
+        document = (APP / "libraries/Finance_document_store.php").read_text()
+        controller = FINANCE_CONTROLLER.read_text()
+        view = (APP / "views/admin/finance/chart_of_accounts_index.php").read_text()
+        self.assertIn("posting_flag", migration)
+        self.assertIn("'posting_flag' => 0", migration)
+        self.assertIn("->where('posting_flag', 1)", journal)
+        self.assertIn("$this->db->where('posting_flag', 1);", transaction)
+        self.assertIn("$this->db->where('posting_flag', 1);", document)
+        self.assertIn("(int) $account['posting_flag'] !== 1", journal)
+        self.assertIn("(int) $account['posting_flag'] !== 1", transaction)
+        self.assertIn("(int) $account['posting_flag'] !== 1", document)
+        self.assertIn("$slug === 'chart_of_accounts'", controller)
+        self.assertIn("posting_flag", view)
+
+    def test_chart_of_accounts_csv_export_import_validates_duplicates(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        routes = (APP / "config/routes.php").read_text()
+        view = (APP / "views/admin/finance/chart_of_accounts_index.php").read_text()
+        self.assertIn("chart_of_accounts/export", routes)
+        self.assertIn("chart_of_accounts/import", routes)
+        self.assertIn("public function chart_of_accounts_export", controller)
+        self.assertIn("public function chart_of_accounts_import", controller)
+        self.assertIn("$conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)))", controller)
+        self.assertIn("Import dibatalkan. Kode akun sudah ada di tenant", controller)
+        self.assertIn("Siklus parent terdeteksi", controller)
+        self.assertIn("Parent ' . $row['parent_code']", controller)
+        self.assertIn("fputcsv", controller)
+        self.assertIn("finance_coa_import_errors", view)
+        self.assertIn("enctype=\"multipart/form-data\"", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_coa_export']", content)
+                self.assertIn("$lang['finance_coa_import']", content)
+
+    def test_category_csv_export_import_validates_composite_duplicates(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        routes = (APP / "config/routes.php").read_text()
+        view = (APP / "views/admin/finance/resource_index.php").read_text()
+        self.assertIn("categories/export", routes)
+        self.assertIn("categories/import", routes)
+        self.assertIn("public function category_export", controller)
+        self.assertIn("public function category_import", controller)
+        self.assertIn("$key = $type . '|' . $code", controller)
+        self.assertIn("Import dibatalkan. Kategori sudah ada di tenant", controller)
+        self.assertIn("category_file", view)
+        self.assertIn("finance_category_import_errors", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_category_export']", content)
+                self.assertIn("$lang['finance_category_import']", content)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()

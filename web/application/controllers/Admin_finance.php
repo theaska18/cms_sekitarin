@@ -87,6 +87,10 @@ class Admin_finance extends Admin
                 'finance_can_update' => $this->has_admin_access_code($resource['menu_code'] . '_update'),
                 'finance_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
+                'finance_csrf_name' => $this->security->get_csrf_token_name(),
+                'finance_csrf_hash' => $this->security->get_csrf_hash(),
+                'finance_category_import_errors' => $slug === 'categories' ? $this->session->flashdata('category_import_errors') : NULL,
+                'finance_category_import_count' => $slug === 'categories' ? (int) $this->session->flashdata('category_import_count') : 0,
             )
         );
     }
@@ -110,6 +114,10 @@ class Admin_finance extends Admin
                 'finance_chart_of_accounts_can_update' => $this->has_admin_access_code($menu . '_update'),
                 'finance_chart_of_accounts_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
+                'finance_coa_import_errors' => $this->session->flashdata('coa_import_errors'),
+                'finance_coa_import_count' => (int) $this->session->flashdata('coa_import_count'),
+                'finance_csrf_name' => $this->security->get_csrf_token_name(),
+                'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )
         );
     }
@@ -121,7 +129,7 @@ class Admin_finance extends Admin
             $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
             return;
         }
-        $rows = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,active_flag')
+        $rows = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,active_flag,posting_flag')
             ->from('fin_account')->where('tenant_id', (int) $this->current_user['tenant_id'])
             ->order_by('account_code', 'ASC')->get()->result_array();
         $by_id = array();
@@ -159,6 +167,7 @@ class Admin_finance extends Admin
                 'account_type' => $row['account_type'],
                 'normal_balance' => $row['normal_balance'],
                 'active_flag' => (int) $row['active_flag'],
+                'posting_flag' => (int) $row['posting_flag'],
                 'parent_name' => $parent_name,
                 'level' => $level,
                 'has_children' => !empty($children[$id]),
@@ -177,6 +186,401 @@ class Admin_finance extends Admin
         }
         $this->output->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($flat, JSON_INVALID_UTF8_SUBSTITUTE));
+    }
+
+    public function category_export()
+    {
+        if (!$this->has_admin_menu_code('fin_categories')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $rows = $this->db->select('category_type,category_code,category_name,active_flag')
+            ->from('fin_category')->where('tenant_id', $tenant_id)
+            ->order_by('category_type', 'ASC')->order_by('category_code', 'ASC')->get()->result_array();
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('category_type', 'category_code', 'category_name', 'active_flag'));
+        foreach ($rows as $row) {
+            fputcsv($stream, array($row['category_type'], $row['category_code'], $row['category_name'], (int) $row['active_flag']));
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = isset($this->current_user['tenant_code']) ? (string) $this->current_user['tenant_code'] : (string) $tenant_id;
+        $filename = 'categories-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_code) . '-' . date('Ymd') . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    public function category_import()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code('fin_categories')
+            || !$this->has_admin_access_code('fin_categories_update')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $errors = array();
+        $rows = array();
+        $file_keys = array();
+        if (empty($_FILES['category_file']) || !is_array($_FILES['category_file'])
+            || !isset($_FILES['category_file']['error']) || $_FILES['category_file']['error'] !== UPLOAD_ERR_OK
+            || empty($_FILES['category_file']['tmp_name']) || !is_uploaded_file($_FILES['category_file']['tmp_name'])) {
+            $errors[] = 'File CSV wajib diunggah.';
+        } else {
+            $file = $_FILES['category_file'];
+            if (strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION)) !== 'csv') {
+                $errors[] = 'Format file harus CSV.';
+            }
+            if ((int) $file['size'] > 2 * 1024 * 1024) {
+                $errors[] = 'Ukuran file maksimal 2 MB.';
+            }
+        }
+        $content = '';
+        if (!$errors) {
+            $content = file_get_contents($_FILES['category_file']['tmp_name']);
+            if ($content === FALSE || $content === '') {
+                $errors[] = 'File CSV kosong.';
+            }
+        }
+        if (!$errors) {
+            $stream = fopen('php://temp', 'r+');
+            fwrite($stream, $content);
+            rewind($stream);
+            $header = fgetcsv($stream);
+            if (is_array($header)) {
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+                $header = array_map('trim', $header);
+            }
+            $expected = array('category_type', 'category_code', 'category_name', 'active_flag');
+            if (!is_array($header) || $header !== $expected) {
+                $errors[] = 'Header CSV tidak sesuai. Gunakan template export kategori.';
+            } else {
+                $line_no = 1;
+                while (($line = fgetcsv($stream)) !== FALSE) {
+                    $line_no++;
+                    if ($line === array(NULL) || $line === array('')) {
+                        continue;
+                    }
+                    if (count($rows) >= 1000) {
+                        $errors[] = 'Maksimal 1.000 baris kategori.';
+                        break;
+                    }
+                    $line = array_pad($line, 4, '');
+                    $line = array_map(function ($value) { return trim((string) $value); }, $line);
+                    $type = $line[0];
+                    $code = $line[1];
+                    if (!in_array($type, array('income', 'expense'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': tipe kategori harus income atau expense.';
+                    }
+                    if ($code === '' || strlen($code) > 32) {
+                        $errors[] = 'Baris ' . $line_no . ': kode kategori wajib, maksimal 32 karakter.';
+                    }
+                    if ($line[2] === '' || strlen($line[2]) > 100) {
+                        $errors[] = 'Baris ' . $line_no . ': nama kategori wajib, maksimal 100 karakter.';
+                    }
+                    if (!in_array($line[3], array('0', '1'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': active_flag harus 0 atau 1.';
+                    }
+                    $key = $type . '|' . $code;
+                    if (isset($file_keys[$key])) {
+                        $errors[] = 'Baris ' . $line_no . ': kategori ' . $key . ' duplikat di file.';
+                    }
+                    $file_keys[$key] = TRUE;
+                    $rows[] = array(
+                        'category_type' => $type,
+                        'category_code' => $code,
+                        'category_name' => $line[2],
+                        'active_flag' => (int) $line[3],
+                    );
+                }
+            }
+            fclose($stream);
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $existing_rows = $this->db->select('category_type,category_code')->from('fin_category')
+                ->where('tenant_id', $tenant_id)->get()->result_array();
+            $existing = array();
+            foreach ($existing_rows as $row) {
+                $existing[$row['category_type'] . '|' . $row['category_code']] = TRUE;
+            }
+            $conflicts = array_values(array_intersect(array_keys($file_keys), array_keys($existing)));
+            if ($conflicts) {
+                $errors[] = 'Import dibatalkan. Kategori sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            }
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $user_id = (int) $this->current_user['user_id'];
+            $this->db->trans_begin();
+            foreach ($rows as $row) {
+                $this->db->insert('fin_category', array(
+                    'tenant_id' => $tenant_id,
+                    'category_type' => $row['category_type'],
+                    'category_code' => $row['category_code'],
+                    'category_name' => $row['category_name'],
+                    'active_flag' => $row['active_flag'],
+                    'create_on' => date('Y-m-d H:i:s'),
+                ));
+                if ($this->db->affected_rows() !== 1) {
+                    $errors[] = 'Kategori ' . $row['category_code'] . ' gagal disimpan.';
+                    break;
+                }
+            }
+            if ($errors || $this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+            } else {
+                $this->db->trans_commit();
+                $this->session->set_flashdata('finance_status', 'category_imported');
+                $this->session->set_flashdata('category_import_count', count($rows));
+                redirect('/admin/finance/categories', 'location', 303);
+                return;
+            }
+        }
+        if (!$rows && !$errors) {
+            $errors[] = 'File CSV tidak berisi data kategori.';
+        }
+        $this->session->set_flashdata('finance_status', 'category_import_error');
+        $this->session->set_flashdata('category_import_errors', $errors);
+        redirect('/admin/finance/categories', 'location', 303);
+    }
+
+    public function chart_of_accounts_export()
+    {
+        if (!$this->has_admin_menu_code('fin_chart_of_accounts')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $rows = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,posting_flag,active_flag,description')
+            ->from('fin_account')->where('tenant_id', $tenant_id)->order_by('account_code', 'ASC')->get()->result_array();
+        $codes = array();
+        foreach ($rows as $row) {
+            $codes[(int) $row['account_id']] = (string) $row['account_code'];
+        }
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('account_code', 'account_name', 'account_type', 'normal_balance', 'parent_code', 'posting_flag', 'active_flag', 'description'));
+        foreach ($rows as $row) {
+            $parent_code = !empty($row['parent_account_id']) && isset($codes[(int) $row['parent_account_id']])
+                ? $codes[(int) $row['parent_account_id']] : '';
+            fputcsv($stream, array(
+                $row['account_code'],
+                $row['account_name'],
+                $row['account_type'],
+                $row['normal_balance'],
+                $parent_code,
+                (int) $row['posting_flag'],
+                (int) $row['active_flag'],
+                $row['description'],
+            ));
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = isset($this->current_user['tenant_code']) ? (string) $this->current_user['tenant_code'] : (string) $tenant_id;
+        $filename = 'coa-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_code) . '-' . date('Ymd') . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    public function chart_of_accounts_import()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code('fin_chart_of_accounts')
+            || !$this->has_admin_access_code('fin_chart_of_accounts_update')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $errors = array();
+        if (empty($_FILES['coa_file']) || !is_array($_FILES['coa_file'])
+            || !isset($_FILES['coa_file']['error']) || $_FILES['coa_file']['error'] !== UPLOAD_ERR_OK
+            || empty($_FILES['coa_file']['tmp_name']) || !is_uploaded_file($_FILES['coa_file']['tmp_name'])) {
+            $errors[] = 'File CSV wajib diunggah.';
+        } else {
+            $file = $_FILES['coa_file'];
+            $name = (string) $file['name'];
+            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if ($ext !== 'csv') {
+                $errors[] = 'Format file harus CSV.';
+            }
+            if ((int) $file['size'] > 2 * 1024 * 1024) {
+                $errors[] = 'Ukuran file maksimal 2 MB.';
+            }
+        }
+        if (!$errors) {
+            $content = file_get_contents($_FILES['coa_file']['tmp_name']);
+            if ($content === FALSE || $content === '') {
+                $errors[] = 'File CSV kosong.';
+            }
+        }
+        $rows = array();
+        $file_codes = array();
+        if (!$errors) {
+            $stream = fopen('php://temp', 'r+');
+            fwrite($stream, $content);
+            rewind($stream);
+            $header = fgetcsv($stream);
+            if (is_array($header)) {
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+                $header = array_map('trim', $header);
+            }
+            $expected = array('account_code', 'account_name', 'account_type', 'normal_balance', 'parent_code', 'posting_flag', 'active_flag', 'description');
+            if (!is_array($header) || $header !== $expected) {
+                $errors[] = 'Header CSV tidak sesuai. Gunakan template export COA.';
+            } else {
+                $line_no = 1;
+                while (($line = fgetcsv($stream)) !== FALSE) {
+                    $line_no++;
+                    if ($line === array(NULL) || $line === array('')) {
+                        continue;
+                    }
+                    if (count($rows) >= 1000) {
+                        $errors[] = 'Maksimal 1.000 baris akun.';
+                        break;
+                    }
+                    $line = array_pad($line, 8, '');
+                    $line = array_map(function ($value) { return trim((string) $value); }, $line);
+                    $code = $line[0];
+                    $parent_code = $line[4];
+                    if ($code === '') {
+                        $errors[] = 'Baris ' . $line_no . ': kode akun wajib diisi.';
+                        continue;
+                    }
+                    if (strlen($code) > 32) {
+                        $errors[] = 'Baris ' . $line_no . ': kode akun maksimal 32 karakter.';
+                    }
+                    if (isset($file_codes[$code])) {
+                        $errors[] = 'Baris ' . $line_no . ': kode akun ' . $code . ' duplikat di file.';
+                    }
+                    $file_codes[$code] = TRUE;
+                    if ($line[1] === '') {
+                        $errors[] = 'Baris ' . $line_no . ': nama akun wajib diisi.';
+                    }
+                    if (!in_array($line[2], array('asset', 'liability', 'equity', 'revenue', 'expense'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': tipe akun tidak valid.';
+                    }
+                    if (!in_array($line[3], array('debit', 'credit'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': saldo normal tidak valid.';
+                    }
+                    if (!in_array($line[5], array('0', '1'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': posting_flag harus 0 atau 1.';
+                    }
+                    if (!in_array($line[6], array('0', '1'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': active_flag harus 0 atau 1.';
+                    }
+                    if ($parent_code === $code) {
+                        $errors[] = 'Baris ' . $line_no . ': akun tidak boleh menjadi parent dirinya sendiri.';
+                    }
+                    $rows[] = array(
+                        'account_code' => $code,
+                        'account_name' => $line[1],
+                        'account_type' => $line[2],
+                        'normal_balance' => $line[3],
+                        'parent_code' => $parent_code,
+                        'posting_flag' => (int) $line[5],
+                        'active_flag' => (int) $line[6],
+                        'description' => $line[7],
+                    );
+                }
+            }
+            fclose($stream);
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $existing = array();
+            $existing_rows = $this->db->select('account_code,account_type,posting_flag')->from('fin_account')
+                ->where('tenant_id', $tenant_id)->get()->result_array();
+            foreach ($existing_rows as $row) {
+                $existing[(string) $row['account_code']] = $row;
+            }
+            $conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)));
+            if ($conflicts) {
+                $errors[] = 'Import dibatalkan. Kode akun sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            }
+            $parent_map = array();
+            foreach ($rows as $row) {
+                if ($row['parent_code'] !== '') {
+                    if (!isset($file_codes[$row['parent_code']]) && !isset($existing[$row['parent_code']])) {
+                        $errors[] = 'Parent ' . $row['parent_code'] . ' untuk akun ' . $row['account_code'] . ' tidak ditemukan.';
+                    }
+                }
+                $parent_map[$row['account_code']] = $row['parent_code'];
+            }
+            foreach ($rows as $row) {
+                $seen = array();
+                $current = $row['account_code'];
+                while ($current !== '' && isset($parent_map[$current])) {
+                    if (isset($seen[$current])) {
+                        $errors[] = 'Siklus parent terdeteksi pada akun ' . $row['account_code'] . '.';
+                        break 2;
+                    }
+                    $seen[$current] = TRUE;
+                    $current = $parent_map[$current];
+                }
+            }
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $user_id = (int) $this->current_user['user_id'];
+            $this->db->trans_begin();
+            foreach ($rows as $row) {
+                $this->db->insert('fin_account', array(
+                    'tenant_id' => $tenant_id,
+                    'parent_account_id' => NULL,
+                    'account_code' => $row['account_code'],
+                    'account_name' => $row['account_name'],
+                    'account_type' => $row['account_type'],
+                    'normal_balance' => $row['normal_balance'],
+                    'posting_flag' => $row['posting_flag'],
+                    'description' => $row['description'],
+                    'active_flag' => $row['active_flag'],
+                    'create_on' => date('Y-m-d H:i:s'),
+                    'created_by' => $user_id,
+                ));
+                if ($this->db->affected_rows() !== 1) {
+                    $errors[] = 'Baris ' . $row['account_code'] . ' gagal disimpan.';
+                    break;
+                }
+            }
+            if (!$errors) {
+                $all = $this->db->select('account_id,account_code')->from('fin_account')
+                    ->where('tenant_id', $tenant_id)->get()->result_array();
+                $ids = array();
+                foreach ($all as $row) {
+                    $ids[(string) $row['account_code']] = (int) $row['account_id'];
+                }
+                foreach ($rows as $row) {
+                    if ($row['parent_code'] !== '' && isset($ids[$row['parent_code']])) {
+                        $this->db->where('tenant_id', $tenant_id)->where('account_code', $row['account_code'])
+                            ->update('fin_account', array('parent_account_id' => $ids[$row['parent_code']]));
+                    }
+                }
+            }
+            if ($errors || $this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+            } else {
+                $this->db->trans_commit();
+                $this->session->set_flashdata('finance_status', 'coa_imported');
+                $this->session->set_flashdata('coa_import_count', count($rows));
+                redirect('/admin/finance/chart_of_accounts', 'location', 303);
+                return;
+            }
+        }
+        if (!$rows && !$errors) {
+            $errors[] = 'File CSV tidak berisi data akun.';
+        }
+        $this->session->set_flashdata('finance_status', 'coa_import_error');
+        $this->session->set_flashdata('coa_import_errors', $errors);
+        redirect('/admin/finance/chart_of_accounts', 'location', 303);
     }
 
     public function data($slug = '')
@@ -830,9 +1234,11 @@ class Admin_finance extends Admin
             $this->db->select('account_id,account_code,account_name')->from('fin_account')
                 ->where('tenant_id', (int) $this->current_user['tenant_id'])->where('active_flag', 1);
             if (in_array($slug, array('cash_accounts', 'bank_accounts'), TRUE)) {
-                $this->db->where('account_type', 'asset');
+                $this->db->where('account_type', 'asset')->where('posting_flag', 1);
             } elseif ($slug === 'tax_configuration') {
-                $this->db->where_in('account_type', array('asset', 'liability'));
+                $this->db->where_in('account_type', array('asset', 'liability'))->where('posting_flag', 1);
+            } elseif ($slug === 'chart_of_accounts') {
+                $this->db->where('posting_flag', 0);
             }
             if ($exclude_id > 0) {
                 $this->db->where('account_id !=', $exclude_id);

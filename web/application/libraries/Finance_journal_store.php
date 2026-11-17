@@ -120,7 +120,7 @@ class Finance_journal_store
             $rate = (float) $line['exchange_rate'];
             $debit = round((float) $line['debit_amount'], 6);
             $credit = round((float) $line['credit_amount'], 6);
-            if (!$account || (int) $account['active_flag'] !== 1
+            if (!$account || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1
                 || !preg_match('/^[A-Z]{3}$/', $currency)
                 || $rate <= 0 || ($currency === $base_currency && abs($rate - 1) > 0.0000001)
                 || (($debit > 0) === ($credit > 0))) {
@@ -234,7 +234,7 @@ class Finance_journal_store
         $credits = 0.0;
         foreach ($entry['lines'] as $line) {
             $account = $this->tenant_row('fin_account', 'account_id', $tenant_id, $line['account_id']);
-            if (!$account || (int) $account['active_flag'] !== 1) {
+            if (!$account || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1) {
                 return 'account_invalid';
             }
             $debits += (float) $line['debit_base_amount'];
@@ -285,7 +285,7 @@ class Finance_journal_store
     public function lookup_accounts($tenant_id, $term)
     {
         $this->db->select('account_id,account_code,account_name')->from('fin_account')
-            ->where('tenant_id', (int) $tenant_id)->where('active_flag', 1);
+            ->where('tenant_id', (int) $tenant_id)->where('active_flag', 1)->where('posting_flag', 1);
         if ($term !== '') {
             $this->db->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end();
         }

@@ -25,7 +25,47 @@ $can_edit = $finance_can_update && $finance_write_available;
             </a>
         <?php endif; ?>
     </header>
+    <?php if ($finance_resource['slug'] === 'categories'): ?>
+    <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 items-start gap-3">
+                <div class="finance-data-exchange-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2h16v-2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-base font-semibold text-slate-900">Category Data Exchange</h2>
+                        <span class="finance-data-exchange-badge rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">CSV</span>
+                    </div>
+                    <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_category_import_hint']) ? $labels['finance_category_import_hint'] : 'Export categories from an existing tenant, then import the CSV into a new tenant.') ?></p>
+                </div>
+            </div>
+            <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="<?= html_escape($current_path . '/export') ?>" class="finance-data-exchange-export inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
+                    <?= html_escape(isset($labels['finance_category_export']) ? $labels['finance_category_export'] : 'Export Categories') ?>
+                </a>
+                <?php if ($finance_can_update): ?>
+                <form method="post" action="<?= html_escape($current_path . '/import') ?>" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
+                    <input id="category-file" type="file" name="category_file" accept=".csv,text/csv" required class="sr-only" data-category-file-input data-category-file-default="<?= html_escape(isset($labels['finance_category_choose_file']) ? $labels['finance_category_choose_file'] : 'Choose CSV') ?>">
+                    <label for="category-file" class="finance-data-exchange-file inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-sm font-medium text-slate-600 hover:border-indigo-400 hover:text-indigo-700">
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
+                        <span data-category-file-label><?= html_escape(isset($labels['finance_category_choose_file']) ? $labels['finance_category_choose_file'] : 'Choose CSV') ?></span>
+                    </label>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_category_import']) ? $labels['finance_category_import'] : 'Import Categories') ?></button>
+                </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+    <?php endif; ?>
 
+    <?php if ($finance_status === 'category_imported'): ?>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"><?= html_escape(sprintf(isset($labels['finance_category_import_success']) ? $labels['finance_category_import_success'] : 'Categories imported: %d.', (int) $finance_category_import_count)) ?></div>
+    <?php elseif ($finance_status === 'category_import_error'): ?>
+        <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p class="font-semibold"><?= html_escape(isset($labels['finance_category_import_error']) ? $labels['finance_category_import_error'] : 'Category import failed.') ?></p><ul class="mt-2 list-inside list-disc"><?php foreach ((array) $finance_category_import_errors as $error): ?><li><?= html_escape($error) ?></li><?php endforeach; ?></ul></div>
+    <?php endif; ?>
     <?php if (in_array($finance_status, array('created', 'saved'), TRUE)): ?>
         <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
             <?= html_escape($finance_status === 'created'
@@ -127,5 +167,13 @@ $can_edit = $finance_can_update && $finance_write_available;
             processing: '<?= html_escape(isset($labels['finance_dt_processing']) ? $labels['finance_dt_processing'] : 'Loading…') ?>'
         }
     });
+    var categoryFile = document.querySelector('[data-category-file-input]');
+    if (categoryFile) {
+        categoryFile.addEventListener('change', function () {
+            var label = document.querySelector('[data-category-file-label]');
+            if (!label) return;
+            label.textContent = this.files && this.files[0] ? this.files[0].name : (this.getAttribute('data-category-file-default') || 'Choose CSV');
+        });
+    }
 })();
 </script>

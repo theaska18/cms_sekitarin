@@ -22,6 +22,44 @@ $balance_labels = array(
         <div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_chart_of_accounts_tree_intro']) ? $labels['finance_chart_of_accounts_tree_intro'] : 'Manage the account hierarchy. Parent accounts can be expanded or collapsed.') ?></p></div>
         <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_add']) ? $labels['finance_add'] : 'Add') ?></a><?php endif; ?>
     </header>
+    <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 items-start gap-3">
+                <div class="finance-data-exchange-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2h16v-2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-base font-semibold text-slate-900">COA Data Exchange</h2>
+                        <span class="finance-data-exchange-badge rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">CSV</span>
+                    </div>
+                    <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_coa_import_hint']) ? $labels['finance_coa_import_hint'] : 'Export COA from an existing tenant, then import the CSV into a new tenant.') ?></p>
+                </div>
+            </div>
+            <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="<?= html_escape($current_path . '/export') ?>" class="finance-data-exchange-export inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
+                    <?= html_escape(isset($labels['finance_coa_export']) ? $labels['finance_coa_export'] : 'Export COA') ?>
+                </a>
+                <?php if ($finance_chart_of_accounts_can_update): ?>
+                <form method="post" action="<?= html_escape($current_path . '/import') ?>" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
+                    <input id="coa-file" type="file" name="coa_file" accept=".csv,text/csv" required class="sr-only" data-coa-file-input data-coa-file-default="<?= html_escape(isset($labels['finance_coa_choose_file']) ? $labels['finance_coa_choose_file'] : 'Choose CSV') ?>">
+                    <label for="coa-file" class="finance-data-exchange-file inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-sm font-medium text-slate-600 hover:border-indigo-400 hover:text-indigo-700">
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
+                        <span data-coa-file-label><?= html_escape(isset($labels['finance_coa_choose_file']) ? $labels['finance_coa_choose_file'] : 'Choose CSV') ?></span>
+                    </label>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><?= html_escape(isset($labels['finance_coa_import']) ? $labels['finance_coa_import'] : 'Import COA') ?></button>
+                </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+    <?php if ($finance_status === 'coa_imported'): ?>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"><?= html_escape(sprintf(isset($labels['finance_coa_import_success']) ? $labels['finance_coa_import_success'] : 'COA imported: %d accounts.', (int) $finance_coa_import_count)) ?></div>
+    <?php elseif ($finance_status === 'coa_import_error'): ?>
+        <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p class="font-semibold"><?= html_escape(isset($labels['finance_coa_import_error']) ? $labels['finance_coa_import_error'] : 'COA import failed.') ?></p><ul class="mt-2 list-inside list-disc"><?php foreach ((array) $finance_coa_import_errors as $error): ?><li><?= html_escape($error) ?></li><?php endforeach; ?></ul></div>
+    <?php endif; ?>
     <?php if (in_array($finance_status, array('created', 'saved'), TRUE)): ?>
         <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"><?= html_escape($finance_status === 'created' ? (isset($labels['finance_created']) ? $labels['finance_created'] : 'Record created.') : (isset($labels['finance_saved']) ? $labels['finance_saved'] : 'Changes saved.')) ?></div>
     <?php elseif ($finance_status === 'save_error'): ?>
@@ -94,7 +132,7 @@ $balance_labels = array(
             html += '<tr data-account-id="' + row.account_id + '">'
                 + '<td class="px-3 py-2">' + menu(row) + '</td>'
                 + '<td class="px-3 py-2 font-mono text-xs font-semibold text-slate-700">' + escapeHtml(row.account_code) + '</td>'
-                + '<td class="px-3 py-2 text-slate-800"><span style="padding-inline-start:' + (row.level * 18) + 'px" class="inline-flex items-center">' + toggle + escapeHtml(row.account_name) + '</span></td>'
+                + '<td class="px-3 py-2 text-slate-800"><span style="padding-inline-start:' + (row.level * 18) + 'px" class="inline-flex items-center">' + toggle + escapeHtml(row.account_name) + (row.posting_flag ? '' : ' <span class="ms-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_coa_group']) ? $labels['finance_coa_group'] : 'Group') ?></span>') + '</span></td>'
                 + '<td class="px-3 py-2">' + escapeHtml(typeLabels[row.account_type] || row.account_type) + '</td>'
                 + '<td class="px-3 py-2">' + escapeHtml(balanceLabels[row.normal_balance] || row.normal_balance) + '</td>'
                 + '<td class="px-3 py-2 text-slate-600">' + escapeHtml(row.parent_name || '—') + '</td>'
@@ -115,5 +153,13 @@ $balance_labels = array(
         .then(function (response) { if (!response.ok) throw new Error(); return response.json(); })
         .then(function (data) { rows = Array.isArray(data) ? data : []; render(); })
         .catch(function () { rows = []; render(); });
+    var coaFile = document.querySelector('[data-coa-file-input]');
+    if (coaFile) {
+        coaFile.addEventListener('change', function () {
+            var label = document.querySelector('[data-coa-file-label]');
+            if (!label) return;
+            label.textContent = this.files && this.files[0] ? this.files[0].name : (this.getAttribute('data-coa-file-default') || 'Choose CSV');
+        });
+    }
 })();
 </script>

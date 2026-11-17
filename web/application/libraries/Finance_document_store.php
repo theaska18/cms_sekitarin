@@ -117,7 +117,7 @@ class Finance_document_store
         if (!$person || (int) $person['active_flag'] !== 1) {
             return 'party_invalid';
         }
-        if (!$account || (int) $account['active_flag'] !== 1 || $account['account_type'] !== $expected_type) {
+        if (!$account || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1 || $account['account_type'] !== $expected_type) {
             return 'account_invalid';
         }
         $settings = $this->db->where('tenant_id', (int) $tenant_id)->limit(1)->get('fin_settings');
@@ -248,7 +248,7 @@ class Finance_document_store
         $expected_type = $kind === 'sales' ? 'revenue' : 'expense';
         $control_type = $kind === 'sales' ? 'asset' : 'liability';
         if (!$control || (int) $control['active_flag'] !== 1 || $control['account_type'] !== $control_type || !$account
-            || (int) $account['active_flag'] !== 1 || $account['account_type'] !== $expected_type) {
+            || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1 || $account['account_type'] !== $expected_type) {
             return 'account_invalid';
         }
         $tax_account = NULL;
@@ -257,7 +257,7 @@ class Finance_document_store
             $tax_account = $tax && !empty($tax['account_id'])
                 ? $this->tenant_row('fin_account', 'account_id', $tenant_id, $tax['account_id'])
                 : NULL;
-            if (!$tax_account || (int) $tax_account['active_flag'] !== 1) {
+            if (!$tax_account || (int) $tax_account['active_flag'] !== 1 || (int) $tax_account['posting_flag'] !== 1) {
                 return 'tax_account_missing';
             }
         }
@@ -368,6 +368,9 @@ class Finance_document_store
         }
         $this->db->select($map['id'] . ',' . $map['code'] . ',' . $map['name'])->from($map['table'])
             ->where('tenant_id', (int) $tenant_id)->where('active_flag', 1);
+        if ($map['table'] === 'fin_account') {
+            $this->db->where('posting_flag', 1);
+        }
         if (isset($map['type'])) {
             $this->db->where('account_type', $map['type']);
         }

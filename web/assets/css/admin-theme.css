@@ -570,3 +570,41 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 /* Finance list tables stay on one line; long content is horizontally scrollable. */
 .finance-list-table th,
 .finance-list-table td { white-space: nowrap; }
+
+/* Export/import exchange panels: explicit light/dark surfaces. */
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange {
+    background-color: #111827 !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange h2 { color: #f8fafc !important; }
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange p { color: #94a3b8 !important; }
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-icon {
+    background-color: #1e1b4b !important;
+    color: #c7d2fe !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-badge {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-export {
+    background-color: #1e293b !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-export:hover {
+    background-color: #334155 !important;
+    border-color: #64748b !important;
+    color: #ffffff !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file {
+    background-color: #0f172a !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
+    background-color: #1e293b !important;
+    border-color: #818cf8 !important;
+    color: #e0e7ff !important;
+}

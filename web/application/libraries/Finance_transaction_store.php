@@ -184,12 +184,12 @@ class Finance_transaction_store
             ? $this->tenant_row('fin_account', 'account_id', $tenant_id, $cash['account_id'])
             : NULL;
         if (!$cash || (int) $cash['active_flag'] !== 1 || !$cash_gl_account
-            || (int) $cash_gl_account['active_flag'] !== 1 || $cash_gl_account['account_type'] !== 'asset') {
+            || (int) $cash_gl_account['active_flag'] !== 1 || (int) $cash_gl_account['posting_flag'] !== 1 || $cash_gl_account['account_type'] !== 'asset') {
             return 'cash_account_invalid';
         }
         $account = $this->tenant_row('fin_account', 'account_id', $tenant_id, $values['account_id']);
         $expected_type = $type === 'income' ? 'revenue' : 'expense';
-        if (!$account || (int) $account['active_flag'] !== 1 || $account['account_type'] !== $expected_type) {
+        if (!$account || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1 || $account['account_type'] !== $expected_type) {
             return 'account_invalid';
         }
         $category_id = !empty($values['category_id']) ? (int) $values['category_id'] : NULL;
@@ -355,8 +355,8 @@ class Finance_transaction_store
         $account = $this->tenant_row('fin_account', 'account_id', $tenant_id, $line['account_id']);
         $expected_account_type = $record['transaction_type'] === 'income' ? 'revenue' : 'expense';
         if (!$cash || (int) $cash['active_flag'] !== 1 || !$cash_account
-            || (int) $cash_account['active_flag'] !== 1 || !$account
-            || (int) $account['active_flag'] !== 1 || $account['account_type'] !== $expected_account_type) {
+            || (int) $cash_account['active_flag'] !== 1 || (int) $cash_account['posting_flag'] !== 1 || !$account
+            || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1 || $account['account_type'] !== $expected_account_type) {
             return 'account_invalid';
         }
         $period_query = $this->db->where('tenant_id', (int) $tenant_id)
@@ -377,7 +377,7 @@ class Finance_transaction_store
                 return 'tax_account_missing';
             }
             $tax_account = $this->tenant_row('fin_account', 'account_id', $tenant_id, $tax_row['account_id']);
-            if (!$tax_account || (int) $tax_account['active_flag'] !== 1) {
+            if (!$tax_account || (int) $tax_account['active_flag'] !== 1 || (int) $tax_account['posting_flag'] !== 1) {
                 return 'tax_account_missing';
             }
         }
@@ -505,7 +505,7 @@ class Finance_transaction_store
     public function accounts($tenant_id, $type)
     {
         $this->db->select('account_id,account_code,account_name')->from('fin_account')
-            ->where('tenant_id', (int) $tenant_id)->where('account_type', $type)->where('active_flag', 1)
+            ->where('tenant_id', (int) $tenant_id)->where('account_type', $type)->where('active_flag', 1)->where('posting_flag', 1)
             ->order_by('account_code', 'ASC')->limit(100);
         $query = $this->db->get();
         return $query === FALSE ? array() : $query->result_array();
@@ -534,6 +534,9 @@ class Finance_transaction_store
             ->from($map['table'])
             ->where('tenant_id', (int) $tenant_id)
             ->where('active_flag', 1);
+        if ($map['table'] === 'fin_account') {
+            $this->db->where('posting_flag', 1);
+        }
         if (isset($map['type'])) {
             $this->db->where($map['type_column'], $map['type']);
         }
