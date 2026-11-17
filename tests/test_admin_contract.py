@@ -32,7 +32,7 @@ SUPPORTED_LOCALES = {
 
 REQUIRED_ADMIN_KEYS = {
     "dashboard", "system", "application", "property", "tenant", "parameter", "menu", "sequence",
-    "employee", "role", "user", "sequence_template", "back_home", "language", "logout", "profile",
+    "employee", "role", "user", "sequence_template", "approval_flow_template", "back_home", "language", "logout", "profile",
     "settings", "welcome_title", "welcome_body", "quick_links", "placeholder_title",
     "placeholder_body", "admin_area", "apply_language",
     "topbar_navigation", "sidebar_navigation", "open_navigation", "close_navigation",

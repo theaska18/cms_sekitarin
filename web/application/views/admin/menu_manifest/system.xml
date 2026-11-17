@@ -62,4 +62,16 @@
         <access code="sys_sequence_delete" name="Delete" />
     </menu>
 
+    <menu code="sys_approval_flow_template"
+          name="Approval Flow Template"
+          label_key="admin_approval_flow_template"
+          icon="workflow"
+          route="/admin/system/approval_flow_template"
+          sort_order="5"
+          status="active">
+        <access code="sys_approval_flow_template_add" name="Add" />
+        <access code="sys_approval_flow_template_update" name="Update" />
+        <access code="sys_approval_flow_template_delete" name="Delete" />
+    </menu>
+
 </menu-group>

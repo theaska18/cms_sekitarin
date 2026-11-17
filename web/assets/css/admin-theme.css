@@ -445,3 +445,58 @@ html[data-theme="dark"] #admin-app-shell #application-sequence-data-table_wrappe
 html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child {
     border-color: #334155 !important;
 }
+
+/* Match the Property list control spacing and dark palette for Approval Flow Template. */
+#approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table) {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin: 0;
+    padding: .9rem 1.5rem;
+}
+#approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table) div.dt-layout-cell {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: 0;
+    text-align: start;
+}
+#approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child {
+    border-top: 1px solid #e2e8f0;
+}
+#approval-flow-template-table_wrapper table.dataTable > thead > tr > th { padding: .9rem 1.5rem; }
+@media (max-width: 640px) {
+    #approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table) { padding-inline: 1rem; }
+    #approval-flow-template-table_wrapper table.dataTable > thead > tr > th { padding-inline: .75rem; }
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper {
+    color: #cbd5e1 !important;
+    --dt-row-stripe: 255, 255, 255;
+    --dt-row-hover: 255, 255, 255;
+    --dt-column-ordering: 255, 255, 255;
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper .dt-paging-button {
+    border-color: #475569 !important;
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper .dt-paging-button:hover,
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper .dt-paging-button.current {
+    border-color: #6366f1 !important;
+    background: #3730a3 !important;
+    color: #fff !important;
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper .dt-paging-button.disabled {
+    color: #64748b !important;
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper .dt-processing {
+    border-color: #475569 !important;
+    background: #111827 !important;
+    color: #e2e8f0 !important;
+}
+html[data-theme="dark"] #admin-app-shell #approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child {
+    border-color: #334155 !important;
+}
