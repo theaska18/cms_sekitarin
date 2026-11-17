@@ -53,6 +53,23 @@ class Admin_finance extends Admin
         $this->load->library('finance_store');
         $store = $this->finance_store;
         $available = $store->available($resource);
+        foreach ($resource['columns'] as &$column) {
+            $column['label_key'] = isset($column['label_key'])
+                ? $column['label_key']
+                : 'finance_resource_column_' . $column['name'];
+            foreach ($resource['fields'] as $field) {
+                if ($field['name'] === $column['name'] && !empty($field['options'])) {
+                    $column['value_label_keys'] = array();
+                    foreach ($field['options'] as $option => $option_label) {
+                        $column['value_label_keys'][$option] = isset($field['option_label_keys'][$option])
+                            ? $field['option_label_keys'][$option]
+                            : 'finance_resource_option_' . $field['name'] . '_' . $option;
+                    }
+                    break;
+                }
+            }
+        }
+        unset($column);
         $this->render_admin(
             'admin/finance/resource_index',
             $resource['title_key'],
@@ -1478,6 +1495,10 @@ class Admin_finance extends Admin
         $filters = $this->finance_report_dates();
         $this->load->library('finance_report_store');
         $columns = $this->finance_report_columns($slug);
+        foreach ($columns as &$column) {
+            $column['label_key'] = 'finance_report_column_' . $column['name'];
+        }
+        unset($column);
         $title_key = 'finance_' . $slug;
         $this->render_admin(
             'admin/finance/report_index',
@@ -1648,6 +1669,24 @@ class Admin_finance extends Admin
         foreach ($resource['fields'] as $field) {
             $record[$field['name']] = isset($field['default']) ? $field['default'] : '';
         }
+        foreach ($resource['columns'] as &$column) {
+            if (!isset($column['label_key'])) {
+                $column['label_key'] = 'finance_resource_column_' . $column['name'];
+            }
+        }
+        unset($column);
+        foreach ($resource['fields'] as &$field) {
+            if (!isset($field['label_key'])) {
+                $field['label_key'] = 'finance_resource_field_' . $field['name'];
+            }
+            if (!empty($field['options']) && !isset($field['option_label_keys'])) {
+                $field['option_label_keys'] = array();
+                foreach ($field['options'] as $option => $option_label) {
+                    $field['option_label_keys'][$option] = 'finance_resource_option_' . $field['name'] . '_' . $option;
+                }
+            }
+        }
+        unset($field);
         $lookup_labels = array();
         if ($id !== NULL && $available) {
             $saved = $store->find($resource, (int) $this->current_user['tenant_id'], $id);

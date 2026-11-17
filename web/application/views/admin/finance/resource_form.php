@@ -13,7 +13,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
 <?php if ($has_account_lookup): ?>
 <link rel="stylesheet" href="/assets/css/vendor/jquery-ui.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/jquery-ui.min.css') ? filemtime(FCPATH . 'assets/css/vendor/jquery-ui.min.css') : '1' ?>">
 <?php endif; ?>
-<main class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+<main class="mx-auto w-full max-w-4xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <a href="/admin/finance/<?= html_escape($finance_resource['slug']) ?>" class="hover:text-indigo-700"><?= html_escape($title) ?></a>
         <span aria-hidden="true" class="mx-2">/</span>
@@ -31,7 +31,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
             <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
                 <p class="font-semibold"><?= html_escape(isset($labels['finance_form_error']) ? $labels['finance_form_error'] : 'Please review the highlighted fields.') ?></p>
                 <ul class="mt-2 list-inside list-disc">
-                    <?php foreach ($finance_errors as $error): ?><li><?= html_escape(isset($labels['finance_error_' . $error]) ? $labels['finance_error_' . $error] : str_replace('_', ' ', $error)) ?></li><?php endforeach; ?>
+                    <?php foreach ($finance_errors as $error): $suffix = substr($error, strrpos($error, '_') + 1); $fallback_key = in_array($suffix, array('required', 'invalid', 'long'), TRUE) ? 'finance_error_' . ($suffix === 'long' ? 'too_long' : $suffix) : 'finance_error_generic'; ?><li><?= html_escape(isset($labels['finance_error_' . $error]) ? $labels['finance_error_' . $error] : (isset($labels[$fallback_key]) ? $labels[$fallback_key] : 'Please check this field.')) ?></li><?php endforeach; ?>
                 </ul>
             </div>
         <?php endif; ?>

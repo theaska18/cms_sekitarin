@@ -22,7 +22,7 @@ $kind_fields = array(
 );
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/jquery-ui.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/jquery-ui.min.css') ? filemtime(FCPATH . 'assets/css/vendor/jquery-ui.min.css') : '1' ?>">
-<main class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+<main class="mx-auto w-full max-w-4xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="<?= html_escape($breadcrumb_label) ?>" class="mb-5 text-sm text-slate-500">
         <a href="/admin/finance/<?= html_escape($finance_transaction_slug) ?>" class="hover:text-indigo-700"><?= html_escape($title) ?></a>
         <span aria-hidden="true" class="mx-2">/</span><span aria-current="page"><?= html_escape($draft_state) ?></span>

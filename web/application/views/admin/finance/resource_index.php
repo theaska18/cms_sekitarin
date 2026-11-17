@@ -5,7 +5,7 @@ $can_add = $finance_can_add && $finance_write_available;
 $can_edit = $finance_can_update && $finance_write_available;
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
-<main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+<main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
         <ol class="flex flex-wrap items-center gap-2">
             <li><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></li>
@@ -45,7 +45,7 @@ $can_edit = $finance_can_update && $finance_write_available;
     <?php else: ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
             <h2 id="finance-resource-heading" class="sr-only"><?= html_escape($title) ?></h2>
-            <div class="overflow-x-auto p-3 sm:p-5">
+            <div class="overflow-x-auto p-2 sm:p-5">
                 <table id="finance-resource-table" class="min-w-full text-sm">
                     <thead><tr>
                         <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>
@@ -91,6 +91,12 @@ $can_edit = $finance_can_update && $finance_write_available;
         name: <?= json_encode($column['name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
         render: function (value, type) {
             if (type !== 'display') return value;
+            <?php if (!empty($column['value_label_keys'])): ?>
+            var optionLabels = <?= json_encode(array_intersect_key($labels, array_flip(array_values($column['value_label_keys']))), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+            <?php foreach ($column['value_label_keys'] as $option_value => $option_key): ?>
+            if (String(value) === <?= json_encode((string) $option_value) ?> && optionLabels[<?= json_encode($option_key) ?>]) return escapeHtml(optionLabels[<?= json_encode($option_key) ?>]);
+            <?php endforeach; ?>
+            <?php endif; ?>
             <?php if ($column['name'] === 'active_flag' || $column['name'] === 'tax_inclusive_default'): ?>
             return escapeHtml(String(value) === '1' ? '<?= html_escape(isset($labels['finance_yes']) ? $labels['finance_yes'] : 'Yes') ?>' : '<?= html_escape(isset($labels['finance_no']) ? $labels['finance_no'] : 'No') ?>');
             <?php else: ?>

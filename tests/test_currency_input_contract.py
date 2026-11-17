@@ -4,7 +4,16 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
 LIBRARY = ROOT / "web/assets/js/currency-input.js"
-TRANSACTION_FORM = APP / "views/admin/finance/transaction_form.php"
+FINANCE = APP / "views/admin/finance"
+
+MONEY_FORMS = {
+    "transaction_form.php": ["amount"],
+    "document_form.php": ["amount"],
+    "payment_form.php": ["amount"],
+    "transfer_form.php": ["from_amount", "to_amount"],
+    "journal_form.php": ["lines[<?= (int) $index ?>][debit_amount]", "lines[<?= (int) $index ?>][credit_amount]"],
+    "reconciliation_form.php": ["opening_balance", "closing_balance", "lines[<?= (int)$i ?>][statement_amount]"],
+}
 
 
 def read(path):
@@ -39,14 +48,54 @@ class CurrencyInputContractTests(unittest.TestCase):
         self.assertIn("editableValue", source)
         self.assertIn("storedRaw", source)
 
-    def test_amount_input_uses_currency_input(self):
-        source = read(TRANSACTION_FORM)
-        self.assertIn('name="amount"', source)
-        self.assertIn("data-currency-input", source)
-        self.assertIn('data-decimal="2"', source)
-        self.assertIn('data-currency-default="0"', source)
-        self.assertIn("currency-input.js", source)
-        self.assertNotIn('name="amount" type="number"', source)
+    def test_library_exposes_idempotent_plugin_api(self):
+        source = read(LIBRARY)
+        self.assertIn("$.fn.currencyInput", source)
+        self.assertIn("command === 'set'", source)
+        self.assertIn("setValue($input, value, options)", source)
+
+    def test_every_money_form_loads_the_library_and_uses_it(self):
+        for filename, fields in MONEY_FORMS.items():
+            source = read(FINANCE / filename)
+            self.assertIn("currency-input.js", source, filename)
+            for field in fields:
+                self.assertIn(field, source, filename)
+            self.assertIn("data-currency-input", source, filename)
+
+    def test_money_inputs_use_two_decimals_and_default_zero(self):
+        for filename in MONEY_FORMS:
+            source = read(FINANCE / filename)
+            self.assertIn('data-decimal="2"', source, filename)
+            self.assertIn('data-currency-default="0"', source, filename)
+
+    def test_exchange_rates_are_not_currency_formatted(self):
+        rate_fields = (
+            "name=\"exchange_rate\"",
+            "name=\"from_exchange_rate\"",
+            "name=\"to_exchange_rate\"",
+            "name=\"lines[<?= (int) $index ?>][exchange_rate]\"",
+        )
+        for filename in MONEY_FORMS:
+            source = read(FINANCE / filename)
+            for line in source.splitlines():
+                if any(field in line for field in rate_fields):
+                    self.assertNotIn("data-currency-input", line, filename)
+
+    def test_negative_balances_allow_a_minus_sign(self):
+        source = read(FINANCE / "reconciliation_form.php")
+        for field in ("opening_balance", "closing_balance", "statement_amount"):
+            self.assertIn(field, source)
+        self.assertGreaterEqual(source.count('data-allow-negative="1"'), 4)
+
+    def test_dynamic_rows_initialize_currency_inputs(self):
+        journal = read(FINANCE / "journal_form.php")
+        self.assertIn("$(row).find('[data-currency-input]').currencyInput();", journal)
+        self.assertIn("data-debit data-currency-input", journal)
+        self.assertIn("data-credit data-currency-input", journal)
+
+        reconciliation = read(FINANCE / "reconciliation_form.php")
+        self.assertIn("$(row).find('[data-currency-input]').currencyInput();", reconciliation)
+        self.assertIn("amount.currencyInput('set',item.item.amount);", reconciliation)
 
     def test_server_still_validates_canonical_decimal_format(self):
         controller = read(APP / "controllers/Admin_finance.php")

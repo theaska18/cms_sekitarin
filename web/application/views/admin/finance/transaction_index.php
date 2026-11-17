@@ -37,7 +37,7 @@ $dt_processing = isset($labels['finance_dt_processing']) ? $labels['finance_dt_p
 $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
-<main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+<main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="<?= html_escape($breadcrumb_label) ?>" class="mb-5 text-sm text-slate-500">
         <span><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></span>
         <span aria-hidden="true" class="mx-2">/</span>
@@ -62,7 +62,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_tx_unavailable']) ? $labels['finance_tx_unavailable'] : 'Finance transaction storage is unavailable.') ?></div>
     <?php else: ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div class="overflow-x-auto p-3 sm:p-5">
+            <div class="overflow-x-auto p-2 sm:p-5">
                 <table id="finance-transaction-table" class="min-w-full text-sm">
                     <thead><tr>
                         <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>

@@ -10,6 +10,9 @@
  *   <input name="amount" type="text" inputmode="decimal"
  *          data-currency-input data-decimal="2" data-currency-default="0">
  *
+ *   $('[data-currency-input]').currencyInput();          // initialize
+ *   $input.currencyInput('set', '1250.500');             // set canonical value
+ *
  * Attributes:
  *   data-decimal           Minimum fraction digits shown on blur (0-6, default 0).
  *                          Extra decimals entered by the user (up to 6) are kept.
@@ -214,12 +217,21 @@
         return raw;
     }
 
+    function setValue($input, value, options) {
+        var raw = parseValue(value, options.allowNegative, null);
+        if (raw === '') {
+            raw = options.defaultRaw;
+        }
+        storeRaw($input, raw);
+        $input.val(raw === '' ? '' : formatValue(raw, options.decimals, options.separators));
+    }
+
     function initInput(element) {
         var $input = $(element);
-        if ($input.data('currencyInputReady')) {
-            return;
+        var existing = $input.data('currencyInputOptions');
+        if (existing) {
+            return existing;
         }
-        $input.data('currencyInputReady', true);
 
         var decimals = parseInt($input.attr('data-decimal'), 10);
         if (isNaN(decimals) || decimals < 0) {
@@ -229,23 +241,16 @@
 
         var defaultAttr = $input.attr('data-currency-default');
         var allowNegative = $input.attr('data-allow-negative') === '1';
-        var separators = localeSeparators();
         var options = {
             decimals: decimals,
             allowNegative: allowNegative,
             defaultRaw: typeof defaultAttr === 'undefined'
                 ? '0'
                 : parseValue(defaultAttr, allowNegative, null),
-            separators: separators
+            separators: localeSeparators()
         };
         $input.data('currencyInputOptions', options);
-
-        var initial = parseValue($input.val(), options.allowNegative, null);
-        if (initial === '') {
-            initial = options.defaultRaw;
-        }
-        storeRaw($input, initial);
-        $input.val(initial === '' ? '' : formatValue(initial, options.decimals, options.separators));
+        setValue($input, $input.val(), options);
 
         $input.on('focus.currencyInput', function () {
             var raw = storedRaw($input, options);
@@ -289,11 +294,27 @@
                 });
             });
         }
+
+        return options;
     }
 
-    $(function () {
-        $('[data-currency-input]').each(function () {
+    $.fn.currencyInput = function (command, value) {
+        if (typeof command === 'string') {
+            return this.each(function () {
+                var $input = $(this);
+                var options = initInput(this);
+                if (options && command === 'set') {
+                    setValue($input, value, options);
+                }
+            });
+        }
+
+        return this.each(function () {
             initInput(this);
         });
+    };
+
+    $(function () {
+        $('[data-currency-input]').currencyInput();
     });
 })(window, document);

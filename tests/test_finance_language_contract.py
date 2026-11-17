@@ -120,6 +120,51 @@ class FinanceLanguageContractTests(unittest.TestCase):
             with self.subTest(locale=locale):
                 self.assertTrue(used.issubset(keys), used - keys)
 
+    def test_document_index_keys_exist_in_every_locale(self):
+        source = read(APP / "views/admin/finance/document_index.php")
+        used = set(re.findall(r"finance_(?:doc_[a-z0-9_]+|new_draft|action_failed|actions|column_[a-z_]+|edit|post|dt_[a-z0-9_]+)", source))
+        for locale in LOCALES:
+            keys = language_keys(LANGUAGES / locale / "finance_lang.php")
+            with self.subTest(locale=locale):
+                self.assertTrue(used.issubset(keys), used - keys)
+
+    def test_all_literal_view_keys_exist_in_every_locale(self):
+        views = APP / "views/admin/finance"
+        used = set()
+        for path in views.glob("*.php"):
+            source = read(path)
+            used.update(re.findall(r"\$labels\[['\"](finance_[a-z0-9_]+)['\"]\]", source))
+            used.update(re.findall(r"\$labels\[['\"](finance_[a-z0-9_]+)['\"]\s*\?", source))
+        for locale in LOCALES:
+            keys = language_keys(LANGUAGES / locale / "finance_lang.php")
+            with self.subTest(locale=locale):
+                self.assertTrue(used.issubset(keys), used - keys)
+
+    def test_resource_metadata_keys_exist_in_every_locale(self):
+        source = read(FINANCE_CONTROLLER)
+        resource_fields = set(re.findall(r"'name'\s*=>\s*'([a-z0-9_]+)'", source[source.index("private function finance_resources()"):]))
+        expected = {
+            "finance_resource_field_" + name for name in resource_fields
+        } | {
+            "finance_resource_column_" + name for name in resource_fields
+        }
+        expected.update(
+            "finance_resource_option_" + field + "_" + option
+            for field, options in {
+                "active_flag": ("0", "1"),
+                "account_type": ("asset", "liability", "equity", "revenue", "expense"),
+                "normal_balance": ("debit", "credit"),
+                "category_type": ("income", "expense"),
+                "account_kind": ("cash", "bank"),
+                "status": ("open", "closed"),
+            }.items()
+            for option in options
+        )
+        for locale in LOCALES:
+            keys = language_keys(LANGUAGES / locale / "finance_lang.php")
+            with self.subTest(locale=locale):
+                self.assertTrue(expected.issubset(keys), expected - keys)
+
 
 if __name__ == "__main__":
     unittest.main()
