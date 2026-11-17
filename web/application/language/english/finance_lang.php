@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'Source exchange rate';
 $lang['finance_transfer_amount_received'] = 'Amount received';
 $lang['finance_transfer_rate_destination'] = 'Destination exchange rate';
 $lang['finance_status_posted'] = 'Posted';
+$lang['finance_status_insufficient_balance'] = 'Insufficient cash/bank balance for this transaction.';
 $lang['finance_status_draft'] = 'Draft';
 $lang['finance_status_completed'] = 'Completed';
 // Finance validation fallbacks.

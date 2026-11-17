@@ -101,7 +101,7 @@ class Application_sequence_store
     }
 
     /** Lock and calculate the next value; caller must commit/rollback its transaction. */
-    public function next_code_for_update($tenant_id, $sequence_code)
+    public function next_code_for_update($tenant_id, $sequence_code, $require_enabled = TRUE)
     {
         if (!$this->schema_available() || (int) $tenant_id < 1 || !is_string($sequence_code) || $sequence_code === '') {
             return FALSE;
@@ -117,7 +117,7 @@ class Application_sequence_store
         if ($query === FALSE) {
             return FALSE;
         }
-        if (!$query->num_rows() || (string) $query->row()->use_flag !== '1') {
+        if (!$query->num_rows() || ($require_enabled && (string) $query->row()->use_flag !== '1')) {
             return NULL;
         }
         $next = $this->next_code_from_row($query->row_array());
@@ -131,7 +131,7 @@ class Application_sequence_store
      * Lock the tenant sequence, creating its override from the system template
      * when the tenant has never configured it. Caller owns the transaction.
      */
-    public function next_code_for_tenant($tenant_id, $sequence_code)
+    public function next_code_for_tenant($tenant_id, $sequence_code, $require_enabled = TRUE)
     {
         if (!$this->schema_available() || (int) $tenant_id < 1
             || !is_string($sequence_code) || $sequence_code === '') {
@@ -160,7 +160,7 @@ class Application_sequence_store
                 return FALSE;
             }
         }
-        return $this->next_code_for_update($tenant_id, $sequence_code);
+        return $this->next_code_for_update($tenant_id, $sequence_code, $require_enabled);
     }
 
     /** Advance a locked in-memory candidate after its generated code is already used. */

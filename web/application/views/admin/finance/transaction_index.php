@@ -18,6 +18,7 @@ $extra_status_messages = array(
     'not_submittable' => 'Transaksi ini tidak dapat diajukan untuk persetujuan.',
     'sequence_unavailable' => 'Nomor transaksi tidak dapat dibuat dari sequence.',
     'not_postable' => 'Hanya transaksi berstatus disetujui yang dapat diposting.',
+    'insufficient_balance' => isset($labels['finance_status_insufficient_balance']) ? $labels['finance_status_insufficient_balance'] : 'Saldo kas/bank tidak mencukupi.',
 );
 if ($finance_status !== '') {
     $status_key = 'finance_tx_status_' . $finance_status;

@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'Tipo de cambio de origen';
 $lang['finance_transfer_amount_received'] = 'Importe recibido';
 $lang['finance_transfer_rate_destination'] = 'Tipo de cambio de destino';
 $lang['finance_status_posted'] = 'Contabilizado';
+$lang['finance_status_insufficient_balance'] = 'El saldo de caja/banco es insuficiente para esta transacción.';
 $lang['finance_status_draft'] = 'Borrador';
 $lang['finance_status_completed'] = 'Completado';
 // Finance validation fallbacks.

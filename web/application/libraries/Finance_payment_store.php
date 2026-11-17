@@ -221,6 +221,20 @@ class Finance_payment_store
             }
         }
         $this->db->trans_begin();
+        if ($kind === 'supplier') {
+            $CI =& get_instance();
+            $CI->load->library('finance_balance_guard');
+            $balance_check = $CI->finance_balance_guard->can_debit(
+                $tenant,
+                (int) $payment['cash_account_id'],
+                (float) $payment['amount'],
+                (string) $payment['currency_code']
+            );
+            if ($balance_check !== 'ok') {
+                $this->db->trans_rollback();
+                return $balance_check;
+            }
+        }
         $source = $spec['source_type'];
         $duplicate = $this->db->where('tenant_id', (int) $tenant)->where('source_type', $source)
             ->where('source_id', (int) $id)->limit(1)->get('fin_journal_entry');

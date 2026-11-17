@@ -905,14 +905,18 @@ class Approval_workflow_store
         $type = isset($request['source_type']) ? (string)$request['source_type'] : '';
         $id = isset($request['source_id']) ? (int)$request['source_id'] : 0;
         $status = isset($request['status']) ? (string)$request['status'] : '';
-        if ($type !== 'fin_transaction' || $id < 1
+        $targets = array(
+            'fin_transaction' => array('table' => 'fin_transaction', 'id' => 'transaction_id'),
+            'fin_cash_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id'),
+        );
+        if (!isset($targets[$type]) || $id < 1
             || !in_array($status, array('approved','revise','rejected'), TRUE)
-            || !$this->db->table_exists('fin_transaction')) {
+            || !$this->db->table_exists($targets[$type]['table'])) {
             return TRUE;
         }
-        $this->db->where(array('tenant_id'=>$this->tenant,'transaction_id'=>$id))
+        $this->db->where(array('tenant_id'=>$this->tenant,$targets[$type]['id']=>$id))
             ->where_in('status', array('pending_approval','revise'))
-            ->update('fin_transaction', array('status'=>$status));
+            ->update($targets[$type]['table'], array('status'=>$status));
         return $this->db->trans_status() !== FALSE;
     }
 

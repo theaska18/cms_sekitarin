@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = '출발 환율';
 $lang['finance_transfer_amount_received'] = '받은 금액';
 $lang['finance_transfer_rate_destination'] = '도착 환율';
 $lang['finance_status_posted'] = '전기됨';
+$lang['finance_status_insufficient_balance'] = '이 거래에 필요한 현금/은행 잔액이 부족합니다.';
 $lang['finance_status_draft'] = '초안';
 $lang['finance_status_completed'] = '완료';
 // Finance validation fallbacks.

@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = '振替元為替レート';
 $lang['finance_transfer_amount_received'] = '受取額';
 $lang['finance_transfer_rate_destination'] = '振替先為替レート';
 $lang['finance_status_posted'] = '転記済み';
+$lang['finance_status_insufficient_balance'] = 'この取引に必要な現金・銀行残高が不足しています。';
 $lang['finance_status_draft'] = '下書き';
 $lang['finance_status_completed'] = '完了';
 // Finance validation fallbacks.

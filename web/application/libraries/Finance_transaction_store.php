@@ -153,6 +153,14 @@ class Finance_transaction_store
         return $record;
     }
 
+    private function transaction_number_exists($tenant_id, $number)
+    {
+        return $this->db->from('fin_transaction')
+            ->where('tenant_id', (int) $tenant_id)
+            ->where('transaction_number', (string) $number)
+            ->count_all_results() > 0;
+    }
+
     /** Save a single-line draft only; a posted transaction is immutable. */
     public function save_draft($tenant_id, $user_id, $type, $id, $values)
     {
@@ -253,6 +261,17 @@ class Finance_transaction_store
                 $this->db->trans_rollback();
                 return 'sequence_unavailable';
             }
+            for ($attempt = 0; $attempt < 10 && $this->transaction_number_exists($tenant_id, (string) $next_code['code']); $attempt++) {
+                $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                if (!is_array($next_code) || !isset($next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            }
+            if ($this->transaction_number_exists($tenant_id, (string) $next_code['code'])) {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
             $this->db->insert('fin_transaction', array(
                 'tenant_id' => (int) $tenant_id,
                 'cash_account_id' => (int) $cash['cash_account_id'],
@@ -271,8 +290,11 @@ class Finance_transaction_store
                 'created_by' => (int) $user_id,
             ));
             $transaction_id = (int) $this->db->insert_id();
-            if ($transaction_id < 1
-                || !$CI->application_sequence_store->advance_sequence($tenant_id, $sequence_code, $next_code)) {
+            if ($transaction_id < 1) {
+                $this->db->trans_rollback();
+                return 'save_error';
+            }
+            if (!$CI->application_sequence_store->advance_sequence($tenant_id, $sequence_code, $next_code)) {
                 $this->db->trans_rollback();
                 return 'sequence_unavailable';
             }
@@ -353,8 +375,32 @@ class Finance_transaction_store
         $base_tax = round($base_total - $base_subtotal, 6);
         $debit_total = $record['transaction_type'] === 'income' ? $base_total : $base_total;
         $credit_total = $base_total;
-        $journal_number = 'TRX-' . (int) $record['transaction_id'];
         $this->db->trans_begin();
+        $CI =& get_instance();
+        if ($record['transaction_type'] === 'expense') {
+            $CI->load->library('finance_balance_guard');
+            $balance_check = $CI->finance_balance_guard->can_debit(
+                $tenant_id,
+                (int) $record['cash_account_id'],
+                (float) $record['total_amount'],
+                (string) $record['currency_code']
+            );
+            if ($balance_check !== 'ok') {
+                $this->db->trans_rollback();
+                return $balance_check;
+            }
+        }
+        $CI->load->library('application_sequence_store');
+        $next_journal = $CI->application_sequence_store->next_code_for_tenant(
+            $tenant_id,
+            'journal_expenses_income',
+            FALSE
+        );
+        if (!is_array($next_journal) || !isset($next_journal['code']) || $next_journal['code'] === '') {
+            $this->db->trans_rollback();
+            return 'sequence_unavailable';
+        }
+        $journal_number = (string) $next_journal['code'];
         $existing = $this->db->where('tenant_id', (int) $tenant_id)
             ->where('source_type', 'transaction')
             ->where('source_id', (int) $record['transaction_id'])
@@ -380,7 +426,8 @@ class Finance_transaction_store
             'posted_by' => (int) $user_id,
         ));
         $journal_id = (int) $this->db->insert_id();
-        if ($journal_id < 1) {
+        if ($journal_id < 1
+            || !$CI->application_sequence_store->advance_sequence($tenant_id, 'journal_expenses_income', $next_journal)) {
             $this->db->trans_rollback();
             return 'post_error';
         }

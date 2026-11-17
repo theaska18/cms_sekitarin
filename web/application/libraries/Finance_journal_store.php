@@ -224,6 +224,15 @@ class Finance_journal_store
             return 'period_ambiguous';
         }
         $this->db->trans_begin();
+        if ($source_type === 'manual') {
+            $CI =& get_instance();
+            $CI->load->library('finance_balance_guard');
+            $balance_check = $CI->finance_balance_guard->validate_journal_lines($tenant_id, $entry['lines']);
+            if ($balance_check !== 'ok') {
+                $this->db->trans_rollback();
+                return $balance_check;
+            }
+        }
         $this->db->where('tenant_id', (int) $tenant_id)
             ->where('journal_entry_id', (int) $id)
             ->where('status', 'draft')

@@ -37,11 +37,14 @@ class Finance_transfer_store
         if (!$this->available()) return FALSE;
         $allowed = array('transfer_number','transfer_date','from_amount','to_amount','status');
         $order = in_array($order, $allowed, TRUE) ? $order : 'transfer_date';
-        $this->db->select('cash_transfer_id,transfer_number,transfer_date,from_amount,to_amount,from_currency,to_currency,status,memo')
-            ->from('fin_cash_transfer')->where('tenant_id', (int) $tenant);
-        if ($search !== '') $this->db->group_start()->like('transfer_number', $search)->or_like('memo', $search)->group_end();
-        $q=$this->db->order_by($order,strtoupper($direction)==='ASC'?'ASC':'DESC')
-            ->order_by('cash_transfer_id','DESC')->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset))->get();
+        $revise_note = "(SELECT a.note FROM app_approval_action a"
+            . " WHERE a.tenant_id = t.tenant_id AND a.request_id = t.approval_request_id"
+            . " AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note";
+        $this->db->select('t.cash_transfer_id,t.transfer_number,t.transfer_date,t.from_amount,t.to_amount,t.from_currency,t.to_currency,t.status,t.memo,t.approval_request_id,' . $revise_note, FALSE)
+            ->from('fin_cash_transfer t')->where('t.tenant_id', (int) $tenant);
+        if ($search !== '') $this->db->group_start()->like('t.transfer_number', $search)->or_like('t.memo', $search)->group_end();
+        $q=$this->db->order_by('t.'.$order,strtoupper($direction)==='ASC'?'ASC':'DESC')
+            ->order_by('t.cash_transfer_id','DESC')->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset))->get();
         return $q===FALSE?FALSE:$q->result_array();
     }
 
@@ -98,14 +101,33 @@ class Finance_transfer_store
         $this->db->trans_begin();
         if($id!==NULL){
             $existing=$this->find($tenant,$id);
-            if(!is_array($existing)||$existing['status']!=='draft'){$this->db->trans_rollback();return 'not_editable';}
+            if(!is_array($existing)||!in_array($existing['status'],array('draft','revise'),TRUE)){$this->db->trans_rollback();return 'not_editable';}
             $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',(int)$id)->update('fin_cash_transfer',$data);
         }else{
-            $data['tenant_id']=(int)$tenant;$data['transfer_number']='TMP-'.bin2hex(random_bytes(6));$data['status']='draft';
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant, 'transfer_code');
+            if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            for ($attempt = 0; $attempt < 10 && $this->transfer_number_exists($tenant, (string) $next_code['code']); $attempt++) {
+                $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                if (!is_array($next_code) || !isset($next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            }
+            if ($this->transfer_number_exists($tenant, (string) $next_code['code'])) {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
+            $data['tenant_id']=(int)$tenant;$data['transfer_number']=(string)$next_code['code'];$data['status']='draft';
             $data['create_on']=date('Y-m-d H:i:s');$data['created_by']=(int)$user;
             $this->db->insert('fin_cash_transfer',$data);$id=(int)$this->db->insert_id();
-            if(!$id){$this->db->trans_rollback();return 'save_error';}
-            $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',$id)->update('fin_cash_transfer',array('transfer_number'=>'TRF-'.date('Ymd').'-'.$id));
+            if(!$id || !$CI->application_sequence_store->advance_sequence($tenant, 'transfer_code', $next_code)){
+                $this->db->trans_rollback();return 'sequence_unavailable';
+            }
         }
         if($this->db->trans_status()===FALSE){$this->db->trans_rollback();return 'save_error';}
         $this->db->trans_commit();return 'saved';
@@ -115,7 +137,7 @@ class Finance_transfer_store
     {
         $row=$this->find($tenant,$id);
         if(!is_array($row))return $row===NULL?'not_found':'unavailable';
-        if($row['status']!=='draft')return 'not_postable';
+        if($row['status']!=='approved')return 'not_postable';
         $period=$this->db->where('tenant_id',(int)$tenant)->where('start_on <=',$row['transfer_date'])
             ->where('end_on >=',$row['transfer_date'])->where('status','open')->get('fin_accounting_period');
         if($period===FALSE||$period->num_rows()!==1)return $period&&$period->num_rows()>1?'period_ambiguous':'period_closed';
@@ -130,13 +152,42 @@ class Finance_transfer_store
         $debit=(float)$row['base_to_amount'];$credit=(float)$row['base_from_amount'];
         if(abs($debit-$credit)>0.000001)return 'fx_imbalance';
         $this->db->trans_begin();
+        $CI =& get_instance();
+        $CI->load->library('finance_balance_guard');
+        $balance_check = $CI->finance_balance_guard->can_debit(
+            $tenant,
+            (int) $row['from_cash_account_id'],
+            (float) $row['from_amount'],
+            (string) $row['from_currency']
+        );
+        if ($balance_check !== 'ok') {
+            $this->db->trans_rollback();
+            return $balance_check;
+        }
         $dup=$this->db->where('tenant_id',(int)$tenant)->where('source_type','cash_transfer')->where('source_id',(int)$id)->limit(1)->get('fin_journal_entry');
         if($dup===FALSE||$dup->num_rows()){$this->db->trans_rollback();return 'already_posted';}
+        $CI =& get_instance();
+        $CI->load->library('application_sequence_store');
+        $next_journal = $CI->application_sequence_store->next_code_for_tenant($tenant, 'journal_transfer', FALSE);
+        $journal_number = 'TRF-' . (int) $id;
+        if (is_array($next_journal) && isset($next_journal['code']) && $next_journal['code'] !== '') {
+            $journal_number = (string) $next_journal['code'];
+            for ($attempt = 0; $attempt < 10 && $this->journal_number_exists($tenant, $journal_number); $attempt++) {
+                $next_journal = $CI->application_sequence_store->next_code_after($next_journal);
+                if (!is_array($next_journal) || !isset($next_journal['code'])) { break; }
+                $journal_number = (string) $next_journal['code'];
+            }
+        }
         $this->db->insert('fin_journal_entry',array('tenant_id'=>(int)$tenant,'period_id'=>(int)$period->row()->period_id,
-            'journal_number'=>'TRF-'.$id,'journal_date'=>$row['transfer_date'],'source_type'=>'cash_transfer','source_id'=>(int)$id,
+            'journal_number'=>$journal_number,'journal_date'=>$row['transfer_date'],'source_type'=>'cash_transfer','source_id'=>(int)$id,
             'description'=>'Posted '.$row['transfer_number'],'status'=>'posted','debit_total'=>$debit,'credit_total'=>$credit,
             'create_on'=>date('Y-m-d H:i:s'),'created_by'=>(int)$user,'posted_on'=>date('Y-m-d H:i:s'),'posted_by'=>(int)$user));
         $journal=(int)$this->db->insert_id();
+        if ($journal < 1
+            || (is_array($next_journal) && !$CI->application_sequence_store->advance_sequence($tenant, 'journal_transfer', $next_journal))) {
+            $this->db->trans_rollback();
+            return 'post_error';
+        }
         $lines=array(
             array('account_id'=>(int)$to_gl['account_id'],'currency'=>$row['to_currency'],'rate'=>$row['to_exchange_rate'],'debit'=>(float)$row['to_amount'],'credit'=>0,'base_debit'=>$debit,'base_credit'=>0),
             array('account_id'=>(int)$from_gl['account_id'],'currency'=>$row['from_currency'],'rate'=>$row['from_exchange_rate'],'debit'=>0,'credit'=>(float)$row['from_amount'],'base_debit'=>0,'base_credit'=>$credit),
@@ -144,10 +195,24 @@ class Finance_transfer_store
         foreach($lines as $i=>$line)$this->db->insert('fin_journal_line',array('tenant_id'=>(int)$tenant,'journal_entry_id'=>$journal,'account_id'=>$line['account_id'],'line_number'=>$i+1,
             'description'=>$row['transfer_number'],'currency_code'=>$line['currency'],'exchange_rate'=>$line['rate'],'debit_amount'=>$line['debit'],'credit_amount'=>$line['credit'],
             'debit_base_amount'=>$line['base_debit'],'credit_base_amount'=>$line['base_credit']));
-        $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',(int)$id)->where('status','draft')
+        $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',(int)$id)->where('status','approved')
             ->update('fin_cash_transfer',array('status'=>'posted','posted_on'=>date('Y-m-d H:i:s'),'posted_by'=>(int)$user));
         if(!$journal||$this->db->trans_status()===FALSE){$this->db->trans_rollback();return 'post_error';}
         $this->db->trans_commit();return 'posted';
+    }
+
+    private function transfer_number_exists($tenant, $number)
+    {
+        return $this->db->from('fin_cash_transfer')
+            ->where('tenant_id', (int) $tenant)->where('transfer_number', (string) $number)
+            ->count_all_results() > 0;
+    }
+
+    private function journal_number_exists($tenant, $number)
+    {
+        return $this->db->from('fin_journal_entry')
+            ->where('tenant_id', (int) $tenant)->where('journal_number', (string) $number)
+            ->count_all_results() > 0;
     }
 
     private function tenant_row($table,$column,$tenant,$id)

@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = '转出汇率';
 $lang['finance_transfer_amount_received'] = '转入金额';
 $lang['finance_transfer_rate_destination'] = '转入汇率';
 $lang['finance_status_posted'] = '已过账';
+$lang['finance_status_insufficient_balance'] = '现金/银行余额不足以完成此交易。';
 $lang['finance_status_draft'] = '草稿';
 $lang['finance_status_completed'] = '已完成';
 // Finance validation fallbacks.

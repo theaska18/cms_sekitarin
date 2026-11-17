@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'Quellwechselkurs';
 $lang['finance_transfer_amount_received'] = 'Empfangener Betrag';
 $lang['finance_transfer_rate_destination'] = 'Zielwechselkurs';
 $lang['finance_status_posted'] = 'Gebucht';
+$lang['finance_status_insufficient_balance'] = 'Der Kassen-/Bankkontostand reicht für diese Transaktion nicht aus.';
 $lang['finance_status_draft'] = 'Entwurf';
 $lang['finance_status_completed'] = 'Abgeschlossen';
 // Finance validation fallbacks.

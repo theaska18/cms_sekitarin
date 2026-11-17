@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'Taux de change source';
 $lang['finance_transfer_amount_received'] = 'Montant reçu';
 $lang['finance_transfer_rate_destination'] = 'Taux de change destination';
 $lang['finance_status_posted'] = 'Comptabilisé';
+$lang['finance_status_insufficient_balance'] = 'Le solde de caisse/banque est insuffisant pour cette opération.';
 $lang['finance_status_draft'] = 'Brouillon';
 $lang['finance_status_completed'] = 'Terminé';
 // Finance validation fallbacks.

@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'Kurs sumber';
 $lang['finance_transfer_amount_received'] = 'Jumlah diterima';
 $lang['finance_transfer_rate_destination'] = 'Kurs tujuan';
 $lang['finance_status_posted'] = 'Diposting';
+$lang['finance_status_insufficient_balance'] = 'Saldo kas/bank tidak mencukupi untuk melakukan transaksi ini.';
 $lang['finance_status_draft'] = 'Draf';
 $lang['finance_status_completed'] = 'Selesai';
 // Finance validation fallbacks.

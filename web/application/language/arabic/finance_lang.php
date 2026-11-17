@@ -353,6 +353,7 @@ $lang['finance_transfer_rate_source'] = 'سعر صرف المصدر';
 $lang['finance_transfer_amount_received'] = 'المبلغ المستلم';
 $lang['finance_transfer_rate_destination'] = 'سعر صرف الوجهة';
 $lang['finance_status_posted'] = 'مرحّل';
+$lang['finance_status_insufficient_balance'] = 'رصيد النقد أو البنك غير كافٍ لهذه المعاملة.';
 $lang['finance_status_draft'] = 'مسودة';
 $lang['finance_status_completed'] = 'مكتمل';
 // Finance validation fallbacks.

@@ -277,19 +277,21 @@ class Admin_finance extends Admin
 
     public function submit_approval($slug = '', $id = 0)
     {
-        if (!in_array($slug, array('income', 'expenses'), TRUE)
+        if (!in_array($slug, array('income', 'expenses', 'cash_bank_transfer'), TRUE)
             || !is_numeric($id) || (int) $id < 1
             || $this->input->method(TRUE) !== 'POST') {
             show_404();
             return;
         }
-        $menu_code = $this->finance_transaction_menu_code($slug);
+        $menu_code = $slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer' : $this->finance_transaction_menu_code($slug);
         if (!$this->has_admin_menu_code($menu_code)
             || !$this->has_admin_access_code($menu_code . '_update')) {
             $this->finance_forbidden();
             return;
         }
-        $result = $this->finance_transaction_start_approval($slug, (int) $id);
+        $result = $slug === 'cash_bank_transfer'
+            ? $this->finance_transfer_start_approval((int) $id)
+            : $this->finance_transaction_start_approval($slug, (int) $id);
         $this->session->set_flashdata('finance_status', $result);
         redirect('/admin/finance/' . $slug, 'location', 303);
     }
@@ -331,6 +333,47 @@ class Admin_finance extends Admin
         $approved = $result['status'] === 'auto_approved';
         $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
             ->update('fin_transaction', array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_transfer_start_approval($id)
+    {
+        $this->load->library('finance_transfer_store');
+        $store = $this->finance_transfer_store;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $record = $store->available() ? $store->find($tenant_id, (int) $id) : FALSE;
+        if (!is_array($record)) {
+            return 'not_found';
+        }
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) {
+            return 'not_submittable';
+        }
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
+            ->update('fin_cash_transfer', array('status' => 'pending_approval'));
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) {
+            $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
+                ->update('fin_cash_transfer', array('status' => $previous_status));
+            return 'approval_unavailable';
+        }
+        $subject = (string) $record['transfer_number'];
+        $details = 'Transfer ' . $subject . ' · ' . (string) $record['from_amount'] . ' ' . (string) $record['from_currency']
+            . ' → ' . (string) $record['to_amount'] . ' ' . (string) $record['to_currency'];
+        $result = $approval->submit('finance_transfer', $subject, $details, 'fin_cash_transfer', (int) $id);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
+                ->update('fin_cash_transfer', array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
+            ->update('fin_cash_transfer', array(
                 'status' => $approved ? 'approved' : 'pending_approval',
                 'approval_request_id' => $request_id > 0 ? $request_id : NULL,
             ));
@@ -1441,8 +1484,9 @@ class Admin_finance extends Admin
         $this->load->library('finance_transfer_store');$store=$this->finance_transfer_store;
         $record=array('transfer_date'=>date('Y-m-d'),'from_cash_account_id'=>'','to_cash_account_id'=>'','from_amount'=>'','to_amount'=>'','from_exchange_rate'=>'1','to_exchange_rate'=>'1','memo'=>'','status'=>'draft');
         $labels=array('from_cash_account_id'=>'','to_cash_account_id'=>'');$available=$store->available();
-        if(!$is_new&&$available){$saved=$store->find((int)$this->current_user['tenant_id'],(int)$id);if($saved===NULL){show_404();return;}if($saved===FALSE){$available=FALSE;}elseif($saved['status']!=='draft'){show_error('Posted transfers cannot be edited.',409);return;}else{$record=array_merge($record,$saved);foreach(array('from_cash_account_id','to_cash_account_id') as $f)$labels[$f]=$store->cash_label((int)$this->current_user['tenant_id'],$record[$f]);}}
+        if(!$is_new&&$available){$saved=$store->find((int)$this->current_user['tenant_id'],(int)$id);if($saved===NULL){show_404();return;}if($saved===FALSE){$available=FALSE;}elseif(!in_array($saved['status'],array('draft','revise'),TRUE)){show_error('Only draft or revised transfers can be edited.',409);return;}else{$record=array_merge($record,$saved);foreach(array('from_cash_account_id','to_cash_account_id') as $f)$labels[$f]=$store->cash_label((int)$this->current_user['tenant_id'],$record[$f]);}}
         $errors=array();$write=$available&&$this->finance_write_available();
+        $was_revise=isset($record['status'])&&$record['status']==='revise';
         if($this->input->method(TRUE)==='POST'){
             if(!$write){show_error('Finance writes are unavailable.',503);return;}
             $values=array();foreach(array('transfer_date','from_cash_account_id','to_cash_account_id','from_amount','to_amount','from_exchange_rate','to_exchange_rate','memo') as $key){$raw=$this->input->post($key,TRUE);$values[$key]=is_scalar($raw)?trim((string)$raw):'';}
@@ -1454,7 +1498,7 @@ class Admin_finance extends Admin
             if(!$values['from_cash_account_id']||!$values['to_cash_account_id'])$errors[]='cash_account_required';
             if(strlen($values['memo'])>10000)$errors[]='memo_too_long';
             if(!$errors){$previous=$this->db->db_debug;$this->db->db_debug=FALSE;$result=$store->save_draft((int)$this->current_user['tenant_id'],(int)$this->current_user['user_id'],$is_new?NULL:(int)$id,$values);$this->db->db_debug=$previous;
-                if($result==='saved'){$this->session->set_flashdata('finance_status','draft_saved');redirect('/admin/finance/cash_bank_transfer','location',303);return;}
+                if($result==='saved'){$this->session->set_flashdata('finance_status',$was_revise&&!$is_new?$this->finance_transfer_start_approval((int)$id):'draft_saved');redirect('/admin/finance/cash_bank_transfer','location',303);return;}
                 $errors[]='transfer_'.$result;
             }
             $record=array_merge($record,$values);foreach(array('from_cash_account_id','to_cash_account_id') as $f)$labels[$f]=$store->cash_label((int)$this->current_user['tenant_id'],$record[$f]);

@@ -32,9 +32,23 @@ class FinanceApprovalContractTests(unittest.TestCase):
         self.assertIn("expenses_code", store)
         self.assertIn("next_code_for_tenant", store)
         self.assertIn("advance_sequence", store)
-        self.assertIn("public function next_code_for_tenant($tenant_id, $sequence_code)", sequence)
+        self.assertIn("public function next_code_for_tenant($tenant_id, $sequence_code, $require_enabled = TRUE)", sequence)
         self.assertIn("sys_sequence", sequence)
         self.assertIn("app_sequence", sequence)
+
+    def test_expense_income_journal_number_uses_configured_sequence_ignoring_flag(self):
+        store = FINANCE_STORE.read_text()
+        sequence = SEQUENCE_STORE.read_text()
+        self.assertIn("journal_expenses_income", store)
+        self.assertIn("next_code_for_tenant(", store)
+        self.assertIn("'journal_expenses_income',\n            FALSE", store)
+        self.assertIn("advance_sequence($tenant_id, 'journal_expenses_income'", store)
+        self.assertIn("transaction_number_exists", store)
+        self.assertIn("next_code_after", store)
+        self.assertNotIn("'TRX-' . (int) $record['transaction_id']", store)
+        self.assertIn("public function next_code_for_update($tenant_id, $sequence_code, $require_enabled = TRUE)", sequence)
+        self.assertIn("public function next_code_for_tenant($tenant_id, $sequence_code, $require_enabled = TRUE)", sequence)
+        self.assertIn("($require_enabled && (string) $query->row()->use_flag !== '1')", sequence)
 
     def test_draft_can_only_be_posted_after_approval(self):
         store = FINANCE_STORE.read_text()
