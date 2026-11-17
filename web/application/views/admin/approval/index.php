@@ -85,6 +85,7 @@
                                 <div class="flex gap-2">
                                     <button name="decision" value="approved" class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">Setuju</button>
                                     <button name="decision" value="rejected" class="rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white">Tolak</button>
+                                    <button name="decision" value="revise" class="rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white">Minta revisi</button>
                                 </div>
                             </form>
                         </td>
@@ -130,6 +131,23 @@
     });
 })();
 </script>
+<script>
+(function(){
+    document.querySelectorAll('form[action="/admin/system/approval/decide"]').forEach(function(form){
+        var note=form.querySelector('[name="note"]');
+        if(!note)return;
+        note.addEventListener('input',function(){note.setCustomValidity('');});
+        form.addEventListener('submit',function(event){
+            if(event.submitter&&event.submitter.value==='revise'&&note.value.trim()===''){
+                event.preventDefault();
+                note.setCustomValidity('Alasan revisi wajib diisi.');
+                note.reportValidity();
+                note.focus();
+            }
+        });
+    });
+})();
+</script>
 <?php if ($approval_my_requests_available): ?>
 <script>
 (function(){
@@ -137,11 +155,12 @@
     if(!table.length)return;
     function escapeHtml(value){return String(value==null?'':value).replace(/[&<>"']/g,function(character){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character];});}
     var statusLabels={
-        approved:'Disetujui',rejected:'Ditolak',pending:'Menunggu persetujuan',
+        approved:'Disetujui',rejected:'Ditolak',revise:'Revisi',pending:'Menunggu persetujuan',
         needs_assignment:'Menunggu penetapan admin',not_reached:'Belum dijalankan',waiting:'Belum disetujui'
     };
     var statusIcons={
         approved:'<svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m6.5 10 2.2 2.2 4.8-4.8"/></svg>',
+        revise:'<svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M10 6v4.5m0 3h.01"/></svg>',
         rejected:'<svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="m7.5 7.5 5 5m0-5-5 5"/></svg>',
         pending:'<svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 5.5V10l3 1.8"/></svg>',
         needs_assignment:'<svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10 2.5 18 17H2L10 2.5Z"/><path stroke-linecap="round" d="M10 7v4m0 2.5h.01"/></svg>',
@@ -188,7 +207,7 @@
             }},
             {data:'status',name:'status',render:function(value,type,row){
                 if(type!=='display')return value;
-                var colors=value==='approved'?'bg-emerald-50 text-emerald-800':(value==='rejected'?'bg-rose-50 text-rose-800':(value==='needs_assignment'?'bg-amber-50 text-amber-900':'bg-indigo-50 text-indigo-800'));
+                var colors=value==='approved'?'bg-emerald-50 text-emerald-800':(value==='rejected'?'bg-rose-50 text-rose-800':(value==='revise'?'bg-amber-50 text-amber-900':(value==='needs_assignment'?'bg-amber-50 text-amber-900':'bg-indigo-50 text-indigo-800')));
                 return '<span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold '+colors+'">'+statusIcon(value)+escapeHtml(statusText(value,row.current_approver_name))+'</span>';
             }},
             {data:'approval_steps',orderable:false,searchable:false,render:function(steps,type,row){

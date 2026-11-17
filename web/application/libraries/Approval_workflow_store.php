@@ -38,6 +38,8 @@ class Approval_workflow_store
             array('app_approval_request', 'flow_code'),
             array('app_approval_request', 'requester_employee_id'),
             array('app_approval_request', 'current_approver_user_id'),
+            array('app_approval_request', 'source_type'),
+            array('app_approval_request', 'source_id'),
             array('sys_approval_flow', 'flow_code'),
             array('sys_approval_flow', 'flow_name'),
             array('sys_approval_flow', 'active_flag'),
@@ -721,7 +723,7 @@ class Approval_workflow_store
         return $this->db->trans_status()===FALSE ? 'error' : 'routed';
     }
 
-    public function submit($flow_code, $subject, $details)
+    public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL)
     {
         $flow_code=trim((string)$flow_code); $subject=trim((string)$subject); $details=trim((string)$details);
         if (!$this->available() || $flow_code === '' || strlen($flow_code)>32
@@ -742,9 +744,15 @@ class Approval_workflow_store
                 'requester_user_id'=>$this->user,'requester_employee_id'=>$this->employee ?: NULL,
                 'subject'=>$subject,'details'=>$details,'status'=>'approved','current_step'=>0,
                 'current_approver_user_id'=>NULL,'create_on'=>$created,'update_on'=>$created,
+                'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
+                'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
             ));
             if (!$inserted || $this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
             $request_id=(int)$this->db->insert_id();
+            $this->finalize_source(array(
+                'source_type'=>$source_type,'source_id'=>$source_id,'status'=>'approved',
+            ));
+            if ($this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
             $this->db->trans_commit();
             return $this->db->trans_status()===FALSE ? FALSE : array('status'=>'auto_approved','request_id'=>$request_id);
         }
@@ -760,6 +768,8 @@ class Approval_workflow_store
             'subject'=>$subject,'details'=>$details,'status'=>$request_status,'current_step'=>1,
             'current_approver_user_id'=>$resolution['ok'] ? (int)$resolution['user_id'] : NULL,
             'create_on'=>$created,'update_on'=>$created,
+            'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
+            'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
         ));
         if (!$inserted) { $this->db->trans_rollback(); return FALSE; }
         $request_id=(int)$this->db->insert_id();
@@ -821,7 +831,9 @@ class Approval_workflow_store
 
     public function decide($request_id, $decision, $note)
     {
-        if (!in_array($decision,array('approved','rejected'),TRUE)) { return FALSE; }
+        if (!in_array($decision,array('approved','rejected','revise'),TRUE)) { return FALSE; }
+        $note = trim((string)$note);
+        if ($decision === 'revise' && $note === '') { return FALSE; }
         $this->db->trans_begin();
         $request=$this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'status'=>'pending'))->get('app_approval_request')->row_array();
         if (!$request) { $this->db->trans_rollback(); return FALSE; }
@@ -834,12 +846,12 @@ class Approval_workflow_store
         }
         if (!$step || !$this->db->insert('app_approval_action',array(
             'tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'step_number'=>$current_step,
-            'approver_user_id'=>$this->user,'decision'=>$decision,'note'=>trim((string)$note),'create_on'=>date('Y-m-d H:i:s'),
+            'approver_user_id'=>$this->user,'decision'=>$decision,'note'=>$note,'create_on'=>date('Y-m-d H:i:s'),
         ))) { $this->db->trans_rollback(); return FALSE; }
 
         $next_step=NULL;
         $resolution=NULL;
-        $new_status=$decision==='rejected'?'rejected':'approved';
+        $new_status=$decision==='rejected'?'rejected':($decision==='revise'?'revise':'approved');
         $next_number=$current_step;
         $next_user=NULL;
         if ($decision==='approved') {
@@ -869,6 +881,13 @@ class Approval_workflow_store
                 $resolution['code'],$resolution['message'],isset($resolution['org_id'])?$resolution['org_id']:NULL)) {
             $this->db->trans_rollback(); return FALSE;
         }
+        if ($new_status === 'approved' || $new_status === 'revise' || $new_status === 'rejected') {
+            $this->finalize_source(array(
+                'source_type'=>isset($request['source_type']) ? $request['source_type'] : NULL,
+                'source_id'=>isset($request['source_id']) ? $request['source_id'] : NULL,
+                'status'=>$new_status,
+            ));
+        }
         if ($this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
         $this->db->trans_commit();
         if ($this->db->trans_status()===FALSE) { return FALSE; }
@@ -879,6 +898,22 @@ class Approval_workflow_store
                 isset($resolution['org_id'])?$resolution['org_id']:NULL);
         }
         return TRUE;
+    }
+
+    private function finalize_source($request)
+    {
+        $type = isset($request['source_type']) ? (string)$request['source_type'] : '';
+        $id = isset($request['source_id']) ? (int)$request['source_id'] : 0;
+        $status = isset($request['status']) ? (string)$request['status'] : '';
+        if ($type !== 'fin_transaction' || $id < 1
+            || !in_array($status, array('approved','revise','rejected'), TRUE)
+            || !$this->db->table_exists('fin_transaction')) {
+            return TRUE;
+        }
+        $this->db->where(array('tenant_id'=>$this->tenant,'transaction_id'=>$id))
+            ->where_in('status', array('pending_approval','revise'))
+            ->update('fin_transaction', array('status'=>$status));
+        return $this->db->trans_status() !== FALSE;
     }
 
     private function deliver_approval($request_id,$approver,$subject)

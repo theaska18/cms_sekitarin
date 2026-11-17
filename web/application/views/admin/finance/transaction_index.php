@@ -10,9 +10,20 @@ $intro = $finance_transaction_slug === 'all_transactions'
     ? (isset($labels['finance_tx_intro_all']) ? $labels['finance_tx_intro_all'] : 'Combined feed of Finance documents and manual transactions; drafts are labeled and do not affect reports.')
     : (isset($labels['finance_tx_intro']) ? $labels['finance_tx_intro'] : 'Drafts do not affect the ledger. Posting creates a balanced, tenant-scoped journal entry; posted transactions cannot be edited.');
 $status_message = '';
+$extra_status_messages = array(
+    'approval_submitted' => 'Transaksi diajukan untuk persetujuan.',
+    'approval_auto_approved' => 'Alur tidak memiliki tahapan; transaksi otomatis disetujui dan siap diposting.',
+    'approval_error' => 'Pengajuan persetujuan gagal diproses.',
+    'approval_unavailable' => 'Penyimpanan persetujuan belum tersedia.',
+    'not_submittable' => 'Transaksi ini tidak dapat diajukan untuk persetujuan.',
+    'sequence_unavailable' => 'Nomor transaksi tidak dapat dibuat dari sequence.',
+    'not_postable' => 'Hanya transaksi berstatus disetujui yang dapat diposting.',
+);
 if ($finance_status !== '') {
     $status_key = 'finance_tx_status_' . $finance_status;
-    if (isset($labels[$status_key])) {
+    if (isset($extra_status_messages[$finance_status])) {
+        $status_message = $extra_status_messages[$finance_status];
+    } elseif (isset($labels[$status_key])) {
         $status_message = $labels[$status_key];
     } else {
         $status_message = sprintf(
@@ -21,8 +32,15 @@ if ($finance_status !== '') {
         );
     }
 }
+$label_actions = isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions';
 $label_edit = isset($labels['finance_edit']) ? $labels['finance_edit'] : 'Edit';
 $label_post = isset($labels['finance_tx_action_post']) ? $labels['finance_tx_action_post'] : 'Post';
+$label_submit_approval = isset($labels['finance_tx_action_submit_approval']) ? $labels['finance_tx_action_submit_approval'] : 'Ajukan persetujuan';
+$state_pending = isset($labels['finance_tx_state_pending_approval']) ? $labels['finance_tx_state_pending_approval'] : 'Menunggu persetujuan';
+$state_approved = isset($labels['finance_tx_state_approved']) ? $labels['finance_tx_state_approved'] : 'Disetujui';
+$state_revise = isset($labels['finance_tx_state_revise']) ? $labels['finance_tx_state_revise'] : 'Revisi';
+$state_rejected = isset($labels['finance_tx_state_rejected']) ? $labels['finance_tx_state_rejected'] : 'Ditolak';
+$label_revise_reason = isset($labels['finance_tx_revise_reason']) ? $labels['finance_tx_revise_reason'] : 'Alasan revisi';
 $type_income = isset($labels['finance_tx_type_income']) ? $labels['finance_tx_type_income'] : 'Income';
 $type_expense = isset($labels['finance_tx_type_expense']) ? $labels['finance_tx_type_expense'] : 'Expense';
 $state_draft = isset($labels['finance_tx_state_draft']) ? $labels['finance_tx_state_draft'] : 'Draft';
@@ -53,7 +71,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         <?php endif; ?>
     </header>
     <?php if ($status_message !== ''): ?>
-        <?php $ok = in_array($finance_status, array('draft_saved', 'posted'), TRUE); ?>
+        <?php $ok = in_array($finance_status, array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved'), TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>">
             <?= html_escape($status_message) ?>
         </div>
@@ -90,8 +108,15 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         });
     }
     var txLabels = {
+        actions: <?= json_encode($label_actions, $js_flags) ?>,
         edit: <?= json_encode($label_edit, $js_flags) ?>,
         post: <?= json_encode($label_post, $js_flags) ?>,
+        submitApproval: <?= json_encode($label_submit_approval, $js_flags) ?>,
+        statePending: <?= json_encode($state_pending, $js_flags) ?>,
+        stateApproved: <?= json_encode($state_approved, $js_flags) ?>,
+        stateRevise: <?= json_encode($state_revise, $js_flags) ?>,
+        stateRejected: <?= json_encode($state_rejected, $js_flags) ?>,
+        reviseReason: <?= json_encode($label_revise_reason, $js_flags) ?>,
         typeIncome: <?= json_encode($type_income, $js_flags) ?>,
         typeExpense: <?= json_encode($type_expense, $js_flags) ?>,
         stateDraft: <?= json_encode($state_draft, $js_flags) ?>,
@@ -105,6 +130,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         dtProcessing: <?= json_encode($dt_processing, $js_flags) ?>
     };
     var canUpdate = <?= $can_update ? 'true' : 'false' ?>;
+    var isOwnList = <?= $finance_transaction_slug !== 'all_transactions' ? 'true' : 'false' ?>;
     table.DataTable({
         processing: true,
         serverSide: true,
@@ -115,26 +141,54 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         order: [[3, 'desc']],
         ajax: {url: <?= json_encode($current_path . '/data', $js_flags) ?>, type: 'GET'},
         columns: [
-            {data: null, orderable: false, searchable: false, render: function (data, type, row) {
-                if (type !== 'display' || !canUpdate) return '';
+            {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
+                if (type !== 'display' || !canUpdate || !isOwnList) return '';
                 var id = parseInt(row.transaction_id, 10);
                 if (!id) return '';
-                var actions = '';
+                var csrf = '<input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">';
+                var menuId = 'finance-actions-' + meta.row;
+                var items = '';
+                var editIcon = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>';
                 if (row.status === 'draft') {
-                    actions += '<a class="me-3 font-semibold text-indigo-700" href="<?= html_escape($current_path) ?>/edit/' + id + '">' + escapeHtml(txLabels.edit) + '</a>';
-                    actions += '<form class="inline" method="post" action="<?= html_escape($current_path) ?>/post/' + id + '"><input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>"><button class="font-semibold text-emerald-700" type="submit">' + escapeHtml(txLabels.post) + '</button></form>';
+                    items += '<a href="<?= html_escape($current_path) ?>/edit/' + id + '" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">' + editIcon + escapeHtml(txLabels.edit) + '</a>';
+                    items += '<form method="post" action="<?= html_escape($current_path) ?>/submit_approval/' + id + '" role="none">' + csrf + '<button type="submit" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0 4-4m-4 4-4-4M4 17h12"/></svg>' + escapeHtml(txLabels.submitApproval) + '</button></form>';
+                } else if (row.status === 'revise') {
+                    items += '<a href="<?= html_escape($current_path) ?>/edit/' + id + '" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">' + editIcon + escapeHtml(txLabels.edit) + '</a>';
+                } else if (row.status === 'approved') {
+                    items += '<form method="post" action="<?= html_escape($current_path) ?>/post/' + id + '" role="none">' + csrf + '<button type="submit" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-emerald-700 hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 10.5 8 14l8-8"/></svg>' + escapeHtml(txLabels.post) + '</button></form>';
                 }
-                return actions;
+                if (!items) return '';
+                return '<div class="relative inline-flex"><button type="button" data-finance-actions-toggle aria-label="' + escapeHtml(txLabels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-finance-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + items + '</div></div>';
             }},
             {data: 'transaction_number', name: 'transaction_number', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'transaction_type', name: 'transaction_type', render: function (v,t) { return t === 'display' ? escapeHtml(v === 'income' ? txLabels.typeIncome : txLabels.typeExpense) : v; }},
             {data: 'transaction_on', name: 'transaction_on', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v,t) { return t === 'display' ? escapeHtml(Number(v).toFixed(2)) : v; }},
             {data: 'currency_code', name: 'currency_code', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
-            {data: 'status', name: 'status', render: function (v,t) {
+            {data: 'status', name: 'status', render: function (v,t,row) {
                 if (t !== 'display') return v;
-                var state = v === 'posted' ? txLabels.statePosted : (v === 'draft' ? txLabels.stateDraft : v);
-                return '<span class="rounded-full px-2.5 py-1 text-xs font-semibold ' + (v === 'posted' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-900') + '">' + escapeHtml(state) + '</span>';
+                var states = {
+                    draft: txLabels.stateDraft,
+                    pending_approval: txLabels.statePending,
+                    approved: txLabels.stateApproved,
+                    revise: txLabels.stateRevise,
+                    rejected: txLabels.stateRejected,
+                    posted: txLabels.statePosted
+                };
+                var colors = {
+                    draft: 'bg-slate-100 text-slate-700',
+                    pending_approval: 'bg-indigo-50 text-indigo-800',
+                    approved: 'bg-emerald-50 text-emerald-800',
+                    revise: 'bg-amber-50 text-amber-900',
+                    rejected: 'bg-rose-50 text-rose-800',
+                    posted: 'bg-emerald-100 text-emerald-900'
+                };
+                var state = states[v] || v;
+                var html = '<span class="rounded-full px-2.5 py-1 text-xs font-semibold ' + (colors[v] || 'bg-slate-100 text-slate-700') + '">' + escapeHtml(state) + '</span>';
+                if (v === 'revise' && row.revise_note) {
+                    html += '<div class="mt-1 max-w-xs break-words text-xs text-amber-800" title="' + escapeHtml(row.revise_note) + '"><span class="font-semibold">' + escapeHtml(txLabels.reviseReason) + ':</span> ' + escapeHtml(row.revise_note) + '</div>';
+                }
+                return html;
             }}
         ],
         language: {
@@ -146,6 +200,47 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
             zeroRecords: txLabels.dtZero,
             processing: txLabels.dtProcessing
         }
+    });
+
+    function closeActionMenus() {
+        document.querySelectorAll('[data-finance-actions-menu]').forEach(function (menu) {
+            menu.hidden = true;
+            var toggle = document.querySelector('[aria-controls="' + menu.id + '"][data-finance-actions-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+    function openActionMenu(toggle, menu) {
+        closeActionMenus();
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        var rect = toggle.getBoundingClientRect();
+        var size = menu.getBoundingClientRect();
+        var top = rect.bottom + 4;
+        if (top + size.height > window.innerHeight - 8 && rect.top - size.height - 4 >= 8) {
+            top = rect.top - size.height - 4;
+        }
+        var left = Math.max(8, Math.min(rect.right - size.width, window.innerWidth - size.width - 8));
+        menu.style.top = Math.max(8, top) + 'px';
+        menu.style.left = left + 'px';
+        var first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+    }
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-finance-actions-toggle]');
+        if (toggle) {
+            var menu = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (menu && menu.hidden) openActionMenu(toggle, menu);
+            else closeActionMenus();
+            return;
+        }
+        if (event.target.closest('[data-finance-actions-menu] [role="menuitem"]')) {
+            closeActionMenus();
+            return;
+        }
+        if (!event.target.closest('[data-finance-actions-menu]')) closeActionMenus();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeActionMenus();
     });
 })();
 </script>

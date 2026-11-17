@@ -28,6 +28,7 @@ $route['admin/hr/hierarchy/action'] = 'admin_hierarchy/action';
 $route['admin/hr/hierarchy/csrf_token'] = 'admin_hierarchy/hierarchy_csrf_token';
 $route['admin/finance/(:any)/edit/(:num)'] = 'admin_finance/edit/$1/$2';
 $route['admin/finance/(:any)/post/(:num)'] = 'admin_finance/post/$1/$2';
+$route['admin/finance/(:any)/submit_approval/(:num)'] = 'admin_finance/submit_approval/$1/$2';
 $route['admin/finance/(:any)/lookup/(:any)'] = 'admin_finance/lookup/$1/$2';
 $route['admin/finance/(:any)/data'] = 'admin_finance/data/$1';
 $route['admin/finance/(:any)/new'] = 'admin_finance/new_record/$1';

@@ -71,13 +71,32 @@ class Finance_report_store
             ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
             ->join('fin_cash_account ca', 'ca.account_id=jl.account_id AND ca.tenant_id=jl.tenant_id')
             ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')->get();
-        $recent = $this->db->select('journal_date,journal_number,description,debit_total,credit_total')
+        $recent = $this->db->select('journal_entry_id,journal_date,journal_number,description,debit_total,credit_total')
             ->where('tenant_id', $tenant_id)->where('status', 'posted')
             ->order_by('journal_date', 'DESC')->order_by('journal_entry_id', 'DESC')->limit(5)
             ->get('fin_journal_entry');
         $count = $this->db->where('tenant_id', $tenant_id)->where('status', 'posted')->count_all_results('fin_journal_entry');
         if ($settings === FALSE || $summary === FALSE || $cash === FALSE || $recent === FALSE || $count === FALSE) {
             return FALSE;
+        }
+        $recent_rows = $recent->result_array();
+        $recent_lines = array();
+        $journal_ids = array_map('intval', array_column($recent_rows, 'journal_entry_id'));
+        if ($journal_ids) {
+            $line_query = $this->db->select('je.journal_entry_id,je.journal_date,je.journal_number,je.description AS journal_description,'
+                . 'jl.line_number,jl.description AS line_description,jl.debit_base_amount,jl.credit_base_amount,'
+                . 'a.account_code,a.account_name', FALSE)
+                ->from('fin_journal_entry je')
+                ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+                ->join('fin_account a', 'a.account_id=jl.account_id AND a.tenant_id=jl.tenant_id')
+                ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')
+                ->where_in('je.journal_entry_id', $journal_ids)
+                ->order_by('je.journal_date', 'DESC')->order_by('je.journal_entry_id', 'DESC')
+                ->order_by('jl.line_number', 'ASC')->get();
+            if ($line_query === FALSE) {
+                return FALSE;
+            }
+            $recent_lines = $line_query->result_array();
         }
         $totals = array('revenue' => 0.0, 'expense' => 0.0);
         foreach ($summary->result_array() as $row) {
@@ -94,7 +113,8 @@ class Finance_report_store
             'revenue_ytd' => $totals['revenue'],
             'expense_ytd' => $totals['expense'],
             'net_ytd' => $totals['revenue'] - $totals['expense'],
-            'recent_journals' => $recent->result_array(),
+            'recent_journals' => $recent_rows,
+            'recent_journal_lines' => $recent_lines,
         );
     }
 

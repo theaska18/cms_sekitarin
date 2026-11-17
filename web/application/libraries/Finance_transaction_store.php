@@ -18,7 +18,7 @@ class Finance_transaction_store
     public function available()
     {
         foreach (array(
-            'fin_transaction' => array('transaction_id', 'tenant_id', 'cash_account_id', 'transaction_number', 'transaction_type', 'transaction_on', 'currency_code', 'exchange_rate', 'subtotal', 'tax_total', 'total_amount', 'base_total_amount', 'status'),
+            'fin_transaction' => array('transaction_id', 'tenant_id', 'cash_account_id', 'transaction_number', 'transaction_type', 'transaction_on', 'currency_code', 'exchange_rate', 'subtotal', 'tax_total', 'total_amount', 'base_total_amount', 'status', 'approval_request_id'),
             'fin_transaction_line' => array('transaction_line_id', 'tenant_id', 'transaction_id', 'account_id', 'description', 'quantity', 'unit_price', 'line_subtotal', 'tax_rate_snapshot', 'tax_amount', 'line_total', 'base_line_total', 'base_tax_amount'),
             'fin_journal_entry' => array('journal_entry_id', 'tenant_id', 'period_id', 'journal_number', 'journal_date', 'source_type', 'source_id', 'description', 'status', 'debit_total', 'credit_total', 'created_by', 'posted_on', 'posted_by'),
             'fin_journal_line' => array('journal_line_id', 'tenant_id', 'journal_entry_id', 'account_id', 'line_number', 'currency_code', 'exchange_rate', 'debit_amount', 'credit_amount', 'debit_base_amount', 'credit_base_amount'),
@@ -108,20 +108,23 @@ class Finance_transaction_store
         $allowed = array('transaction_number', 'transaction_type', 'transaction_on', 'total_amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : 'transaction_on';
         $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
-        $this->db->select('transaction_id,transaction_number,transaction_type,transaction_on,total_amount,currency_code,status,description')
-            ->from('fin_transaction')
-            ->where('tenant_id', (int) $tenant_id);
+        $revise_note = "(SELECT a.note FROM app_approval_action a"
+            . " WHERE a.tenant_id = t.tenant_id AND a.request_id = t.approval_request_id"
+            . " AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note";
+        $this->db->select('t.transaction_id,t.transaction_number,t.transaction_type,t.transaction_on,t.total_amount,t.currency_code,t.status,t.description,t.approval_request_id,' . $revise_note, FALSE)
+            ->from('fin_transaction t')
+            ->where('t.tenant_id', (int) $tenant_id);
         if ($type !== NULL) {
-            $this->db->where('transaction_type', $type);
+            $this->db->where('t.transaction_type', $type);
         }
         if (trim((string) $search) !== '') {
             $this->db->group_start()
-                ->like('transaction_number', $search)
-                ->or_like('description', $search)
+                ->like('t.transaction_number', $search)
+                ->or_like('t.description', $search)
                 ->group_end();
         }
-        $query = $this->db->order_by($order, $direction)
-            ->order_by('transaction_id', 'DESC')
+        $query = $this->db->order_by('t.' . $order, $direction)
+            ->order_by('t.transaction_id', 'DESC')
             ->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))
             ->get();
         return $query === FALSE ? FALSE : $query->result_array();
@@ -218,7 +221,8 @@ class Finance_transaction_store
                 return 'not_found';
             }
             $existing = $existing->row_array();
-            if ($existing['status'] !== 'draft' || $existing['transaction_type'] !== $type) {
+            if (!in_array($existing['status'], array('draft', 'revise'), TRUE)
+                || $existing['transaction_type'] !== $type) {
                 $this->db->trans_rollback();
                 return 'not_editable';
             }
@@ -241,10 +245,18 @@ class Finance_transaction_store
             $this->db->where('tenant_id', (int) $tenant_id)
                 ->where('transaction_id', $transaction_id)->delete('fin_transaction_line');
         } else {
+            $CI =& get_instance();
+            $CI->load->library('application_sequence_store');
+            $sequence_code = $type === 'income' ? 'income_code' : 'expenses_code';
+            $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant_id, $sequence_code);
+            if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                $this->db->trans_rollback();
+                return 'sequence_unavailable';
+            }
             $this->db->insert('fin_transaction', array(
                 'tenant_id' => (int) $tenant_id,
                 'cash_account_id' => (int) $cash['cash_account_id'],
-                'transaction_number' => 'TMP-' . strtoupper($type) . '-' . bin2hex(random_bytes(6)),
+                'transaction_number' => (string) $next_code['code'],
                 'transaction_type' => $type,
                 'transaction_on' => $values['transaction_on'],
                 'currency_code' => $currency,
@@ -259,13 +271,11 @@ class Finance_transaction_store
                 'created_by' => (int) $user_id,
             ));
             $transaction_id = (int) $this->db->insert_id();
-            if ($transaction_id < 1) {
+            if ($transaction_id < 1
+                || !$CI->application_sequence_store->advance_sequence($tenant_id, $sequence_code, $next_code)) {
                 $this->db->trans_rollback();
-                return 'save_error';
+                return 'sequence_unavailable';
             }
-            $number = ($type === 'income' ? 'INC-' : 'EXP-') . date('Ymd') . '-' . str_pad((string) $transaction_id, 6, '0', STR_PAD_LEFT);
-            $this->db->where('tenant_id', (int) $tenant_id)->where('transaction_id', $transaction_id)
-                ->update('fin_transaction', array('transaction_number' => $number));
         }
 
         $this->db->insert('fin_transaction_line', array(
@@ -302,7 +312,7 @@ class Finance_transaction_store
         if (!is_array($record)) {
             return $record === NULL ? 'not_found' : 'unavailable';
         }
-        if ($record['status'] !== 'draft' || !$record['line']) {
+        if ($record['status'] !== 'approved' || !$record['line']) {
             return 'not_postable';
         }
         $line = $record['line'];
@@ -414,7 +424,7 @@ class Finance_transaction_store
         }
         $this->db->where('tenant_id', (int) $tenant_id)
             ->where('transaction_id', (int) $record['transaction_id'])
-            ->where('status', 'draft')
+            ->where('status', 'approved')
             ->update('fin_transaction', array(
                 'status' => 'posted',
                 'posted_on' => date('Y-m-d H:i:s'),

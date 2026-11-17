@@ -127,6 +127,42 @@ class Application_sequence_store
         return $next;
     }
 
+    /**
+     * Lock the tenant sequence, creating its override from the system template
+     * when the tenant has never configured it. Caller owns the transaction.
+     */
+    public function next_code_for_tenant($tenant_id, $sequence_code)
+    {
+        if (!$this->schema_available() || (int) $tenant_id < 1
+            || !is_string($sequence_code) || $sequence_code === '') {
+            return FALSE;
+        }
+        $existing = $this->sequence_config($tenant_id, $sequence_code);
+        if ($existing === FALSE) {
+            return FALSE;
+        }
+        if ($existing === NULL) {
+            $template = $this->db->select('repeat_type, format')->from('sys_sequence')
+                ->where('sequence_code', $sequence_code)->limit(1)->get();
+            if ($template === FALSE || !$template->num_rows()) {
+                return FALSE;
+            }
+            $inserted = $this->db->insert('app_sequence', array(
+                'tenant_id' => (int) $tenant_id,
+                'sequence_code' => $sequence_code,
+                'repeat_type' => (string) $template->row()->repeat_type,
+                'format' => (string) $template->row()->format,
+                'last_value' => 0,
+                'last_repeat' => NULL,
+                'use_flag' => 1,
+            ));
+            if ($inserted !== TRUE) {
+                return FALSE;
+            }
+        }
+        return $this->next_code_for_update($tenant_id, $sequence_code);
+    }
+
     /** Advance a locked in-memory candidate after its generated code is already used. */
     public function next_code_after($current)
     {

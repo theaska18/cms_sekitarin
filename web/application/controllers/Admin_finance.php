@@ -275,6 +275,68 @@ class Admin_finance extends Admin
         redirect('/admin/finance/' . $slug, 'location', 303);
     }
 
+    public function submit_approval($slug = '', $id = 0)
+    {
+        if (!in_array($slug, array('income', 'expenses'), TRUE)
+            || !is_numeric($id) || (int) $id < 1
+            || $this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        $menu_code = $this->finance_transaction_menu_code($slug);
+        if (!$this->has_admin_menu_code($menu_code)
+            || !$this->has_admin_access_code($menu_code . '_update')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $result = $this->finance_transaction_start_approval($slug, (int) $id);
+        $this->session->set_flashdata('finance_status', $result);
+        redirect('/admin/finance/' . $slug, 'location', 303);
+    }
+
+    private function finance_transaction_start_approval($slug, $id)
+    {
+        $this->load->library('finance_transaction_store');
+        $store = $this->finance_transaction_store;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $record = $store->available() ? $store->find($tenant_id, (int) $id) : FALSE;
+        if (!is_array($record)) {
+            return 'not_found';
+        }
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) {
+            return 'not_submittable';
+        }
+        $type = $record['transaction_type'] === 'income' ? 'income' : 'expense';
+        $flow_code = $type === 'income' ? 'finance_income' : 'finance_expenses';
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
+            ->update('fin_transaction', array('status' => 'pending_approval'));
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) {
+            $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
+                ->update('fin_transaction', array('status' => $previous_status));
+            return 'approval_unavailable';
+        }
+        $subject = (string) $record['transaction_number'];
+        $details = ($type === 'income' ? 'Income' : 'Expense') . ' ' . $subject
+            . ' · ' . (string) $record['total_amount'] . ' ' . (string) $record['currency_code'];
+        $result = $approval->submit($flow_code, $subject, $details, 'fin_transaction', (int) $id);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
+                ->update('fin_transaction', array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
+            ->update('fin_transaction', array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
     public function lookup($slug = '', $kind = '')
     {
         if ($slug === 'bank_reconciliation') {
@@ -522,8 +584,8 @@ class Admin_finance extends Admin
             }
             if ($saved === FALSE || $saved['transaction_type'] !== $type) {
                 $available = FALSE;
-            } elseif ($saved['status'] !== 'draft') {
-                show_error('Posted Finance transactions cannot be edited.', 409);
+            } elseif (!in_array($saved['status'], array('draft', 'revise'), TRUE)) {
+                show_error('Only draft or revised Finance transactions can be edited.', 409);
                 return;
             } else {
                 $record = array_merge($record, $saved);
@@ -561,7 +623,14 @@ class Admin_finance extends Admin
                 );
                 $this->db->db_debug = $previous_db_debug;
                 if ($result === 'saved') {
-                    $this->session->set_flashdata('finance_status', 'draft_saved');
+                    if (!$is_new && isset($record['status']) && $record['status'] === 'revise') {
+                        $this->session->set_flashdata(
+                            'finance_status',
+                            $this->finance_transaction_start_approval($slug, (int) $id)
+                        );
+                    } else {
+                        $this->session->set_flashdata('finance_status', 'draft_saved');
+                    }
                     redirect('/admin/finance/' . $slug, 'location', 303);
                     return;
                 }

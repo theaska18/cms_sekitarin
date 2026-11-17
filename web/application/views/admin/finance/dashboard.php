@@ -51,16 +51,33 @@ $money = function ($value) use ($currency) {
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 text-sm">
                         <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            <tr><th class="px-5 py-3"><?= html_escape(isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date') ?></th><th class="px-5 py-3"><?= html_escape(isset($labels['finance_dashboard_journal']) ? $labels['finance_dashboard_journal'] : 'Journal') ?></th><th class="px-5 py-3"><?= html_escape(isset($labels['finance_field_description']) ? $labels['finance_field_description'] : 'Description') ?></th><th class="px-5 py-3 text-right"><?= html_escape(isset($labels['finance_dashboard_debit']) ? $labels['finance_dashboard_debit'] : 'Debit') ?></th><th class="px-5 py-3 text-right"><?= html_escape(isset($labels['finance_dashboard_credit']) ? $labels['finance_dashboard_credit'] : 'Credit') ?></th></tr>
+                            <tr>
+                                <th class="px-5 py-3"><?= html_escape(isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date') ?></th>
+                                <th class="px-5 py-3"><?= html_escape(isset($labels['finance_dashboard_journal']) ? $labels['finance_dashboard_journal'] : 'Journal') ?></th>
+                                <th class="px-5 py-3"><?= html_escape(isset($labels['finance_report_column_account_code']) ? $labels['finance_report_column_account_code'] : 'Account') ?></th>
+                                <th class="px-5 py-3"><?= html_escape(isset($labels['finance_field_description']) ? $labels['finance_field_description'] : 'Description') ?></th>
+                                <th class="px-5 py-3 text-right"><?= html_escape(isset($labels['finance_dashboard_debit']) ? $labels['finance_dashboard_debit'] : 'Debit') ?></th>
+                                <th class="px-5 py-3 text-right"><?= html_escape(isset($labels['finance_dashboard_credit']) ? $labels['finance_dashboard_credit'] : 'Credit') ?></th>
+                            </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <?php foreach ($data['recent_journals'] as $journal): ?>
+                            <?php foreach ((array) $data['recent_journal_lines'] as $line): ?>
+                                <?php
+                                $debit = (float) $line['debit_base_amount'];
+                                $credit = (float) $line['credit_base_amount'];
+                                $account_label = trim((string) $line['account_code'] . ' — ' . (string) $line['account_name']);
+                                $line_description = trim((string) $line['line_description']);
+                                if ($line_description === '') {
+                                    $line_description = (string) $line['journal_description'];
+                                }
+                                ?>
                                 <tr>
-                                    <td class="whitespace-nowrap px-5 py-3"><?= html_escape($journal['journal_date']) ?></td>
-                                    <td class="whitespace-nowrap px-5 py-3 font-mono"><?= html_escape($journal['journal_number']) ?></td>
-                                    <td class="min-w-48 px-5 py-3"><?= html_escape($journal['description']) ?></td>
-                                    <td class="whitespace-nowrap px-5 py-3 text-right tabular-nums"><?= html_escape($money($journal['debit_total'])) ?></td>
-                                    <td class="whitespace-nowrap px-5 py-3 text-right tabular-nums"><?= html_escape($money($journal['credit_total'])) ?></td>
+                                    <td class="whitespace-nowrap px-5 py-3"><?= html_escape($line['journal_date']) ?></td>
+                                    <td class="whitespace-nowrap px-5 py-3 font-mono"><?= html_escape($line['journal_number']) ?></td>
+                                    <td class="min-w-48 break-words px-5 py-3"><?= html_escape($account_label) ?></td>
+                                    <td class="min-w-48 break-words px-5 py-3"><?= html_escape($line_description) ?></td>
+                                    <td class="whitespace-nowrap px-5 py-3 text-right tabular-nums"><?= $debit > 0 ? html_escape($money($debit)) : '—' ?></td>
+                                    <td class="whitespace-nowrap px-5 py-3 text-right tabular-nums"><?= $credit > 0 ? html_escape($money($credit)) : '—' ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
