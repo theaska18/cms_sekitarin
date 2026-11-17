@@ -3,14 +3,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $title = isset($labels[$finance_resource['title_key']]) ? $labels[$finance_resource['title_key']] : $finance_resource['title_key'];
 $is_edit = $finance_id !== NULL;
 $has_account_lookup = FALSE;
+$has_fiscal_year_lookup = FALSE;
 foreach ($finance_resource['fields'] as $finance_field) {
     if ($finance_field['type'] === 'account_lookup') {
         $has_account_lookup = TRUE;
-        break;
+    } elseif ($finance_field['type'] === 'fiscal_year_lookup') {
+        $has_fiscal_year_lookup = TRUE;
     }
 }
 ?>
-<?php if ($has_account_lookup): ?>
+<?php if ($has_account_lookup || $has_fiscal_year_lookup): ?>
 <link rel="stylesheet" href="/assets/css/vendor/jquery-ui.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/jquery-ui.min.css') ? filemtime(FCPATH . 'assets/css/vendor/jquery-ui.min.css') : '1' ?>">
 <?php endif; ?>
 <main class="mx-auto w-full max-w-4xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -61,6 +63,12 @@ foreach ($finance_resource['fields'] as $finance_field) {
                             <input type="text" id="finance-<?= html_escape($name) ?>-label" data-finance-account-lookup data-account-target="finance-<?= html_escape($name) ?>" data-account-exclude="<?= html_escape($is_edit && $finance_resource['slug'] === 'chart_of_accounts' && $name === 'parent_account_id' ? (string) $finance_id : '') ?>" value="<?= html_escape(isset($finance_lookup_labels[$name]) ? $finance_lookup_labels[$name] : '') ?>" autocomplete="off" aria-autocomplete="list"<?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white pe-10 ps-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
                         </div>
+                    <?php elseif ($field['type'] === 'fiscal_year_lookup'): ?>
+                        <input type="hidden" id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" value="<?= html_escape($value) ?>">
+                        <div class="relative">
+                            <input type="text" id="finance-<?= html_escape($name) ?>-label" data-fiscal-year-lookup data-fiscal-year-target="finance-<?= html_escape($name) ?>" value="<?= html_escape(isset($finance_lookup_labels[$name]) ? $finance_lookup_labels[$name] : '') ?>" autocomplete="off" aria-autocomplete="list"<?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white pe-10 ps-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg>
+                        </div>
                     <?php elseif ($field['type'] === 'textarea'): ?>
                         <textarea id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" rows="4"<?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"><?= html_escape($value) ?></textarea>
                     <?php elseif ($field['type'] === 'select'): ?>
@@ -105,7 +113,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
     });
 })();
 </script>
-<?php if ($has_account_lookup): ?>
+<?php if ($has_account_lookup || $has_fiscal_year_lookup): ?>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/jquery-ui.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery-ui.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery-ui.min.js') : '1' ?>"></script>
 <script>
@@ -118,6 +126,28 @@ foreach ($finance_resource['fields'] as $finance_field) {
             delay: 250,
             source: function (request, response) {
                 $.getJSON('/admin/finance/<?= html_escape($finance_resource['slug']) ?>/lookup/account', {term: request.term, exclude_id: input.attr('data-account-exclude') || ''})
+                    .done(response).fail(function () { response([]); });
+            },
+            select: function (event, item) { hidden.val(item.item.id); input.val(item.item.label); return false; },
+            change: function (event, item) { if (!item.item) hidden.val(''); }
+        }).on('focus', function () {
+            if (input.val() === '') input.autocomplete('search', '');
+        }).on('input', function () { hidden.val(''); });
+    });
+})();
+</script>
+<?php endif; ?>
+<?php if ($has_fiscal_year_lookup): ?>
+<script>
+(function () {
+    $('[data-fiscal-year-lookup]').each(function () {
+        var input = $(this);
+        var hidden = $('#' + input.attr('data-fiscal-year-target'));
+        input.autocomplete({
+            minLength: 0,
+            delay: 250,
+            source: function (request, response) {
+                $.getJSON('/admin/finance/accounting_periods/lookup/fiscal_year', {term: request.term})
                     .done(response).fail(function () { response([]); });
             },
             select: function (event, item) { hidden.val(item.item.id); input.val(item.item.label); return false; },

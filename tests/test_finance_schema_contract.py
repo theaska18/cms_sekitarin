@@ -317,6 +317,35 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn("$lang['finance_category_export']", content)
                 self.assertIn("$lang['finance_category_import']", content)
 
+    def test_tax_csv_export_import_validates_account_existence(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        routes = (APP / "config/routes.php").read_text()
+        view = (APP / "views/admin/finance/resource_index.php").read_text()
+        self.assertIn("tax_configuration/export", routes)
+        self.assertIn("tax_configuration/import", routes)
+        self.assertIn("public function tax_export", controller)
+        self.assertIn("public function tax_import", controller)
+        self.assertIn("Akun pajak ' . $row['account_code'] . ' tidak ditemukan.", controller)
+        self.assertIn("Akun pajak ' . $row['account_code'] . ' harus bertipe aset atau liabilitas.", controller)
+        self.assertIn("akun pajak wajib untuk tarif lebih dari 0", controller)
+        self.assertIn("tax_file", view)
+        self.assertIn("finance_tax_import_errors", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_tax_export']", content)
+                self.assertIn("$lang['finance_tax_import']", content)
+
+    def test_accounting_period_fiscal_year_uses_autocomplete_lookup(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        view = (APP / "views/admin/finance/resource_form.php").read_text()
+        self.assertIn("'fiscal_year_id', 'label' => 'Fiscal year', 'type' => 'fiscal_year_lookup'", controller)
+        self.assertIn("fiscal_year_lookup", view)
+        self.assertIn("data-fiscal-year-lookup", view)
+        self.assertIn("accounting_periods/lookup/fiscal_year", view)
+        self.assertIn("$slug === 'accounting_periods' && $kind === 'fiscal_year'", controller)
+        self.assertIn("finance_fiscal_year_label", controller)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()

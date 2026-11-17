@@ -91,6 +91,8 @@ class Admin_finance extends Admin
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
                 'finance_category_import_errors' => $slug === 'categories' ? $this->session->flashdata('category_import_errors') : NULL,
                 'finance_category_import_count' => $slug === 'categories' ? (int) $this->session->flashdata('category_import_count') : 0,
+                'finance_tax_import_errors' => $slug === 'tax_configuration' ? $this->session->flashdata('tax_import_errors') : NULL,
+                'finance_tax_import_count' => $slug === 'tax_configuration' ? (int) $this->session->flashdata('tax_import_count') : 0,
             )
         );
     }
@@ -186,6 +188,206 @@ class Admin_finance extends Admin
         }
         $this->output->set_content_type('application/json', 'utf-8')
             ->set_output(json_encode($flat, JSON_INVALID_UTF8_SUBSTITUTE));
+    }
+
+    public function tax_export()
+    {
+        if (!$this->has_admin_menu_code('fin_tax_configuration')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $rows = $this->db->select('t.tax_code,t.tax_name,t.rate_percent,a.account_code,t.active_flag', FALSE)
+            ->from('fin_tax t')
+            ->join('fin_account a', 'a.account_id = t.account_id AND a.tenant_id = t.tenant_id', 'left')
+            ->where('t.tenant_id', $tenant_id)->order_by('t.tax_code', 'ASC')->get()->result_array();
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('tax_code', 'tax_name', 'rate_percent', 'account_code', 'active_flag'));
+        foreach ($rows as $row) {
+            fputcsv($stream, array($row['tax_code'], $row['tax_name'], $row['rate_percent'], (string) $row['account_code'], (int) $row['active_flag']));
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = isset($this->current_user['tenant_code']) ? (string) $this->current_user['tenant_code'] : (string) $tenant_id;
+        $filename = 'taxes-' . preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_code) . '-' . date('Ymd') . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    public function tax_import()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code('fin_tax_configuration')
+            || !$this->has_admin_access_code('fin_tax_configuration_update')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $errors = array();
+        $rows = array();
+        $file_codes = array();
+        if (empty($_FILES['tax_file']) || !is_array($_FILES['tax_file'])
+            || !isset($_FILES['tax_file']['error']) || $_FILES['tax_file']['error'] !== UPLOAD_ERR_OK
+            || empty($_FILES['tax_file']['tmp_name']) || !is_uploaded_file($_FILES['tax_file']['tmp_name'])) {
+            $errors[] = 'File CSV wajib diunggah.';
+        } else {
+            $file = $_FILES['tax_file'];
+            if (strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION)) !== 'csv') {
+                $errors[] = 'Format file harus CSV.';
+            }
+            if ((int) $file['size'] > 2 * 1024 * 1024) {
+                $errors[] = 'Ukuran file maksimal 2 MB.';
+            }
+        }
+        $content = '';
+        if (!$errors) {
+            $content = file_get_contents($_FILES['tax_file']['tmp_name']);
+            if ($content === FALSE || $content === '') {
+                $errors[] = 'File CSV kosong.';
+            }
+        }
+        if (!$errors) {
+            $stream = fopen('php://temp', 'r+');
+            fwrite($stream, $content);
+            rewind($stream);
+            $header = fgetcsv($stream);
+            if (is_array($header)) {
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+                $header = array_map('trim', $header);
+            }
+            $expected = array('tax_code', 'tax_name', 'rate_percent', 'account_code', 'active_flag');
+            if (!is_array($header) || $header !== $expected) {
+                $errors[] = 'Header CSV tidak sesuai. Gunakan template export konfigurasi pajak.';
+            } else {
+                $line_no = 1;
+                while (($line = fgetcsv($stream)) !== FALSE) {
+                    $line_no++;
+                    if ($line === array(NULL) || $line === array('')) {
+                        continue;
+                    }
+                    if (count($rows) >= 1000) {
+                        $errors[] = 'Maksimal 1.000 baris pajak.';
+                        break;
+                    }
+                    $line = array_pad($line, 5, '');
+                    $line = array_map(function ($value) { return trim((string) $value); }, $line);
+                    $code = $line[0];
+                    if ($code === '' || strlen($code) > 32) {
+                        $errors[] = 'Baris ' . $line_no . ': kode pajak wajib, maksimal 32 karakter.';
+                    }
+                    if ($line[1] === '' || strlen($line[1]) > 100) {
+                        $errors[] = 'Baris ' . $line_no . ': nama pajak wajib, maksimal 100 karakter.';
+                    }
+                    if (!is_numeric($line[2]) || (float) $line[2] < 0 || (float) $line[2] > 100) {
+                        $errors[] = 'Baris ' . $line_no . ': tarif pajak harus angka 0-100.';
+                    }
+                    if (!in_array($line[4], array('0', '1'), TRUE)) {
+                        $errors[] = 'Baris ' . $line_no . ': active_flag harus 0 atau 1.';
+                    }
+                    if (isset($file_codes[$code])) {
+                        $errors[] = 'Baris ' . $line_no . ': kode pajak ' . $code . ' duplikat di file.';
+                    }
+                    $file_codes[$code] = TRUE;
+                    if ((float) $line[2] > 0 && $line[3] === '') {
+                        $errors[] = 'Baris ' . $line_no . ': akun pajak wajib untuk tarif lebih dari 0.';
+                    }
+                    $rows[] = array(
+                        'tax_code' => $code,
+                        'tax_name' => $line[1],
+                        'rate_percent' => (float) $line[2],
+                        'account_code' => $line[3],
+                        'active_flag' => (int) $line[4],
+                    );
+                }
+            }
+            fclose($stream);
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $existing_rows = $this->db->select('tax_code')->from('fin_tax')->where('tenant_id', $tenant_id)->get()->result_array();
+            $existing = array();
+            foreach ($existing_rows as $row) {
+                $existing[(string) $row['tax_code']] = TRUE;
+            }
+            $conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)));
+            if ($conflicts) {
+                $errors[] = 'Import dibatalkan. Kode pajak sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            }
+            $codes = array();
+            foreach ($rows as $row) {
+                if ($row['account_code'] !== '') {
+                    $codes[$row['account_code']] = TRUE;
+                }
+            }
+            $accounts = array();
+            if ($codes) {
+                $account_rows = $this->db->select('account_id,account_code,account_type,active_flag,posting_flag')
+                    ->from('fin_account')->where('tenant_id', $tenant_id)
+                    ->where_in('account_code', array_keys($codes))->get()->result_array();
+                foreach ($account_rows as $account) {
+                    $accounts[(string) $account['account_code']] = $account;
+                }
+            }
+            foreach ($rows as $row) {
+                if ($row['account_code'] === '') {
+                    continue;
+                }
+                $account = isset($accounts[$row['account_code']]) ? $accounts[$row['account_code']] : NULL;
+                if (!$account) {
+                    $errors[] = 'Akun pajak ' . $row['account_code'] . ' tidak ditemukan.';
+                    continue;
+                }
+                if ((int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1) {
+                    $errors[] = 'Akun pajak ' . $row['account_code'] . ' tidak aktif atau bukan akun posting.';
+                }
+                if (!in_array($account['account_type'], array('asset', 'liability'), TRUE)) {
+                    $errors[] = 'Akun pajak ' . $row['account_code'] . ' harus bertipe aset atau liabilitas.';
+                }
+            }
+        }
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $this->db->trans_begin();
+            foreach ($rows as $row) {
+                $account_id = NULL;
+                if ($row['account_code'] !== '') {
+                    $account_id = isset($accounts[$row['account_code']]) ? (int) $accounts[$row['account_code']]['account_id'] : NULL;
+                }
+                $this->db->insert('fin_tax', array(
+                    'tenant_id' => $tenant_id,
+                    'account_id' => $account_id,
+                    'tax_code' => $row['tax_code'],
+                    'tax_name' => $row['tax_name'],
+                    'rate_percent' => $row['rate_percent'],
+                    'active_flag' => $row['active_flag'],
+                    'create_on' => date('Y-m-d H:i:s'),
+                    'created_by' => (int) $this->current_user['user_id'],
+                ));
+                if ($this->db->affected_rows() !== 1) {
+                    $errors[] = 'Pajak ' . $row['tax_code'] . ' gagal disimpan.';
+                    break;
+                }
+            }
+            if ($errors || $this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+            } else {
+                $this->db->trans_commit();
+                $this->session->set_flashdata('finance_status', 'tax_imported');
+                $this->session->set_flashdata('tax_import_count', count($rows));
+                redirect('/admin/finance/tax_configuration', 'location', 303);
+                return;
+            }
+        }
+        if (!$rows && !$errors) {
+            $errors[] = 'File CSV tidak berisi data pajak.';
+        }
+        $this->session->set_flashdata('finance_status', 'tax_import_error');
+        $this->session->set_flashdata('tax_import_errors', $errors);
+        redirect('/admin/finance/tax_configuration', 'location', 303);
     }
 
     public function category_export()
@@ -1212,6 +1414,29 @@ class Admin_finance extends Admin
                 $kind,
                 $term
             );
+            $this->output->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode($results, JSON_INVALID_UTF8_SUBSTITUTE));
+            return;
+        }
+        if ($slug === 'accounting_periods' && $kind === 'fiscal_year') {
+            if (!$this->has_admin_menu_code('fin_accounting_periods')) {
+                $this->output->set_status_header(403);
+                $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
+                return;
+            }
+            $term = $this->input->get('term', TRUE);
+            $term = is_string($term) && strlen($term) <= 120 ? $term : '';
+            $this->db->select('fiscal_year_id,year_code,year_name,start_on,end_on')->from('fin_fiscal_year')
+                ->where('tenant_id', (int) $this->current_user['tenant_id']);
+            if ($term !== '') {
+                $this->db->group_start()->like('year_code', $term)->or_like('year_name', $term)->group_end();
+            }
+            $rows = $this->db->order_by('year_code', 'ASC')->limit(20)->get()->result_array();
+            $results = array();
+            foreach ($rows as $row) {
+                $label = $row['year_code'] . ' — ' . $row['year_name'] . ' (' . $row['start_on'] . ' s/d ' . $row['end_on'] . ')';
+                $results[] = array('id' => (int) $row['fiscal_year_id'], 'label' => $label, 'value' => $label);
+            }
             $this->output->set_content_type('application/json', 'utf-8')
                 ->set_output(json_encode($results, JSON_INVALID_UTF8_SUBSTITUTE));
             return;
@@ -2607,6 +2832,16 @@ class Admin_finance extends Admin
         );
     }
 
+    private function finance_fiscal_year_label($tenant_id, $id)
+    {
+        if ((int) $id < 1) {
+            return '';
+        }
+        $row = $this->db->select('year_code,year_name,start_on,end_on')->from('fin_fiscal_year')
+            ->where('tenant_id', (int) $tenant_id)->where('fiscal_year_id', (int) $id)->limit(1)->get()->row_array();
+        return $row ? $row['year_code'] . ' — ' . $row['year_name'] . ' (' . $row['start_on'] . ' s/d ' . $row['end_on'] . ')' : '';
+    }
+
     private function finance_form($resource, $id)
     {
         $this->load->library('finance_store');
@@ -2667,6 +2902,11 @@ class Admin_finance extends Admin
                             (int) $this->current_user['tenant_id'],
                             $record[$field['name']]
                         );
+                    } elseif ($field['type'] === 'fiscal_year_lookup' && !empty($record[$field['name']])) {
+                        $lookup_labels[$field['name']] = $this->finance_fiscal_year_label(
+                            (int) $this->current_user['tenant_id'],
+                            $record[$field['name']]
+                        );
                     }
                 }
             }
@@ -2708,6 +2948,11 @@ class Admin_finance extends Admin
             foreach ($resource['fields'] as $field) {
                 if ($field['type'] === 'account_lookup' && !empty($record[$field['name']])) {
                     $lookup_labels[$field['name']] = $store->account_label(
+                        (int) $this->current_user['tenant_id'],
+                        $record[$field['name']]
+                    );
+                } elseif ($field['type'] === 'fiscal_year_lookup' && !empty($record[$field['name']])) {
+                    $lookup_labels[$field['name']] = $this->finance_fiscal_year_label(
                         (int) $this->current_user['tenant_id'],
                         $record[$field['name']]
                     );
@@ -3031,7 +3276,7 @@ class Admin_finance extends Admin
                     array('name' => 'status', 'label' => 'Status'),
                 ),
                 'fields' => array(
-                    array('name' => 'fiscal_year_id', 'label' => 'Fiscal year ID', 'type' => 'number', 'required' => TRUE,
+                    array('name' => 'fiscal_year_id', 'label' => 'Fiscal year', 'type' => 'fiscal_year_lookup', 'required' => TRUE,
                         'reference' => array('table' => 'fin_fiscal_year', 'id' => 'fiscal_year_id')),
                     array('name' => 'period_number', 'label' => 'Period number', 'type' => 'number', 'required' => TRUE),
                     array('name' => 'period_name', 'label' => 'Period name', 'type' => 'text', 'required' => TRUE, 'maxlength' => 80, 'normalize' => 'name'),
