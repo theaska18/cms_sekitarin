@@ -27,7 +27,7 @@ LOCALE_KEYS = (
     "edit", "delete", "actions", "code_label", "code_help", "name_label", "name_help",
     "description_label", "description_help", "active_label", "active_help", "active_yes",
     "active_no", "menus_label", "menu_help", "menu_search", "remove_menu", "steps_heading",
-    "steps_help", "step_title", "approver_type", "approver_superior", "approver_organization",
+    "steps_help", "steps_auto_approve_help", "step_title", "approver_type", "approver_superior", "approver_organization",
     "approver_employee", "approver_user", "remove_step", "add_step", "choose_organization",
     "search_organization", "choose_employee", "search_employee", "unavailable",
     "write_disabled", "invalid", "no_access", "add_denied", "update_denied", "created",
@@ -177,6 +177,16 @@ class ApprovalFlowTemplateContractTests(unittest.TestCase):
                 error_lines = re.findall(r"(?m)^\$lang\['approval_flow_template_save_error'\]\s*=", content)
                 self.assertEqual(1, len(save_lines))
                 self.assertEqual(1, len(error_lines))
+
+    def test_template_can_be_saved_without_steps_for_auto_approval(self):
+        store = STORE.read_text()
+        controller = CONTROLLER.read_text()
+        form = FORM.read_text()
+        self.assertIn("private function normalize_steps($steps)", store)
+        self.assertNotIn("!$steps ||", store)
+        self.assertNotIn("$errors[] = 'step_required';", controller)
+        self.assertIn('data-step-editor-allow-empty="1"', form)
+        self.assertIn("steps_auto_approve_help", form)
 
     def test_access_denied_view_escapes_message_and_supports_application_sequence_title(self):
         view = ACCESS_DENIED.read_text()

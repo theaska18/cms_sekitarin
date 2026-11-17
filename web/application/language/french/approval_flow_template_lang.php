@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'Rechercher des menus…';
 $lang['approval_flow_template_remove_menu'] = 'Retirer le menu';
 $lang['approval_flow_template_steps_heading'] = 'Étapes d’approbation';
 $lang['approval_flow_template_steps_help'] = 'Les étapes s’exécutent dans l’ordre. Les approbateurs introuvables sont envoyés à la file des erreurs d’approbation.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'Un modèle sans étape approuve automatiquement les demandes.';
 $lang['approval_flow_template_step_title'] = 'Étape';
 $lang['approval_flow_template_approver_type'] = 'Type d’approbateur';
 $lang['approval_flow_template_approver_superior'] = 'Supérieur';

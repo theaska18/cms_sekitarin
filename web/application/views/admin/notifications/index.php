@@ -52,14 +52,14 @@ $approval_notification = function ($message) use ($notifications_approval_view) 
     foreach ($lines as $line) {
         $line = trim($line);
         if (preg_match('/^Lihat:\s*(https?:\/\/\S+)$/u', $line, $matches)) {
-            $parts = parse_url($matches[2]);
+            $parts = parse_url($matches[1]);
             $query = array();
             if (is_array($parts) && strtolower(isset($parts['host']) ? $parts['host'] : '') === $expected_host && isset($parts['path']) && $parts['path'] === '/admin/system/approval') {
                 parse_str(isset($parts['query']) ? $parts['query'] : '', $query);
                 if (isset($query['approval_token'], $query['approval_decision'])
                     && preg_match('/^[a-f0-9]{64}$/', $query['approval_token'])
                     && $query['approval_decision'] === 'view') {
-                    $actions[] = array('label' => $notifications_approval_view, 'url' => $matches[2], 'decision' => 'view');
+                    $actions[] = array('label' => $notifications_approval_view, 'url' => $matches[1], 'decision' => 'view');
                     continue;
                 }
             }

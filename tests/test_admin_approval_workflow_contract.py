@@ -55,22 +55,76 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
 
     def test_workflow_submission_and_decision_enforce_step_and_tenant(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        self.assertIn("public function submit($request_type, $subject, $details)", store)
+        self.assertIn("public function submit($flow_code, $subject, $details)", store)
         self.assertIn("public function decide($request_id, $decision, $note)", store)
-        self.assertIn("'request_type'=>$request_type", store)
+        self.assertIn("'flow_code'=>$flow_code", store)
         self.assertIn("'requester_employee_id'", store)
         self.assertIn("'status'=>$request_status", store)
         self.assertIn("'status'=>'needs_assignment'", store)
         self.assertIn("'approver_user_id'=>$this->user", store)
         self.assertIn("$new_status=$decision==='rejected'?'rejected':'approved'", store)
-        self.assertIn("'status'=>'approved'", store)
-        self.assertIn("'status'=>'auto_approved'", store)
+        self.assertIn("$new_status='pending'", store)
+        self.assertIn("'status'=>'submitted'", store)
+
+    def test_superior_uses_parent_head_when_requester_leads_an_organization(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        superior = store.split("if ($type === 'superior')", 1)[1].split(
+            "return array('ok'=>FALSE,'code'=>'invalid_approver_type'", 1
+        )[0]
+        self.assertIn("'head_employee_id'=>$employee_id", superior)
+        self.assertIn("count($headed_orgs)===1", superior)
+        self.assertIn("A leader is approved by the head of the parent organization.", superior)
+        self.assertIn("$org = $headed_orgs[0]", superior)
+        self.assertIn("count($headed_orgs)>1", superior)
+
+    def test_flow_without_steps_is_auto_approved_without_error_queue(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        form = (APP / "views/admin/approval_flow/add.php").read_text()
+        script = (ROOT / "web/assets/js/approval-step-editor.js").read_text()
+        submit = store.split("public function submit($flow_code, $subject, $details)", 1)[1].split(
+            "private function create_approval_token", 1
+        )[0]
+        auto_branch = submit.split("if (!$steps)", 1)[1].split("$step=isset($steps[0])", 1)[0]
+        self.assertIn("'status'=>'approved'", auto_branch)
+        self.assertIn("'current_step'=>0", auto_branch)
+        self.assertIn("'status'=>'auto_approved'", auto_branch)
+        self.assertNotIn("insert_approval_error", auto_branch)
+        self.assertIn("normalize_steps($steps, TRUE)", store)
+        self.assertIn("private function normalize_steps($steps, $allow_empty = FALSE)", store)
+        self.assertIn('data-step-editor-allow-empty="1"', form)
+        self.assertIn("data-step-editor-allow-empty", script)
+        self.assertIn("rows.length <= 1 && !allowEmpty", script)
+
+    def test_error_queue_requires_sys_approval_error_access(self):
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        view = (APP / "views/admin/approval/index.php").read_text()
+        manifest = (APP / "views/admin/menu_manifest/hr.xml").read_text()
+        self.assertIn('sys_approval_error', manifest)
+        self.assertIn("$can_manage_errors = $this->has_admin_access_code('sys_approval_error');", controller)
+        self.assertIn("'approval_can_manage_errors'=>$can_manage_errors", controller)
+        self.assertIn("!empty($approval_can_manage_errors)", view)
+        for method in ("approval_errors", "approval_error_data", "approval_employee_search"):
+            with self.subTest(method=method):
+                body = controller.split("public function " + method, 1)[1]
+                self.assertIn("has_admin_access_code('sys_approval_error')", body)
+
+    def test_request_form_requires_submit_approval_access(self):
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        view = (APP / "views/admin/approval/index.php").read_text()
+        manifest = (APP / "views/admin/menu_manifest/hr.xml").read_text()
+        self.assertIn("sys_approval_submit_approval", manifest)
+        self.assertIn("$can_add = $this->has_admin_access_code('sys_approval_submit_approval');", controller)
+        self.assertIn("$hide_request_form = !$can_add;", controller)
+        self.assertIn("'approval_hide_request_form'=>$hide_request_form", controller)
+        self.assertIn("empty($approval_hide_request_form)", view)
+        submit = controller.split("public function approval_submit", 1)[1]
+        self.assertIn("!$this->has_admin_access_code('sys_approval_submit_approval')", submit)
 
     def test_controller_actions_require_access_and_post(self):
         cases = {
             "Admin_hierarchy.php": ("hierarchy_save", "hr_hierarchy_update"),
-            "Admin_approvalFlow.php": ("approvalFlow_save", "hr_approval_flow_add"),
-            "Admin_approval.php": ("approval_submit", "sys_approval_add"),
+            "Admin_approvalFlow.php": ("approvalFlow_save", "hr_approval_flow_update"),
+            "Admin_approval.php": ("approval_submit", "sys_approval_submit_approval"),
         }
         for filename, (method, permission) in cases.items():
             source = (APP / "controllers" / filename).read_text()
@@ -79,7 +133,8 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
             self.assertRegex(body, r"\$this->input->method\(TRUE\)\s*!==\s*'POST'")
         approval = (APP / "controllers/Admin_approval.php").read_text()
         decide = approval.split("public function approval_decide", 1)[1]
-        self.assertIn("has_admin_access_code('sys_approval_update')", decide)
+        self.assertNotIn("has_admin_access_code('sys_approval_update')", decide)
+        self.assertIn("has_admin_menu_code('sys_approval')", decide)
         self.assertIn("$this->input->method(TRUE)!=='POST'", decide)
 
     def test_migration_creates_all_workflow_tables_and_is_non_destructive_on_rollback(self):
@@ -112,45 +167,47 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("create_approval_token", store)
         self.assertIn("notify_approver", store)
 
-    def test_approval_flow_list_and_add_form_are_separate_pages(self):
+    def test_approval_flow_list_is_template_overrides_without_add_or_delete(self):
         listing = (APP / "views/admin/approval_flow/index.php").read_text()
         form = (APP / "views/admin/approval_flow/add.php").read_text()
+        step_editor = (APP / "views/admin/approval_flow/_step_editor.php").read_text()
         controller = (APP / "controllers/Admin_approvalFlow.php").read_text()
-        self.assertNotIn('action="/admin/hr/approvalFlow/save"', listing)
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        migration = (APP / "migrations/20261117000200_refactor_app_approval_flow_to_template_overrides.php").read_text()
+        self.assertNotIn('/admin/hr/approvalFlow/add', listing)
+        self.assertNotIn('/admin/hr/approvalFlow/delete', listing)
+        self.assertNotIn('<dialog', listing)
         self.assertIn('name="search"', listing)
         self.assertIn('name="per_page"', listing)
         self.assertIn('Navigasi halaman', listing)
         self.assertIn('/admin/hr/approvalFlow/edit/', listing)
-        self.assertIn('/admin/hr/approvalFlow/delete/', listing)
-        self.assertIn('<dialog', listing)
+        self.assertIn('Sumber tahap', listing)
+        self.assertIn("public function approvalFlow_index", controller)
         self.assertIn("public function approvalFlow_edit", controller)
-        self.assertIn("public function approvalFlow_delete", controller)
+        self.assertIn("public function approvalFlow_save", controller)
+        self.assertNotIn("public function approvalFlow_add", controller)
+        self.assertNotIn("public function approvalFlow_delete", controller)
         self.assertIn("count_flows", controller)
         self.assertIn("$store->flows($search, $per_page", controller)
-        self.assertIn('/admin/hr/approvalFlow/add', listing)
+        self.assertIn("save_override", controller)
+        self.assertIn("template_flow", controller)
         self.assertIn('<form method="post"', form)
-        self.assertIn("public function approvalFlow_add()", controller)
-        self.assertIn("'hr_approval_flow_add'", controller)
-        self.assertIn("'approval_flow', '/admin/hr/approvalFlow/add'", controller)
-        self.assertIn("'approval_flow', '/admin/hr/approvalFlow/edit/'", controller)
-        property_form = (APP / "views/admin/property/form.php").read_text()
-        migration = (APP / "migrations/20261112000200_create_hr_approval_workflow.php").read_text()
-        for marker in ('rounded-t-2xl rounded-b-none', 'sm:p-8', 'space-y-6', 'sticky bottom-0', 'bg-white/10', 'border-t border-slate-100'):
-            self.assertIn(marker, form)
-            self.assertIn(marker, property_form)
-        self.assertIn("'flow_name' => array('type' => 'VARCHAR', 'constraint' => 120)", migration)
-        self.assertIn('name="flow_name" type="text" required maxlength="120"', form)
-        self.assertIn("'request_type' => array('type' => 'VARCHAR', 'constraint' => 64)", migration)
-        self.assertIn('name="request_type" type="text" required maxlength="64"', form)
-        self.assertIn('data-approval-step-list', form)
-        self.assertIn('data-add-approval-step', form)
-        self.assertIn('data-approver-type', form)
-        self.assertIn('data-organization-search', form)
-        self.assertIn('data-employee-search', form)
-        self.assertNotIn('<select', form)
-        self.assertIn('text-base', form)
-        self.assertIn('sm:text-sm', form)
-        self.assertIn('focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100', form)
+        self.assertIn('name="flow_code"', form)
+        self.assertIn("admin/approval_flow/_step_editor", form)
+        self.assertIn("approval-step-editor.js", form)
+        self.assertNotIn('name="flow_name"', form)
+        self.assertNotIn('name="request_type"', form)
+        for marker in ('data-approval-step-list', 'data-add-approval-step', 'data-approver-type', 'data-organization-search', 'data-employee-search'):
+            self.assertIn(marker, step_editor)
+        self.assertIn("sys_approval_flow", store)
+        self.assertIn("sys_approval_flow_menu", store)
+        self.assertIn("public function effective_steps", store)
+        self.assertIn("public function save_override", store)
+        self.assertIn("'flow_code'", migration)
+        self.assertIn("'flow_name'", migration)
+        self.assertIn("'request_type'", migration)
+        self.assertIn("'active_flag'", migration)
+        self.assertIn("'created_by'", migration)
 
     def test_routes_remain_generic_without_workflow_specific_routes(self):
         routes = (APP / "config/routes.php").read_text()
@@ -187,6 +244,11 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("serverSide:true", view)
         self.assertIn("data-approval-error-form", view)
         self.assertIn("data-error-employee-search", view)
+        self.assertIn("tableLanguage.aria={paginate:pagingLabels}", view)
+        self.assertIn('viewBox="0 0 20 20"', view)
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn("#approval-error-table_wrapper div.dt-layout-row:not(.dt-layout-table)", css)
+        self.assertIn("#approval-error-table_wrapper .dt-paging-button", css)
         self.assertIn("$approval_error_count", approval_view)
 
     def test_email_approval_confirmation_renders_inside_admin_shell(self):
@@ -209,20 +271,22 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertNotIn('"\\nSetuju: "', store)
         self.assertNotIn('"\\nTidak setuju: "', store)
         self.assertIn("notifications_approval_view", notifications)
+        self.assertIn("parse_url($matches[1])", notifications)
+        self.assertIn("'url' => $matches[1]", notifications)
         self.assertIn("$token_decision==='view'", controller)
         self.assertIn("value=\"rejected\"", confirm)
         self.assertIn("value=\"approved\"", confirm)
 
     def test_dynamic_approval_step_types_resolve_at_request_time(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        flow_form = (APP / "views/admin/approval_flow/add.php").read_text()
+        flow_form = (APP / "views/admin/approval_flow/_step_editor.php").read_text()
         request_form = (APP / "views/admin/approval/index.php").read_text()
         migration = (APP / "migrations/20261116000100_add_dynamic_approval_routing.php").read_text()
         for step_type in ("superior", "organization", "employee"):
             self.assertIn("'" + step_type + "'", store)
             self.assertIn('value="' + step_type + '"', flow_form)
         self.assertIn("function resolve_approver(", store)
-        self.assertIn("data-request-type-search-url", request_form)
+        self.assertIn("data-flow-search-url", request_form)
         self.assertNotIn('name="flow_id"', request_form)
         self.assertIn("if ((int)$previous_org_id>0)", store)
         self.assertIn("$this->hierarchy_org($parent_id)", store)

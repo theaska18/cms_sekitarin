@@ -224,7 +224,7 @@ class Approval_flow_template_store
         }
 
         $normalized_steps = $this->normalize_steps($steps);
-        if ($normalized_steps === FALSE || !$normalized_steps) {
+        if ($normalized_steps === FALSE) {
             return FALSE;
         }
 
@@ -385,7 +385,7 @@ class Approval_flow_template_store
 
     private function normalize_steps($steps)
     {
-        if (!is_array($steps) || !$steps || count($steps) > 20) {
+        if (!is_array($steps) || count($steps) > 20) {
             return FALSE;
         }
         $normalized = array();

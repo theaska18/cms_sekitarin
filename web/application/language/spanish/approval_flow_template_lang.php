@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'Buscar menús…';
 $lang['approval_flow_template_remove_menu'] = 'Quitar menú';
 $lang['approval_flow_template_steps_heading'] = 'Pasos de aprobación';
 $lang['approval_flow_template_steps_help'] = 'Los pasos se ejecutan en orden. Los aprobadores no resolubles pasan a la cola de errores de aprobación.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'Una plantilla sin pasos aprueba las solicitudes automáticamente.';
 $lang['approval_flow_template_step_title'] = 'Paso';
 $lang['approval_flow_template_approver_type'] = 'Tipo de aprobador';
 $lang['approval_flow_template_approver_superior'] = 'Superior';

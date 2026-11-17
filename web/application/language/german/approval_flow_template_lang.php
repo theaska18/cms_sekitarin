@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'Menüs suchen…';
 $lang['approval_flow_template_remove_menu'] = 'Menü entfernen';
 $lang['approval_flow_template_steps_heading'] = 'Genehmigungsschritte';
 $lang['approval_flow_template_steps_help'] = 'Schritte werden der Reihe nach ausgeführt. Nicht auflösbare Genehmiger landen in der Fehlerwarteschlange.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'Eine Vorlage ohne Schritte genehmigt Anforderungen automatisch.';
 $lang['approval_flow_template_step_title'] = 'Schritt';
 $lang['approval_flow_template_approver_type'] = 'Genehmigertyp';
 $lang['approval_flow_template_approver_superior'] = 'Vorgesetzter';

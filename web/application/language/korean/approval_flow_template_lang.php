@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = '메뉴 검색…';
 $lang['approval_flow_template_remove_menu'] = '메뉴 제거';
 $lang['approval_flow_template_steps_heading'] = '승인 단계';
 $lang['approval_flow_template_steps_help'] = '단계는 순서대로 실행됩니다. 승인자를 찾을 수 없으면 승인 오류 대기열로 이동합니다.';
+$lang['approval_flow_template_steps_auto_approve_help'] = '단계가 없는 템플릿은 요청을 자동으로 승인합니다.';
 $lang['approval_flow_template_step_title'] = '단계';
 $lang['approval_flow_template_approver_type'] = '승인자 유형';
 $lang['approval_flow_template_approver_superior'] = '상사';

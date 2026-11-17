@@ -9,6 +9,7 @@
         var stepLabel = editor.getAttribute('data-step-label') || 'Step';
         var addButton = editor.querySelector('[data-add-approval-step]');
         var disabled = editor.getAttribute('data-step-editor-disabled') === '1';
+        var allowEmpty = editor.getAttribute('data-step-editor-allow-empty') === '1';
         var employeeUrl = editor.getAttribute('data-employee-search-url');
         var organizationUrl = editor.getAttribute('data-organization-search-url');
 
@@ -113,7 +114,7 @@
             var remove = event.target.closest('[data-remove-approval-step]');
             if (!remove || disabled) return;
             var rows = list.querySelectorAll('[data-approval-step]');
-            if (rows.length <= 1) return;
+            if (rows.length <= 1 && !allowEmpty) return;
             remove.closest('[data-approval-step]').remove();
             renumber();
         });

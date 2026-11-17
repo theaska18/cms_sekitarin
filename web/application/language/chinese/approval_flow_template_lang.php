@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = '搜索菜单…';
 $lang['approval_flow_template_remove_menu'] = '移除菜单';
 $lang['approval_flow_template_steps_heading'] = '审批步骤';
 $lang['approval_flow_template_steps_help'] = '步骤按顺序执行。无法确定审批人的请求会进入审批错误队列。';
+$lang['approval_flow_template_steps_auto_approve_help'] = '没有步骤的模板会自动批准请求。';
 $lang['approval_flow_template_step_title'] = '步骤';
 $lang['approval_flow_template_approver_type'] = '审批人类型';
 $lang['approval_flow_template_approver_superior'] = '上级';

@@ -31,6 +31,7 @@ $template_json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QU
       data-approval-flow-editor
       data-step-label="<?= html_escape($labels['approval_flow_template_step_title']) ?>"
       data-step-editor-disabled="<?= $template_disabled ? '1' : '0' ?>"
+      data-step-editor-allow-empty="1"
       data-employee-search-url="<?= html_escape($approval_flow_template_employee_search_url) ?>"
       data-organization-search-url="<?= html_escape($approval_flow_template_organization_search_url) ?>">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
@@ -113,9 +114,10 @@ $template_json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QU
             <?php $this->load->view('admin/approval_flow/_step_editor', array(
                 'step_editor_steps' => $template_steps,
                 'step_editor_disabled' => $template_disabled,
+                'step_editor_allow_empty' => TRUE,
                 'step_editor_labels' => array(
                     'heading' => $labels['approval_flow_template_steps_heading'],
-                    'help' => $labels['approval_flow_template_steps_help'],
+                    'help' => $labels['approval_flow_template_steps_help'] . ' ' . $labels['approval_flow_template_steps_auto_approve_help'],
                     'step_title' => $labels['approval_flow_template_step_title'],
                     'approver_type' => $labels['approval_flow_template_approver_type'],
                     'superior' => $labels['approval_flow_template_approver_superior'],

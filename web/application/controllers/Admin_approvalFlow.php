@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'controllers/Admin.php';
 
+/** HR approval flow step overrides for accessible system templates. */
 class Admin_approvalFlow extends Admin
 {
     public function approvalFlow_index()
@@ -20,62 +21,49 @@ class Admin_approvalFlow extends Admin
             'approval_flows' => $available ? $store->flows($search, $per_page, ($page-1)*$per_page) : array(),
             'approval_flow_available' => $available,
             'approval_flow_status' => (string)$this->session->flashdata('admin_approval_flow_status'),
-            'approval_flow_can_add' => $this->has_admin_access_code('hr_approval_flow_add'),
             'approval_flow_can_update' => $this->has_admin_access_code('hr_approval_flow_update'),
-            'approval_flow_can_delete' => $this->has_admin_access_code('hr_approval_flow_delete'),
             'filters' => array('search'=>$search), 'page'=>$page, 'per_page'=>$per_page, 'total'=>$total, 'pages'=>$pages,
         ));
     }
 
-    public function approvalFlow_add()
-    {
-        if (!$this->has_admin_menu_code('hr_approval_flow')) { show_error('Access denied', 403); return; }
-        if (!$this->has_admin_access_code('hr_approval_flow_add')) { show_error('Access denied', 403); return; }
-        $this->load->library('approval_workflow_store');
-        $store = $this->approval_workflow_store;
-        $available = $store->available();
-        $this->render_admin('admin/approval_flow/add', 'approval_flow', '/admin/hr/approvalFlow/add', array(
-            'approval_flow_steps' => array(),
-            'approval_flow_available' => $available,
-        ));
-    }
-
-    public function approvalFlow_edit($flow_id = 0)
+    public function approvalFlow_edit($flow_code = '')
     {
         if (!$this->has_admin_menu_code('hr_approval_flow')) { show_error('Access denied', 403); return; }
         if (!$this->has_admin_access_code('hr_approval_flow_update')) { show_error('Access denied', 403); return; }
         $this->load->library('approval_workflow_store');
         $store = $this->approval_workflow_store;
-        $flow = $store->flow((int)$flow_id);
-        if (!$flow) { show_404(); return; }
-        $this->render_admin('admin/approval_flow/add', 'approval_flow', '/admin/hr/approvalFlow/edit/'.$flow_id, array(
-            'approval_flow_steps'=>isset($flow['steps'])?$flow['steps']:array(),
-            'approval_flow_available'=>$store->available(), 'approval_flow'=>$flow,
+        if (!$store->available()) { show_error('Approval flow storage is unavailable.', 503); return; }
+        $flow = $store->template_flow((string)$flow_code);
+        if ($flow === FALSE) { show_error('Approval flow storage is unavailable.', 503); return; }
+        if ($flow === NULL) { show_404(); return; }
+        $this->render_admin('admin/approval_flow/add', 'admin_approval_flow', '/admin/hr/approvalFlow/edit/'.rawurlencode((string)$flow['flow_code']), array(
+            'approval_flow' => $flow,
+            'approval_flow_steps' => isset($flow['steps']) ? $flow['steps'] : array(),
+            'approval_flow_available' => TRUE,
+            'approval_flow_employee_search_url' => '/admin/hr/approvalFlow/employee_search',
+            'approval_flow_organization_search_url' => '/admin/hr/approvalFlow/organization_search',
         ));
     }
 
     public function approvalFlow_save()
     {
-        $flow_id = (int)$this->input->post('flow_id');
-        if ($flow_id) {
-            if (!$this->has_admin_access_code('hr_approval_flow_update')) { show_error('Access denied', 403); return; }
-        } else {
-            if (!$this->has_admin_access_code('hr_approval_flow_add')) { show_error('Access denied', 403); return; }
-        }
+        if (!$this->has_admin_menu_code('hr_approval_flow')
+            || !$this->has_admin_access_code('hr_approval_flow_update')) { show_error('Access denied', 403); return; }
         if ($this->input->method(TRUE) !== 'POST') { show_404(); return; }
         $this->load->library('approval_workflow_store');
+        $store = $this->approval_workflow_store;
+        $flow_code = $this->input->post('flow_code', TRUE);
         $steps = $this->input->post('steps', TRUE);
-        $flow = $this->approval_workflow_store->available() ? $this->approval_workflow_store->save_flow(
-            $this->input->post('flow_name', TRUE), $this->input->post('request_type', TRUE), $steps, $flow_id
-        ) : FALSE;
-        $this->session->set_flashdata('admin_approval_flow_status', $flow ? ($flow_id ? 'updated' : 'saved') : 'error');
+        $saved = $store->available() && is_string($flow_code) && $flow_code !== ''
+            && $store->save_override($flow_code, $steps);
+        $this->session->set_flashdata('admin_approval_flow_status', $saved ? 'saved' : 'error');
         redirect('/admin/hr/approvalFlow', 'location', 303);
     }
 
     public function approvalFlow_employee_search()
     {
         if (!$this->has_admin_menu_code('hr_approval_flow')
-            || (!$this->has_admin_access_code('hr_approval_flow_add') && !$this->has_admin_access_code('hr_approval_flow_update'))) {
+            || !$this->has_admin_access_code('hr_approval_flow_update')) {
             $this->output->set_status_header(403);
             $this->output->set_content_type('application/json')->set_output('[]');
             return;
@@ -91,7 +79,7 @@ class Admin_approvalFlow extends Admin
     public function approvalFlow_organization_search()
     {
         if (!$this->has_admin_menu_code('hr_approval_flow')
-            || (!$this->has_admin_access_code('hr_approval_flow_add') && !$this->has_admin_access_code('hr_approval_flow_update'))) {
+            || !$this->has_admin_access_code('hr_approval_flow_update')) {
             $this->output->set_status_header(403);
             $this->output->set_content_type('application/json')->set_output('[]');
             return;
@@ -102,15 +90,5 @@ class Admin_approvalFlow extends Admin
             ? $this->approval_workflow_store->approval_organization_suggestions($term)
             : array();
         $this->output->set_content_type('application/json')->set_output(json_encode($rows));
-    }
-
-    public function approvalFlow_delete($flow_id = 0)
-    {
-        if (!$this->has_admin_access_code('hr_approval_flow_delete')) { show_error('Access denied', 403); return; }
-        if ($this->input->method(TRUE) !== 'POST') { show_404(); return; }
-        $this->load->library('approval_workflow_store');
-        $result = $this->approval_workflow_store->delete_flow((int)$flow_id);
-        $this->session->set_flashdata('admin_approval_flow_status', $result);
-        redirect('/admin/hr/approvalFlow', 'location', 303);
     }
 }

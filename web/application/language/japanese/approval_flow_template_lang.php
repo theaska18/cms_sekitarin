@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'メニューを検索…';
 $lang['approval_flow_template_remove_menu'] = 'メニューを削除';
 $lang['approval_flow_template_steps_heading'] = '承認ステップ';
 $lang['approval_flow_template_steps_help'] = 'ステップは順番に実行されます。承認者を特定できない場合は承認エラーキューに送られます。';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'ステップのないテンプレートはリクエストを自動承認します。';
 $lang['approval_flow_template_step_title'] = 'ステップ';
 $lang['approval_flow_template_approver_type'] = '承認者の種類';
 $lang['approval_flow_template_approver_superior'] = '上司';

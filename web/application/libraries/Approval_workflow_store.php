@@ -22,20 +22,48 @@ class Approval_workflow_store
 
     public function available()
     {
-        foreach (array('hr_org', 'hr_org_member', 'app_approval_flow', 'app_approval_flow_step', 'app_approval_request', 'app_approval_action', 'app_approval_error', 'app_approval_link_token', 'hr_employee', 'app_user') as $table) {
+        foreach (array(
+            'hr_org', 'hr_org_member', 'app_approval_flow', 'app_approval_flow_step',
+            'app_approval_request', 'app_approval_action', 'app_approval_error',
+            'app_approval_link_token', 'hr_employee', 'app_user',
+            'sys_approval_flow', 'sys_approval_flow_step', 'sys_approval_flow_menu',
+        ) as $table) {
             if (!$this->db->table_exists($table)) { return FALSE; }
         }
         foreach (array(
+            array('app_approval_flow', 'flow_code'),
             array('app_approval_flow_step', 'approver_type'),
             array('app_approval_flow_step', 'approver_employee_id'),
             array('app_approval_flow_step', 'org_id'),
-            array('app_approval_request', 'request_type'),
+            array('app_approval_request', 'flow_code'),
             array('app_approval_request', 'requester_employee_id'),
             array('app_approval_request', 'current_approver_user_id'),
+            array('sys_approval_flow', 'flow_code'),
+            array('sys_approval_flow', 'flow_name'),
+            array('sys_approval_flow', 'active_flag'),
+            array('sys_approval_flow_step', 'flow_code'),
+            array('sys_approval_flow_step', 'step_number'),
+            array('sys_approval_flow_menu', 'flow_code'),
+            array('sys_approval_flow_menu', 'menu_code'),
         ) as $field) {
             if (!$this->db->field_exists($field[1], $field[0])) { return FALSE; }
         }
         return $this->tenant > 0 && $this->user > 0;
+    }
+
+    /** System flow codes mapped to menus the current user can access. */
+    public function accessible_flow_codes()
+    {
+        if (!$this->available()) { return array(); }
+        $CI =& get_instance();
+        $session = $CI->session->userdata('admin_user');
+        $menu_codes = is_array($session) && isset($session['menu_codes']) && is_array($session['menu_codes'])
+            ? array_values(array_filter($session['menu_codes'], 'is_string'))
+            : array();
+        if (!$menu_codes) { return array(); }
+        $rows = $this->db->distinct()->select('flow_code')->from('sys_approval_flow_menu')
+            ->where_in('menu_code', $menu_codes)->get()->result_array();
+        return array_map('strval', array_column($rows, 'flow_code'));
     }
 
     public function hierarchy_available()
@@ -237,135 +265,226 @@ class Approval_workflow_store
     public function flows($search = '', $limit = NULL, $offset = 0, $sort = 'flow_name', $direction = 'ASC')
     {
         if (!$this->available()) { return array(); }
-        $this->db->select('f.flow_id, f.flow_name, f.request_type, f.active_flag, COUNT(s.flow_step_id) AS step_count')
-            ->from('app_approval_flow f')->join('app_approval_flow_step s','s.flow_id=f.flow_id AND s.tenant_id=f.tenant_id','left')
-            ->where('f.tenant_id',$this->tenant);
+        $codes = $this->accessible_flow_codes();
+        if (!$codes) { return array(); }
+        $tenant = (int) $this->tenant;
+        $menu_codes = "(SELECT GROUP_CONCAT(m.menu_code ORDER BY m.menu_code SEPARATOR ', ')"
+            . " FROM sys_approval_flow_menu m WHERE m.flow_code = f.flow_code) AS menu_codes";
+        $override_id = "(SELECT af.flow_id FROM app_approval_flow af"
+            . " WHERE af.tenant_id = " . $tenant . " AND af.flow_code = f.flow_code LIMIT 1) AS override_flow_id";
+        $system_count = "(SELECT COUNT(*) FROM sys_approval_flow_step ss WHERE ss.flow_code = f.flow_code) AS system_step_count";
+        $override_count = "(SELECT COUNT(*) FROM app_approval_flow_step os"
+            . " INNER JOIN app_approval_flow af2 ON af2.flow_id = os.flow_id AND af2.tenant_id = os.tenant_id"
+            . " WHERE af2.tenant_id = " . $tenant . " AND af2.flow_code = f.flow_code) AS override_step_count";
+        $this->db->select('f.flow_code, f.flow_name, f.description, f.active_flag, '
+            . $menu_codes . ', ' . $override_id . ', ' . $system_count . ', ' . $override_count, FALSE)
+            ->from('sys_approval_flow f')->where_in('f.flow_code', $codes);
         $search = substr(trim((string)$search), 0, 120);
-        if ($search !== '') { $this->db->group_start()->like('f.flow_name',$search)->or_like('f.request_type',$search)->group_end(); }
-        $this->db->group_by(array('f.flow_id','f.flow_name','f.request_type','f.active_flag'));
-        $sort = in_array($sort, array('flow_name','request_type','active_flag'), TRUE) ? $sort : 'flow_name';
+        if ($search !== '') {
+            $this->db->group_start()->like('f.flow_code',$search)->or_like('f.flow_name',$search)
+                ->or_like('f.description',$search)->group_end();
+        }
+        $sort = in_array($sort, array('flow_code','flow_name','active_flag'), TRUE) ? $sort : 'flow_name';
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $this->db->order_by('f.'.$sort,$direction);
         if ($limit !== NULL) { $this->db->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset)); }
-        return $this->db->get()->result_array();
+        $rows = $this->db->get()->result_array();
+        foreach ($rows as &$row) {
+            $row['flow_code'] = (string)$row['flow_code'];
+            $row['active_flag'] = (int)$row['active_flag'] === 1 ? 1 : 0;
+            $row['menu_codes'] = isset($row['menu_codes']) ? (string)$row['menu_codes'] : '';
+            $row['override_flow_id'] = isset($row['override_flow_id']) ? (int)$row['override_flow_id'] : 0;
+            $row['step_count'] = $row['override_flow_id'] > 0
+                ? (int)$row['override_step_count'] : (int)$row['system_step_count'];
+            $row['step_source'] = $row['override_flow_id'] > 0 ? 'tenant' : 'system';
+            $row['override'] = $row['override_flow_id'] > 0;
+        }
+        unset($row);
+        return $rows;
     }
 
     public function count_flows($search = '')
     {
         if (!$this->available()) { return FALSE; }
-        $this->db->from('app_approval_flow')->where('tenant_id',$this->tenant);
+        $codes = $this->accessible_flow_codes();
+        if (!$codes) { return 0; }
+        $this->db->from('sys_approval_flow f')->where_in('f.flow_code', $codes);
         $search = substr(trim((string)$search), 0, 120);
-        if ($search !== '') { $this->db->group_start()->like('flow_name',$search)->or_like('request_type',$search)->group_end(); }
+        if ($search !== '') {
+            $this->db->group_start()->like('f.flow_code',$search)->or_like('f.flow_name',$search)
+                ->or_like('f.description',$search)->group_end();
+        }
         return (int)$this->db->count_all_results();
     }
 
-    public function flow($flow_id)
+    /** One system template with effective (tenant override or system) steps. */
+    public function template_flow($flow_code)
     {
         if (!$this->available()) { return FALSE; }
-        $flow = $this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>(int)$flow_id))->get('app_approval_flow')->row_array();
+        $flow_code = trim((string)$flow_code);
+        if ($flow_code === '' || !in_array($flow_code, $this->accessible_flow_codes(), TRUE)) { return NULL; }
+        $flow = $this->db->select('flow_code, flow_name, description, active_flag, create_on, update_on')
+            ->from('sys_approval_flow')->where('flow_code',$flow_code)->limit(1)->get()->row_array();
         if (!$flow) { return NULL; }
-        $flow['steps'] = $this->db->select('s.flow_step_id,s.step_number,s.approver_type,s.approver_user_id,s.approver_employee_id,s.org_id,e.employee_code,e.employee_name,o.org_code,o.org_name,u.username')
-            ->from('app_approval_flow_step s')
-            ->join('hr_employee e', 'e.employee_id=s.approver_employee_id AND e.tenant_id=s.tenant_id', 'left')
-            ->join('hr_org o', 'o.org_id=s.org_id AND o.tenant_id=s.tenant_id', 'left')
-            ->join('app_user u', 'u.user_id=s.approver_user_id AND u.tenant_id=s.tenant_id', 'left')
-            ->where(array('s.tenant_id'=>$this->tenant,'s.flow_id'=>(int)$flow_id))
-            ->order_by('s.step_number')->get()->result_array();
-        $flow['approver_user_ids'] = array_map('intval', array_column($flow['steps'], 'approver_user_id'));
+        $override = $this->flow_override($flow_code);
+        $flow['flow_code'] = (string)$flow['flow_code'];
+        $flow['active_flag'] = (int)$flow['active_flag'] === 1 ? 1 : 0;
+        $flow['override'] = $override ? TRUE : FALSE;
+        $flow['override_flow_id'] = $override ? (int)$override['flow_id'] : 0;
+        $flow['step_source'] = $override ? 'tenant' : 'system';
+        $flow['steps'] = $this->effective_steps($flow_code);
+        $menu_rows = $this->db->select('menu_code')->from('sys_approval_flow_menu')
+            ->where('flow_code',$flow_code)->order_by('menu_code')->get()->result_array();
+        $flow['menu_codes'] = array_map('strval', array_column($menu_rows, 'menu_code'));
         return $flow;
     }
 
-    public function delete_flow($flow_id)
+    public function effective_steps($flow_code)
     {
-        if (!$this->available() || (int)$flow_id < 1) { return 'error'; }
-        $this->db->trans_begin();
-        $flow = $this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>(int)$flow_id))->get('app_approval_flow')->row_array();
-        if (!$flow) { $this->db->trans_rollback(); return 'not_found'; }
-        if ($this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>(int)$flow_id))->count_all_results('app_approval_request') > 0) { $this->db->trans_rollback(); return 'in_use'; }
-        $this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>(int)$flow_id))->delete('app_approval_flow_step');
-        $this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>(int)$flow_id))->delete('app_approval_flow');
-        if ($this->db->trans_status() === FALSE || $this->db->affected_rows() !== 1) { $this->db->trans_rollback(); return 'error'; }
-        $this->db->trans_commit(); return 'deleted';
+        if (!$this->available()) { return array(); }
+        $flow_code = trim((string)$flow_code);
+        if ($flow_code === '') { return array(); }
+        $override = $this->flow_override($flow_code);
+        if ($override) {
+            return $this->db->select('s.flow_step_id,s.flow_id,s.step_number,s.approver_type,s.approver_user_id,s.approver_employee_id,s.org_id,e.employee_code,e.employee_name,o.org_code,o.org_name,u.username AS configured_username')
+                ->from('app_approval_flow_step s')
+                ->join('hr_employee e', 'e.employee_id=s.approver_employee_id AND e.tenant_id=s.tenant_id', 'left')
+                ->join('hr_org o', 'o.org_id=s.org_id AND o.tenant_id=s.tenant_id', 'left')
+                ->join('app_user u', 'u.user_id=s.approver_user_id AND u.tenant_id=s.tenant_id', 'left')
+                ->where(array('s.tenant_id'=>$this->tenant,'s.flow_id'=>(int)$override['flow_id']))
+                ->order_by('s.step_number')->get()->result_array();
+        }
+        $tenant = $this->db->escape($this->tenant);
+        return $this->db->select('s.flow_step_id,s.flow_code,s.step_number,s.approver_type,s.approver_user_id,s.approver_employee_id,s.org_id,e.employee_code,e.employee_name,o.org_code,o.org_name,u.username AS configured_username')
+            ->from('sys_approval_flow_step s')
+            ->join('hr_employee e', 'e.employee_id=s.approver_employee_id AND e.tenant_id='.$tenant, 'left')
+            ->join('hr_org o', 'o.org_id=s.org_id AND o.tenant_id='.$tenant, 'left')
+            ->join('app_user u', 'u.user_id=s.approver_user_id AND u.tenant_id='.$tenant, 'left')
+            ->where('s.flow_code',$flow_code)->order_by('s.step_number')->get()->result_array();
     }
 
-    public function save_flow($name, $type, $steps, $flow_id = 0)
+    private function effective_step($flow_code, $step_number)
     {
-        $name = trim((string)$name); $type = trim((string)$type);
+        foreach ($this->effective_steps($flow_code) as $step) {
+            if ((int)$step['step_number'] === (int)$step_number) { return $step; }
+        }
+        return NULL;
+    }
+
+    private function flow_override($flow_code)
+    {
+        return $this->db->where(array('tenant_id'=>$this->tenant,'flow_code'=>(string)$flow_code))
+            ->limit(1)->get('app_approval_flow')->row_array();
+    }
+
+    public function save_override($flow_code, $steps)
+    {
+        if (!$this->available()) { return FALSE; }
+        $flow_code = trim((string)$flow_code);
+        if ($flow_code === '' || !in_array($flow_code, $this->accessible_flow_codes(), TRUE)) { return FALSE; }
+        $flow_exists = $this->db->where('flow_code',$flow_code)->count_all_results('sys_approval_flow') === 1;
+        if (!$flow_exists) { return FALSE; }
+        $normalized_steps = $this->normalize_steps($steps, TRUE);
+        if ($normalized_steps === FALSE) { return FALSE; }
+        $now = date('Y-m-d H:i:s');
+        $this->db->trans_begin();
+        $override = $this->flow_override($flow_code);
+        if ($override) {
+            $flow_id = (int)$override['flow_id'];
+            $this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>$flow_id))
+                ->update('app_approval_flow', array('update_on'=>$now));
+        } else {
+            if (!$this->db->insert('app_approval_flow', array(
+                'tenant_id'=>$this->tenant,'flow_code'=>$flow_code,'create_on'=>$now,'update_on'=>$now,
+            ))) { $this->db->trans_rollback(); return FALSE; }
+            $flow_id = (int)$this->db->insert_id();
+        }
+        if ($this->db->where(array('tenant_id'=>$this->tenant,'flow_id'=>$flow_id))->delete('app_approval_flow_step') !== TRUE) {
+            $this->db->trans_rollback(); return FALSE;
+        }
+        foreach ($normalized_steps as $i=>$step) {
+            $row = array_merge($step, array('tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'step_number'=>$i+1,'create_on'=>$now));
+            if (!$this->db->insert('app_approval_flow_step', $row)) { $this->db->trans_rollback(); return FALSE; }
+        }
+        if ($this->db->trans_status() === FALSE) { $this->db->trans_rollback(); return FALSE; }
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
+    private function normalize_steps($steps, $allow_empty = FALSE)
+    {
         $steps = is_array($steps) ? array_values($steps) : array();
-        if (!$name || strlen($name) > 120 || !preg_match('/^[A-Za-z0-9_.-]{1,64}$/', $type) || !$steps || count($steps) > 20) { return FALSE; }
-        $normalized_steps = array();
+        if ((!$steps && !$allow_empty) || count($steps) > 20) { return FALSE; }
+        $normalized = array();
         foreach ($steps as $step) {
             if (!is_array($step)) { return FALSE; }
-            $step_type = isset($step['approver_type']) ? trim((string)$step['approver_type']) : '';
+            $type = isset($step['approver_type']) ? trim((string)$step['approver_type']) : '';
             $employee_id = isset($step['approver_employee_id']) ? trim((string)$step['approver_employee_id']) : '';
             $org_id = isset($step['org_id']) ? trim((string)$step['org_id']) : '';
-            $approver_user_id = 0;
-            if ($step_type === 'superior') {
-                $employee_id = '';
-                $org_id = '';
-            } elseif ($step_type === 'organization') {
+            $user_id = 0;
+            if ($type === 'superior') {
+                $employee_id = ''; $org_id = '';
+            } elseif ($type === 'organization') {
                 if (!ctype_digit($org_id) || !$this->org_exists((int)$org_id)) { return FALSE; }
                 $employee_id = '';
-            } elseif ($step_type === 'employee') {
+            } elseif ($type === 'employee') {
                 if (!ctype_digit($employee_id) || !$this->hierarchy_employee_exists((int)$employee_id)) { return FALSE; }
                 $account = $this->employee_user((int)$employee_id);
                 if (!$account['ok']) { return FALSE; }
-                $approver_user_id = (int)$account['user_id'];
-                $org_id = '';
-            } elseif ($step_type === 'user') {
-                $approver_user_id = isset($step['approver_user_id']) ? (int)$step['approver_user_id'] : 0;
-                if (!$approver_user_id || !$this->user_exists($approver_user_id)) { return FALSE; }
-                $employee_id = '';
-                $org_id = '';
+                $user_id = (int)$account['user_id']; $org_id = '';
+            } elseif ($type === 'user') {
+                $user_id = isset($step['approver_user_id']) ? (int)$step['approver_user_id'] : 0;
+                if ($user_id < 1 || !$this->user_exists($user_id)) { return FALSE; }
+                $employee_id = ''; $org_id = '';
             } else {
                 return FALSE;
             }
-            $normalized_steps[] = array(
-                'approver_type' => $step_type,
-                'approver_user_id' => $approver_user_id,
+            $normalized[] = array(
+                'approver_type' => $type,
+                'approver_user_id' => $user_id,
                 'approver_employee_id' => $employee_id === '' ? NULL : (int)$employee_id,
                 'org_id' => $org_id === '' ? NULL : (int)$org_id,
             );
         }
-        $this->db->trans_begin();
-        $data = array('flow_name'=>$name,'request_type'=>$type,'active_flag'=>1,'update_on'=>date('Y-m-d H:i:s'));
-        if ($flow_id) {
-            $this->db->where('tenant_id',$this->tenant)->where('flow_id',(int)$flow_id)->update('app_approval_flow',$data);
-            $exists = $this->db->where('tenant_id',$this->tenant)->where('flow_id',(int)$flow_id)->count_all_results('app_approval_flow');
-            if (!$exists) { $this->db->trans_rollback(); return FALSE; }
-            $id = (int)$flow_id;
-            $this->db->where('tenant_id',$this->tenant)->where('flow_id',$id)->delete('app_approval_flow_step');
-        } else {
-            $data['tenant_id']=$this->tenant; $data['created_by']=$this->user; $data['create_on']=date('Y-m-d H:i:s');
-            if (!$this->db->insert('app_approval_flow',$data)) { $this->db->trans_rollback(); return FALSE; }
-            $id = (int)$this->db->insert_id();
-        }
-        foreach ($normalized_steps as $i=>$step) {
-            $row = array_merge($step, array('tenant_id'=>$this->tenant,'flow_id'=>$id,'step_number'=>$i+1,'create_on'=>date('Y-m-d H:i:s')));
-            if (!$this->db->insert('app_approval_flow_step',$row)) { $this->db->trans_rollback(); return FALSE; }
-        }
-        if ($this->db->trans_status() === FALSE) { $this->db->trans_rollback(); return FALSE; }
-        $this->db->trans_commit(); return $id;
+        return $normalized;
     }
 
     public function pending()
     {
         if (!$this->available()) { return array(); }
-        return $this->db->select('r.request_id,r.subject,r.details,r.create_on,r.current_step,f.flow_name,u.username AS requester_name')
-            ->from('app_approval_request r')->join('app_approval_flow f','f.flow_id=r.flow_id AND f.tenant_id=r.tenant_id','left')
+        $requests = $this->db->select('r.request_id,r.flow_code,r.subject,r.details,r.create_on,r.current_step,r.current_approver_user_id,f.flow_name,u.username AS requester_name')
+            ->from('app_approval_request r')
+            ->join('sys_approval_flow f','f.flow_code=r.flow_code','left')
             ->join('app_user u','u.user_id=r.requester_user_id AND u.tenant_id=r.tenant_id','left')
-            ->join('app_approval_flow_step s','s.tenant_id=r.tenant_id AND s.flow_id=r.flow_id AND s.step_number=r.current_step','left')
             ->where('r.tenant_id',$this->tenant)->where('r.status','pending')
-            ->group_start()->where('r.current_approver_user_id',$this->user)
-                ->or_group_start()->where('r.current_approver_user_id IS NULL',NULL,FALSE)->where('s.approver_user_id',$this->user)->group_end()
-            ->group_end()->order_by('r.create_on','ASC')->get()->result_array();
+            ->order_by('r.create_on','ASC')->get()->result_array();
+        $pending = array();
+        $steps_cache = array();
+        foreach ($requests as $request) {
+            $flow_code = (string)$request['flow_code'];
+            if (!isset($steps_cache[$flow_code])) { $steps_cache[$flow_code] = $this->effective_steps($flow_code); }
+            $step = NULL;
+            foreach ($steps_cache[$flow_code] as $candidate) {
+                if ((int)$candidate['step_number'] === (int)$request['current_step']) { $step = $candidate; break; }
+            }
+            $assigned = (int)$request['current_approver_user_id'];
+            $matches = $assigned > 0
+                ? $assigned === $this->user
+                : ($step && (int)$step['approver_user_id'] === $this->user);
+            if ($matches) {
+                $request['flow_name'] = isset($request['flow_name']) && $request['flow_name'] !== NULL
+                    ? (string)$request['flow_name'] : $flow_code;
+                $pending[] = $request;
+            }
+        }
+        return $pending;
     }
 
     public function count_my_approval_requests($search = '')
     {
         if (!$this->available()) { return FALSE; }
         $this->db->from('app_approval_request r')
-            ->join('app_approval_flow f','f.flow_id=r.flow_id AND f.tenant_id=r.tenant_id','left')
+            ->join('sys_approval_flow f','f.flow_code=r.flow_code','left')
             ->where(array('r.tenant_id'=>$this->tenant,'r.requester_user_id'=>$this->user));
         $this->apply_my_approval_search($search);
         return (int)$this->db->count_all_results();
@@ -375,12 +494,12 @@ class Approval_workflow_store
     public function my_approval_requests($search = '', $limit = 10, $offset = 0, $sort = 'create_on', $direction = 'DESC')
     {
         if (!$this->available()) { return array(); }
-        $sort=in_array($sort,array('subject','request_type','status','create_on'),TRUE)?$sort:'create_on';
+        $sort=in_array($sort,array('subject','flow_code','status','create_on'),TRUE)?$sort:'create_on';
         $sort='r.'.$sort;
         $direction=strtoupper($direction)==='ASC'?'ASC':'DESC';
-        $this->db->select('r.request_id,r.flow_id,r.request_type,r.requester_employee_id,r.current_approver_user_id,r.subject,r.details,r.status,r.current_step,r.create_on,r.update_on,f.flow_name',FALSE)
+        $this->db->select('r.request_id,r.flow_id,r.flow_code,r.requester_employee_id,r.current_approver_user_id,r.subject,r.details,r.status,r.current_step,r.create_on,r.update_on,f.flow_name',FALSE)
             ->from('app_approval_request r')
-            ->join('app_approval_flow f','f.flow_id=r.flow_id AND f.tenant_id=r.tenant_id','left')
+            ->join('sys_approval_flow f','f.flow_code=r.flow_code','left')
             ->join('app_user ca','ca.user_id=r.current_approver_user_id AND ca.tenant_id=r.tenant_id','left')
             ->select("COALESCE(NULLIF(ca.full_name,''),ca.username) AS current_approver_name",FALSE)
             ->where(array('r.tenant_id'=>$this->tenant,'r.requester_user_id'=>$this->user));
@@ -390,17 +509,10 @@ class Approval_workflow_store
         if (!$requests) { return array(); }
 
         $request_ids=array_map('intval',array_column($requests,'request_id'));
-        $flow_ids=array_values(array_unique(array_filter(array_map('intval',array_column($requests,'flow_id')))));
+        $flow_codes=array_values(array_unique(array_filter(array_map('strval',array_column($requests,'flow_code')))));
         $steps_by_flow=array();
-        if ($flow_ids) {
-            $steps=$this->db->select('s.flow_id,s.step_number,s.approver_type,s.approver_user_id,s.approver_employee_id,s.org_id,u.username AS configured_username,e.employee_name,e.employee_code,o.org_code,o.org_name')
-                ->from('app_approval_flow_step s')
-                ->join('app_user u','u.user_id=s.approver_user_id AND u.tenant_id=s.tenant_id','left')
-                ->join('hr_employee e','e.employee_id=s.approver_employee_id AND e.tenant_id=s.tenant_id','left')
-                ->join('hr_org o','o.org_id=s.org_id AND o.tenant_id=s.tenant_id','left')
-                ->where('s.tenant_id',$this->tenant)->where_in('s.flow_id',$flow_ids)
-                ->order_by('s.flow_id','ASC')->order_by('s.step_number','ASC')->get()->result_array();
-            foreach ($steps as $step) { $steps_by_flow[(int)$step['flow_id']][]=$step; }
+        foreach ($flow_codes as $flow_code) {
+            $steps_by_flow[(string)$flow_code]=$this->effective_steps((string)$flow_code);
         }
 
         $actions_by_request=array();
@@ -425,8 +537,8 @@ class Approval_workflow_store
 
         foreach ($requests as &$request) {
             $request_id=(int)$request['request_id'];
-            $flow_id=(int)$request['flow_id'];
-            $steps=isset($steps_by_flow[$flow_id])?$steps_by_flow[$flow_id]:array();
+            $flow_code=(string)$request['flow_code'];
+            $steps=isset($steps_by_flow[$flow_code])?$steps_by_flow[$flow_code]:array();
             $actions=isset($actions_by_request[$request_id])?$actions_by_request[$request_id]:array();
             $request['approval_steps']=array();
             foreach ($steps as $step) {
@@ -476,7 +588,7 @@ class Approval_workflow_store
     {
         $search=substr(trim((string)$search),0,120);
         if ($search!=='') {
-            $this->db->group_start()->like('r.subject',$search)->or_like('r.request_type',$search)
+            $this->db->group_start()->like('r.subject',$search)->or_like('r.flow_code',$search)
                 ->or_like('f.flow_name',$search)->group_end();
         }
     }
@@ -484,21 +596,27 @@ class Approval_workflow_store
     public function active_flows()
     {
         if (!$this->available()) { return array(); }
-        return $this->db->where(array('tenant_id'=>$this->tenant,'active_flag'=>1))->order_by('flow_name')->get('app_approval_flow')->result_array();
+        $codes = $this->accessible_flow_codes();
+        if (!$codes) { return array(); }
+        return $this->db->select('flow_code, flow_name')->from('sys_approval_flow')
+            ->where_in('flow_code', $codes)->where('active_flag', 1)
+            ->order_by('flow_name')->get()->result_array();
     }
 
-    public function request_type_suggestions($term)
+    public function flow_suggestions($term)
     {
         if (!$this->available()) { return array(); }
         $term=substr(trim((string)$term),0,64);
         if (strlen($term)<2) { return array(); }
-        $rows=$this->db->select('request_type,flow_name')->from('app_approval_flow')
-            ->where(array('tenant_id'=>$this->tenant,'active_flag'=>1))
-            ->group_start()->like('request_type',$term)->or_like('flow_name',$term)->group_end()
-            ->order_by('request_type')->limit(10)->get()->result_array();
+        $codes = $this->accessible_flow_codes();
+        if (!$codes) { return array(); }
+        $rows=$this->db->select('flow_code,flow_name')->from('sys_approval_flow')
+            ->where_in('flow_code', $codes)->where('active_flag', 1)
+            ->group_start()->like('flow_code',$term)->or_like('flow_name',$term)->group_end()
+            ->order_by('flow_name')->limit(10)->get()->result_array();
         return array_map(function($row) {
-            return array('id'=>(string)$row['request_type'],'value'=>(string)$row['request_type'],
-                'label'=>(string)$row['request_type'].' — '.(string)$row['flow_name']);
+            return array('id'=>(string)$row['flow_code'],'value'=>(string)$row['flow_code'],
+                'label'=>(string)$row['flow_name'].' — '.(string)$row['flow_code']);
         },$rows);
     }
 
@@ -545,7 +663,7 @@ class Approval_workflow_store
             ->join('app_approval_request r','r.request_id=x.request_id AND r.tenant_id=x.tenant_id','inner')
             ->where(array('x.tenant_id'=>$this->tenant,'x.status'=>'open'));
         if ($search!=='') {
-            $this->db->group_start()->like('r.subject',$search)->or_like('r.request_type',$search)
+            $this->db->group_start()->like('r.subject',$search)->or_like('r.flow_code',$search)
                 ->or_like('x.error_code',$search)->or_like('x.error_message',$search)->group_end();
         }
         return (int)$this->db->count_all_results();
@@ -555,19 +673,19 @@ class Approval_workflow_store
     {
         if (!$this->available()) { return array(); }
         $search=substr(trim((string)$search),0,120);
-        $this->db->select('x.error_id,x.request_id,x.flow_id,x.step_number,x.org_id,x.error_code,x.error_message,x.create_on,r.request_type,r.subject,r.details,r.requester_user_id,u.username AS requester_name,f.flow_name,o.org_code,o.org_name')
+        $this->db->select('x.error_id,x.request_id,x.flow_id,x.step_number,x.org_id,x.error_code,x.error_message,x.create_on,r.flow_code,r.subject,r.details,r.requester_user_id,u.username AS requester_name,f.flow_name,o.org_code,o.org_name')
             ->from('app_approval_error x')
             ->join('app_approval_request r','r.request_id=x.request_id AND r.tenant_id=x.tenant_id','inner')
             ->join('app_user u','u.user_id=r.requester_user_id AND u.tenant_id=r.tenant_id','left')
-            ->join('app_approval_flow f','f.flow_id=x.flow_id AND f.tenant_id=x.tenant_id','left')
+            ->join('sys_approval_flow f','f.flow_code=r.flow_code','left')
             ->join('hr_org o','o.org_id=x.org_id AND o.tenant_id=x.tenant_id','left')
             ->where(array('x.tenant_id'=>$this->tenant,'x.status'=>'open'));
         if ($search!=='') {
-            $this->db->group_start()->like('r.subject',$search)->or_like('r.request_type',$search)
+            $this->db->group_start()->like('r.subject',$search)->or_like('r.flow_code',$search)
                 ->or_like('x.error_code',$search)->or_like('x.error_message',$search)->group_end();
         }
-        $sort=in_array($sort,array('subject','request_type','error_code','create_on'),TRUE)?$sort:'create_on';
-        $sort=$sort==='subject'?'r.subject':($sort==='request_type'?'r.request_type':($sort==='error_code'?'x.error_code':'x.create_on'));
+        $sort=in_array($sort,array('subject','flow_code','error_code','create_on'),TRUE)?$sort:'create_on';
+        $sort=$sort==='subject'?'r.subject':($sort==='flow_code'?'r.flow_code':($sort==='error_code'?'x.error_code':'x.create_on'));
         $this->db->order_by($sort,strtoupper($direction)==='ASC'?'ASC':'DESC');
         if ($limit!==NULL) { $this->db->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset)); }
         return $this->db->get()->result_array();
@@ -603,19 +721,24 @@ class Approval_workflow_store
         return $this->db->trans_status()===FALSE ? 'error' : 'routed';
     }
 
-    public function submit($request_type, $subject, $details)
+    public function submit($flow_code, $subject, $details)
     {
-        $request_type=trim((string)$request_type); $subject=trim((string)$subject); $details=trim((string)$details);
-        if (!$this->available() || !$request_type || strlen($request_type)>64
-            || !preg_match('/\A[A-Za-z0-9_.-]+\z/',$request_type)
-            || !$subject || strlen($subject)>180 || strlen($details)>10000) { return FALSE; }
-
-        $flow=$this->db->where(array('tenant_id'=>$this->tenant,'request_type'=>$request_type,'active_flag'=>1))->limit(1)->get('app_approval_flow')->row_array();
+        $flow_code=trim((string)$flow_code); $subject=trim((string)$subject); $details=trim((string)$details);
+        if (!$this->available() || $flow_code === '' || strlen($flow_code)>32
+            || !preg_match('/\A[A-Za-z0-9_.-]+\z/',$flow_code)
+            || !$subject || strlen($subject)>180 || strlen($details)>10000
+            || !in_array($flow_code, $this->accessible_flow_codes(), TRUE)) { return FALSE; }
+        $flow=$this->db->select('flow_code,flow_name')->from('sys_approval_flow')
+            ->where(array('flow_code'=>$flow_code,'active_flag'=>1))->limit(1)->get()->row_array();
+        if (!$flow) { return FALSE; }
+        $override=$this->flow_override($flow_code);
+        $flow_id=$override ? (int)$override['flow_id'] : NULL;
+        $steps=$this->effective_steps($flow_code);
         $created=date('Y-m-d H:i:s');
-        if (!$flow) {
+        if (!$steps) {
             $this->db->trans_begin();
             $inserted=$this->db->insert('app_approval_request',array(
-                'tenant_id'=>$this->tenant,'flow_id'=>NULL,'request_type'=>$request_type,
+                'tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'flow_code'=>$flow_code,
                 'requester_user_id'=>$this->user,'requester_employee_id'=>$this->employee ?: NULL,
                 'subject'=>$subject,'details'=>$details,'status'=>'approved','current_step'=>0,
                 'current_approver_user_id'=>NULL,'create_on'=>$created,'update_on'=>$created,
@@ -625,16 +748,14 @@ class Approval_workflow_store
             $this->db->trans_commit();
             return $this->db->trans_status()===FALSE ? FALSE : array('status'=>'auto_approved','request_id'=>$request_id);
         }
-
-        $flow_id=(int)$flow['flow_id'];
-        $step=$this->flow_step($flow_id,1);
+        $step=isset($steps[0])?$steps[0]:NULL;
         $resolution=$step ? $this->resolve_approver($step,$this->employee,0) : array(
             'ok'=>FALSE,'code'=>'empty_flow','message'=>'The active approval flow has no configured steps.',
         );
         $request_status=$resolution['ok'] ? 'pending' : 'needs_assignment';
         $this->db->trans_begin();
         $inserted=$this->db->insert('app_approval_request',array(
-            'tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'request_type'=>$request_type,
+            'tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'flow_code'=>$flow_code,
             'requester_user_id'=>$this->user,'requester_employee_id'=>$this->employee ?: NULL,
             'subject'=>$subject,'details'=>$details,'status'=>$request_status,'current_step'=>1,
             'current_approver_user_id'=>$resolution['ok'] ? (int)$resolution['user_id'] : NULL,
@@ -650,7 +771,6 @@ class Approval_workflow_store
         $this->db->trans_commit();
         if ($this->db->trans_status()===FALSE) { return FALSE; }
         if (!$resolution['ok']) { return array('status'=>'needs_assignment','request_id'=>$request_id); }
-
         if ($this->deliver_approval($request_id,(int)$resolution['user_id'],$subject)) {
             return array('status'=>'submitted','request_id'=>$request_id);
         }
@@ -706,7 +826,7 @@ class Approval_workflow_store
         $request=$this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'status'=>'pending'))->get('app_approval_request')->row_array();
         if (!$request) { $this->db->trans_rollback(); return FALSE; }
         $current_step=(int)$request['current_step'];
-        $step=$this->flow_step((int)$request['flow_id'],$current_step);
+        $step=$this->effective_step((string)$request['flow_code'],$current_step);
         $assigned_user=isset($request['current_approver_user_id'])?(int)$request['current_approver_user_id']:0;
         if (($assigned_user>0 && $assigned_user!==$this->user)
             || ($assigned_user<1 && (!$step || (int)$step['approver_user_id']!==$this->user))) {
@@ -724,7 +844,7 @@ class Approval_workflow_store
         $next_user=NULL;
         if ($decision==='approved') {
             $next_number=$current_step+1;
-            $next_step=$this->flow_step((int)$request['flow_id'],$next_number);
+            $next_step=$this->effective_step((string)$request['flow_code'],$next_number);
             if ($next_step) {
                 $resolution=$this->resolve_approver(
                     $next_step,
@@ -782,15 +902,6 @@ class Approval_workflow_store
     {
         if (!$this->available()) { return array(); }
         return $this->db->select('user_id, username')->where('tenant_id',$this->tenant)->order_by('username')->get('app_user')->result_array();
-    }
-
-    private function flow_step($flow_id, $step_number)
-    {
-        return $this->db->where(array(
-            'tenant_id'=>$this->tenant,
-            'flow_id'=>(int)$flow_id,
-            'step_number'=>(int)$step_number,
-        ))->limit(1)->get('app_approval_flow_step')->row_array();
     }
 
     /** Resolve a configured step to exactly one active, tenant-local app user. */
@@ -854,18 +965,28 @@ class Approval_workflow_store
                     return array('ok'=>FALSE,'code'=>'organization_parent_missing','message'=>'The parent organization could not be found.','org_id'=>$parent_id);
                 }
             } else {
+                $headed_orgs = $this->db->select('org_id,parent_org,head_employee_id')
+                    ->from('hr_org')
+                    ->where(array('tenant_id'=>$this->tenant,'head_employee_id'=>$employee_id))
+                    ->order_by('org_id','ASC')->get()->result_array();
                 $memberships = $this->db->distinct()
                     ->select('o.org_id,o.parent_org,o.head_employee_id')
                     ->from('hr_org_member m')->join('hr_org o','o.org_id=m.org_id','inner')
                     ->where(array('o.tenant_id'=>$this->tenant,'m.employee_id'=>$employee_id))
                     ->get()->result_array();
-                if (!$memberships) {
+                if (count($headed_orgs)>1) {
+                    return array('ok'=>FALSE,'code'=>'organization_membership_ambiguous','message'=>'The requester or previous approver leads multiple organizations.','org_id'=>NULL);
+                }
+                if (count($headed_orgs)===1) {
+                    // A leader is approved by the head of the parent organization.
+                    $org = $headed_orgs[0];
+                } elseif (!$memberships) {
                     return array('ok'=>FALSE,'code'=>'organization_membership_missing','message'=>'No organization membership was found for the requester or previous approver.','org_id'=>NULL);
-                }
-                if (count($memberships)>1) {
+                } elseif (count($memberships)>1) {
                     return array('ok'=>FALSE,'code'=>'organization_membership_ambiguous','message'=>'The requester or previous approver belongs to multiple organizations.','org_id'=>NULL);
+                } else {
+                    $org = $memberships[0];
                 }
-                $org = $memberships[0];
             }
             $visited = array();
             for ($depth=0;$depth<100 && !empty($org['org_id']);$depth++) {

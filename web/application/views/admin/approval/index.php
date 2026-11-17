@@ -1,14 +1,14 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') ?>">
 <link rel="stylesheet" href="/assets/css/jquery-ui.css?v=<?= filemtime(FCPATH . 'assets/css/jquery-ui.css') ?>">
-<main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-approval-request-form data-request-type-search-url="/admin/system/approval/request_type_search">
+<main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8" data-approval-request-form data-flow-search-url="/admin/system/approval/flow_search">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">Human Resource / Approval Flow / Approval</nav>
     <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
             <h1 class="text-3xl font-bold tracking-tight text-slate-950">Persetujuan</h1>
             <p class="mt-2 text-slate-600">Ajukan permintaan dan tindak lanjuti persetujuan yang menunggu keputusan Anda.</p>
         </div>
-        <?php if ($approval_can_update): ?>
+        <?php if (!empty($approval_can_manage_errors)): ?>
         <a href="/admin/system/approval/errors" class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-semibold text-amber-900 hover:bg-amber-100">
             Error Approval <span class="rounded-full bg-amber-200 px-2 py-0.5 text-xs"><?= (int)$approval_error_count ?></span>
         </a>
@@ -18,7 +18,7 @@
         <div role="status" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
             <?= html_escape(array(
                 'submitted'=>'Permintaan diajukan.',
-                'auto_approved'=>'Flow tidak ditemukan; permintaan otomatis disetujui.',
+                'auto_approved'=>'Alur tidak memiliki tahapan; permintaan otomatis disetujui.',
                 'needs_assignment'=>'Permintaan masuk ke antrean Error Approval dan menunggu penetapan admin.',
                 'decided'=>'Keputusan tersimpan.',
                 'error'=>'Tindakan gagal. Pastikan jenis permintaan, flow, dan hak Anda masih valid.',
@@ -28,6 +28,7 @@
     <?php if (!$approval_available): ?>
         <div role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Fitur approval belum tersedia. Pastikan migrasi selesai dan tenant aktif.</div>
     <?php else: ?>
+    <?php if (empty($approval_hide_request_form)): ?>
     <section class="mb-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 class="mb-4 text-lg font-semibold">Ajukan permintaan</h2>
         <?php if (!$approval_can_add): ?>
@@ -36,9 +37,9 @@
         <form method="post" action="/admin/system/approval/submit" class="grid gap-4 md:grid-cols-2">
             <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
             <div>
-                <label for="request-type" class="mb-1 block text-sm font-semibold">Jenis permintaan</label>
-                <input id="request-type" name="request_type" type="search" required maxlength="64" pattern="[A-Za-z0-9_.-]+" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Cari atau ketik kode jenis permintaan" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
-                <p class="mt-1 text-xs text-slate-500">Flow aktif akan dicari berdasarkan kode ini. Jika tidak ada flow, permintaan otomatis disetujui.</p>
+                <label for="flow-code" class="mb-1 block text-sm font-semibold">Alur persetujuan</label>
+                <input id="flow-code" name="flow_code" type="search" required maxlength="32" pattern="[A-Za-z0-9_.-]+" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Cari nama atau kode alur" class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-base sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
+                <p class="mt-1 text-xs text-slate-500">Pilih alur aktif yang menunya dapat Anda akses. Tahapan mengikuti override tenant bila tersedia.</p>
             </div>
             <div>
                 <label for="request-subject" class="mb-1 block text-sm font-semibold">Judul</label>
@@ -54,6 +55,7 @@
         </form>
         <?php endif; ?>
     </section>
+    <?php endif; ?>
     <section>
         <h2 class="mb-4 text-lg font-semibold">Menunggu persetujuan saya</h2>
         <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -100,7 +102,7 @@
         <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table id="my-approval-history-table" class="w-full min-w-[68rem] text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
-                    <tr><th scope="col" class="px-4 py-3">Permintaan</th><th scope="col" class="px-4 py-3">Jenis / flow</th><th scope="col" class="px-4 py-3">Status</th><th scope="col" class="px-4 py-3">Checklist persetujuan</th><th scope="col" class="px-4 py-3">Aktivitas terakhir</th></tr>
+                    <tr><th scope="col" class="px-4 py-3">Permintaan</th><th scope="col" class="px-4 py-3">Alur</th><th scope="col" class="px-4 py-3">Status</th><th scope="col" class="px-4 py-3">Checklist persetujuan</th><th scope="col" class="px-4 py-3">Aktivitas terakhir</th></tr>
                 </thead>
                 <tbody></tbody>
             </table>
@@ -114,13 +116,13 @@
 <script>
 (function(){
     var form=document.querySelector('[data-approval-request-form]');
-    var field=document.getElementById('request-type');
+    var field=document.getElementById('flow-code');
     if(!form||!field||!window.jQuery||!window.jQuery.ui)return;
     window.jQuery(field).autocomplete({
         minLength:2,
         delay:250,
         source:function(request,response){
-            window.jQuery.getJSON(form.dataset.requestTypeSearchUrl,{q:request.term})
+            window.jQuery.getJSON(form.dataset.flowSearchUrl,{q:request.term})
                 .done(response).fail(function(){response([]);});
         },
         focus:function(){return false;},
@@ -180,7 +182,7 @@
                 return '<div class="font-semibold">'+escapeHtml(value)+'</div>'+
                     (row.details?'<div class="mt-1 max-w-lg whitespace-pre-wrap text-xs font-normal text-slate-600">'+escapeHtml(row.details)+'</div>':'');
             }},
-            {data:'request_type',name:'request_type',render:function(value,type,row){
+            {data:'flow_code',name:'flow_code',render:function(value,type,row){
                 if(type!=='display')return value;
                 return '<div>'+escapeHtml(row.flow_name||'Tanpa flow')+'</div><div class="mt-1 text-xs text-slate-500">'+escapeHtml(value)+'</div>';
             }},

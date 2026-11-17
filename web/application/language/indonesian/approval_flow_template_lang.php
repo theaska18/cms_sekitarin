@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'Cari menu…';
 $lang['approval_flow_template_remove_menu'] = 'Hapus menu';
 $lang['approval_flow_template_steps_heading'] = 'Tahap Persetujuan';
 $lang['approval_flow_template_steps_help'] = 'Tahap diproses berurutan. Approver yang tidak dapat ditentukan masuk ke antrean error approval.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'Template tanpa tahapan akan otomatis menyetujui permintaan.';
 $lang['approval_flow_template_step_title'] = 'Tahap';
 $lang['approval_flow_template_approver_type'] = 'Jenis approver';
 $lang['approval_flow_template_approver_superior'] = 'Atasan';

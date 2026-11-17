@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'Search menus…';
 $lang['approval_flow_template_remove_menu'] = 'Remove menu';
 $lang['approval_flow_template_steps_heading'] = 'Approval Steps';
 $lang['approval_flow_template_steps_help'] = 'Steps run in order. Unresolvable approvers are routed to the approval error queue.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'A template with no steps automatically approves requests.';
 $lang['approval_flow_template_step_title'] = 'Step';
 $lang['approval_flow_template_approver_type'] = 'Approver type';
 $lang['approval_flow_template_approver_superior'] = 'Superior';

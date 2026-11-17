@@ -269,10 +269,17 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                 if element.tag == "menu":
                     code = element.attrib["code"]
                     access_codes = [access.attrib.get("code") for access in element.findall("access")]
-                    required_access_codes = {f"{code}_add", f"{code}_update"}
+                    update_only_menus = {"hr_approval_flow"}
+                    required_access_codes = (
+                        {f"{code}_update"} if code in update_only_menus else {f"{code}_add", f"{code}_update"}
+                    )
                     with self.subTest(file=path.name, menu=code):
                         self.assertTrue(required_access_codes.issubset(access_codes), required_access_codes - set(access_codes))
                         self.assertEqual(len(access_codes), len(set(access_codes)), "menu access codes must be unique")
+                    if code in update_only_menus:
+                        with self.subTest(file=path.name, menu=code, rule="override-only"):
+                            self.assertNotIn(f"{code}_add", access_codes)
+                            self.assertNotIn(f"{code}_delete", access_codes)
 
     def test_finance_manifest_registers_all_listed_items_without_business_logic_or_grants(self):
         manifest = parse_xml(MANIFEST_DIR / "manifest.xml")

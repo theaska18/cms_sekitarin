@@ -322,9 +322,7 @@ class Admin_approval_flow_template extends Admin
             }
         }
         $steps = isset($record['steps']) && is_array($record['steps']) ? $record['steps'] : array();
-        if (!$steps) {
-            $errors[] = 'step_required';
-        } elseif (count($steps) > 20) {
+        if (count($steps) > 20) {
             $errors[] = 'step_limit';
         }
         foreach ($steps as $step) {

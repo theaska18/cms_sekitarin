@@ -54,6 +54,14 @@
     var csrfName=<?= json_encode($csrf_token_name,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;
     var csrfHash=<?= json_encode($csrf_hash,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;
     var tableLanguage={emptyTable:'Tidak ada error approval terbuka.',zeroRecords:'Tidak ada error yang cocok.',search:'Cari error: _INPUT_',lengthMenu:'Tampilkan _MENU_ data',info:'Menampilkan _START_–_END_ dari _TOTAL_ error',infoEmpty:'Tidak ada error',infoFiltered:'(disaring dari _MAX_ error)',processing:'Memuat antrean…',paginate:{first:'Pertama',last:'Terakhir',next:'Berikutnya',previous:'Sebelumnya'}};
+    var pagingLabels={first:tableLanguage.paginate.first,last:tableLanguage.paginate.last,next:tableLanguage.paginate.next,previous:tableLanguage.paginate.previous};
+    tableLanguage.paginate={
+        first:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m11.5 4.5-5.5 5.5 5.5 5.5M17 4.5 11.5 10l5.5 5.5"/></svg>',
+        previous:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg>',
+        next:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>',
+        last:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m8.5 4.5 5.5 5.5-5.5 5.5M3 4.5 8.5 10 3 15.5"/></svg>'
+    };
+    tableLanguage.aria={paginate:pagingLabels};
     table.DataTable({
         processing:true,serverSide:true,deferRender:true,autoWidth:false,
         pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order:[[5,'desc']],language:tableLanguage,
@@ -61,7 +69,7 @@
         columns:[
             {data:'subject',name:'subject',render:function(value,type){return type==='display'?escapeHtml(value):value;}},
             {data:'requester_name',name:'requester_name',render:function(value,type){return type==='display'?escapeHtml(value||'—'):value;}},
-            {data:null,orderable:false,searchable:false,render:function(value,type,row){return type==='display'?escapeHtml(row.flow_name||row.request_type)+'<div class="text-xs text-slate-500">Tahap '+parseInt(row.step_number,10)+'</div>':'';}},
+            {data:null,orderable:false,searchable:false,render:function(value,type,row){return type==='display'?escapeHtml(row.flow_name||row.flow_code)+'<div class="text-xs text-slate-500">Tahap '+parseInt(row.step_number,10)+'</div>':'';}},
             {data:null,orderable:false,searchable:false,render:function(value,type,row){return type==='display'?escapeHtml(row.org_name?((row.org_code||'')+' — '+row.org_name):'—'):'';}},
             {data:'error_code',name:'error_code',render:function(value,type,row){return type==='display'?'<strong>'+escapeHtml(value)+'</strong><div class="mt-1 text-xs font-normal leading-5 text-slate-600">'+escapeHtml(row.error_message)+'</div>':value;}},
             {data:'create_on',name:'create_on',render:function(value,type){return type==='display'?escapeHtml(value):value;}},

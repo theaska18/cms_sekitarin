@@ -2,7 +2,8 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $step_editor_steps = isset($step_editor_steps) && is_array($step_editor_steps) ? array_values($step_editor_steps) : array();
-if (!$step_editor_steps) {
+$step_editor_allow_empty = !empty($step_editor_allow_empty);
+if (!$step_editor_steps && !$step_editor_allow_empty) {
     $step_editor_steps = array(array('approver_type' => 'superior'));
 }
 $step_editor_labels = isset($step_editor_labels) && is_array($step_editor_labels) ? $step_editor_labels : array();

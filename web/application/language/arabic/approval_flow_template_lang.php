@@ -28,6 +28,7 @@ $lang['approval_flow_template_menu_search'] = 'ابحث في القوائم…';
 $lang['approval_flow_template_remove_menu'] = 'إزالة القائمة';
 $lang['approval_flow_template_steps_heading'] = 'خطوات الموافقة';
 $lang['approval_flow_template_steps_help'] = 'تُنفذ الخطوات بالترتيب. تُوجَّه الموافقات غير القابلة للتحديد إلى قائمة أخطاء الموافقة.';
+$lang['approval_flow_template_steps_auto_approve_help'] = 'القالب الذي لا يحتوي على خطوات يوافق على الطلبات تلقائياً.';
 $lang['approval_flow_template_step_title'] = 'خطوة';
 $lang['approval_flow_template_approver_type'] = 'نوع الموافق';
 $lang['approval_flow_template_approver_superior'] = 'المدير الأعلى';
