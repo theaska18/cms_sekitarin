@@ -29,14 +29,21 @@ $finance_help_topics = array(
     'finance_setting' => 'setting',
 );
 $normalized_current_path = '/' . trim(isset($current_path) ? (string) $current_path : '', '/');
+$admin_menu_path_aliases = array(
+    '/admin/finance/profit_loss_detail' => '/admin/finance/profit_loss',
+    '/admin/finance/balance_sheet_skontro' => '/admin/finance/balance_sheet',
+);
+$active_current_path = isset($admin_menu_path_aliases[$normalized_current_path])
+    ? $admin_menu_path_aliases[$normalized_current_path]
+    : $normalized_current_path;
 foreach ($menu_groups as $finance_help_group) {
     if (strpos((string) $finance_help_group['code'], 'finance') !== 0) {
         continue;
     }
     foreach ($finance_help_group['items'] as $finance_help_item) {
         $finance_help_route = rtrim((string) $finance_help_item['route'], '/');
-        if ($normalized_current_path !== $finance_help_route
-            && strpos($normalized_current_path, $finance_help_route . '/') !== 0) {
+        if ($active_current_path !== $finance_help_route
+            && strpos($active_current_path, $finance_help_route . '/') !== 0) {
             continue;
         }
         $finance_help_topic = isset($finance_help_topics[$finance_help_group['code']])
@@ -170,7 +177,7 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
                         <?php foreach ($group['items'] as $item): ?>
                             <?php
                                 $item_base_route = rtrim((string) $item['route'], '/');
-                                $current_admin_path = '/' . trim((string) $current_path, '/');
+                                $current_admin_path = $active_current_path;
                                 $is_current = $current_admin_path === $item_base_route
                                     || ($item_base_route !== '' && strpos($current_admin_path, $item_base_route . '/') === 0);
                             ?>

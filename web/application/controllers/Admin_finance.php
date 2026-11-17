@@ -36,6 +36,14 @@ class Admin_finance extends Admin
             $this->finance_reconciliation_index();
             return;
         }
+        if ($slug === 'profit_loss') {
+            $this->finance_profit_loss_statement();
+            return;
+        }
+        if ($slug === 'balance_sheet_skontro') {
+            $this->finance_balance_sheet_skontro();
+            return;
+        }
         if ($this->finance_report_menu_code($slug) !== NULL) {
             $this->finance_report_index($slug);
             return;
@@ -2657,6 +2665,379 @@ class Admin_finance extends Admin
         redirect('/admin/finance/bank_reconciliation','location',303);
     }
 
+    public function report_export($slug = '')
+    {
+        $menu_code = $this->finance_report_menu_code($slug);
+        if ($menu_code === NULL) {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code($menu_code)) {
+            $this->finance_forbidden();
+            return;
+        }
+        if ($slug === 'profit_loss') {
+            $this->finance_profit_loss_export();
+            return;
+        }
+        if ($slug === 'balance_sheet_skontro') {
+            $this->finance_balance_sheet_skontro_export();
+            return;
+        }
+        $this->lang->load('finance', $this->resolve_admin_locale());
+        $filters = $this->finance_report_dates();
+        if (!empty($filters['errors'])) {
+            $this->session->set_flashdata('finance_status', 'invalid_range');
+            redirect('/admin/finance/' . $slug, 'location', 303);
+            return;
+        }
+        $this->load->library('finance_report_store');
+        $store = $this->finance_report_store;
+        if (!$store->available($slug)) {
+            $this->session->set_flashdata('finance_status', 'unavailable');
+            redirect('/admin/finance/' . $slug, 'location', 303);
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $rows = $store->rows($slug, $tenant_id, $filters['start_on'], $filters['end_on']);
+        if ($rows === FALSE) {
+            $this->session->set_flashdata('finance_status', 'unavailable');
+            redirect('/admin/finance/' . $slug, 'location', 303);
+            return;
+        }
+        $columns = $this->finance_report_columns($slug);
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : (string) $tenant_id;
+        $title = $this->lang->line('admin_finance_' . $slug);
+        if (!is_string($title) || $title === '') {
+            $title = $this->lang->line('finance_' . $slug);
+        }
+        if (!is_string($title) || $title === '') {
+            $title = ucfirst(str_replace('_', ' ', $slug));
+        }
+        $prepared_by = isset($this->current_user['full_name']) && trim((string) $this->current_user['full_name']) !== ''
+            ? (string) $this->current_user['full_name']
+            : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
+        $column_labels = array();
+        foreach ($columns as $column) {
+            $label = $this->lang->line('finance_report_column_' . $column['name']);
+            $column_labels[] = is_string($label) && $label !== '' ? $label : $column['label'];
+        }
+        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding');
+        $totals = array();
+        foreach ($columns as $column) {
+            if (in_array($column['name'], $numeric, TRUE)) {
+                $totals[$column['name']] = 0.0;
+            }
+        }
+        foreach ($rows as $row) {
+            foreach ($totals as $name => $value) {
+                $totals[$name] += (float) (isset($row[$name]) ? $row[$name] : 0);
+            }
+        }
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('Report Name', $title));
+        fputcsv($stream, array('Report Code', $slug));
+        fputcsv($stream, array('Tenant', $tenant_name));
+        $as_of_report = in_array($slug, array('balance_sheet', 'ar_report', 'ap_report'), TRUE);
+        fputcsv($stream, array($as_of_report ? 'As of' : 'Period',
+            $as_of_report ? $filters['end_on'] : $filters['start_on'] . ' s/d ' . $filters['end_on']));
+        fputcsv($stream, array('Base Currency', $base_currency));
+        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
+        fputcsv($stream, array('Prepared By', $prepared_by));
+        fputcsv($stream, array('Source', 'Posted journals'));
+        fputcsv($stream, array('Rows', count($rows)));
+        fputcsv($stream, array());
+        fputcsv($stream, array_merge(array('No'), $column_labels));
+        $row_number = 0;
+        foreach ($rows as $row) {
+            $line = array(++$row_number);
+            foreach ($columns as $column) {
+                $value = isset($row[$column['name']]) ? $row[$column['name']] : '';
+                if (in_array($column['name'], $numeric, TRUE)) {
+                    $value = number_format((float) $value, 2, '.', '');
+                }
+                $line[] = $value;
+            }
+            fputcsv($stream, $line);
+        }
+        if ($totals) {
+            $line = array();
+            foreach (array_merge(array('No'), $columns) as $column) {
+                if ($column === 'No') {
+                    $line[] = 'TOTAL';
+                    continue;
+                }
+                if (isset($totals[$column['name']])) {
+                    $line[] = number_format($totals[$column['name']], 2, '.', '');
+                } else {
+                    $line[] = '';
+                }
+            }
+            fputcsv($stream, $line);
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_name);
+        $report_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $title);
+        if ($report_code === '') {
+            $report_code = $slug;
+        }
+        $filename = trim($report_code, '-') . '-' . trim($tenant_code, '-') . '-'
+            . ($as_of_report ? $filters['end_on'] : $filters['start_on'] . '-' . $filters['end_on']) . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    private function finance_profit_loss_statement()
+    {
+        if (!$this->has_admin_menu_code('fin_profit_loss')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $filters = $this->finance_report_dates();
+        $this->load->library('finance_report_store');
+        $statement = empty($filters['errors'])
+            ? $this->finance_report_store->profit_loss_statement(
+                (int) $this->current_user['tenant_id'],
+                $filters['start_on'],
+                $filters['end_on']
+            )
+            : FALSE;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : '';
+        $this->render_admin(
+            'admin/finance/report_profit_loss',
+            'admin_finance_profit_loss',
+            '/admin/finance/profit_loss',
+            array(
+                'finance_report_filters' => $filters,
+                'finance_report_errors' => isset($filters['errors']) ? $filters['errors'] : array(),
+                'finance_pl' => $statement,
+                'finance_pl_available' => $this->finance_report_store->available('profit_loss'),
+                'finance_pl_currency' => $base_currency,
+                'finance_pl_tenant' => $tenant_name,
+            )
+        );
+    }
+
+    private function finance_profit_loss_export()
+    {
+        $this->lang->load('finance', $this->resolve_admin_locale());
+        $filters = $this->finance_report_dates();
+        if (!empty($filters['errors'])) {
+            $this->session->set_flashdata('finance_status', 'invalid_range');
+            redirect('/admin/finance/profit_loss', 'location', 303);
+            return;
+        }
+        $this->load->library('finance_report_store');
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $statement = $this->finance_report_store->profit_loss_statement($tenant_id, $filters['start_on'], $filters['end_on']);
+        if ($statement === FALSE) {
+            $this->session->set_flashdata('finance_status', 'unavailable');
+            redirect('/admin/finance/profit_loss', 'location', 303);
+            return;
+        }
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : (string) $tenant_id;
+        $title = $this->finance_report_text('admin_finance_profit_loss', 'Profit and Loss');
+        $prepared_by = isset($this->current_user['full_name']) && trim((string) $this->current_user['full_name']) !== ''
+            ? (string) $this->current_user['full_name']
+            : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
+        $labels = array(
+            'revenue' => $this->finance_report_text('finance_pl_revenue', 'Revenue'),
+            'cogs' => $this->finance_report_text('finance_pl_cogs', 'Cost of goods sold'),
+            'gross' => $this->finance_report_text('finance_pl_gross_profit', 'Gross profit'),
+            'operating' => $this->finance_report_text('finance_pl_operating_expenses', 'Operating expenses'),
+            'total_revenue' => $this->finance_report_text('finance_pl_total_revenue', 'Total revenue'),
+            'total_cogs' => $this->finance_report_text('finance_pl_total_cogs', 'Total cost of goods sold'),
+            'total_operating' => $this->finance_report_text('finance_pl_total_operating', 'Total operating expenses'),
+            'total_expenses' => $this->finance_report_text('finance_pl_total_expenses', 'Total expenses'),
+            'net' => $this->finance_report_text('finance_pl_net_profit', 'Net profit'),
+            'subtotal' => $this->finance_report_text('finance_pl_subtotal', 'Subtotal'),
+        );
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('Report Name', $title));
+        fputcsv($stream, array('Report Code', 'profit_loss'));
+        fputcsv($stream, array('Tenant', $tenant_name));
+        fputcsv($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
+        fputcsv($stream, array('Base Currency', $base_currency));
+        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
+        fputcsv($stream, array('Prepared By', $prepared_by));
+        fputcsv($stream, array('Source', 'Posted journals'));
+        fputcsv($stream, array());
+        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $row_number = 0;
+        foreach ($statement['revenue']['accounts'] as $line) {
+            fputcsv($stream, array(++$row_number, $labels['revenue'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+        }
+        fputcsv($stream, array('', $labels['revenue'], '', '', $labels['total_revenue'], number_format((float) $statement['revenue']['total'], 2, '.', '')));
+        fputcsv($stream, array());
+        foreach ($statement['cogs']['accounts'] as $line) {
+            fputcsv($stream, array(++$row_number, $labels['cogs'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+        }
+        fputcsv($stream, array('', $labels['cogs'], '', '', $labels['total_cogs'], number_format((float) $statement['cogs']['total'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $labels['gross'], number_format((float) $statement['gross_profit'], 2, '.', '')));
+        fputcsv($stream, array());
+        foreach ($statement['operating']['groups'] as $group) {
+            foreach ($group['accounts'] as $line) {
+                fputcsv($stream, array(++$row_number, $labels['operating'], $group['name'], $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+            }
+            fputcsv($stream, array('', $labels['operating'], $group['name'], '', $labels['subtotal'], number_format((float) $group['total'], 2, '.', '')));
+        }
+        fputcsv($stream, array('', $labels['operating'], '', '', $labels['total_operating'], number_format((float) $statement['operating']['total'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $labels['total_expenses'], number_format((float) $statement['total_expenses'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $labels['net'], number_format((float) $statement['net_profit'], 2, '.', '')));
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_name);
+        $report_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $title);
+        if ($report_code === '') {
+            $report_code = 'Laba-Rugi';
+        }
+        $filename = trim($report_code, '-') . '-' . trim($tenant_code, '-') . '-' . $filters['start_on'] . '-' . $filters['end_on'] . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    private function finance_report_text($key, $fallback)
+    {
+        $label = $this->lang->line($key);
+        return is_string($label) && $label !== '' ? $label : $fallback;
+    }
+
+    private function finance_balance_sheet_skontro()
+    {
+        if (!$this->has_admin_menu_code('fin_balance_sheet')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $filters = $this->finance_report_dates();
+        $this->load->library('finance_report_store');
+        $report = empty($filters['errors'])
+            ? $this->finance_report_store->balance_sheet_skontro((int) $this->current_user['tenant_id'], $filters['end_on'])
+            : FALSE;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : '';
+        $this->render_admin(
+            'admin/finance/report_balance_sheet_skontro',
+            'finance_balance_sheet_skontro',
+            '/admin/finance/balance_sheet_skontro',
+            array(
+                'finance_report_filters' => $filters,
+                'finance_report_errors' => isset($filters['errors']) ? $filters['errors'] : array(),
+                'finance_skontro' => $report,
+                'finance_skontro_available' => $this->finance_report_store->available('balance_sheet'),
+                'finance_skontro_currency' => $base_currency,
+                'finance_skontro_tenant' => $tenant_name,
+            )
+        );
+    }
+
+    private function finance_balance_sheet_skontro_export()
+    {
+        $this->lang->load('finance', $this->resolve_admin_locale());
+        $filters = $this->finance_report_dates();
+        if (!empty($filters['errors'])) {
+            $this->session->set_flashdata('finance_status', 'invalid_range');
+            redirect('/admin/finance/balance_sheet_skontro', 'location', 303);
+            return;
+        }
+        $this->load->library('finance_report_store');
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $report = $this->finance_report_store->balance_sheet_skontro($tenant_id, $filters['end_on']);
+        if ($report === FALSE) {
+            $this->session->set_flashdata('finance_status', 'unavailable');
+            redirect('/admin/finance/balance_sheet_skontro', 'location', 303);
+            return;
+        }
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : (string) $tenant_id;
+        $title = $this->lang->line('finance_balance_sheet_skontro');
+        if (!is_string($title) || $title === '') {
+            $title = 'Balance Sheet (Skontro)';
+        }
+        $section_labels = array(
+            'asset' => $this->finance_skontro_label('finance_skontro_assets', 'Assets'),
+            'liability' => $this->finance_skontro_label('finance_skontro_liabilities', 'Liabilities'),
+            'equity' => $this->finance_skontro_label('finance_skontro_equity', 'Equity'),
+        );
+        $prepared_by = isset($this->current_user['full_name']) && trim((string) $this->current_user['full_name']) !== ''
+            ? (string) $this->current_user['full_name']
+            : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('Report Name', $title));
+        fputcsv($stream, array('Report Code', 'balance_sheet_skontro'));
+        fputcsv($stream, array('Tenant', $tenant_name));
+        fputcsv($stream, array('As of', $filters['end_on']));
+        fputcsv($stream, array('Base Currency', $base_currency));
+        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
+        fputcsv($stream, array('Prepared By', $prepared_by));
+        fputcsv($stream, array('Source', 'Posted journals'));
+        fputcsv($stream, array());
+        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $row_number = 0;
+        foreach ($section_labels as $type => $section_label) {
+            foreach ($report['sections'][$type]['groups'] as $group) {
+                $group_label = isset($group['name_key'])
+                    ? $this->finance_skontro_label($group['name_key'], $section_label)
+                    : $group['name'];
+                foreach ($group['accounts'] as $line) {
+                    fputcsv($stream, array(++$row_number, $section_label, $group_label, $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+                }
+                fputcsv($stream, array('', $section_label, $group_label, '', $this->finance_skontro_label('finance_skontro_subtotal', 'Subtotal'), number_format((float) $group['total'], 2, '.', '')));
+            }
+            fputcsv($stream, array('', $section_label, '', '', $type === 'asset'
+                ? $this->finance_skontro_label('finance_skontro_total_assets', 'Total assets')
+                : ($type === 'liability'
+                    ? $this->finance_skontro_label('finance_skontro_total_liabilities', 'Total liabilities')
+                    : $this->finance_skontro_label('finance_skontro_total_equity', 'Total equity')),
+                number_format((float) $report['sections'][$type]['total'], 2, '.', '')));
+            fputcsv($stream, array());
+        }
+        fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_total_liabilities_equity', 'Total liabilities and equity'), number_format((float) $report['total_liabilities_equity'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_balance_check', 'Balance check'), $report['balanced']
+            ? $this->finance_skontro_label('finance_skontro_balanced', 'Balanced')
+            : $this->finance_skontro_label('finance_skontro_not_balanced', 'Not balanced')));
+        if (!$report['balanced']) {
+            fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_difference', 'Difference'), number_format((float) $report['difference'], 2, '.', '')));
+        }
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_name);
+        $report_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $title);
+        if ($report_code === '') {
+            $report_code = 'Neraca-Skontro';
+        }
+        $filename = trim($report_code, '-') . '-' . trim($tenant_code, '-') . '-' . $filters['end_on'] . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    private function finance_skontro_label($key, $fallback)
+    {
+        $label = $this->lang->line($key);
+        return is_string($label) && $label !== '' ? $label : $fallback;
+    }
+
     private function finance_report_index($slug)
     {
         $menu_code = $this->finance_report_menu_code($slug);
@@ -2672,6 +3053,15 @@ class Admin_finance extends Admin
         }
         unset($column);
         $title_key = 'finance_' . $slug;
+        $summary = empty($filters['errors'])
+            ? $this->finance_report_store->summary($slug, (int) $this->current_user['tenant_id'], $filters['start_on'], $filters['end_on'])
+            : FALSE;
+        $balance_totals = FALSE;
+        if ($slug === 'balance_sheet' && empty($filters['errors'])) {
+            $balance_totals = $this->finance_report_store->balance_sheet_skontro((int) $this->current_user['tenant_id'], $filters['end_on']);
+        }
+        $settings = $this->db->select('base_currency')->where('tenant_id', (int) $this->current_user['tenant_id'])->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
         $this->render_admin(
             'admin/finance/report_index',
             $title_key,
@@ -2682,6 +3072,9 @@ class Admin_finance extends Admin
                 'finance_report_filters' => $filters,
                 'finance_report_errors' => isset($filters['errors']) ? $filters['errors'] : array(),
                 'finance_report_available' => $this->finance_report_store->available($slug),
+                'finance_report_summary' => $summary,
+                'finance_report_base_currency' => $base_currency,
+                'finance_report_balance_totals' => $balance_totals,
             )
         );
     }
@@ -2768,7 +3161,9 @@ class Admin_finance extends Admin
     {
         $codes = array(
             'profit_loss' => 'fin_profit_loss',
+            'profit_loss_detail' => 'fin_profit_loss',
             'balance_sheet' => 'fin_balance_sheet',
+            'balance_sheet_skontro' => 'fin_balance_sheet',
             'cash_flow' => 'fin_cash_flow',
             'trial_balance' => 'fin_trial_balance',
             'ar_report' => 'fin_ar_report',
@@ -2828,7 +3223,7 @@ class Admin_finance extends Admin
             array('name' => 'account_type', 'label' => 'Type'),
             array('name' => 'debit_total', 'label' => 'Debits (base)'),
             array('name' => 'credit_total', 'label' => 'Credits (base)'),
-            array('name' => 'net_debit', 'label' => in_array($slug, array('profit_loss', 'balance_sheet'), TRUE) ? 'Balance (base)' : 'Net debit (base)'),
+            array('name' => 'net_debit', 'label' => in_array($slug, array('profit_loss', 'profit_loss_detail', 'balance_sheet'), TRUE) ? 'Balance (base)' : 'Net debit (base)'),
         );
     }
 

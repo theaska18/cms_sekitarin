@@ -32,6 +32,7 @@ $route['admin/finance/categories/export'] = 'admin_finance/category_export';
 $route['admin/finance/categories/import'] = 'admin_finance/category_import';
 $route['admin/finance/chart_of_accounts/export'] = 'admin_finance/chart_of_accounts_export';
 $route['admin/finance/chart_of_accounts/import'] = 'admin_finance/chart_of_accounts_import';
+$route['admin/finance/(:any)/export'] = 'admin_finance/report_export/$1';
 $route['admin/finance/(:any)/edit/(:num)'] = 'admin_finance/edit/$1/$2';
 $route['admin/finance/(:any)/post/(:num)'] = 'admin_finance/post/$1/$2';
 $route['admin/finance/(:any)/submit_approval/(:num)'] = 'admin_finance/submit_approval/$1/$2';

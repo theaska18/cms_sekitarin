@@ -326,7 +326,7 @@ class Admin extends CI_Controller
 
 
 
-    private function resolve_admin_locale()
+    protected function resolve_admin_locale()
     {
         $requested_locale = isset($_POST['locale']) ? trim((string) $_POST['locale']) : '';
         if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_METHOD']) === 'POST' && isset($this->admin_languages[$requested_locale])) {

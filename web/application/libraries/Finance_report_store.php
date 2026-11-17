@@ -118,6 +118,37 @@ class Finance_report_store
         );
     }
 
+    public function rows($report, $tenant_id, $start, $end, $search = '')
+    {
+        if (!$this->available($report)) {
+            return FALSE;
+        }
+        list($sql, $binds, $order_columns) = $this->query($report, $tenant_id, $start, $end, $search);
+        $order = reset($order_columns);
+        $sql .= ' ORDER BY ' . $order . ' ASC';
+        $result = $this->db->query($sql, $binds);
+        return $result === FALSE ? FALSE : $result->result_array();
+    }
+
+    public function summary($report, $tenant_id, $start, $end)
+    {
+        $rows = $this->rows($report, $tenant_id, $start, $end);
+        if ($rows === FALSE) {
+            return FALSE;
+        }
+        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding');
+        $totals = array_fill_keys($numeric, 0.0);
+        foreach ($rows as $row) {
+            foreach ($numeric as $field) {
+                if (isset($row[$field])) {
+                    $totals[$field] += (float) $row[$field];
+                }
+            }
+        }
+        $totals['row_count'] = count($rows);
+        return $totals;
+    }
+
     public function count($report, $tenant_id, $start, $end, $search = '')
     {
         if (!$this->available($report)) {
@@ -146,8 +177,292 @@ class Finance_report_store
         return $result === FALSE ? FALSE : $result->result_array();
     }
 
+    /**
+     * Two-sided (skontro) balance sheet grouped by the account hierarchy.
+     * Assets sit on the left; liabilities and equity sit on the right.
+     * Unclosed revenue/expense is presented as current year earnings so the
+     * sheet still balances before closing entries are posted.
+     */
+    public function balance_sheet_skontro($tenant_id, $end)
+    {
+        if (!$this->available('balance_sheet') || $end === '') {
+            return FALSE;
+        }
+        $tenant_id = (int) $tenant_id;
+        $account_query = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,posting_flag')
+            ->from('fin_account')->where('tenant_id', $tenant_id)->get();
+        if ($account_query === FALSE) {
+            return FALSE;
+        }
+        $accounts = array();
+        foreach ($account_query->result_array() as $account) {
+            $accounts[(int) $account['account_id']] = $account;
+        }
+        $balance_query = $this->db->select('a.account_id,SUM(jl.debit_base_amount) AS debit_total,SUM(jl.credit_base_amount) AS credit_total', FALSE)
+            ->from('fin_journal_entry je')
+            ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+            ->join('fin_account a', 'a.account_id=jl.account_id AND a.tenant_id=jl.tenant_id')
+            ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')
+            ->where('je.journal_date <=', $end)
+            ->group_by('a.account_id')->get();
+        if ($balance_query === FALSE) {
+            return FALSE;
+        }
+
+        $sections = array(
+            'asset' => array('groups' => array(), 'total' => 0.0),
+            'liability' => array('groups' => array(), 'total' => 0.0),
+            'equity' => array('groups' => array(), 'total' => 0.0),
+        );
+        $current_earnings = 0.0;
+        foreach ($balance_query->result_array() as $line) {
+            $account_id = (int) $line['account_id'];
+            if (!isset($accounts[$account_id])) {
+                continue;
+            }
+            $account = $accounts[$account_id];
+            $raw = (float) $line['debit_total'] - (float) $line['credit_total'];
+            $type = (string) $account['account_type'];
+            if ($type === 'revenue') {
+                $current_earnings -= $raw;
+                continue;
+            }
+            if ($type === 'expense') {
+                $current_earnings -= $raw;
+                continue;
+            }
+            if (!isset($sections[$type])) {
+                continue;
+            }
+            $amount = $type === 'asset' ? $raw : -$raw;
+            if (abs($amount) < 0.005) {
+                continue;
+            }
+            list($group_id, $group_account) = $this->balance_sheet_group($account, $accounts);
+            if (!isset($sections[$type]['groups'][$group_id])) {
+                $sections[$type]['groups'][$group_id] = array(
+                    'code' => (string) $group_account['account_code'],
+                    'name' => (string) $group_account['account_name'],
+                    'accounts' => array(),
+                    'total' => 0.0,
+                );
+            }
+            $sections[$type]['groups'][$group_id]['accounts'][] = array(
+                'code' => (string) $account['account_code'],
+                'name' => (string) $account['account_name'],
+                'amount' => $amount,
+            );
+            $sections[$type]['groups'][$group_id]['total'] += $amount;
+            $sections[$type]['total'] += $amount;
+        }
+
+        $sections['equity']['groups']['current_earnings'] = array(
+            'code' => '',
+            'name' => '',
+            'name_key' => 'finance_skontro_current_earnings',
+            'accounts' => array(),
+            'total' => $current_earnings,
+        );
+        $sections['equity']['total'] += $current_earnings;
+
+        foreach ($sections as $type => &$section) {
+            uasort($section['groups'], function ($left, $right) {
+                return strcmp((string) $left['code'], (string) $right['code']);
+            });
+            foreach ($section['groups'] as &$group) {
+                usort($group['accounts'], function ($left, $right) {
+                    return strcmp((string) $left['code'], (string) $right['code']);
+                });
+            }
+            unset($group);
+        }
+        unset($section);
+
+        $total_assets = (float) $sections['asset']['total'];
+        $total_liabilities_equity = (float) $sections['liability']['total'] + (float) $sections['equity']['total'];
+        return array(
+            'as_of' => $end,
+            'sections' => $sections,
+            'current_earnings' => $current_earnings,
+            'total_assets' => $total_assets,
+            'total_liabilities' => (float) $sections['liability']['total'],
+            'total_equity' => (float) $sections['equity']['total'],
+            'total_liabilities_equity' => $total_liabilities_equity,
+            'balanced' => abs($total_assets - $total_liabilities_equity) < 0.01,
+            'difference' => $total_assets - $total_liabilities_equity,
+        );
+    }
+
+    /**
+     * Formal profit & loss statement grouped like a printed report:
+     * revenue, cost of goods sold, gross profit, operating expenses and
+     * net profit. Amounts are derived from posted journals in the period.
+     */
+    public function profit_loss_statement($tenant_id, $start, $end)
+    {
+        if (!$this->available('profit_loss') || $start === '' || $end === '') {
+            return FALSE;
+        }
+        $tenant_id = (int) $tenant_id;
+        $account_query = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,posting_flag')
+            ->from('fin_account')->where('tenant_id', $tenant_id)->get();
+        if ($account_query === FALSE) {
+            return FALSE;
+        }
+        $accounts = array();
+        foreach ($account_query->result_array() as $account) {
+            $accounts[(int) $account['account_id']] = $account;
+        }
+        $balance_query = $this->db->select('a.account_id,SUM(jl.debit_base_amount) AS debit_total,SUM(jl.credit_base_amount) AS credit_total', FALSE)
+            ->from('fin_journal_entry je')
+            ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+            ->join('fin_account a', 'a.account_id=jl.account_id AND a.tenant_id=jl.tenant_id')
+            ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')
+            ->where('je.journal_date >=', $start)->where('je.journal_date <=', $end)
+            ->group_by('a.account_id')->get();
+        if ($balance_query === FALSE) {
+            return FALSE;
+        }
+
+        $revenue = array('accounts' => array(), 'total' => 0.0);
+        $cogs = array('accounts' => array(), 'total' => 0.0);
+        $operating = array('groups' => array(), 'total' => 0.0);
+        foreach ($balance_query->result_array() as $line) {
+            $account_id = (int) $line['account_id'];
+            if (!isset($accounts[$account_id])) {
+                continue;
+            }
+            $account = $accounts[$account_id];
+            $raw = (float) $line['debit_total'] - (float) $line['credit_total'];
+            if ($account['account_type'] === 'revenue') {
+                $amount = -$raw;
+                if (abs($amount) < 0.005) {
+                    continue;
+                }
+                $revenue['accounts'][] = array(
+                    'code' => (string) $account['account_code'],
+                    'name' => (string) $account['account_name'],
+                    'amount' => $amount,
+                );
+                $revenue['total'] += $amount;
+                continue;
+            }
+            if ($account['account_type'] !== 'expense') {
+                continue;
+            }
+            $amount = $raw;
+            if (abs($amount) < 0.005) {
+                continue;
+            }
+            list($top_id, $top) = $this->account_top($account, $accounts);
+            $is_cogs = strpos((string) $top['account_code'], '5') === 0
+                || stripos((string) $top['account_name'], 'harga pokok') !== FALSE;
+            if ($is_cogs) {
+                $cogs['accounts'][] = array(
+                    'code' => (string) $account['account_code'],
+                    'name' => (string) $account['account_name'],
+                    'amount' => $amount,
+                );
+                $cogs['total'] += $amount;
+                continue;
+            }
+            list($group_id, $group_account) = $this->account_group($account, $accounts);
+            if (!isset($operating['groups'][$group_id])) {
+                $operating['groups'][$group_id] = array(
+                    'code' => (string) $group_account['account_code'],
+                    'name' => (string) $group_account['account_name'],
+                    'accounts' => array(),
+                    'total' => 0.0,
+                );
+            }
+            $operating['groups'][$group_id]['accounts'][] = array(
+                'code' => (string) $account['account_code'],
+                'name' => (string) $account['account_name'],
+                'amount' => $amount,
+            );
+            $operating['groups'][$group_id]['total'] += $amount;
+            $operating['total'] += $amount;
+        }
+
+        usort($revenue['accounts'], function ($left, $right) {
+            return strcmp((string) $left['code'], (string) $right['code']);
+        });
+        usort($cogs['accounts'], function ($left, $right) {
+            return strcmp((string) $left['code'], (string) $right['code']);
+        });
+        uasort($operating['groups'], function ($left, $right) {
+            return strcmp((string) $left['code'], (string) $right['code']);
+        });
+        foreach ($operating['groups'] as &$group) {
+            usort($group['accounts'], function ($left, $right) {
+                return strcmp((string) $left['code'], (string) $right['code']);
+            });
+        }
+        unset($group);
+
+        $gross_profit = $revenue['total'] - $cogs['total'];
+        return array(
+            'period_start' => $start,
+            'period_end' => $end,
+            'revenue' => $revenue,
+            'cogs' => $cogs,
+            'gross_profit' => $gross_profit,
+            'operating' => $operating,
+            'total_expenses' => $cogs['total'] + $operating['total'],
+            'net_profit' => $gross_profit - $operating['total'],
+        );
+    }
+
+    /** Return the top-level ancestor of an account. */
+    private function account_top($account, $accounts)
+    {
+        $current = $account;
+        $guard = 0;
+        while ((int) $current['parent_account_id'] > 0 && isset($accounts[(int) $current['parent_account_id']]) && $guard < 32) {
+            $current = $accounts[(int) $current['parent_account_id']];
+            $guard++;
+        }
+        return array((int) $current['account_id'], $current);
+    }
+
+    /** Return the grouping parent used by the formatted reports. */
+    private function account_group($account, $accounts)
+    {
+        $ancestors = array();
+        $parent_id = (int) $account['parent_account_id'];
+        $guard = 0;
+        while ($parent_id > 0 && isset($accounts[$parent_id]) && $guard < 32) {
+            $ancestors[] = $parent_id;
+            $parent_id = (int) $accounts[$parent_id]['parent_account_id'];
+            $guard++;
+        }
+        if (!$ancestors) {
+            return array((int) $account['account_id'], $account);
+        }
+        $top_id = (int) end($ancestors);
+        $group_id = (int) $ancestors[0];
+        for ($index = 0; $index < count($ancestors); $index++) {
+            $candidate = (int) $ancestors[$index];
+            $candidate_parent = (int) $accounts[$candidate]['parent_account_id'];
+            if ($candidate_parent === $top_id || $candidate_parent === 0 || !isset($accounts[$candidate_parent])) {
+                $group_id = $candidate;
+                break;
+            }
+        }
+        return array($group_id, $accounts[$group_id]);
+    }
+
+    /** Return the grouping parent used by the skontro balance sheet. */
+    private function balance_sheet_group($account, $accounts)
+    {
+        return $this->account_group($account, $accounts);
+    }
+
     private function query($report, $tenant_id, $start, $end, $search)
     {
+        if ($report === 'profit_loss_detail') {
+            $report = 'profit_loss';
+        }
         $binds = array((int) $tenant_id);
         $search = is_string($search) ? trim(substr($search, 0, 120)) : '';
         $like = '%' . $search . '%';

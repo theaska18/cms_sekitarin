@@ -2,8 +2,15 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $title = isset($labels['finance_' . $finance_report_slug])
     ? $labels['finance_' . $finance_report_slug]
-    : ucfirst(str_replace('_', ' ', $finance_report_slug));
+    : (isset($labels['admin_finance_' . $finance_report_slug])
+        ? $labels['admin_finance_' . $finance_report_slug]
+        : ucfirst(str_replace('_', ' ', $finance_report_slug)));
 $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report', 'ap_report'), TRUE);
+$balance_totals = isset($finance_report_balance_totals) && is_array($finance_report_balance_totals) ? $finance_report_balance_totals : NULL;
+$balance_money = function ($value) use ($finance_report_base_currency) {
+    $amount = number_format((float) $value, 2, '.', ',');
+    return $finance_report_base_currency !== '' ? $finance_report_base_currency . ' ' . $amount : $amount;
+};
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -20,6 +27,50 @@ $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report',
                 : (isset($labels['finance_report_range_intro']) ? $labels['finance_report_range_intro'] : 'Amounts are calculated from posted journal entries only and shown in the tenant base currency.') ?>
         </p>
     </header>
+    <?php if (!$finance_report_errors && $finance_report_summary !== FALSE): ?>
+    <section aria-label="<?= html_escape($title) ?>" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600"><?= html_escape(isset($labels['finance_report_info_title']) ? $labels['finance_report_info_title'] : 'Report summary') ?></p>
+                <h2 class="mt-1 text-lg font-semibold text-slate-950"><?= html_escape($title) ?></h2>
+                <p class="mt-1 text-sm text-slate-600"><?= html_escape($date_as_of ? (isset($labels['finance_report_as_of']) ? $labels['finance_report_as_of'] : 'As of') . ' ' . $finance_report_filters['end_on'] : (isset($labels['finance_report_from']) ? $labels['finance_report_from'] : 'From') . ' ' . $finance_report_filters['start_on'] . ' ' . (isset($labels['finance_report_to']) ? $labels['finance_report_to'] : 'to') . ' ' . $finance_report_filters['end_on']) ?></p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_base_currency']) ? $labels['finance_report_base_currency'] : 'Base currency') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape($finance_report_base_currency !== '' ? $finance_report_base_currency : '—') ?></p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_rows']) ? $labels['finance_report_rows'] : 'Rows') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= (int) $finance_report_summary['row_count'] ?></p></div>
+                <?php if (in_array($finance_report_slug, array('general_ledger', 'trial_balance'), TRUE)): ?>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_dashboard_debit']) ? $labels['finance_dashboard_debit'] : 'Debit') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) ($finance_report_summary['debit_base_amount'] + $finance_report_summary['debit_total']), 2, '.', ',')) ?></p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_dashboard_credit']) ? $labels['finance_dashboard_credit'] : 'Credit') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) ($finance_report_summary['credit_base_amount'] + $finance_report_summary['credit_total']), 2, '.', ',')) ?></p></div>
+                <?php elseif ($finance_report_slug === 'cash_flow'): ?>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_column_cash_in']) ? $labels['finance_report_column_cash_in'] : 'Cash in') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) $finance_report_summary['cash_in'], 2, '.', ',')) ?></p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_column_cash_out']) ? $labels['finance_report_column_cash_out'] : 'Cash out') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) $finance_report_summary['cash_out'], 2, '.', ',')) ?></p></div>
+                <?php elseif (in_array($finance_report_slug, array('ar_report', 'ap_report'), TRUE)): ?>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_column_outstanding']) ? $labels['finance_report_column_outstanding'] : 'Outstanding') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) $finance_report_summary['outstanding'], 2, '.', ',')) ?></p></div>
+                <?php elseif ($finance_report_slug === 'balance_sheet'): ?>
+                <div class="rounded-xl border px-3 py-2 <?= $balance_totals && $balance_totals['balanced'] ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50' ?>"><p class="text-[10px] font-semibold uppercase tracking-wide <?= $balance_totals && $balance_totals['balanced'] ? 'text-emerald-700' : 'text-rose-700' ?>"><?= html_escape(isset($labels['finance_skontro_balance_check']) ? $labels['finance_skontro_balance_check'] : 'Balance check') ?></p><p class="mt-1 text-sm font-semibold <?= $balance_totals && $balance_totals['balanced'] ? 'text-emerald-900' : 'text-rose-900' ?>"><?= html_escape($balance_totals && $balance_totals['balanced'] ? (isset($labels['finance_skontro_balanced']) ? $labels['finance_skontro_balanced'] : 'Balanced') : (isset($labels['finance_skontro_not_balanced']) ? $labels['finance_skontro_not_balanced'] : 'Not balanced')) ?></p></div>
+                <?php else: ?>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"><p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_report_column_net_debit']) ? $labels['finance_report_column_net_debit'] : 'Net') ?></p><p class="mt-1 text-sm font-semibold text-slate-900"><?= html_escape(number_format((float) $finance_report_summary['net_debit'], 2, '.', ',')) ?></p></div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php if ($finance_report_slug === 'balance_sheet' && $balance_totals): ?>
+        <div class="mt-4 grid gap-3 border-t border-slate-200 pt-4 sm:grid-cols-3">
+            <div class="flex h-full flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_skontro_total_assets']) ? $labels['finance_skontro_total_assets'] : 'Total assets') ?></p>
+                <p class="text-right text-base font-bold tabular-nums text-slate-950"><?= html_escape($balance_money($balance_totals['total_assets'])) ?></p>
+            </div>
+            <div class="flex h-full flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_skontro_total_liabilities']) ? $labels['finance_skontro_total_liabilities'] : 'Total liabilities') ?></p>
+                <p class="text-right text-base font-bold tabular-nums text-slate-950"><?= html_escape($balance_money($balance_totals['total_liabilities'])) ?></p>
+            </div>
+            <div class="flex h-full flex-col justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_skontro_total_equity']) ? $labels['finance_skontro_total_equity'] : 'Total equity') ?></p>
+                <p class="text-right text-base font-bold tabular-nums text-slate-950"><?= html_escape($balance_money($balance_totals['total_equity'])) ?></p>
+            </div>
+        </div>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
     <?php if ($finance_report_errors): ?>
         <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><?= html_escape(isset($labels['finance_report_invalid_range']) ? $labels['finance_report_invalid_range'] : 'The selected date range is invalid.') ?></div>
     <?php endif; ?>
@@ -35,6 +86,21 @@ $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report',
             <input id="finance-end-on" name="end_on" type="date" value="<?= html_escape($finance_report_filters['end_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
         </div>
         <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_report_run']) ? $labels['finance_report_run'] : 'Run report') ?></button>
+        <a href="<?= html_escape($current_path . '/export?' . http_build_query(array('start_on' => $finance_report_filters['start_on'], 'end_on' => $finance_report_filters['end_on']))) ?>" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
+            <?= html_escape(isset($labels['finance_report_export']) ? $labels['finance_report_export'] : 'Export CSV') ?>
+        </a>
+        <?php if ($finance_report_slug === 'balance_sheet'): ?>
+        <a href="<?= html_escape('/admin/finance/balance_sheet_skontro?' . http_build_query(array('end_on' => $finance_report_filters['end_on']))) ?>" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h12v12H4zM10 4v12M4 10h12"/></svg>
+            <?= html_escape(isset($labels['finance_skontro_open']) ? $labels['finance_skontro_open'] : 'Neraca Skontro') ?>
+        </a>
+        <?php endif; ?>
+        <?php if ($finance_report_slug === 'profit_loss_detail'): ?>
+        <a href="<?= html_escape('/admin/finance/profit_loss?' . http_build_query(array('start_on' => $finance_report_filters['start_on'], 'end_on' => $finance_report_filters['end_on']))) ?>" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 text-sm font-semibold text-indigo-800 hover:bg-indigo-100">
+            <?= html_escape(isset($labels['finance_pl_back']) ? $labels['finance_pl_back'] : 'Profit and loss') ?>
+        </a>
+        <?php endif; ?>
     </form>
     <?php if (!$finance_report_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_report_unavailable']) ? $labels['finance_report_unavailable'] : 'Finance report data is unavailable.') ?></div>

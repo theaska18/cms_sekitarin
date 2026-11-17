@@ -346,6 +346,90 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("$slug === 'accounting_periods' && $kind === 'fiscal_year'", controller)
         self.assertIn("finance_fiscal_year_label", controller)
 
+    def test_finance_reports_export_all_filtered_rows_to_csv(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = (APP / "libraries/Finance_report_store.php").read_text()
+        routes = (APP / "config/routes.php").read_text()
+        view = (APP / "views/admin/finance/report_index.php").read_text()
+        self.assertIn("admin/finance/(:any)/export", routes)
+        self.assertIn("public function report_export", controller)
+        self.assertIn("public function rows($report", store)
+        self.assertIn("fputcsv", controller)
+        self.assertIn("'Report Name'", controller)
+        self.assertIn("'Prepared By'", controller)
+        self.assertIn("$report_code = preg_replace", controller)
+        self.assertIn("$as_of_report", controller)
+        self.assertIn("array_merge(array('No'), $column_labels)", controller)
+        self.assertIn("finance_report_export", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_report_export']", content)
+
+    def test_finance_detail_reports_keep_sidebar_menu_active(self):
+        header = (APP / "views/admin/header.php").read_text()
+        self.assertIn("$admin_menu_path_aliases", header)
+        self.assertIn("'/admin/finance/profit_loss_detail' => '/admin/finance/profit_loss'", header)
+        self.assertIn("'/admin/finance/balance_sheet_skontro' => '/admin/finance/balance_sheet'", header)
+        self.assertIn("$current_admin_path = $active_current_path;", header)
+
+    def test_finance_profit_loss_uses_formatted_statement_with_subtotals(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = (APP / "libraries/Finance_report_store.php").read_text()
+        view = (APP / "views/admin/finance/report_profit_loss.php").read_text()
+        self.assertIn("private function finance_profit_loss_statement(", controller)
+        self.assertIn("public function profit_loss_statement($tenant_id, $start, $end)", store)
+        self.assertIn("finance_report_text", controller)
+        self.assertIn("gross_profit", store)
+        self.assertIn("net_profit", store)
+        self.assertIn("finance_pl_total_revenue", view)
+        self.assertIn("finance_pl_gross_profit", view)
+        self.assertIn("finance_pl_total_expenses", view)
+        self.assertIn("finance_pl_net_profit", view)
+        self.assertIn("finance_pl_detail", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_pl_revenue']", content)
+                self.assertIn("$lang['finance_pl_net_profit']", content)
+                self.assertIn("$lang['finance_profit_loss_detail']", content)
+
+    def test_finance_balance_sheet_skontro_groups_assets_and_passiva(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = (APP / "libraries/Finance_report_store.php").read_text()
+        view = (APP / "views/admin/finance/report_balance_sheet_skontro.php").read_text()
+        standard_view = (APP / "views/admin/finance/report_index.php").read_text()
+        self.assertIn("'balance_sheet_skontro' => 'fin_balance_sheet'", controller)
+        self.assertIn("private function finance_balance_sheet_skontro(", controller)
+        self.assertIn("public function balance_sheet_skontro($tenant_id, $end)", store)
+        self.assertIn("balance_sheet_group", store)
+        self.assertIn("current_earnings", store)
+        self.assertIn("je.status", store)
+        self.assertIn("finance_skontro_aktiva", view)
+        self.assertIn("finance_skontro_pasiva", view)
+        self.assertIn("finance_skontro_total_liabilities_equity", view)
+        self.assertIn("finance_skontro_balanced", view)
+        self.assertIn("finance_skontro_open", standard_view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_balance_sheet_skontro']", content)
+                self.assertIn("$lang['finance_skontro_total_assets']", content)
+
+    def test_finance_report_pages_show_report_title_and_summary(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = (APP / "libraries/Finance_report_store.php").read_text()
+        view = (APP / "views/admin/finance/report_index.php").read_text()
+        self.assertIn("public function summary($report", store)
+        self.assertIn("finance_report_summary", controller)
+        self.assertIn("finance_report_base_currency", controller)
+        self.assertIn("finance_report_balance_totals", controller)
+        self.assertIn("finance_skontro_total_assets", view)
+        self.assertIn("finance_skontro_total_equity", view)
+        self.assertIn("admin_finance_' . $finance_report_slug", view)
+        self.assertIn("finance_report_info_title", view)
+        self.assertIn("finance_report_rows", view)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()
