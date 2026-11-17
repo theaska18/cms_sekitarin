@@ -40,6 +40,10 @@ class Admin_finance extends Admin
             $this->finance_report_index($slug);
             return;
         }
+        if ($slug === 'chart_of_accounts') {
+            $this->finance_chart_of_accounts_index();
+            return;
+        }
         $resource = $this->finance_resource($slug);
         if ($resource === NULL) {
             $this->module('finance', $slug);
@@ -87,6 +91,94 @@ class Admin_finance extends Admin
         );
     }
 
+    private function finance_chart_of_accounts_index()
+    {
+        $menu = 'fin_chart_of_accounts';
+        if (!$this->has_admin_menu_code($menu)) {
+            $this->finance_forbidden();
+            return;
+        }
+        $this->load->library('finance_store');
+        $available = $this->finance_store->available($this->finance_resource('chart_of_accounts'));
+        $this->render_admin(
+            'admin/finance/chart_of_accounts_index',
+            'finance_chart_of_accounts',
+            '/admin/finance/chart_of_accounts',
+            array(
+                'finance_chart_of_accounts_available' => $available,
+                'finance_chart_of_accounts_can_add' => $this->has_admin_access_code($menu . '_add'),
+                'finance_chart_of_accounts_can_update' => $this->has_admin_access_code($menu . '_update'),
+                'finance_chart_of_accounts_write_available' => $this->finance_write_available(),
+                'finance_status' => (string) $this->session->flashdata('finance_status'),
+            )
+        );
+    }
+
+    private function finance_chart_of_accounts_data()
+    {
+        if (!$this->has_admin_menu_code('fin_chart_of_accounts')) {
+            $this->output->set_status_header(403);
+            $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
+            return;
+        }
+        $rows = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,active_flag')
+            ->from('fin_account')->where('tenant_id', (int) $this->current_user['tenant_id'])
+            ->order_by('account_code', 'ASC')->get()->result_array();
+        $by_id = array();
+        foreach ($rows as $row) {
+            $row['account_id'] = (int) $row['account_id'];
+            $row['parent_account_id'] = !empty($row['parent_account_id']) ? (int) $row['parent_account_id'] : NULL;
+            $by_id[$row['account_id']] = $row;
+        }
+        $children = array();
+        $roots = array();
+        foreach ($by_id as $id => $row) {
+            $parent = $row['parent_account_id'];
+            if ($parent === NULL || !isset($by_id[$parent]) || $parent === $id) {
+                $roots[] = $id;
+            } else {
+                $children[$parent][] = $id;
+            }
+        }
+        $flat = array();
+        $visited = array();
+        $walk = function ($id, $level, $path) use (&$walk, &$flat, &$visited, $by_id, $children) {
+            if (isset($visited[$id])) {
+                return;
+            }
+            $visited[$id] = TRUE;
+            $row = $by_id[$id];
+            $parent_name = $row['parent_account_id'] !== NULL && isset($by_id[$row['parent_account_id']])
+                ? $by_id[$row['parent_account_id']]['account_code'] . ' — ' . $by_id[$row['parent_account_id']]['account_name']
+                : '';
+            $flat[] = array(
+                'account_id' => $row['account_id'],
+                'parent_account_id' => $row['parent_account_id'],
+                'account_code' => $row['account_code'],
+                'account_name' => $row['account_name'],
+                'account_type' => $row['account_type'],
+                'normal_balance' => $row['normal_balance'],
+                'active_flag' => (int) $row['active_flag'],
+                'parent_name' => $parent_name,
+                'level' => $level,
+                'has_children' => !empty($children[$id]),
+                'path' => array_values($path),
+            );
+            if (!empty($children[$id])) {
+                $next_path = $path;
+                $next_path[] = $id;
+                foreach ($children[$id] as $child_id) {
+                    $walk($child_id, $level + 1, $next_path);
+                }
+            }
+        };
+        foreach ($roots as $root_id) {
+            $walk($root_id, 0, array());
+        }
+        $this->output->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode($flat, JSON_INVALID_UTF8_SUBSTITUTE));
+    }
+
     public function data($slug = '')
     {
         if (in_array($slug, array('all_transactions', 'income', 'expenses'), TRUE)) {
@@ -115,6 +207,10 @@ class Admin_finance extends Admin
         }
         if ($this->finance_report_menu_code($slug) !== NULL) {
             $this->finance_report_data($slug);
+            return;
+        }
+        if ($slug === 'chart_of_accounts') {
+            $this->finance_chart_of_accounts_data();
             return;
         }
         $resource = $this->finance_resource($slug);
@@ -712,6 +808,44 @@ class Admin_finance extends Admin
                 $kind,
                 $term
             );
+            $this->output->set_content_type('application/json', 'utf-8')
+                ->set_output(json_encode($results, JSON_INVALID_UTF8_SUBSTITUTE));
+            return;
+        }
+        if (in_array($slug, array('tax_configuration', 'cash_accounts', 'bank_accounts', 'chart_of_accounts'), TRUE) && $kind === 'account') {
+            $menus = array(
+                'tax_configuration' => 'fin_tax_configuration',
+                'cash_accounts' => 'fin_cash_accounts',
+                'bank_accounts' => 'fin_bank_accounts',
+                'chart_of_accounts' => 'fin_chart_of_accounts',
+            );
+            if (!$this->has_admin_menu_code($menus[$slug])) {
+                $this->output->set_status_header(403);
+                $this->output->set_content_type('application/json', 'utf-8')->set_output('[]');
+                return;
+            }
+            $term = $this->input->get('term', TRUE);
+            $term = is_string($term) && strlen($term) <= 120 ? $term : '';
+            $exclude_id = (int) $this->input->get('exclude_id', TRUE);
+            $this->db->select('account_id,account_code,account_name')->from('fin_account')
+                ->where('tenant_id', (int) $this->current_user['tenant_id'])->where('active_flag', 1);
+            if (in_array($slug, array('cash_accounts', 'bank_accounts'), TRUE)) {
+                $this->db->where('account_type', 'asset');
+            } elseif ($slug === 'tax_configuration') {
+                $this->db->where_in('account_type', array('asset', 'liability'));
+            }
+            if ($exclude_id > 0) {
+                $this->db->where('account_id !=', $exclude_id);
+            }
+            if ($term !== '') {
+                $this->db->group_start()->like('account_code', $term)->or_like('account_name', $term)->group_end();
+            }
+            $rows = $this->db->order_by('account_code', 'ASC')->limit(20)->get()->result_array();
+            $results = array();
+            foreach ($rows as $row) {
+                $label = $row['account_code'] . ' — ' . $row['account_name'];
+                $results[] = array('id' => (int) $row['account_id'], 'label' => $label, 'value' => $label);
+            }
             $this->output->set_content_type('application/json', 'utf-8')
                 ->set_output(json_encode($results, JSON_INVALID_UTF8_SUBSTITUTE));
             return;
@@ -1410,6 +1544,13 @@ class Admin_finance extends Admin
             'account_id' => '', 'tax_id' => '', 'department_id' => '',
             'currency_code' => '', 'exchange_rate' => '1', 'amount' => '', 'description' => '', 'memo' => '',
         );
+        if ($is_new) {
+            $base_settings = $this->db->select('base_currency')
+                ->where('tenant_id', (int) $this->current_user['tenant_id'])->limit(1)->get('fin_settings');
+            if ($base_settings !== FALSE && $base_settings->num_rows()) {
+                $record['currency_code'] = strtoupper((string) $base_settings->row()->base_currency);
+            }
+        }
         $labels = array();
         if (!$is_new && $available) {
             $saved = $store->find((int) $this->current_user['tenant_id'], $kind, (int) $id);
@@ -2069,6 +2210,22 @@ class Admin_finance extends Admin
         foreach ($resource['fields'] as $field) {
             $record[$field['name']] = isset($field['default']) ? $field['default'] : '';
         }
+        if ($id === NULL && $resource['table'] !== 'fin_settings') {
+            $has_currency = FALSE;
+            foreach ($resource['fields'] as $field) {
+                if ($field['name'] === 'currency_code') {
+                    $has_currency = TRUE;
+                    break;
+                }
+            }
+            if ($has_currency) {
+                $base_settings = $this->db->select('base_currency')
+                    ->where('tenant_id', (int) $this->current_user['tenant_id'])->limit(1)->get('fin_settings');
+                if ($base_settings !== FALSE && $base_settings->num_rows()) {
+                    $record['currency_code'] = strtoupper((string) $base_settings->row()->base_currency);
+                }
+            }
+        }
         foreach ($resource['columns'] as &$column) {
             if (!isset($column['label_key'])) {
                 $column['label_key'] = 'finance_resource_column_' . $column['name'];
@@ -2122,7 +2279,8 @@ class Admin_finance extends Admin
                 $values,
                 $id === NULL,
                 $store,
-                (int) $this->current_user['tenant_id']
+                (int) $this->current_user['tenant_id'],
+                $id === NULL ? NULL : (int) $id
             );
             if (!$errors) {
                 $tenant_id = (int) $this->current_user['tenant_id'];
@@ -2199,7 +2357,7 @@ class Admin_finance extends Admin
         return $values;
     }
 
-    private function finance_validate($resource, $values, $include_code, $store, $tenant_id)
+    private function finance_validate($resource, $values, $include_code, $store, $tenant_id, $id = NULL)
     {
         $errors = array();
         foreach ($resource['fields'] as $field) {
@@ -2256,6 +2414,21 @@ class Admin_finance extends Admin
             if ($value !== '' && isset($field['options'])
                 && !array_key_exists($value, $field['options'])) {
                 $errors[] = $name . '_invalid';
+            }
+        }
+        if ($resource['slug'] === 'chart_of_accounts' && $id !== NULL
+            && !empty($values['parent_account_id'])) {
+            $current = (int) $values['parent_account_id'];
+            $guard = 0;
+            while ($current > 0 && $guard < 100) {
+                if ($current === (int) $id) {
+                    $errors[] = 'parent_account_id_invalid';
+                    break;
+                }
+                $parent = $this->db->select('parent_account_id')->where('tenant_id', (int) $tenant_id)
+                    ->where('account_id', $current)->limit(1)->get('fin_account')->row_array();
+                $current = $parent && !empty($parent['parent_account_id']) ? (int) $parent['parent_account_id'] : 0;
+                $guard++;
             }
         }
         return array_values(array_unique($errors));
@@ -2320,7 +2493,7 @@ class Admin_finance extends Admin
                         'options' => array('asset' => 'Asset', 'liability' => 'Liability', 'equity' => 'Equity', 'revenue' => 'Revenue', 'expense' => 'Expense')),
                     array('name' => 'normal_balance', 'label' => 'Normal balance', 'type' => 'select', 'required' => TRUE,
                         'options' => array('debit' => 'Debit', 'credit' => 'Credit')),
-                    array('name' => 'parent_account_id', 'label' => 'Parent account ID', 'type' => 'number',
+                    array('name' => 'parent_account_id', 'label' => 'Parent account', 'type' => 'account_lookup',
                         'reference' => array('table' => 'fin_account', 'id' => 'account_id')),
                     array('name' => 'description', 'label' => 'Description', 'type' => 'textarea'),
                     $active,
@@ -2415,7 +2588,7 @@ class Admin_finance extends Admin
                     array('name' => 'tax_code', 'label' => 'Code', 'type' => 'text', 'required' => TRUE, 'maxlength' => 32, 'normalize' => 'code'),
                     array('name' => 'tax_name', 'label' => 'Tax name', 'type' => 'text', 'required' => TRUE, 'maxlength' => 100, 'normalize' => 'name'),
                     array('name' => 'rate_percent', 'label' => 'Rate percent', 'type' => 'decimal', 'required' => TRUE, 'max' => 100),
-                    array('name' => 'account_id', 'label' => 'Tax account ID', 'type' => 'number',
+                    array('name' => 'account_id', 'label' => 'Tax account', 'type' => 'account_lookup',
                         'reference' => array('table' => 'fin_account', 'id' => 'account_id')),
                     $active,
                 ),
@@ -2474,7 +2647,7 @@ class Admin_finance extends Admin
                     array('name' => 'active_flag', 'label' => 'Active'),
                 ),
                 'fields' => array(
-                    array('name' => 'account_id', 'label' => 'Chart of accounts ID', 'type' => 'number', 'required' => TRUE,
+                    array('name' => 'account_id', 'label' => 'Chart of accounts', 'type' => 'account_lookup', 'required' => TRUE,
                         'reference' => array('table' => 'fin_account', 'id' => 'account_id')),
                     array('name' => 'account_code', 'label' => 'Code', 'type' => 'text', 'required' => TRUE, 'maxlength' => 32, 'normalize' => 'code'),
                     array('name' => 'account_name', 'label' => 'Account name', 'type' => 'text', 'required' => TRUE, 'maxlength' => 120, 'normalize' => 'name'),

@@ -223,6 +223,43 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn('role="menuitem"', content)
                 self.assertNotIn('class="me-3 font-semibold text-indigo-700"', content)
 
+    def test_new_finance_forms_default_currency_to_the_base_currency(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        document_form = controller.split("private function finance_document_form(", 1)[1].split("private function finance_document_values(", 1)[0]
+        resource_form = controller.split("private function finance_form(", 1)[1].split("private function finance_form_values(", 1)[0]
+        self.assertIn("$record['currency_code'] = strtoupper((string) $base_settings->row()->base_currency);", document_form)
+        self.assertIn("$resource['table'] !== 'fin_settings'", resource_form)
+        self.assertIn("$record['currency_code'] = strtoupper((string) $base_settings->row()->base_currency);", resource_form)
+        label = (APP / "language/indonesian/finance_lang.php").read_text(encoding="utf-8")
+        self.assertIn("$lang['finance_tx_field_amount'] = 'Jumlah (sebelum pajak)';", label)
+        self.assertIn("$lang['finance_doc_line_amount'] = 'Jumlah sebelum pajak';", label)
+
+    def test_account_id_fields_use_account_autocomplete_lookups(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        self.assertIn("'label' => 'Tax account', 'type' => 'account_lookup'", controller)
+        self.assertIn("'label' => 'Chart of accounts', 'type' => 'account_lookup'", controller)
+        self.assertIn("'label' => 'Parent account', 'type' => 'account_lookup'", controller)
+        self.assertIn("'tax_configuration', 'cash_accounts', 'bank_accounts', 'chart_of_accounts'", controller)
+        form = (APP / "views/admin/finance/resource_form.php").read_text()
+        self.assertIn("exclude_id", form)
+        self.assertIn("data-account-exclude", form)
+
+    def test_chart_of_accounts_uses_a_tree_table(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        view = (APP / "views/admin/finance/chart_of_accounts_index.php").read_text()
+        self.assertIn("private function finance_chart_of_accounts_index", controller)
+        self.assertIn("private function finance_chart_of_accounts_data", controller)
+        self.assertIn("parent_account_id", controller)
+        self.assertIn("has_children", controller)
+        self.assertIn("data-coa-toggle", view)
+        self.assertIn("finance-coa-table", view)
+        self.assertIn("finance-list-table", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_chart_of_accounts_tree_intro']", content)
+                self.assertIn("$lang['finance_coa_tree_empty']", content)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()
