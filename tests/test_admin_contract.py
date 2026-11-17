@@ -174,6 +174,11 @@ class AdminDashboardContractTests(unittest.TestCase):
         self.assertIn(".dashboard-tenant-card { background-color: #172033", theme)
         self.assertIn("lg:grid-cols-[minmax(0,1fr)_auto]", dashboard)
 
+    def test_dark_mode_darkens_posted_status_badges(self):
+        theme = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn('html[data-theme="dark"] #admin-app-shell .bg-emerald-100 { background-color: #065f46 !important; }', theme)
+        self.assertIn('.text-emerald-900 { color: #a7f3d0 !important; }', theme)
+
     def test_parameter_navigation_uses_its_manifest_route_and_registered_module(self):
         header = HEADER.read_text()
         routes = ROUTES.read_text()

@@ -55,7 +55,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
 
     def test_workflow_submission_and_decision_enforce_step_and_tenant(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        self.assertIn("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL)", store)
+        self.assertIn("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)", store)
         self.assertIn("public function decide($request_id, $decision, $note)", store)
         self.assertIn("'flow_code'=>$flow_code", store)
         self.assertIn("'requester_employee_id'", store)
@@ -81,7 +81,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
         form = (APP / "views/admin/approval_flow/add.php").read_text()
         script = (ROOT / "web/assets/js/approval-step-editor.js").read_text()
-        submit = store.split("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL)", 1)[1].split(
+        submit = store.split("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)", 1)[1].split(
             "private function create_approval_token", 1
         )[0]
         auto_branch = submit.split("if (!$steps)", 1)[1].split("$step=isset($steps[0])", 1)[0]
@@ -260,6 +260,32 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("csrf_token_name", view)
         self.assertIn("approval_confirmation_token", view)
         self.assertIn("Konfirmasi keputusan", view)
+
+    def test_approval_token_detail_names_the_requester_and_supports_revision(self):
+        store = (APP / "libraries/Approval_workflow_store.php").read_text()
+        controller = (APP / "controllers/Admin_approval.php").read_text()
+        confirm = (APP / "views/admin/approval/confirm.php").read_text()
+        token_request = store.split("public function approval_token_request", 1)[1].split("public function decide_approval_token", 1)[0]
+        token_decide = store.split("public function decide_approval_token", 1)[1].split("public function decide(", 1)[0]
+        self.assertIn("requester_name", token_request)
+        self.assertIn("submitted_by_name", token_request)
+        self.assertIn("'app_user'", token_request)
+        self.assertIn("'revise'", token_decide)
+        self.assertIn("$note", token_decide)
+        self.assertIn("Dibuat oleh", confirm)
+        self.assertIn("Disubmit oleh", confirm)
+        self.assertIn("$approval_confirmation['requester_name']", confirm)
+        self.assertIn("$approval_confirmation['submitted_by_name']", confirm)
+        self.assertIn("dark:bg-slate-900/60", confirm)
+        self.assertIn("dark:text-slate-100", confirm)
+        self.assertIn("data-local-time", confirm)
+        self.assertIn("Intl.DateTimeFormat", confirm)
+        self.assertIn("timeZoneName: 'short'", confirm)
+        self.assertIn('name="approval_decision" value="revise"', confirm)
+        self.assertIn('name="note"', confirm)
+        self.assertIn("Alasan revisi wajib diisi.", confirm)
+        self.assertIn("$posted_note", controller)
+        self.assertIn("in_array($posted_decision,array('approved','rejected','revise'),TRUE)", controller)
 
     def test_approval_notifications_only_offer_a_view_link_before_decision(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()

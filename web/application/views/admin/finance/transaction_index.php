@@ -46,6 +46,11 @@ $type_income = isset($labels['finance_tx_type_income']) ? $labels['finance_tx_ty
 $type_expense = isset($labels['finance_tx_type_expense']) ? $labels['finance_tx_type_expense'] : 'Expense';
 $state_draft = isset($labels['finance_tx_state_draft']) ? $labels['finance_tx_state_draft'] : 'Draft';
 $state_posted = isset($labels['finance_tx_state_posted']) ? $labels['finance_tx_state_posted'] : 'Posted';
+$label_created_by = isset($labels['finance_created_by']) ? $labels['finance_created_by'] : 'Created by';
+$label_approver = isset($labels['finance_approver_label']) ? $labels['finance_approver_label'] : 'Approver';
+$label_pending_unassigned = isset($labels['finance_pending_approver_unassigned']) ? $labels['finance_pending_approver_unassigned'] : 'Waiting for approver assignment';
+$label_transaction_date = isset($labels['finance_transaction_date']) ? $labels['finance_transaction_date'] : 'Transaction Date';
+$label_created_at = isset($labels['finance_created_at']) ? $labels['finance_created_at'] : 'Created At';
 $dt_empty = isset($labels['finance_tx_dt_empty']) ? $labels['finance_tx_dt_empty'] : 'No transactions yet';
 $dt_search = isset($labels['finance_dt_search']) ? $labels['finance_dt_search'] : 'Search:';
 $dt_length = isset($labels['finance_dt_length']) ? $labels['finance_dt_length'] : 'Show _MENU_';
@@ -82,14 +87,16 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
     <?php else: ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="overflow-x-auto p-2 sm:p-5">
-                <table id="finance-transaction-table" class="min-w-full text-sm">
+                <table id="finance-transaction-table" class="min-w-full whitespace-nowrap text-sm">
                     <thead><tr>
                         <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_number']) ? $labels['finance_tx_column_number'] : 'Number') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_type']) ? $labels['finance_tx_column_type'] : 'Type') ?></th>
-                        <th scope="col"><?= html_escape(isset($labels['finance_tx_column_date']) ? $labels['finance_tx_column_date'] : 'Date') ?></th>
+                        <th scope="col"><?= html_escape($label_transaction_date) ?></th>
+                        <th scope="col"><?= html_escape($label_created_at) ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_amount']) ? $labels['finance_tx_column_amount'] : 'Amount') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_currency']) ? $labels['finance_tx_column_currency'] : 'Currency') ?></th>
+                        <th scope="col"><?= html_escape($label_created_by) ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_status']) ? $labels['finance_tx_column_status'] : 'Status') ?></th>
                     </tr></thead>
                 </table>
@@ -99,6 +106,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/finance-list.js?v=<?= is_file(FCPATH . 'assets/js/finance-list.js') ? filemtime(FCPATH . 'assets/js/finance-list.js') : '1' ?>"></script>
 <script>
 (function () {
     var table = $('#finance-transaction-table');
@@ -122,6 +130,9 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         typeExpense: <?= json_encode($type_expense, $js_flags) ?>,
         stateDraft: <?= json_encode($state_draft, $js_flags) ?>,
         statePosted: <?= json_encode($state_posted, $js_flags) ?>,
+        createdBy: <?= json_encode($label_created_by, $js_flags) ?>,
+        approver: <?= json_encode($label_approver, $js_flags) ?>,
+        pendingUnassigned: <?= json_encode($label_pending_unassigned, $js_flags) ?>,
         dtEmpty: <?= json_encode($dt_empty, $js_flags) ?>,
         dtSearch: <?= json_encode($dt_search, $js_flags) ?>,
         dtLength: <?= json_encode($dt_length, $js_flags) ?>,
@@ -132,6 +143,14 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
     };
     var canUpdate = <?= $can_update ? 'true' : 'false' ?>;
     var isOwnList = <?= $finance_transaction_slug !== 'all_transactions' ? 'true' : 'false' ?>;
+    var stateStyles = {
+        draft: {badge: 'border-slate-200 bg-slate-50 text-slate-700', dot: 'bg-slate-400'},
+        pending_approval: {badge: 'border-indigo-200 bg-indigo-50 text-indigo-800', dot: 'bg-indigo-500'},
+        approved: {badge: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500'},
+        revise: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
+        rejected: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'},
+        posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'}
+    };
     table.DataTable({
         processing: true,
         serverSide: true,
@@ -139,7 +158,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
         autoWidth: false,
         pageLength: 10,
         lengthMenu: [[10, 25, 50], [10, 25, 50]],
-        order: [[3, 'desc']],
+        order: [[4, 'desc']],
         ajax: {url: <?= json_encode($current_path . '/data', $js_flags) ?>, type: 'GET'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
@@ -163,9 +182,11 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
             }},
             {data: 'transaction_number', name: 'transaction_number', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'transaction_type', name: 'transaction_type', render: function (v,t) { return t === 'display' ? escapeHtml(v === 'income' ? txLabels.typeIncome : txLabels.typeExpense) : v; }},
-            {data: 'transaction_on', name: 'transaction_on', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
-            {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v,t) { return t === 'display' ? escapeHtml(Number(v).toFixed(2)) : v; }},
+            {data: 'transaction_on', name: 'transaction_on', render: function (v,t) { return t === 'display' ? escapeHtml(window.financeFormatDate(v)) : v; }},
+            {data: 'create_on', name: 'create_on', render: function (v,t) { return t === 'display' ? window.financeLocalTimeHtml(v) : v; }},
+            {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v,t) { return t === 'display' ? escapeHtml(window.financeFormatAmount(v)) : v; }},
             {data: 'currency_code', name: 'currency_code', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
+            {data: 'created_by_name', name: 'created_by_name', render: function (v,t) { return t === 'display' ? escapeHtml(v || '') : v; }},
             {data: 'status', name: 'status', render: function (v,t,row) {
                 if (t !== 'display') return v;
                 var states = {
@@ -176,20 +197,28 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
                     rejected: txLabels.stateRejected,
                     posted: txLabels.statePosted
                 };
-                var colors = {
-                    draft: 'bg-slate-100 text-slate-700',
-                    pending_approval: 'bg-indigo-50 text-indigo-800',
-                    approved: 'bg-emerald-50 text-emerald-800',
-                    revise: 'bg-amber-50 text-amber-900',
-                    rejected: 'bg-rose-50 text-rose-800',
-                    posted: 'bg-emerald-100 text-emerald-900'
-                };
-                var state = states[v] || v;
-                var html = '<span class="rounded-full px-2.5 py-1 text-xs font-semibold ' + (colors[v] || 'bg-slate-100 text-slate-700') + '">' + escapeHtml(state) + '</span>';
-                if (v === 'revise' && row.revise_note) {
-                    html += '<div class="mt-1 max-w-xs break-words text-xs text-amber-800" title="' + escapeHtml(row.revise_note) + '"><span class="font-semibold">' + escapeHtml(txLabels.reviseReason) + ':</span> ' + escapeHtml(row.revise_note) + '</div>';
+                var style = stateStyles[v] || stateStyles.draft;
+                var html = '<div class="flex flex-col items-start gap-1.5">'
+                    + '<span class="inline-flex w-fit items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide ' + style.badge + '">'
+                    + '<span aria-hidden="true" class="h-1.5 w-1.5 rounded-full ' + style.dot + '"></span>'
+                    + escapeHtml(states[v] || v) + '</span>';
+                if (v === 'pending_approval') {
+                    var approver = String(row.current_approver_name || '').trim();
+                    if (approver) {
+                        html += '<div class="flex max-w-xs items-start gap-1.5 text-xs text-slate-500 dark:text-slate-400">'
+                            + '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="mt-px h-3.5 w-3.5 shrink-0 text-slate-400"><circle cx="10" cy="7" r="2.5"/><path stroke-linecap="round" d="M5.5 16c.4-2.4 2.1-3.8 4.5-3.8s4.1 1.4 4.5 3.8"/></svg>'
+                            + '<span class="break-words"><span class="font-medium text-slate-600 dark:text-slate-300">' + escapeHtml(txLabels.approver) + ':</span> ' + escapeHtml(approver) + '</span></div>';
+                    } else {
+                        html += '<div class="flex max-w-xs items-start gap-1.5 text-xs text-amber-700 dark:text-amber-300">'
+                            + '<span aria-hidden="true" class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500"></span>'
+                            + '<span>' + escapeHtml(txLabels.pendingUnassigned) + '</span></div>';
+                    }
                 }
-                return html;
+                if (v === 'revise' && row.revise_note) {
+                    html += '<div class="max-w-xs border-l-2 border-amber-300 pl-2 text-xs leading-5 text-amber-800 dark:text-amber-300" title="' + escapeHtml(row.revise_note) + '">'
+                        + '<span class="font-medium">' + escapeHtml(txLabels.reviseReason) + ':</span> ' + escapeHtml(row.revise_note) + '</div>';
+                }
+                return html + '</div>';
             }}
         ],
         language: {
@@ -202,6 +231,8 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
             processing: txLabels.dtProcessing
         }
     });
+    table.on('draw.dt', function () { window.financeFormatLocalTimes(document); });
+    window.financeFormatLocalTimes(document);
 
     function closeActionMenus() {
         document.querySelectorAll('[data-finance-actions-menu]').forEach(function (menu) {

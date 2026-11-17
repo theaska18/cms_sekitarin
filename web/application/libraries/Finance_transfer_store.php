@@ -35,15 +35,27 @@ class Finance_transfer_store
     public function page($tenant, $search, $limit, $offset, $order, $direction)
     {
         if (!$this->available()) return FALSE;
-        $allowed = array('transfer_number','transfer_date','from_amount','to_amount','status');
+        $allowed = array('transfer_number','transfer_date','create_on','from_amount','to_amount','status','created_by_name','from_account_name','to_account_name');
         $order = in_array($order, $allowed, TRUE) ? $order : 'transfer_date';
         $revise_note = "(SELECT a.note FROM app_approval_action a"
             . " WHERE a.tenant_id = t.tenant_id AND a.request_id = t.approval_request_id"
             . " AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note";
-        $this->db->select('t.cash_transfer_id,t.transfer_number,t.transfer_date,t.from_amount,t.to_amount,t.from_currency,t.to_currency,t.status,t.memo,t.approval_request_id,' . $revise_note, FALSE)
-            ->from('fin_cash_transfer t')->where('t.tenant_id', (int) $tenant);
+        $this->db->select('t.cash_transfer_id,t.transfer_number,t.transfer_date,t.create_on,t.from_amount,t.to_amount,t.from_currency,t.to_currency,t.status,t.memo,t.approval_request_id,t.from_cash_account_id,t.to_cash_account_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . "CONCAT(fa.account_code, ' — ', fa.account_name) AS from_account_name,"
+            . "CONCAT(ta.account_code, ' — ', ta.account_name) AS to_account_name,"
+            . $revise_note, FALSE)
+            ->from('fin_cash_transfer t')
+            ->join('fin_cash_account fa', 'fa.cash_account_id = t.from_cash_account_id AND fa.tenant_id = t.tenant_id', 'left')
+            ->join('fin_cash_account ta', 'ta.cash_account_id = t.to_cash_account_id AND ta.tenant_id = t.tenant_id', 'left')
+            ->join('app_user u', 'u.user_id = t.created_by AND u.tenant_id = t.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = t.approval_request_id AND ar.tenant_id = t.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
+            ->where('t.tenant_id', (int) $tenant);
         if ($search !== '') $this->db->group_start()->like('t.transfer_number', $search)->or_like('t.memo', $search)->group_end();
-        $q=$this->db->order_by('t.'.$order,strtoupper($direction)==='ASC'?'ASC':'DESC')
+        $order_column = in_array($order, array('created_by_name', 'from_account_name', 'to_account_name'), TRUE) ? $order : 't.' . $order;
+        $q=$this->db->order_by($order_column,strtoupper($direction)==='ASC'?'ASC':'DESC')
             ->order_by('t.cash_transfer_id','DESC')->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset))->get();
         return $q===FALSE?FALSE:$q->result_array();
     }

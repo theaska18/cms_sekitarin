@@ -18,7 +18,7 @@ class Finance_journal_store
     public function available()
     {
         $required = array(
-            'fin_journal_entry' => array('journal_entry_id', 'tenant_id', 'period_id', 'journal_number', 'journal_date', 'source_type', 'status', 'debit_total', 'credit_total'),
+            'fin_journal_entry' => array('journal_entry_id', 'tenant_id', 'period_id', 'journal_number', 'journal_date', 'source_type', 'status', 'debit_total', 'credit_total', 'approval_request_id'),
             'fin_journal_line' => array('journal_line_id', 'tenant_id', 'journal_entry_id', 'account_id', 'line_number', 'currency_code', 'exchange_rate', 'debit_amount', 'credit_amount', 'debit_base_amount', 'credit_base_amount'),
             'fin_accounting_period' => array('period_id', 'tenant_id', 'start_on', 'end_on', 'status'),
             'fin_account' => array('account_id', 'tenant_id', 'account_code', 'account_name', 'active_flag'),
@@ -53,13 +53,24 @@ class Finance_journal_store
         if (!$this->available()) {
             return FALSE;
         }
-        $allowed = array('journal_number', 'journal_date', 'description', 'debit_total', 'status');
+        $allowed = array('journal_number', 'journal_date', 'description', 'created_by_name', 'debit_total', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : 'journal_date';
         $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
-        $this->db->select('journal_entry_id,journal_number,journal_date,description,debit_total,credit_total,status')
-            ->from('fin_journal_entry')->where('tenant_id', (int) $tenant_id)->where('source_type', $source_type);
+        $revise_note = "(SELECT a.note FROM app_approval_action a"
+            . " WHERE a.tenant_id = je.tenant_id AND a.request_id = je.approval_request_id"
+            . " AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note";
+        $this->db->select('je.journal_entry_id,je.journal_number,je.journal_date,je.description,je.debit_total,je.credit_total,je.status,je.approval_request_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . $revise_note, FALSE)
+            ->from('fin_journal_entry je')
+            ->join('app_user u', 'u.user_id = je.created_by AND u.tenant_id = je.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = je.approval_request_id AND ar.tenant_id = je.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
+            ->where('je.tenant_id', (int) $tenant_id)->where('je.source_type', $source_type);
         $this->apply_search($search);
-        $query = $this->db->order_by($order, $direction)->order_by('journal_entry_id', 'DESC')
+        $order_column = $order === 'created_by_name' ? 'created_by_name' : 'je.' . $order;
+        $query = $this->db->order_by($order_column, $direction)->order_by('je.journal_entry_id', 'DESC')
             ->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();
     }
@@ -139,7 +150,7 @@ class Finance_journal_store
                 $this->db->trans_rollback();
                 return $existing === NULL ? 'not_found' : 'unavailable';
             }
-            if ($existing['status'] !== 'draft') {
+            if (!in_array($existing['status'], $source_type === 'opening_balance' ? array('draft', 'revise') : array('draft'), TRUE)) {
                 $this->db->trans_rollback();
                 return 'not_editable';
             }
@@ -154,10 +165,32 @@ class Finance_journal_store
             $this->db->where('tenant_id', (int) $tenant_id)->where('journal_entry_id', $entry_id)
                 ->delete('fin_journal_line');
         } else {
+            $journal_number = 'TMP-' . strtoupper($source_type) . '-' . bin2hex(random_bytes(6));
+            if ($source_type === 'opening_balance') {
+                $CI =& get_instance();
+                $CI->load->library('application_sequence_store');
+                $next_code = $CI->application_sequence_store->next_code_for_tenant($tenant_id, 'journal_opening_balance');
+                if (!is_array($next_code) || !isset($next_code['code']) || $next_code['code'] === '') {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+                for ($attempt = 0; $attempt < 10 && $this->journal_number_exists($tenant_id, (string) $next_code['code']); $attempt++) {
+                    $next_code = $CI->application_sequence_store->next_code_after($next_code);
+                    if (!is_array($next_code) || !isset($next_code['code'])) {
+                        $this->db->trans_rollback();
+                        return 'sequence_unavailable';
+                    }
+                }
+                if ($this->journal_number_exists($tenant_id, (string) $next_code['code'])) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+                $journal_number = (string) $next_code['code'];
+            }
             $this->db->insert('fin_journal_entry', array(
                 'tenant_id' => (int) $tenant_id,
                 'period_id' => NULL,
-                'journal_number' => 'TMP-' . strtoupper($source_type) . '-' . bin2hex(random_bytes(6)),
+                'journal_number' => $journal_number,
                 'journal_date' => $date,
                 'source_type' => $source_type,
                 'source_id' => NULL,
@@ -173,9 +206,15 @@ class Finance_journal_store
                 $this->db->trans_rollback();
                 return 'save_error';
             }
-            $prefix = $source_type === 'opening_balance' ? 'OB-' : 'MAN-';
-            $this->db->where('tenant_id', (int) $tenant_id)->where('journal_entry_id', $entry_id)
-                ->update('fin_journal_entry', array('journal_number' => $prefix . $entry_id));
+            if ($source_type === 'opening_balance') {
+                if (!$CI->application_sequence_store->advance_sequence($tenant_id, 'journal_opening_balance', $next_code)) {
+                    $this->db->trans_rollback();
+                    return 'sequence_unavailable';
+                }
+            } else {
+                $this->db->where('tenant_id', (int) $tenant_id)->where('journal_entry_id', $entry_id)
+                    ->update('fin_journal_entry', array('journal_number' => 'MAN-' . $entry_id));
+            }
         }
         foreach ($clean_lines as $index => $line) {
             $line['tenant_id'] = (int) $tenant_id;
@@ -197,7 +236,8 @@ class Finance_journal_store
         if (!is_array($entry)) {
             return $entry === NULL ? 'not_found' : 'unavailable';
         }
-        if ($entry['status'] !== 'draft' || count($entry['lines']) < 2) {
+        $required_status = $source_type === 'opening_balance' ? 'approved' : 'draft';
+        if ($entry['status'] !== $required_status || count($entry['lines']) < 2) {
             return 'not_postable';
         }
         $debits = 0.0;
@@ -235,7 +275,7 @@ class Finance_journal_store
         }
         $this->db->where('tenant_id', (int) $tenant_id)
             ->where('journal_entry_id', (int) $id)
-            ->where('status', 'draft')
+            ->where('status', $required_status)
             ->update('fin_journal_entry', array(
                 'period_id' => (int) $period->row()->period_id,
                 'status' => 'posted',
@@ -278,6 +318,14 @@ class Finance_journal_store
     {
         $row = $this->tenant_row('fin_account', 'account_id', $tenant_id, $id);
         return $row ? $row['account_code'] . ' — ' . $row['account_name'] : '';
+    }
+
+    private function journal_number_exists($tenant_id, $number)
+    {
+        return $this->db->from('fin_journal_entry')
+            ->where('tenant_id', (int) $tenant_id)
+            ->where('journal_number', (string) $number)
+            ->count_all_results() > 0;
     }
 
     private function apply_search($search)

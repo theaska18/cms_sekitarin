@@ -90,29 +90,40 @@ class Finance_transaction_store
         }
         if ($type === 'all') {
             list($sql, $binds) = $this->all_transactions_sql($tenant_id);
+            $allowed = array('transaction_number','transaction_type','transaction_on','create_on','total_amount','currency_code','status','created_by_name');
+            $order = in_array($order, $allowed, TRUE) ? $order : 'transaction_on';
+            $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
+            $sql = 'SELECT a.*, COALESCE(NULLIF(u.full_name, \'\'), u.username) AS created_by_name,'
+                . ' COALESCE(NULLIF(au.full_name, \'\'), au.username) AS current_approver_name'
+                . ' FROM (' . $sql . ') a'
+                . ' LEFT JOIN app_user u ON u.user_id = a.created_by AND u.tenant_id = a.tenant_id'
+                . ' LEFT JOIN app_approval_request ar ON ar.request_id = a.approval_request_id AND ar.tenant_id = a.tenant_id'
+                . ' LEFT JOIN app_user au ON au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id';
             if (trim((string) $search) !== '') {
                 $sql = 'SELECT * FROM (' . $sql . ') all_finance WHERE transaction_number LIKE ? OR description LIKE ? OR transaction_type LIKE ?';
                 $needle = '%' . $search . '%';
                 array_push($binds, $needle, $needle, $needle);
-            } else {
-                $sql = 'SELECT * FROM (' . $sql . ') all_finance';
             }
-            $allowed = array('transaction_number','transaction_type','transaction_on','total_amount','currency_code','status');
-            $order = in_array($order, $allowed, TRUE) ? $order : 'transaction_on';
-            $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
-            $sql .= ' ORDER BY ' . $order . ' ' . $direction . ', transaction_id DESC LIMIT '
+            $order_column = $order;
+            $sql .= ' ORDER BY ' . $order_column . ' ' . $direction . ', transaction_id DESC LIMIT '
                 . min(50, max(1, (int) $limit)) . ' OFFSET ' . max(0, (int) $offset);
             $result = $this->db->query($sql, $binds);
             return $result === FALSE ? FALSE : $result->result_array();
         }
-        $allowed = array('transaction_number', 'transaction_type', 'transaction_on', 'total_amount', 'currency_code', 'status');
+        $allowed = array('transaction_number', 'transaction_type', 'transaction_on', 'create_on', 'total_amount', 'currency_code', 'status', 'created_by_name');
         $order = in_array($order, $allowed, TRUE) ? $order : 'transaction_on';
         $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
         $revise_note = "(SELECT a.note FROM app_approval_action a"
             . " WHERE a.tenant_id = t.tenant_id AND a.request_id = t.approval_request_id"
             . " AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note";
-        $this->db->select('t.transaction_id,t.transaction_number,t.transaction_type,t.transaction_on,t.total_amount,t.currency_code,t.status,t.description,t.approval_request_id,' . $revise_note, FALSE)
+        $this->db->select('t.transaction_id,t.transaction_number,t.transaction_type,t.transaction_on,t.create_on,t.total_amount,t.currency_code,t.status,t.description,t.approval_request_id,'
+            . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
+            . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
+            . $revise_note, FALSE)
             ->from('fin_transaction t')
+            ->join('app_user u', 'u.user_id = t.created_by AND u.tenant_id = t.tenant_id', 'left')
+            ->join('app_approval_request ar', 'ar.request_id = t.approval_request_id AND ar.tenant_id = t.tenant_id', 'left')
+            ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('t.tenant_id', (int) $tenant_id);
         if ($type !== NULL) {
             $this->db->where('t.transaction_type', $type);
@@ -123,7 +134,8 @@ class Finance_transaction_store
                 ->or_like('t.description', $search)
                 ->group_end();
         }
-        $query = $this->db->order_by('t.' . $order, $direction)
+        $order_column = $order === 'created_by_name' ? 'created_by_name' : 't.' . $order;
+        $query = $this->db->order_by($order_column, $direction)
             ->order_by('t.transaction_id', 'DESC')
             ->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))
             ->get();
@@ -359,7 +371,7 @@ class Finance_transaction_store
         }
         $period_id = (int) $period_query->row()->period_id;
         $tax_account = NULL;
-        if (!empty($line['tax_id'])) {
+        if (!empty($line['tax_id']) && (float) $line['tax_amount'] > 0) {
             $tax_row = $this->tenant_row('fin_tax', 'tax_id', $tenant_id, $line['tax_id']);
             if (!$tax_row || empty($tax_row['account_id'])) {
                 return 'tax_account_missing';
@@ -608,13 +620,13 @@ class Finance_transaction_store
 
     private function all_transactions_sql($tenant_id)
     {
-        $sql = 'SELECT transaction_id,transaction_number,transaction_type,transaction_on,total_amount,currency_code,status,description FROM fin_transaction WHERE tenant_id=? '
-            . 'UNION ALL SELECT sales_invoice_id,invoice_number,"sales_invoice",invoice_date,total_amount,currency_code,status,memo FROM fin_sales_invoice WHERE tenant_id=? '
-            . 'UNION ALL SELECT purchase_bill_id,bill_number,"purchase_bill",bill_date,total_amount,currency_code,status,memo FROM fin_purchase_bill WHERE tenant_id=? '
-            . 'UNION ALL SELECT customer_payment_id,payment_number,"customer_payment",payment_date,amount,currency_code,status,reference FROM fin_customer_payment WHERE tenant_id=? '
-            . 'UNION ALL SELECT supplier_payment_id,payment_number,"supplier_payment",payment_date,amount,currency_code,status,reference FROM fin_supplier_payment WHERE tenant_id=? '
-            . 'UNION ALL SELECT cash_transfer_id,transfer_number,"cash_transfer",transfer_date,from_amount,from_currency,status,memo FROM fin_cash_transfer WHERE tenant_id=? '
-            . 'UNION ALL SELECT je.journal_entry_id,je.journal_number,je.source_type,je.journal_date,je.debit_total,s.base_currency,je.status,je.description FROM fin_journal_entry je JOIN fin_settings s ON s.tenant_id=je.tenant_id WHERE je.tenant_id=? AND je.source_type IN ("manual","opening_balance")';
+        $sql = 'SELECT transaction_id,transaction_number,transaction_type,transaction_on,total_amount,currency_code,status,description,created_by,create_on,approval_request_id,tenant_id FROM fin_transaction WHERE tenant_id=? '
+            . 'UNION ALL SELECT sales_invoice_id,invoice_number,"sales_invoice",invoice_date,total_amount,currency_code,status,memo,created_by,create_on,NULL,tenant_id FROM fin_sales_invoice WHERE tenant_id=? '
+            . 'UNION ALL SELECT purchase_bill_id,bill_number,"purchase_bill",bill_date,total_amount,currency_code,status,memo,created_by,create_on,NULL,tenant_id FROM fin_purchase_bill WHERE tenant_id=? '
+            . 'UNION ALL SELECT customer_payment_id,payment_number,"customer_payment",payment_date,amount,currency_code,status,reference,created_by,create_on,NULL,tenant_id FROM fin_customer_payment WHERE tenant_id=? '
+            . 'UNION ALL SELECT supplier_payment_id,payment_number,"supplier_payment",payment_date,amount,currency_code,status,reference,created_by,create_on,NULL,tenant_id FROM fin_supplier_payment WHERE tenant_id=? '
+            . 'UNION ALL SELECT cash_transfer_id,transfer_number,"cash_transfer",transfer_date,from_amount,from_currency,status,memo,created_by,create_on,approval_request_id,tenant_id FROM fin_cash_transfer WHERE tenant_id=? '
+            . 'UNION ALL SELECT je.journal_entry_id,je.journal_number,je.source_type,je.journal_date,je.debit_total,s.base_currency,je.status,je.description,je.created_by,je.create_on,je.approval_request_id,je.tenant_id FROM fin_journal_entry je JOIN fin_settings s ON s.tenant_id=je.tenant_id WHERE je.tenant_id=? AND je.source_type IN ("manual","opening_balance")';
         return array($sql, array_fill(0, 7, (int) $tenant_id));
     }
 }

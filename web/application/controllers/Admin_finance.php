@@ -277,13 +277,14 @@ class Admin_finance extends Admin
 
     public function submit_approval($slug = '', $id = 0)
     {
-        if (!in_array($slug, array('income', 'expenses', 'cash_bank_transfer'), TRUE)
+        if (!in_array($slug, array('income', 'expenses', 'cash_bank_transfer', 'opening_balances'), TRUE)
             || !is_numeric($id) || (int) $id < 1
             || $this->input->method(TRUE) !== 'POST') {
             show_404();
             return;
         }
-        $menu_code = $slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer' : $this->finance_transaction_menu_code($slug);
+        $menu_code = $slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer'
+            : ($slug === 'opening_balances' ? 'fin_opening_balances' : $this->finance_transaction_menu_code($slug));
         if (!$this->has_admin_menu_code($menu_code)
             || !$this->has_admin_access_code($menu_code . '_update')) {
             $this->finance_forbidden();
@@ -291,9 +292,16 @@ class Admin_finance extends Admin
         }
         $result = $slug === 'cash_bank_transfer'
             ? $this->finance_transfer_start_approval((int) $id)
-            : $this->finance_transaction_start_approval($slug, (int) $id);
+            : ($slug === 'opening_balances'
+                ? $this->finance_opening_balance_start_approval((int) $id)
+                : $this->finance_transaction_start_approval($slug, (int) $id));
         $this->session->set_flashdata('finance_status', $result);
         redirect('/admin/finance/' . $slug, 'location', 303);
+    }
+
+    private function finance_approval_amount($amount)
+    {
+        return number_format((float) $amount, 2, '.', ',');
     }
 
     private function finance_transaction_start_approval($slug, $id)
@@ -310,6 +318,25 @@ class Admin_finance extends Admin
         }
         $type = $record['transaction_type'] === 'income' ? 'income' : 'expense';
         $flow_code = $type === 'income' ? 'finance_income' : 'finance_expenses';
+        $subject = $type === 'income' ? 'Income' : 'Expense';
+        $line = is_array($record['line']) ? $record['line'] : array();
+        $cash_label = $store->lookup_label($tenant_id, 'cash_account', (int) $record['cash_account_id']);
+        $account_kind = $type === 'income' ? 'revenue_account' : 'expense_account';
+        $category_kind = $type === 'income' ? 'income_category' : 'expense_category';
+        $account_label = !empty($line['account_id']) ? $store->lookup_label($tenant_id, $account_kind, (int) $line['account_id']) : '';
+        $category_label = !empty($line['category_id']) ? $store->lookup_label($tenant_id, $category_kind, (int) $line['category_id']) : '';
+        $details = 'Nomor: ' . (string) $record['transaction_number']
+            . "\n" . 'Jenis: ' . ($type === 'income' ? 'Income' : 'Expense')
+            . "\n" . 'Tanggal: ' . (string) $record['transaction_on']
+            . "\n" . 'Jumlah: ' . $this->finance_approval_amount($record['total_amount']) . ' ' . (string) $record['currency_code']
+            . "\n" . 'Akun Kas/Bank: ' . $cash_label
+            . "\n" . 'Akun: ' . $account_label;
+        if ($category_label !== '') {
+            $details .= "\n" . 'Kategori: ' . $category_label;
+        }
+        if (!empty($line['description'])) {
+            $details .= "\n" . 'Keterangan: ' . (string) $line['description'];
+        }
         $previous_status = $record['status'];
         $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
             ->update('fin_transaction', array('status' => 'pending_approval'));
@@ -320,10 +347,7 @@ class Admin_finance extends Admin
                 ->update('fin_transaction', array('status' => $previous_status));
             return 'approval_unavailable';
         }
-        $subject = (string) $record['transaction_number'];
-        $details = ($type === 'income' ? 'Income' : 'Expense') . ' ' . $subject
-            . ' · ' . (string) $record['total_amount'] . ' ' . (string) $record['currency_code'];
-        $result = $approval->submit($flow_code, $subject, $details, 'fin_transaction', (int) $id);
+        $result = $approval->submit($flow_code, $subject, $details, 'fin_transaction', (int) $id, (int) $record['created_by']);
         if (!is_array($result) || !isset($result['status'])) {
             $this->db->where('tenant_id', $tenant_id)->where('transaction_id', (int) $id)
                 ->update('fin_transaction', array('status' => $previous_status));
@@ -361,10 +385,15 @@ class Admin_finance extends Admin
                 ->update('fin_cash_transfer', array('status' => $previous_status));
             return 'approval_unavailable';
         }
-        $subject = (string) $record['transfer_number'];
-        $details = 'Transfer ' . $subject . ' · ' . (string) $record['from_amount'] . ' ' . (string) $record['from_currency']
-            . ' → ' . (string) $record['to_amount'] . ' ' . (string) $record['to_currency'];
-        $result = $approval->submit('finance_transfer', $subject, $details, 'fin_cash_transfer', (int) $id);
+        $from_label = $store->cash_label($tenant_id, (int) $record['from_cash_account_id']);
+        $to_label = $store->cash_label($tenant_id, (int) $record['to_cash_account_id']);
+        $subject = 'Transfer Balance';
+        $details = 'Nomor: ' . (string) $record['transfer_number']
+            . "\n" . 'Dari: ' . $from_label
+            . "\n" . 'Nilai: ' . $this->finance_approval_amount($record['from_amount']) . ' ' . (string) $record['from_currency']
+            . "\n" . 'Ke: ' . $to_label
+            . "\n" . 'Nilai: ' . $this->finance_approval_amount($record['to_amount']) . ' ' . (string) $record['to_currency'];
+        $result = $approval->submit('finance_transfer', $subject, $details, 'fin_cash_transfer', (int) $id, (int) $record['created_by']);
         if (!is_array($result) || !isset($result['status'])) {
             $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
                 ->update('fin_cash_transfer', array('status' => $previous_status));
@@ -374,6 +403,53 @@ class Admin_finance extends Admin
         $approved = $result['status'] === 'auto_approved';
         $this->db->where('tenant_id', $tenant_id)->where('cash_transfer_id', (int) $id)
             ->update('fin_cash_transfer', array(
+                'status' => $approved ? 'approved' : 'pending_approval',
+                'approval_request_id' => $request_id > 0 ? $request_id : NULL,
+            ));
+        return $approved ? 'approval_auto_approved' : 'approval_submitted';
+    }
+
+    private function finance_opening_balance_start_approval($id)
+    {
+        $this->load->library('finance_journal_store');
+        $store = $this->finance_journal_store;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $record = $store->available() ? $store->find($tenant_id, (int) $id, 'opening_balance') : FALSE;
+        if (!is_array($record)) {
+            return 'not_found';
+        }
+        if (!in_array($record['status'], array('draft', 'revise'), TRUE)) {
+            return 'not_submittable';
+        }
+        $this->load->library('approval_workflow_store');
+        $approval = $this->approval_workflow_store;
+        if (!$approval->available()) {
+            return 'approval_unavailable';
+        }
+        $steps = $approval->effective_steps('finance_begining_balance');
+        if (!is_array($steps) || !$steps) {
+            return 'approval_steps_missing';
+        }
+        $previous_status = $record['status'];
+        $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+            ->where('source_type', 'opening_balance')
+            ->update('fin_journal_entry', array('status' => 'pending_approval'));
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $subject = 'Opening Balance';
+        $details = 'Opening Balance ' . (string) $record['journal_number'] . ' · ' . $this->finance_approval_amount($record['debit_total']) . ' ' . $base_currency;
+        $result = $approval->submit('finance_begining_balance', $subject, $details, 'fin_journal_entry', (int) $id, (int) $record['created_by']);
+        if (!is_array($result) || !isset($result['status'])) {
+            $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+                ->where('source_type', 'opening_balance')
+                ->update('fin_journal_entry', array('status' => $previous_status));
+            return 'approval_error';
+        }
+        $request_id = isset($result['request_id']) ? (int) $result['request_id'] : 0;
+        $approved = $result['status'] === 'auto_approved';
+        $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
+            ->where('source_type', 'opening_balance')
+            ->update('fin_journal_entry', array(
                 'status' => $approved ? 'approved' : 'pending_approval',
                 'approval_request_id' => $request_id > 0 ? $request_id : NULL,
             ));
@@ -567,9 +643,11 @@ class Admin_finance extends Admin
             1 => 'transaction_number',
             2 => 'transaction_type',
             3 => 'transaction_on',
-            4 => 'total_amount',
-            5 => 'currency_code',
-            6 => 'status',
+            4 => 'create_on',
+            5 => 'total_amount',
+            6 => 'currency_code',
+            7 => 'created_by_name',
+            8 => 'status',
         );
         $this->datatable_server->respond(
             $columns,
@@ -582,7 +660,7 @@ class Admin_finance extends Admin
             function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $type) {
                 return $store->page($tenant_id, $type, $search, $length, $start, $order, $direction);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'transaction_on')
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'create_on')
         );
     }
 
@@ -808,7 +886,7 @@ class Admin_finance extends Admin
         $tenant_id = (int) $this->current_user['tenant_id'];
         $source_type = $slug === 'opening_balances' ? 'opening_balance' : 'manual';
         $this->datatable_server->respond(
-            array(1 => 'journal_number', 2 => 'journal_date', 3 => 'description', 4 => 'debit_total', 5 => 'status'),
+            array(1 => 'journal_number', 2 => 'journal_date', 3 => 'description', 4 => 'created_by_name', 5 => 'debit_total', 6 => 'status'),
             function () use ($store, $tenant_id, $source_type) {
                 return $store->count($tenant_id, $source_type);
             },
@@ -877,6 +955,7 @@ class Admin_finance extends Admin
         );
         $account_labels = array();
         $available = $store->available();
+        $was_revise = FALSE;
         if (!$is_new && $available) {
             $saved = $store->find($tenant_id, (int) $id, $source_type);
             if ($saved === NULL) {
@@ -885,10 +964,11 @@ class Admin_finance extends Admin
             }
             if ($saved === FALSE) {
                 $available = FALSE;
-            } elseif ($saved['status'] !== 'draft') {
-                show_error('Posted journal entries cannot be edited.', 409);
+            } elseif (!in_array($saved['status'], $source_type === 'opening_balance' ? array('draft', 'revise') : array('draft'), TRUE)) {
+                show_error('Only draft or revised journal entries can be edited.', 409);
                 return;
             } else {
+                $was_revise = $saved['status'] === 'revise';
                 $record = array_merge($record, $saved);
                 foreach ($record['lines'] as $index => $line) {
                     $account_labels[$index] = !empty($line['account_id'])
@@ -920,7 +1000,11 @@ class Admin_finance extends Admin
                 );
                 $this->db->db_debug = $previous_db_debug;
                 if ($result === 'saved') {
-                    $this->session->set_flashdata('finance_status', 'draft_saved');
+                    $status = 'draft_saved';
+                    if ($source_type === 'opening_balance' && $was_revise && !$is_new) {
+                        $status = $this->finance_opening_balance_start_approval((int) $id);
+                    }
+                    $this->session->set_flashdata('finance_status', $status);
                     redirect('/admin/finance/' . $slug, 'location', 303);
                     return;
                 }
@@ -989,29 +1073,51 @@ class Admin_finance extends Admin
     {
         $errors = array();
         $date = DateTime::createFromFormat('!Y-m-d', $values['journal_date']);
-        if ($date === FALSE || $date->format('Y-m-d') !== $values['journal_date']) {
+        if ($values['journal_date'] === '') {
+            $errors[] = 'journal_date_required';
+        } elseif ($date === FALSE || $date->format('Y-m-d') !== $values['journal_date']) {
             $errors[] = 'journal_date_invalid';
         }
-        if ($values['description'] === '' || strlen($values['description']) > 240) {
-            $errors[] = 'description_invalid';
+        if ($values['description'] === '') {
+            $errors[] = 'description_required';
+        } elseif (strlen($values['description']) > 240) {
+            $errors[] = 'description_too_long';
         }
         if (count($values['lines']) < 2) {
             $errors[] = 'journal_lines_required';
         }
         foreach ($values['lines'] as $index => $line) {
+            $prefix = 'journal_line_' . ($index + 1);
             $debit = $line['debit_amount'];
             $credit = $line['credit_amount'];
-            if ((int) $line['account_id'] < 1 || !preg_match('/^[A-Z]{3}$/', $line['currency_code'])
-                || !preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $line['exchange_rate'])
-                || (float) $line['exchange_rate'] <= 0
-                || !preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $debit)
-                || !preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $credit)
-                || (((float) $debit > 0) === ((float) $credit > 0))) {
-                $errors[] = 'journal_line_' . ($index + 1) . '_invalid';
+            $debit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $debit);
+            $credit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $credit);
+            $rate_valid = (bool) preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $line['exchange_rate'])
+                && (float) $line['exchange_rate'] > 0;
+            if ((int) $line['account_id'] < 1) {
+                $errors[] = $prefix . '_account_required';
             }
-            if ($line['currency_code'] === strtoupper($base_currency)
+            if (!preg_match('/^[A-Z]{3}$/', $line['currency_code'])) {
+                $errors[] = $prefix . '_currency_invalid';
+            }
+            if (!$rate_valid) {
+                $errors[] = $prefix . '_rate_invalid';
+            }
+            if (!$debit_valid) {
+                $errors[] = $prefix . '_debit_invalid';
+            }
+            if (!$credit_valid) {
+                $errors[] = $prefix . '_credit_invalid';
+            }
+            if ($debit_valid && $credit_valid && (((float) $debit > 0) === ((float) $credit > 0))) {
+                $errors[] = $prefix . '_amount_required';
+            }
+            if ($rate_valid && $line['currency_code'] === strtoupper($base_currency)
                 && abs((float) $line['exchange_rate'] - 1) > 0.0000001) {
-                $errors[] = 'journal_line_' . ($index + 1) . '_base_rate_invalid';
+                $errors[] = $prefix . '_base_rate_invalid';
+            }
+            if (strlen($line['description']) > 240) {
+                $errors[] = $prefix . '_description_too_long';
             }
         }
         return array_values(array_unique($errors));
@@ -1469,11 +1575,11 @@ class Admin_finance extends Admin
         if(!$store->available()){$this->datatable_server->error(503);return;}
         $tenant=(int)$this->current_user['tenant_id'];
         $this->datatable_server->respond(
-            array(1=>'transfer_number',2=>'transfer_date',3=>'from_amount',4=>'to_amount',5=>'status'),
+            array(1=>'transfer_number',2=>'transfer_date',3=>'create_on',4=>'from_account_name',5=>'to_account_name',6=>'from_amount',7=>'created_by_name',8=>'status'),
             function()use($store,$tenant){return $store->count($tenant);},
             function($search)use($store,$tenant){return $store->count($tenant,$search);},
             function($search,$length,$offset,$order,$direction)use($store,$tenant){return $store->page($tenant,$search,$length,$offset,$order,$direction);},
-            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'transfer_date')
+            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
         );
     }
 

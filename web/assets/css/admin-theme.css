@@ -13,6 +13,7 @@ html[data-theme="dark"] #admin-app-shell [class*="divide-slate-"] > :not([hidden
 html[data-theme="dark"] #admin-app-shell table th, html[data-theme="dark"] #admin-app-shell table td { border-color: #334155; }
 html[data-theme="dark"] #admin-app-shell input:not([type="radio"]), html[data-theme="dark"] #admin-app-shell select, html[data-theme="dark"] #admin-app-shell textarea { background-color: #0f172a !important; color: #f1f5f9 !important; border-color: #475569 !important; }
 html[data-theme="dark"] #admin-app-shell .bg-emerald-50 { background-color: #064e3b !important; }
+html[data-theme="dark"] #admin-app-shell .bg-emerald-100 { background-color: #065f46 !important; }
 html[data-theme="dark"] #admin-app-shell .text-emerald-800, html[data-theme="dark"] #admin-app-shell .text-emerald-900 { color: #a7f3d0 !important; }
 html[data-theme="dark"] #admin-app-shell .ring-emerald-100 { --tw-ring-color: #065f46 !important; }
 html[data-theme="dark"] #admin-app-shell .bg-rose-50 { background-color: #4c0519 !important; }

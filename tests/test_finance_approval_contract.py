@@ -67,6 +67,18 @@ class FinanceApprovalContractTests(unittest.TestCase):
         self.assertIn("$record['status'] === 'revise'", controller)
         self.assertIn("finance_transaction_start_approval($slug, (int) $id)", controller)
 
+    def test_finance_approval_uses_the_draft_owner_as_requester(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = APPROVAL_STORE.read_text()
+        self.assertIn("'fin_transaction', (int) $id, (int) $record['created_by']", controller)
+        self.assertIn("'fin_cash_transfer', (int) $id, (int) $record['created_by']", controller)
+        self.assertIn("'fin_journal_entry', (int) $id, (int) $record['created_by']", controller)
+        submit = store.split("public function submit(", 1)[1].split("private function create_approval_token", 1)[0]
+        self.assertIn("$requester_user_id = $requester_user_id === NULL", submit)
+        self.assertIn("$requester_employee_id", submit)
+        self.assertIn("'submitted_by'=>$submitted_by", submit)
+        self.assertIn("$this->resolve_approver($step,$requester_employee_id", submit)
+
     def test_approval_decisions_support_revise_with_a_required_reason(self):
         store = APPROVAL_STORE.read_text()
         self.assertIn("in_array($decision,array('approved','rejected','revise'),TRUE)", store)
@@ -94,6 +106,18 @@ class FinanceApprovalContractTests(unittest.TestCase):
         self.assertIn("$line['debit_base_amount']", view)
         self.assertIn("$line['credit_base_amount']", view)
         self.assertIn("finance_report_column_account_code", view)
+
+    def test_income_expense_approval_details_name_the_accounts_and_amount(self):
+        controller = (APP / "controllers/Admin_finance.php").read_text()
+        method = controller.split("private function finance_transaction_start_approval(", 1)[1].split("private function finance_transfer_start_approval(", 1)[0]
+        self.assertIn("$subject = $type === 'income' ? 'Income' : 'Expense';", method)
+        self.assertIn("'Nomor: ' . (string) $record['transaction_number']", method)
+        self.assertIn("'Jenis: ' . ($type === 'income' ? 'Income' : 'Expense')", method)
+        self.assertIn("'Jumlah: ' . $this->finance_approval_amount($record['total_amount'])", method)
+        self.assertIn("'Akun Kas/Bank: ' . $cash_label", method)
+        self.assertIn("'Akun: ' . $account_label", method)
+        self.assertIn("$account_kind = $type === 'income' ? 'revenue_account' : 'expense_account';", method)
+        self.assertIn("$category_kind = $type === 'income' ? 'income_category' : 'expense_category';", method)
 
     def test_finance_list_shows_submit_action_revise_reason_and_post_after_approval(self):
         view = FINANCE_INDEX.read_text()

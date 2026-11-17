@@ -228,7 +228,7 @@ class Finance_document_store
             return 'account_invalid';
         }
         $tax_account = NULL;
-        if (!empty($line['tax_id'])) {
+        if (!empty($line['tax_id']) && (float) $line['tax_amount'] > 0) {
             $tax = $this->tenant_row('fin_tax', 'tax_id', $tenant_id, $line['tax_id']);
             $tax_account = $tax && !empty($tax['account_id'])
                 ? $this->tenant_row('fin_account', 'account_id', $tenant_id, $tax['account_id'])

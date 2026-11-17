@@ -20,10 +20,15 @@ class Admin_approval extends Admin
             if ($this->input->method(TRUE)==='POST') {
                 $posted_token=(string)$this->input->post('approval_token',TRUE);
                 $posted_decision=(string)$this->input->post('approval_decision',TRUE);
+                $posted_note=(string)$this->input->post('note',TRUE);
                 $valid_choice=$token_decision==='view'
-                    ? in_array($posted_decision,array('approved','rejected'),TRUE)
+                    ? in_array($posted_decision,array('approved','rejected','revise'),TRUE)
                     : $posted_decision===$token_decision;
-                $ok=hash_equals((string)$token,$posted_token) && $valid_choice && $store->decide_approval_token($posted_token,$posted_decision);
+                if ($posted_decision==='revise' && trim($posted_note)==='') {
+                    show_error('Alasan revisi wajib diisi.', 422);
+                    return;
+                }
+                $ok=hash_equals((string)$token,$posted_token) && $valid_choice && $store->decide_approval_token($posted_token,$posted_decision,$posted_note);
                 if (!$ok) { show_error('Persetujuan tidak dapat diproses. Tautan mungkin sudah digunakan atau kedaluwarsa.', 409); return; }
                 $this->session->set_flashdata('admin_approval_status','decided');
                 redirect('/admin/system/approval','location',303);

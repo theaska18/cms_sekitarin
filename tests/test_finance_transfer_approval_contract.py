@@ -18,6 +18,18 @@ class FinanceTransferApprovalContractTests(unittest.TestCase):
         self.assertIn("fin_cash_transfer", migration)
         self.assertIn("idx_fin_cash_transfer_approval", migration)
 
+    def test_transfer_approval_details_name_both_accounts_and_amounts(self):
+        controller = CONTROLLER.read_text()
+        method = controller.split('private function finance_transfer_start_approval(', 1)[1].split('public function lookup(', 1)[0]
+        self.assertIn("$subject = 'Transfer Balance';", method)
+        self.assertIn('$from_label = $store->cash_label', method)
+        self.assertIn('$to_label = $store->cash_label', method)
+        self.assertIn("'Nomor: ' . (string) $record['transfer_number']", method)
+        self.assertIn("'Dari: ' . $from_label", method)
+        self.assertIn("'Nilai: ' . $this->finance_approval_amount($record['from_amount'])", method)
+        self.assertIn("'Ke: ' . $to_label", method)
+        self.assertIn("'Nilai: ' . $this->finance_approval_amount($record['to_amount'])", method)
+
     def test_transfer_numbers_use_transfer_code_sequence(self):
         store = STORE.read_text()
         self.assertIn("'transfer_code'", store)

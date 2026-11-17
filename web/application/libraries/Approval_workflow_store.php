@@ -723,13 +723,20 @@ class Approval_workflow_store
         return $this->db->trans_status()===FALSE ? 'error' : 'routed';
     }
 
-    public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL)
+    public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)
     {
         $flow_code=trim((string)$flow_code); $subject=trim((string)$subject); $details=trim((string)$details);
         if (!$this->available() || $flow_code === '' || strlen($flow_code)>32
             || !preg_match('/\A[A-Za-z0-9_.-]+\z/',$flow_code)
             || !$subject || strlen($subject)>180 || strlen($details)>10000
             || !in_array($flow_code, $this->accessible_flow_codes(), TRUE)) { return FALSE; }
+        $requester_user_id = $requester_user_id === NULL ? (int) $this->user : (int) $requester_user_id;
+        $requester = $this->db->select('user_id,employee_id')->where(array(
+            'tenant_id'=>$this->tenant,'user_id'=>$requester_user_id,
+        ))->limit(1)->get('app_user')->row_array();
+        if (!$requester) { return FALSE; }
+        $requester_employee_id = !empty($requester['employee_id']) ? (int) $requester['employee_id'] : NULL;
+        $submitted_by = (int) $this->user;
         $flow=$this->db->select('flow_code,flow_name')->from('sys_approval_flow')
             ->where(array('flow_code'=>$flow_code,'active_flag'=>1))->limit(1)->get()->row_array();
         if (!$flow) { return FALSE; }
@@ -741,7 +748,8 @@ class Approval_workflow_store
             $this->db->trans_begin();
             $inserted=$this->db->insert('app_approval_request',array(
                 'tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'flow_code'=>$flow_code,
-                'requester_user_id'=>$this->user,'requester_employee_id'=>$this->employee ?: NULL,
+                'requester_user_id'=>$requester_user_id,'requester_employee_id'=>$requester_employee_id,
+                'submitted_by'=>$submitted_by,
                 'subject'=>$subject,'details'=>$details,'status'=>'approved','current_step'=>0,
                 'current_approver_user_id'=>NULL,'create_on'=>$created,'update_on'=>$created,
                 'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
@@ -757,14 +765,15 @@ class Approval_workflow_store
             return $this->db->trans_status()===FALSE ? FALSE : array('status'=>'auto_approved','request_id'=>$request_id);
         }
         $step=isset($steps[0])?$steps[0]:NULL;
-        $resolution=$step ? $this->resolve_approver($step,$this->employee,0) : array(
+        $resolution=$step ? $this->resolve_approver($step,$requester_employee_id ?: 0,0) : array(
             'ok'=>FALSE,'code'=>'empty_flow','message'=>'The active approval flow has no configured steps.',
         );
         $request_status=$resolution['ok'] ? 'pending' : 'needs_assignment';
         $this->db->trans_begin();
         $inserted=$this->db->insert('app_approval_request',array(
             'tenant_id'=>$this->tenant,'flow_id'=>$flow_id,'flow_code'=>$flow_code,
-            'requester_user_id'=>$this->user,'requester_employee_id'=>$this->employee ?: NULL,
+            'requester_user_id'=>$requester_user_id,'requester_employee_id'=>$requester_employee_id,
+            'submitted_by'=>$submitted_by,
             'subject'=>$subject,'details'=>$details,'status'=>$request_status,'current_step'=>1,
             'current_approver_user_id'=>$resolution['ok'] ? (int)$resolution['user_id'] : NULL,
             'create_on'=>$created,'update_on'=>$created,
@@ -816,15 +825,42 @@ class Approval_workflow_store
         $row=$this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->where('expires_at >',date('Y-m-d H:i:s'))->get('app_approval_link_token')->row_array();
         if (!$row) { return FALSE; }
         $request=$this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$row['request_id'],'status'=>'pending'))->get('app_approval_request')->row_array();
-        return $request ? array('request_id'=>(int)$request['request_id'],'subject'=>(string)$request['subject'],'details'=>(string)$request['details'],'decision'=>(string)$row['decision']) : FALSE;
+        if (!$request) { return FALSE; }
+        $requester_name='';
+        if (!empty($request['requester_user_id'])) {
+            $requester=$this->db->select('full_name,username')->where(array('tenant_id'=>$this->tenant,'user_id'=>(int)$request['requester_user_id']))->limit(1)->get('app_user')->row_array();
+            if ($requester) {
+                $requester_name=trim((string)$requester['full_name']) !== '' ? (string)$requester['full_name'] : (string)$requester['username'];
+            }
+        }
+        $submitted_by_name='';
+        if (!empty($request['submitted_by'])) {
+            $submitter=$this->db->select('full_name,username')->where(array('tenant_id'=>$this->tenant,'user_id'=>(int)$request['submitted_by']))->limit(1)->get('app_user')->row_array();
+            if ($submitter) {
+                $submitted_by_name=trim((string)$submitter['full_name']) !== '' ? (string)$submitter['full_name'] : (string)$submitter['username'];
+            }
+        }
+        return array(
+            'request_id'=>(int)$request['request_id'],
+            'subject'=>(string)$request['subject'],
+            'details'=>(string)$request['details'],
+            'decision'=>(string)$row['decision'],
+            'requester_name'=>$requester_name,
+            'submitted_by_name'=>$submitted_by_name,
+            'create_on'=>(string)$request['create_on'],
+            'flow_code'=>(string)$request['flow_code'],
+        );
     }
 
-    public function decide_approval_token($token,$decision)
+    public function decide_approval_token($token,$decision,$note='')
     {
         $request=$this->approval_token_request($token);
-        if (!$request || !in_array($decision,array('approved','rejected'),TRUE)
-            || ($request['decision']!=='view' && $request['decision']!==$decision)) { return FALSE; }
-        if (!$this->decide($request['request_id'],$decision,'')) { return FALSE; }
+        $decision=(string)$decision;
+        $note=trim((string)$note);
+        if (!$request || !in_array($decision,array('approved','rejected','revise'),TRUE)
+            || ($request['decision']!=='view' && $request['decision']!==$decision)
+            || ($decision==='revise' && $note==='')) { return FALSE; }
+        if (!$this->decide($request['request_id'],$decision,$note)) { return FALSE; }
         $this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->update('app_approval_link_token',array('used_at'=>date('Y-m-d H:i:s')));
         return $this->db->affected_rows()===1;
     }
@@ -908,6 +944,7 @@ class Approval_workflow_store
         $targets = array(
             'fin_transaction' => array('table' => 'fin_transaction', 'id' => 'transaction_id'),
             'fin_cash_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id'),
+            'fin_journal_entry' => array('table' => 'fin_journal_entry', 'id' => 'journal_entry_id'),
         );
         if (!isset($targets[$type]) || $id < 1
             || !in_array($status, array('approved','revise','rejected'), TRUE)
