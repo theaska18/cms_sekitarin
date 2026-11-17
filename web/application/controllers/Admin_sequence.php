@@ -10,12 +10,21 @@ class Admin_sequence extends Admin
 
     private function sequence_deny_access($message_key = 'sequence_no_access', $requested_path = NULL)
     {
+        $requested_path = is_string($requested_path) && $requested_path !== ''
+            ? $requested_path
+            : self::ADMIN_SEQUENCE_PATH;
+        $title_key = $requested_path === '/admin/application/sequence'
+            ? 'sequence_heading'
+            : 'sequence_template_heading';
         $this->output->set_status_header(403);
         $this->render_admin(
             'admin/sequence/access_denied',
-            'sequence',
-            is_string($requested_path) && $requested_path !== '' ? $requested_path : self::ADMIN_SEQUENCE_PATH,
-            array('sequence_access_message_key' => $message_key)
+            $title_key,
+            $requested_path,
+            array(
+                'sequence_access_message_key' => $message_key,
+                'sequence_access_title_key' => $title_key,
+            )
         );
     }
 
@@ -30,7 +39,7 @@ class Admin_sequence extends Admin
             return;
         }
         $module = array(
-            'key' => 'sequence',
+            'key' => 'sequence_template',
             'group_key' => 'system',
             'description_key' => 'system_sequence_description',
             'focus_key' => 'system_sequence_focus',
@@ -42,7 +51,7 @@ class Admin_sequence extends Admin
 
         $this->render_admin(
             'admin/sequence/index',
-            $module['key'],
+            'sequence_template_heading',
             $requested_path,
             array(
                 'module' => $module,
@@ -117,7 +126,7 @@ class Admin_sequence extends Admin
     private function application_sequence_index()
     {
         if (!$this->has_admin_menu_code('app_sequence')) {
-            $this->sequence_deny_access('sequence_no_access');
+            $this->sequence_deny_access('sequence_no_access', '/admin/application/sequence');
             return;
         }
         $this->load->database();

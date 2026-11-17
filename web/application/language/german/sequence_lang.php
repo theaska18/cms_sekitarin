@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequenzen';
+$lang['sequence_template_heading'] = 'Sequenzvorlage';
 $lang['sequence_auto_number_permission_required'] = 'Sie dürfen die automatische Nummerierung nicht ändern.';
 $lang['sequence_use_flag_help'] = 'Bei Aktivierung erzeugt das System die Nummern automatisch. Bei Deaktivierung müssen sie manuell eingegeben werden.';
 $lang['sequence_use_flag_disabled'] = 'Manuell';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'Für diesen Mandanten nich
 $lang['sequence_application_form_intro'] = 'Bearbeiten Sie Zähler und Erzeugungseinstellungen dieses Mandanten. Die gemeinsame Systemvorlage bleibt unverändert.';
 $lang['sequence_application_intro'] = 'Konfigurieren Sie Sequenzen für diesen Mandanten anhand der Vorlagen, die mit Ihren zugänglichen Menüs verknüpft sind. Beim Speichern einer nicht konfigurierten Vorlage werden Mandanteneinstellungen erstellt.';
 $lang['sequence_no_access'] = 'Sie haben keinen Zugriff auf diese Sequenzseite.';
-$lang['sequence_add'] = 'Hinzufügen';
+$lang['sequence_add'] = 'Vorlage hinzufügen';
 $lang['sequence_actions'] = 'Aktionen';
 $lang['sequence_edit'] = 'Bearbeiten';
 $lang['sequence_delete'] = 'Löschen';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'Sequenz wurde erstellt.';
 $lang['sequence_saved'] = 'Änderungen an der Sequenz wurden gespeichert.';
 $lang['sequence_deleted'] = 'Sequenz wurde gelöscht.';
 $lang['sequence_delete_error'] = 'Sequenz konnte nicht gelöscht werden. Bitte erneut versuchen.';
-$lang['sequence_intro'] = 'Systemsequenzdefinitionen und ihre aktuellen Werte anzeigen.';
+$lang['sequence_intro'] = 'Systemsequenzvorlagen und ihre aktuellen Werte anzeigen.';
 $lang['sequence_search_label'] = 'Sequenzen suchen';
 $lang['sequence_search_hint'] = 'Sequenzen suchen…';
 $lang['sequence_total'] = '%s Sequenzdatensätze';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'Das ausgewählte Menü ist nicht im Manif
 $lang['sequence_last_value'] = 'Letzter Wert';
 $lang['sequence_last_sequence'] = 'Letzte Sequenz';
 $lang['sequence_format'] = 'Format';
-$lang['sequence_form_new'] = 'Neue Sequenz';
-$lang['sequence_form_edit'] = 'Sequenz bearbeiten';
+$lang['sequence_form_new'] = 'Neue Sequenzvorlage';
+$lang['sequence_form_edit'] = 'Sequenzvorlage bearbeiten';
 $lang['sequence_form_intro'] = 'Geben Sie die Sequenzdefinition und ihren Anfangswert ein.';
 $lang['sequence_choose_repeat_type'] = 'Wiederholungstyp auswählen';
 $lang['sequence_code_help'] = 'Beim Verlassen dieses Felds werden Leerzeichen entfernt und Buchstaben in Kleinbuchstaben umgewandelt.';

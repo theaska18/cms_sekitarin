@@ -135,15 +135,15 @@ class AdminSequenceContractTests(unittest.TestCase):
 
     def test_compact_action_labels_are_localized_for_every_admin_locale(self):
         expected = {
-            "english": ("Add", "Back", "Save"),
-            "indonesian": ("Tambah", "Kembali", "Simpan"),
-            "japanese": ("追加", "戻る", "保存"),
-            "chinese": ("添加", "返回", "保存"),
-            "arabic": ("إضافة", "رجوع", "حفظ"),
-            "korean": ("추가", "뒤로", "저장"),
-            "spanish": ("Añadir", "Volver", "Guardar"),
-            "french": ("Ajouter", "Retour", "Enregistrer"),
-            "german": ("Hinzufügen", "Zurück", "Speichern"),
+            "english": ("Add Template", "Back", "Save"),
+            "indonesian": ("Tambah Template", "Kembali", "Simpan"),
+            "japanese": ("テンプレートを追加", "戻る", "保存"),
+            "chinese": ("添加模板", "返回", "保存"),
+            "arabic": ("إضافة قالب", "رجوع", "حفظ"),
+            "korean": ("템플릿 추가", "뒤로", "저장"),
+            "spanish": ("Añadir plantilla", "Volver", "Guardar"),
+            "french": ("Ajouter un modèle", "Retour", "Enregistrer"),
+            "german": ("Vorlage hinzufügen", "Zurück", "Speichern"),
         }
         for locale, (add, back, save) in expected.items():
             content = (APP / "language" / locale / "sequence_lang.php").read_text()
@@ -166,7 +166,7 @@ class AdminSequenceContractTests(unittest.TestCase):
             "korean", "spanish", "french", "german",
         )
         keys = (
-            "heading", "intro", "search_label", "search_hint", "total", "empty",
+            "heading", "template_heading", "intro", "search_label", "search_hint", "total", "empty",
             'no_results', 'empty_hint', 'no_results_hint', 'unavailable', 'page', 'page_of', 'previous', 'next',
             "per_page", "sequence_code", "sequence_name", "description", "repeat_type",
             "menu", "menu_help", "menu_search", "remove_menu", "menu_code_required", "menu_code_invalid",

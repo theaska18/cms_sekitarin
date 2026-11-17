@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'シーケンス';
+$lang['sequence_template_heading'] = 'シーケンステンプレート';
 $lang['sequence_auto_number_permission_required'] = '自動採番を変更する権限がありません。';
 $lang['sequence_use_flag_help'] = '有効にするとシステムが番号を自動生成します。無効の場合は番号を手動で入力します。';
 $lang['sequence_use_flag_disabled'] = '手動';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'このテナントでは�
 $lang['sequence_application_form_intro'] = 'このテナントのカウンターと生成設定を編集します。システム共通テンプレートは変更されません。';
 $lang['sequence_application_intro'] = 'アクセス可能なメニューに関連付けられたテンプレートから、このテナントのシーケンスを設定します。未設定のテンプレートを保存すると、テナント設定が作成されます。';
 $lang['sequence_no_access'] = 'このシーケンスページへのアクセス権がありません。';
-$lang['sequence_add'] = '追加';
+$lang['sequence_add'] = 'テンプレートを追加';
 $lang['sequence_actions'] = '操作';
 $lang['sequence_edit'] = '編集';
 $lang['sequence_delete'] = '削除';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'シーケンスを作成しました。';
 $lang['sequence_saved'] = 'シーケンスの変更を保存しました。';
 $lang['sequence_deleted'] = 'シーケンスを削除しました。';
 $lang['sequence_delete_error'] = 'シーケンスを削除できませんでした。もう一度お試しください。';
-$lang['sequence_intro'] = 'システムのシーケンス定義と現在の値を表示します。';
+$lang['sequence_intro'] = 'システムのシーケンステンプレートと現在の値を表示します。';
 $lang['sequence_search_label'] = 'シーケンスを検索';
 $lang['sequence_search_hint'] = 'シーケンスを検索…';
 $lang['sequence_total'] = '%s 件のシーケンス';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = '選択したメニューはマニフェ�
 $lang['sequence_last_value'] = '最終値';
 $lang['sequence_last_sequence'] = '最終シーケンス';
 $lang['sequence_format'] = '形式';
-$lang['sequence_form_new'] = '新しいシーケンス';
-$lang['sequence_form_edit'] = 'シーケンスを編集';
+$lang['sequence_form_new'] = '新しいシーケンステンプレート';
+$lang['sequence_form_edit'] = 'シーケンステンプレートを編集';
 $lang['sequence_form_intro'] = 'シーケンス定義と初期値を入力してください。';
 $lang['sequence_choose_repeat_type'] = '繰り返し種別を選択';
 $lang['sequence_code_help'] = 'この欄を離れると、空白が削除され英字が小文字になります。';

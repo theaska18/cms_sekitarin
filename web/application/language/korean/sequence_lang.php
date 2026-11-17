@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = '시퀀스';
+$lang['sequence_template_heading'] = '시퀀스 템플릿';
 $lang['sequence_auto_number_permission_required'] = '자동 번호 설정을 변경할 권한이 없습니다.';
 $lang['sequence_use_flag_help'] = '사용하면 시스템이 번호를 자동 생성하고, 사용하지 않으면 번호를 직접 입력합니다.';
 $lang['sequence_use_flag_disabled'] = '수동';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = '이 테넌트에 미설정
 $lang['sequence_application_form_intro'] = '이 테넌트의 카운터와 생성 설정을 수정합니다. 공통 시스템 템플릿은 변경되지 않습니다.';
 $lang['sequence_application_intro'] = '접근 가능한 메뉴에 연결된 템플릿을 기준으로 테넌트 시퀀스를 설정합니다. 미설정 템플릿을 저장하면 테넌트 설정이 생성됩니다.';
 $lang['sequence_no_access'] = '이 시퀀스 페이지에 접근할 권한이 없습니다.';
-$lang['sequence_add'] = '추가';
+$lang['sequence_add'] = '템플릿 추가';
 $lang['sequence_actions'] = '작업';
 $lang['sequence_edit'] = '수정';
 $lang['sequence_delete'] = '삭제';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = '시퀀스가 생성되었습니다.';
 $lang['sequence_saved'] = '시퀀스 변경 사항이 저장되었습니다.';
 $lang['sequence_deleted'] = '시퀀스가 삭제되었습니다.';
 $lang['sequence_delete_error'] = '시퀀스를 삭제할 수 없습니다. 다시 시도해 주세요.';
-$lang['sequence_intro'] = '시스템 시퀀스 정의와 현재 값을 확인합니다.';
+$lang['sequence_intro'] = '시스템 시퀀스 템플릿과 현재 값을 확인합니다.';
 $lang['sequence_search_label'] = '시퀀스 검색';
 $lang['sequence_search_hint'] = '시퀀스 검색…';
 $lang['sequence_total'] = '시퀀스 레코드 %s개';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = '선택한 메뉴가 매니페스트에 �
 $lang['sequence_last_value'] = '마지막 값';
 $lang['sequence_last_sequence'] = '마지막 시퀀스';
 $lang['sequence_format'] = '형식';
-$lang['sequence_form_new'] = '새 시퀀스';
-$lang['sequence_form_edit'] = '시퀀스 편집';
+$lang['sequence_form_new'] = '새 시퀀스 템플릿';
+$lang['sequence_form_edit'] = '시퀀스 템플릿 편집';
 $lang['sequence_form_intro'] = '시퀀스 정의와 초기값을 입력하세요.';
 $lang['sequence_choose_repeat_type'] = '반복 유형 선택';
 $lang['sequence_code_help'] = '이 입력란을 벗어나면 공백이 제거되고 영문자가 소문자로 바뀝니다.';

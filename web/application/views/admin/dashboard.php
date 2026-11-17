@@ -16,7 +16,7 @@
         <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base"><?php echo html_escape($labels['welcome_body']); ?></p>
     </div>
     <?php if (!empty($dashboard_tenant_name)): ?>
-        <div class="min-w-0 rounded-2xl border border-white/90 bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
+        <div class="dashboard-tenant-card min-w-0 rounded-2xl border border-white/90 bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
             <p class="text-xs font-bold uppercase tracking-[.12em] text-slate-500">Tenant</p>
             <p class="mt-1 break-words text-base font-bold text-slate-900 sm:text-lg"><?php echo html_escape($dashboard_tenant_name); ?></p>
         </div>

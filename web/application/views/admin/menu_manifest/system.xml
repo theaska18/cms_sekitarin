@@ -48,11 +48,11 @@
     </menu>
 
     <menu code="sys_sequence"
-          name="Sequence"
-          label_key="admin_sequence"
+          name="Sequence Template"
+          label_key="admin_sequence_template"
           icon="list-ordered"
           route="/admin/system/sequence"
-          module_key="sequence"
+          module_key="sequence_template"
           module_description_key="system_sequence_description"
           module_focus_key="system_sequence_focus"
           sort_order="4"

@@ -79,6 +79,9 @@ html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] > d
 html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] p { color: #cbd5e1 !important; }
 html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] h2 { color: #f8fafc !important; }
 html[data-theme="dark"] #admin-app-shell [aria-labelledby="welcome-heading"] a { color: #ffffff !important; }
+html[data-theme="dark"] #admin-app-shell .dashboard-tenant-card { background-color: #172033 !important; border-color: #334155 !important; box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important; }
+html[data-theme="dark"] #admin-app-shell .dashboard-tenant-card p:first-child { color: #94a3b8 !important; }
+html[data-theme="dark"] #admin-app-shell .dashboard-tenant-card p:last-child { color: #f1f5f9 !important; }
 
 html[data-theme="dark"] #admin-app-shell a[rel="prev"],
 html[data-theme="dark"] #admin-app-shell a[rel="next"],

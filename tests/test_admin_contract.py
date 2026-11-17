@@ -32,7 +32,7 @@ SUPPORTED_LOCALES = {
 
 REQUIRED_ADMIN_KEYS = {
     "dashboard", "system", "application", "property", "tenant", "parameter", "menu", "sequence",
-    "employee", "role", "user", "back_home", "language", "logout", "profile",
+    "employee", "role", "user", "sequence_template", "back_home", "language", "logout", "profile",
     "settings", "welcome_title", "welcome_body", "quick_links", "placeholder_title",
     "placeholder_body", "admin_area", "apply_language",
     "topbar_navigation", "sidebar_navigation", "open_navigation", "close_navigation",
@@ -165,10 +165,13 @@ class AdminDashboardContractTests(unittest.TestCase):
     def test_dashboard_loads_active_tenant_name_and_escapes_it_in_responsive_hero(self):
         controller = CONTROLLER.read_text()
         dashboard = VIEW.read_text()
+        theme = (ROOT / "web/assets/css/admin-theme.css").read_text()
         self.assertIn("$this->current_user['tenant_id']", controller)
         self.assertIn("->where('tenant_id', $tenant_id)", controller)
         self.assertIn("'dashboard_tenant_name' => $dashboard_tenant_name", controller)
         self.assertIn("html_escape($dashboard_tenant_name)", dashboard)
+        self.assertIn("class=\"dashboard-tenant-card", dashboard)
+        self.assertIn(".dashboard-tenant-card { background-color: #172033", theme)
         self.assertIn("lg:grid-cols-[minmax(0,1fr)_auto]", dashboard)
 
     def test_parameter_navigation_uses_its_manifest_route_and_registered_module(self):

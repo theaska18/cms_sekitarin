@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequences';
+$lang['sequence_template_heading'] = 'Sequence Template';
 $lang['sequence_auto_number_permission_required'] = 'You do not have permission to change automatic numbering.';
 $lang['sequence_use_flag_help'] = 'When enabled, the system generates sequence values automatically. When disabled, the number must be entered manually.';
 $lang['sequence_use_flag_disabled'] = 'Manual';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'Not configured for this te
 $lang['sequence_application_form_intro'] = 'Edit this tenant’s counter and generation settings. The shared system template is not changed.';
 $lang['sequence_application_intro'] = 'Configure tenant-specific sequence settings for templates linked to menus you can access. Saving an unconfigured template creates its tenant settings.';
 $lang['sequence_no_access'] = 'You do not have access to this Sequence page.';
-$lang['sequence_add'] = 'Add';
+$lang['sequence_add'] = 'Add Template';
 $lang['sequence_actions'] = 'Actions';
 $lang['sequence_edit'] = 'Edit';
 $lang['sequence_delete'] = 'Delete';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'Sequence created successfully.';
 $lang['sequence_saved'] = 'Sequence changes saved.';
 $lang['sequence_deleted'] = 'Sequence deleted successfully.';
 $lang['sequence_delete_error'] = 'The sequence could not be deleted. Please try again.';
-$lang['sequence_intro'] = 'Browse system sequence definitions and their current values.';
+$lang['sequence_intro'] = 'Browse system sequence templates and their current values.';
 $lang['sequence_search_label'] = 'Search sequences';
 $lang['sequence_search_hint'] = 'Search sequences…';
 $lang['sequence_total'] = '%s sequence records';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'The selected menu is not available in the
 $lang['sequence_last_value'] = 'Last value';
 $lang['sequence_last_sequence'] = 'Last sequence';
 $lang['sequence_format'] = 'Format';
-$lang['sequence_form_new'] = 'New sequence';
-$lang['sequence_form_edit'] = 'Edit sequence';
+$lang['sequence_form_new'] = 'New sequence template';
+$lang['sequence_form_edit'] = 'Edit sequence template';
 $lang['sequence_form_intro'] = 'Enter the sequence definition and its initial value.';
 $lang['sequence_choose_repeat_type'] = 'Select a repeat type';
 $lang['sequence_code_help'] = 'Spaces are removed and letters are converted to lowercase when you leave this field.';

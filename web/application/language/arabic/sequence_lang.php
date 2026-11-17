@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'التسلسلات';
+$lang['sequence_template_heading'] = 'قالب التسلسل';
 $lang['sequence_auto_number_permission_required'] = 'لا تملك صلاحية تغيير إعداد الترقيم التلقائي.';
 $lang['sequence_use_flag_help'] = 'عند التفعيل ينشئ النظام الأرقام تلقائياً؛ وعند التعطيل يجب إدخال الرقم يدوياً.';
 $lang['sequence_use_flag_disabled'] = 'يدوي';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'غير مُعد لهذا �
 $lang['sequence_application_form_intro'] = 'عدّل العداد وإعدادات الإنشاء لهذا المستأجر. لن يتغير قالب النظام المشترك.';
 $lang['sequence_application_intro'] = 'اضبط التسلسلات الخاصة بالمستأجر من القوالب المرتبطة بالقوائم التي يمكنك الوصول إليها. سيؤدي حفظ قالب غير مُعد إلى إنشاء إعدادات المستأجر.';
 $lang['sequence_no_access'] = 'ليس لديك صلاحية الوصول إلى صفحة التسلسلات هذه.';
-$lang['sequence_add'] = 'إضافة';
+$lang['sequence_add'] = 'إضافة قالب';
 $lang['sequence_actions'] = 'الإجراءات';
 $lang['sequence_edit'] = 'تعديل';
 $lang['sequence_delete'] = 'حذف';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'تم إنشاء التسلسل بنجاح.';
 $lang['sequence_saved'] = 'تم حفظ تغييرات التسلسل.';
 $lang['sequence_deleted'] = 'تم حذف التسلسل بنجاح.';
 $lang['sequence_delete_error'] = 'تعذر حذف التسلسل. يرجى المحاولة مرة أخرى.';
-$lang['sequence_intro'] = 'استعراض تعريفات تسلسلات النظام وقيمها الحالية.';
+$lang['sequence_intro'] = 'استعراض قوالب تسلسل النظام وقيمها الحالية.';
 $lang['sequence_search_label'] = 'البحث في التسلسلات';
 $lang['sequence_search_hint'] = 'ابحث عن تسلسل…';
 $lang['sequence_total'] = '%s سجل تسلسل';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'القائمة المحددة غير مو
 $lang['sequence_last_value'] = 'القيمة الأخيرة';
 $lang['sequence_last_sequence'] = 'التسلسل الأخير';
 $lang['sequence_format'] = 'التنسيق';
-$lang['sequence_form_new'] = 'تسلسل جديد';
-$lang['sequence_form_edit'] = 'تعديل التسلسل';
+$lang['sequence_form_new'] = 'قالب تسلسل جديد';
+$lang['sequence_form_edit'] = 'تعديل قالب التسلسل';
 $lang['sequence_form_intro'] = 'أدخل تعريف التسلسل وقيمته الأولية.';
 $lang['sequence_choose_repeat_type'] = 'اختر نوع التكرار';
 $lang['sequence_code_help'] = 'تُحذف المسافات وتُحوّل الأحرف إلى صغيرة عند مغادرة هذا الحقل.';

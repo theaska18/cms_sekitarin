@@ -90,7 +90,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         self.assertIn("module_key", loader)
         self.assertIn("module_description_key", loader)
         self.assertIn("module_focus_key", loader)
-        self.assertIn('module_key="sequence"', (MANIFEST_DIR / "system.xml").read_text())
+        self.assertIn('module_key="sequence_template"', (MANIFEST_DIR / "system.xml").read_text())
         self.assertIn("has_admin_menu_code($module['menu_code'])", controller)
 
     def test_application_sequence_route_dispatches_separately_from_system_sequence(self):
@@ -104,6 +104,18 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         sequence = SEQUENCE_CONTROLLER.read_text()
         self.assertIn("admin/application/sequence", sequence)
         self.assertIn("$this->application_sequence_index()", sequence)
+
+    def test_system_sequence_is_renamed_without_renaming_application_sequence(self):
+        system = parse_xml(MANIFEST_DIR / "system.xml")
+        application = parse_xml(MANIFEST_DIR / "application.xml")
+        system_sequence = next(item for item in system.findall("menu") if item.attrib["code"] == "sys_sequence")
+        app_sequence = next(item for item in application.findall("menu") if item.attrib["code"] == "app_sequence")
+        self.assertEqual("Sequence Template", system_sequence.attrib["name"])
+        self.assertEqual("admin_sequence_template", system_sequence.attrib["label_key"])
+        self.assertEqual("/admin/system/sequence", system_sequence.attrib["route"])
+        self.assertEqual("Sequence", app_sequence.attrib["name"])
+        self.assertEqual("admin_sequence", app_sequence.attrib["label_key"])
+        self.assertEqual("/admin/application/sequence", app_sequence.attrib["route"])
 
     def test_manifest_labels_resolve_in_all_nine_locales_and_fall_back_to_xml_name(self):
         groups = parse_xml(MANIFEST_DIR / "manifest.xml").findall("group")

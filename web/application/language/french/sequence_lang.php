@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Séquences';
+$lang['sequence_template_heading'] = 'Modèle de séquence';
 $lang['sequence_auto_number_permission_required'] = 'Vous ne pouvez pas modifier la numérotation automatique.';
 $lang['sequence_use_flag_help'] = 'Activée, la séquence est générée automatiquement. Désactivée, le numéro doit être saisi manuellement.';
 $lang['sequence_use_flag_disabled'] = 'Manuelle';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'Non configurée pour ce te
 $lang['sequence_application_form_intro'] = 'Modifiez le compteur et la génération pour ce tenant. Le modèle système partagé reste inchangé.';
 $lang['sequence_application_intro'] = 'Configurez les séquences du tenant à partir des modèles liés aux menus accessibles. Enregistrer un modèle non configuré crée les paramètres du tenant.';
 $lang['sequence_no_access'] = 'Vous n’avez pas accès à cette page des séquences.';
-$lang['sequence_add'] = 'Ajouter';
+$lang['sequence_add'] = 'Ajouter un modèle';
 $lang['sequence_actions'] = 'Actions';
 $lang['sequence_edit'] = 'Modifier';
 $lang['sequence_delete'] = 'Supprimer';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'La séquence a été créée.';
 $lang['sequence_saved'] = 'Les modifications de la séquence ont été enregistrées.';
 $lang['sequence_deleted'] = 'La séquence a été supprimée.';
 $lang['sequence_delete_error'] = 'Impossible de supprimer la séquence. Veuillez réessayer.';
-$lang['sequence_intro'] = 'Consultez les définitions des séquences système et leurs valeurs actuelles.';
+$lang['sequence_intro'] = 'Consultez les modèles de séquence système et leurs valeurs actuelles.';
 $lang['sequence_search_label'] = 'Rechercher des séquences';
 $lang['sequence_search_hint'] = 'Rechercher des séquences…';
 $lang['sequence_total'] = '%s enregistrements de séquence';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'Le menu sélectionné est absent du manif
 $lang['sequence_last_value'] = 'Dernière valeur';
 $lang['sequence_last_sequence'] = 'Dernière séquence';
 $lang['sequence_format'] = 'Format';
-$lang['sequence_form_new'] = 'Nouvelle séquence';
-$lang['sequence_form_edit'] = 'Modifier la séquence';
+$lang['sequence_form_new'] = 'Nouveau modèle de séquence';
+$lang['sequence_form_edit'] = 'Modifier le modèle de séquence';
 $lang['sequence_form_intro'] = 'Saisissez la définition de la séquence et sa valeur initiale.';
 $lang['sequence_choose_repeat_type'] = 'Sélectionnez un type de répétition';
 $lang['sequence_code_help'] = 'Les espaces sont supprimés et les lettres converties en minuscules lorsque vous quittez ce champ.';

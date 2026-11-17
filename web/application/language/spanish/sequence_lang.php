@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Secuencias';
+$lang['sequence_template_heading'] = 'Plantilla de secuencia';
 $lang['sequence_auto_number_permission_required'] = 'No tienes permiso para cambiar la numeración automática.';
 $lang['sequence_use_flag_help'] = 'Al activarla, el sistema genera los números automáticamente. Al desactivarla, deben introducirse manualmente.';
 $lang['sequence_use_flag_disabled'] = 'Manual';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'Sin configurar para este t
 $lang['sequence_application_form_intro'] = 'Edita el contador y la generación de secuencias de este tenant. La plantilla del sistema no cambia.';
 $lang['sequence_application_intro'] = 'Configura secuencias del tenant con plantillas vinculadas a menús accesibles. Al guardar una plantilla sin configurar, se crearán los ajustes del tenant.';
 $lang['sequence_no_access'] = 'No tienes permiso para acceder a esta página de secuencias.';
-$lang['sequence_add'] = 'Añadir';
+$lang['sequence_add'] = 'Añadir plantilla';
 $lang['sequence_actions'] = 'Acciones';
 $lang['sequence_edit'] = 'Editar';
 $lang['sequence_delete'] = 'Eliminar';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'La secuencia se creó correctamente.';
 $lang['sequence_saved'] = 'Se guardaron los cambios de la secuencia.';
 $lang['sequence_deleted'] = 'La secuencia se eliminó correctamente.';
 $lang['sequence_delete_error'] = 'No se pudo eliminar la secuencia. Inténtalo de nuevo.';
-$lang['sequence_intro'] = 'Consulta las definiciones de secuencia del sistema y sus valores actuales.';
+$lang['sequence_intro'] = 'Consulta las plantillas de secuencia del sistema y sus valores actuales.';
 $lang['sequence_search_label'] = 'Buscar secuencias';
 $lang['sequence_search_hint'] = 'Buscar secuencias…';
 $lang['sequence_total'] = '%s registros de secuencia';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'El menú seleccionado no está disponible
 $lang['sequence_last_value'] = 'Último valor';
 $lang['sequence_last_sequence'] = 'Última secuencia';
 $lang['sequence_format'] = 'Formato';
-$lang['sequence_form_new'] = 'Nueva secuencia';
-$lang['sequence_form_edit'] = 'Editar secuencia';
+$lang['sequence_form_new'] = 'Nueva plantilla de secuencia';
+$lang['sequence_form_edit'] = 'Editar plantilla de secuencia';
 $lang['sequence_form_intro'] = 'Introduce la definición de la secuencia y su valor inicial.';
 $lang['sequence_choose_repeat_type'] = 'Selecciona un tipo de repetición';
 $lang['sequence_code_help'] = 'Al salir del campo se eliminan los espacios y las letras se convierten a minúsculas.';

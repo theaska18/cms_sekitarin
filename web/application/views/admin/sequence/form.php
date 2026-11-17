@@ -29,7 +29,7 @@ foreach ($sequence_errors as $error) {
         <ol class="flex flex-wrap items-center gap-2">
             <li><?= html_escape($labels['system']) ?></li>
             <li aria-hidden="true">/</li>
-            <li><a href="/admin/system/sequence" class="hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"><?= html_escape($labels['sequence_heading']) ?></a></li>
+            <li><a href="/admin/system/sequence" class="hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"><?= html_escape($labels['sequence_template_heading']) ?></a></li>
             <li aria-hidden="true">/</li>
             <li aria-current="page" class="font-medium text-slate-800"><?= html_escape($sequence_form_title) ?></li>
         </ol>

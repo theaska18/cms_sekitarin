@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['sequence_heading'] = 'Sequence';
+$lang['sequence_template_heading'] = 'Template Sequence';
 $lang['sequence_auto_number_permission_required'] = 'Anda tidak memiliki izin untuk mengubah pengaturan penomoran otomatis.';
 $lang['sequence_use_flag_help'] = 'Jika diaktifkan, sistem menghasilkan nomor secara otomatis. Jika dinonaktifkan, nomor harus dimasukkan secara manual.';
 $lang['sequence_use_flag_disabled'] = 'Manual';
@@ -16,7 +17,7 @@ $lang['sequence_application_not_configured_short'] = 'Belum dikonfigurasi untuk 
 $lang['sequence_application_form_intro'] = 'Ubah penghitung dan format sequence untuk tenant ini. Perubahan tidak mengubah template sistem.';
 $lang['sequence_application_intro'] = 'Atur sequence untuk tenant ini dari template yang terhubung ke menu yang dapat Anda akses. Menyimpan template yang belum dikonfigurasi akan membuat pengaturan tenant.';
 $lang['sequence_no_access'] = 'Anda tidak memiliki akses ke halaman Sequence ini.';
-$lang['sequence_add'] = 'Tambah';
+$lang['sequence_add'] = 'Tambah Template';
 $lang['sequence_actions'] = 'Aksi';
 $lang['sequence_edit'] = 'Ubah';
 $lang['sequence_delete'] = 'Hapus';
@@ -26,7 +27,7 @@ $lang['sequence_created'] = 'Sequence berhasil ditambahkan.';
 $lang['sequence_saved'] = 'Perubahan sequence berhasil disimpan.';
 $lang['sequence_deleted'] = 'Sequence berhasil dihapus.';
 $lang['sequence_delete_error'] = 'Sequence tidak dapat dihapus. Silakan coba lagi.';
-$lang['sequence_intro'] = 'Lihat definisi sequence sistem dan nilai terkininya.';
+$lang['sequence_intro'] = 'Lihat template sequence sistem dan nilai terkininya.';
 $lang['sequence_search_label'] = 'Cari sequence';
 $lang['sequence_search_hint'] = 'Cari sequence…';
 $lang['sequence_total'] = '%s data sequence';
@@ -64,8 +65,8 @@ $lang['sequence_menu_code_invalid'] = 'Menu yang dipilih tidak tersedia di manif
 $lang['sequence_last_value'] = 'Nilai terakhir';
 $lang['sequence_last_sequence'] = 'Sequence terakhir';
 $lang['sequence_format'] = 'Format';
-$lang['sequence_form_new'] = 'Sequence baru';
-$lang['sequence_form_edit'] = 'Ubah sequence';
+$lang['sequence_form_new'] = 'Template sequence baru';
+$lang['sequence_form_edit'] = 'Ubah template sequence';
 $lang['sequence_form_intro'] = 'Masukkan definisi sequence dan nilai awalnya.';
 $lang['sequence_choose_repeat_type'] = 'Pilih tipe pengulangan';
 $lang['sequence_code_help'] = 'Spasi dihapus dan huruf diubah menjadi lowercase saat keluar dari kolom ini.';
