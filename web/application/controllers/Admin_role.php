@@ -296,45 +296,14 @@ class Admin_role extends Admin
         }
 
         $this->load->library('role_menu_access_store');
-        $this->load->library('tenant_menu_access_store');
-        $this->load->library('admin_menu_manifest');
         $role_menu_store = $this->role_menu_access_store;
-        $tenant_menu_store = $this->tenant_menu_access_store;
         $role_state = $role_menu_store->state($role['role_id']);
-        $tenant_state = $tenant_menu_store->state($role['tenant_id']);
-        $manifest_file = APPPATH . 'views/admin/menu_manifest/manifest.xml';
-        $manifest_groups = $this->admin_menu_manifest->load($manifest_file);
-        $groups = array();
-        $allowed_state = array();
-
-        foreach ($manifest_groups as $group) {
-            $visible_group = $group;
-            $visible_group['items'] = array();
-            foreach ($group['items'] as $item) {
-                $menu_code = (string) $item['code'];
-                if (!is_array($tenant_state) || !isset($tenant_state[$menu_code])) {
-                    continue;
-                }
-                $visible_item = $item;
-                $visible_item['accesses'] = array();
-                $allowed_state[$menu_code] = array();
-                foreach ($item['accesses'] as $access) {
-                    $access_code = (string) $access['access_code'];
-                    if (!isset($tenant_state[$menu_code][$access_code])) {
-                        continue;
-                    }
-                    $visible_item['accesses'][] = $access;
-                    $allowed_state[$menu_code][$access_code] = TRUE;
-                }
-                $visible_group['items'][] = $visible_item;
-            }
-            if ($visible_group['items']) {
-                $groups[] = $visible_group;
-            }
-        }
+        $catalog = $this->role_menu_allowed_catalog($role);
+        $groups = $catalog === FALSE ? array() : $catalog[0];
+        $allowed_state = $catalog === FALSE ? array() : $catalog[1];
 
         $write_available = $this->role_write_available($role_store)
-            && $role_state !== FALSE && $tenant_state !== FALSE
+            && $role_state !== FALSE && $catalog !== FALSE
             && $role_menu_store->schema_available() && !empty($allowed_state);
         $status = $this->session->flashdata('admin_role_status');
         $error = '';
@@ -368,16 +337,240 @@ class Admin_role extends Admin
             }
         }
 
-        $this->render_admin('admin/role/menu', 'role', '/admin/application/role/menu/' . rawurlencode((string) $role['role_code']) . '/' . (int) $role['tenant_id'], array(
+        $this->load->library('menu_access_catalog');
+        $role_menu_rows = $this->menu_access_catalog->rows(
+            $groups,
+            is_array($role_state) ? $role_state : array(),
+            $allowed_state
+        );
+        $role_menu_base = '/admin/application/role/menu/' . rawurlencode((string) $role['role_code']) . '/' . (int) $role['tenant_id'];
+
+        $this->render_admin('admin/role/menu', 'role', $role_menu_base, array(
             'role_record' => $role,
             'role_menu_groups' => $groups,
             'role_menu_selected' => is_array($role_state) ? $role_state : array(),
             'role_menu_label' => $this->lang->line('admin_menu'),
-            'role_menu_backend_available' => $role_state !== FALSE && $tenant_state !== FALSE,
+            'role_menu_backend_available' => $role_state !== FALSE && $catalog !== FALSE,
             'role_menu_write_available' => $write_available,
             'role_menu_error_key' => $error,
             'role_menu_status_key' => $status === 'menu_saved' ? 'menu_saved' : '',
+            'menu_access_rows' => $role_menu_rows,
+            'menu_access_table_id' => 'role-menu-table',
+            'menu_access_datatable_url' => $role_menu_base . '/data',
+            'menu_access_toggle_url' => $role_menu_base . '/toggle',
+            'menu_access_write_available' => $write_available,
         ));
+    }
+
+    /** DataTables server-side endpoint for one role's tenant-scoped menu catalog. */
+    public function role_menu_data($role_code, $tenant_id = NULL)
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('app_role') || !$this->has_admin_access_code('app_role_menu_access')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $role = $this->role_menu_record($role_code, $tenant_id);
+        if ($role === NULL) {
+            $this->datatable_server->error(404);
+            return;
+        }
+        $role_store = $this->role_store();
+        if ($role_store === NULL || !$role_store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $this->load->library('role_menu_access_store');
+        $role_menu_store = $this->role_menu_access_store;
+        $role_state = $role_menu_store->state($role['role_id']);
+        $catalog = $this->role_menu_allowed_catalog($role);
+        if ($role_state === FALSE || $catalog === FALSE) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $groups = $catalog[0];
+        $allowed_state = $catalog[1];
+        $this->load->library('menu_access_catalog');
+        $columns = $this->menu_access_catalog;
+        $rows = $columns->rows($groups, $role_state, $allowed_state);
+        $write_available = $this->role_write_available($role_store);
+        $this->datatable_server->respond(
+            array(0 => 'group', 1 => 'menu'),
+            function () use ($rows) {
+                return count($rows);
+            },
+            function ($search) use ($rows, $columns) {
+                return count($columns->filter($rows, $search));
+            },
+            function ($search, $length, $start, $order, $direction) use ($rows, $columns, $write_available) {
+                $filtered = $columns->filter($rows, $search);
+                $sorted = $columns->sort($filtered, $order, $direction);
+                $page = $columns->slice($sorted, $length, $start);
+
+                return $this->menu_access_payload($page, $write_available);
+            },
+            array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
+        );
+    }
+
+    /** Toggle one role menu or access checkbox inside the tenant-scoped catalog. */
+    public function role_menu_toggle($role_code, $tenant_id = NULL)
+    {
+        if (!$this->has_admin_menu_code('app_role') || !$this->has_admin_access_code('app_role_menu_access')) {
+            $this->menu_access_json(403, array('saved' => FALSE));
+            return;
+        }
+        if ($this->input->method(TRUE) !== 'POST') {
+            $this->menu_access_json(405, array('saved' => FALSE));
+            return;
+        }
+        $role = $this->role_menu_record($role_code, $tenant_id);
+        if ($role === NULL) {
+            $this->menu_access_json(404, array('saved' => FALSE));
+            return;
+        }
+        $role_store = $this->role_store();
+        $this->load->library('role_menu_access_store');
+        $role_menu_store = $this->role_menu_access_store;
+        if (!$this->role_write_available($role_store) || !$role_menu_store->schema_available()) {
+            $this->menu_access_json(503, array('saved' => FALSE));
+            return;
+        }
+        $catalog = $this->role_menu_allowed_catalog($role);
+        if ($catalog === FALSE) {
+            $this->menu_access_json(503, array('saved' => FALSE));
+            return;
+        }
+        $allowed_state = $catalog[1];
+        $menu_code = $this->input->post('menu_code', FALSE);
+        $access_code = $this->input->post('access_code', FALSE);
+        $checked = $this->input->post('checked', FALSE) === '1';
+        if (!is_string($menu_code) || $menu_code === '' || !array_key_exists($menu_code, $allowed_state)) {
+            $this->menu_access_json(422, array('saved' => FALSE));
+            return;
+        }
+        if (is_string($access_code) && $access_code !== '') {
+            if (!isset($allowed_state[$menu_code][$access_code])) {
+                $this->menu_access_json(422, array('saved' => FALSE));
+                return;
+            }
+            $saved = $role_menu_store->toggle_access(
+                (int) $role['role_id'],
+                $menu_code,
+                $access_code,
+                $checked,
+                $allowed_state
+            );
+        } else {
+            $saved = $role_menu_store->toggle_menu(
+                (int) $role['role_id'],
+                $menu_code,
+                $checked,
+                $allowed_state
+            );
+        }
+        $this->menu_access_json($saved ? 200 : 500, array('saved' => (bool) $saved));
+    }
+
+    /** Resolve and authorize the role/tenant pair used by the menu-access endpoints. */
+    private function role_menu_record($role_code, $tenant_id)
+    {
+        if (!$this->has_admin_access_code('app_role_tenant')) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+        }
+        $role_code = $this->role_code($role_code);
+        if ($tenant_id !== NULL && (!is_numeric($tenant_id)
+            || (string) (int) $tenant_id !== (string) $tenant_id || (int) $tenant_id < 1)) {
+            return NULL;
+        }
+        if ($role_code === '' || !preg_match('/^[a-zA-Z0-9._-]+$/', $role_code)) {
+            return NULL;
+        }
+        $role_store = $this->role_store();
+        if ($role_store === NULL || !$role_store->schema_available()) {
+            return NULL;
+        }
+        $role = $role_store->find($role_code, $tenant_id);
+
+        return is_array($role) ? $role : NULL;
+    }
+
+    /** Manifest menus and accesses the role's tenant has enabled. */
+    private function role_menu_allowed_catalog($role)
+    {
+        $this->load->library('tenant_menu_access_store');
+        $this->load->library('admin_menu_manifest');
+        $tenant_state = $this->tenant_menu_access_store->state((int) $role['tenant_id']);
+        if ($tenant_state === FALSE) {
+            return FALSE;
+        }
+        $manifest_groups = $this->admin_menu_manifest->load(
+            APPPATH . 'views/admin/menu_manifest/manifest.xml'
+        );
+        $groups = array();
+        $allowed_state = array();
+        foreach ($manifest_groups as $group) {
+            $visible_group = $group;
+            $visible_group['items'] = array();
+            foreach ($group['items'] as $item) {
+                $menu_code = (string) $item['code'];
+                if (!isset($tenant_state[$menu_code])) {
+                    continue;
+                }
+                $visible_item = $item;
+                $visible_item['accesses'] = array();
+                $allowed_state[$menu_code] = array();
+                foreach ($item['accesses'] as $access) {
+                    $access_code = (string) $access['access_code'];
+                    if (!isset($tenant_state[$menu_code][$access_code])) {
+                        continue;
+                    }
+                    $visible_item['accesses'][] = $access;
+                    $allowed_state[$menu_code][$access_code] = TRUE;
+                }
+                $visible_group['items'][] = $visible_item;
+            }
+            if ($visible_group['items']) {
+                $groups[] = $visible_group;
+            }
+        }
+
+        return array($groups, $allowed_state);
+    }
+
+    /** Render menu/access cells for DataTables rows through the shared partials. */
+    private function menu_access_payload($rows, $write_available)
+    {
+        $payload = array();
+        foreach ($rows as $row) {
+            $payload[] = array(
+                'menu' => $this->load->view('admin/menu_access/_menu_cell', array(
+                    'menu_access_row' => $row,
+                    'menu_access_write_available' => $write_available,
+                ), TRUE),
+                'group' => html_escape($row['group_label']),
+                'accesses' => $this->load->view('admin/menu_access/_access_cell', array(
+                    'menu_access_row' => $row,
+                    'menu_access_write_available' => $write_available,
+                ), TRUE),
+            );
+        }
+
+        return $payload;
+    }
+
+    private function menu_access_json($status, $payload)
+    {
+        $payload['csrf'] = array(
+            'name' => $this->security->get_csrf_token_name(),
+            'hash' => $this->security->get_csrf_hash(),
+        );
+        $this->output
+            ->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0')
+            ->set_header('Pragma: no-cache')
+            ->set_status_header((int) $status)
+            ->set_content_type('application/json')
+            ->set_output(json_encode($payload));
     }
 
     private function role_store()

@@ -170,4 +170,112 @@ class Tenant_menu_access_store
         $this->db->trans_commit();
         return $this->db->trans_status();
     }
+
+    /** Insert or remove a single menu without touching the tenant's other rows. */
+    public function toggle_menu($tenant_id, $menu_code, $checked, $manifest_access)
+    {
+        if (!$this->schema_available() || !is_numeric($tenant_id) || (int) $tenant_id < 1
+            || !is_string($menu_code) || $menu_code === '' || !is_array($manifest_access)
+            || !isset($manifest_access[$menu_code])) {
+            return FALSE;
+        }
+        $tenant_id = (int) $tenant_id;
+        $menu_id = $this->menu_row_id($tenant_id, $menu_code);
+        if ($menu_id === FALSE) {
+            return FALSE;
+        }
+        $this->db->trans_begin();
+        if ($checked) {
+            if ($menu_id === NULL && $this->db->insert('sys_tenant_menu', array(
+                'tenant_id' => $tenant_id,
+                'menu_code' => $menu_code,
+            )) !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        } elseif ($menu_id !== NULL) {
+            if ($this->db->where('tenant_menu_id', $menu_id)->delete('sys_tenant_menu_access') !== TRUE
+                || $this->db->where('tenant_menu_id', $menu_id)->delete('sys_tenant_menu') !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        }
+        if (!$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
+    /** Insert or remove one access row, creating the parent menu when needed. */
+    public function toggle_access($tenant_id, $menu_code, $access_code, $checked, $manifest_access)
+    {
+        if (!$this->schema_available() || !is_numeric($tenant_id) || (int) $tenant_id < 1
+            || !is_string($menu_code) || $menu_code === '' || !is_string($access_code) || $access_code === ''
+            || !is_array($manifest_access) || !isset($manifest_access[$menu_code])
+            || !in_array($access_code, $manifest_access[$menu_code], TRUE)) {
+            return FALSE;
+        }
+        $tenant_id = (int) $tenant_id;
+        $menu_id = $this->menu_row_id($tenant_id, $menu_code);
+        if ($menu_id === FALSE) {
+            return FALSE;
+        }
+        $this->db->trans_begin();
+        if ($checked) {
+            if ($menu_id === NULL) {
+                if ($this->db->insert('sys_tenant_menu', array(
+                    'tenant_id' => $tenant_id,
+                    'menu_code' => $menu_code,
+                )) !== TRUE) {
+                    $this->db->trans_rollback();
+                    return FALSE;
+                }
+                $menu_id = (int) $this->db->insert_id();
+            }
+            $existing = $this->db->select('tenant_menu_access_id')
+                ->where(array('tenant_menu_id' => $menu_id, 'access_code' => $access_code))
+                ->limit(1)
+                ->get('sys_tenant_menu_access');
+            if ($existing === FALSE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            if (!$existing->row_array() && $this->db->insert('sys_tenant_menu_access', array(
+                'tenant_menu_id' => $menu_id,
+                'access_code' => $access_code,
+            )) !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        } elseif ($menu_id !== NULL) {
+            if ($this->db->where(array('tenant_menu_id' => $menu_id, 'access_code' => $access_code))
+                ->delete('sys_tenant_menu_access') !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        }
+        if (!$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
+    /** Return the tenant menu primary key, NULL when absent, FALSE on query failure. */
+    private function menu_row_id($tenant_id, $menu_code)
+    {
+        $query = $this->db->select('tenant_menu_id')
+            ->where(array('tenant_id' => (int) $tenant_id, 'menu_code' => $menu_code))
+            ->limit(1)
+            ->get('sys_tenant_menu');
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        $row = $query->row_array();
+
+        return $row ? (int) $row['tenant_menu_id'] : NULL;
+    }
 }

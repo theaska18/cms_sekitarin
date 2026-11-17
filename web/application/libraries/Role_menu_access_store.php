@@ -178,4 +178,112 @@ class Role_menu_access_store
         unset($accesses);
         return $saved === $expected;
     }
+
+    /** Insert or remove a single role menu when the tenant allows it. */
+    public function toggle_menu($role_id, $menu_code, $checked, $menu_catalog)
+    {
+        if (!$this->schema_available() || !is_numeric($role_id) || (int) $role_id < 1
+            || !is_string($menu_code) || $menu_code === '' || !is_array($menu_catalog)
+            || !array_key_exists($menu_code, $menu_catalog)) {
+            return FALSE;
+        }
+        $role_id = (int) $role_id;
+        $menu_id = $this->menu_row_id($role_id, $menu_code);
+        if ($menu_id === FALSE) {
+            return FALSE;
+        }
+        $this->db->trans_begin();
+        if ($checked) {
+            if ($menu_id === NULL && $this->db->insert('app_role_menu', array(
+                'role_id' => $role_id,
+                'menu_code' => $menu_code,
+            )) !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        } elseif ($menu_id !== NULL) {
+            if ($this->db->where('role_menu_id', $menu_id)->delete('app_role_menu_access') !== TRUE
+                || $this->db->where('role_menu_id', $menu_id)->delete('app_role_menu') !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        }
+        if (!$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
+    /** Insert or remove one role access row when the tenant allows it. */
+    public function toggle_access($role_id, $menu_code, $access_code, $checked, $menu_catalog)
+    {
+        if (!$this->schema_available() || !is_numeric($role_id) || (int) $role_id < 1
+            || !is_string($menu_code) || $menu_code === '' || !is_string($access_code) || $access_code === ''
+            || !is_array($menu_catalog) || !array_key_exists($menu_code, $menu_catalog)
+            || !is_array($menu_catalog[$menu_code]) || !isset($menu_catalog[$menu_code][$access_code])) {
+            return FALSE;
+        }
+        $role_id = (int) $role_id;
+        $menu_id = $this->menu_row_id($role_id, $menu_code);
+        if ($menu_id === FALSE) {
+            return FALSE;
+        }
+        $this->db->trans_begin();
+        if ($checked) {
+            if ($menu_id === NULL) {
+                if ($this->db->insert('app_role_menu', array(
+                    'role_id' => $role_id,
+                    'menu_code' => $menu_code,
+                )) !== TRUE) {
+                    $this->db->trans_rollback();
+                    return FALSE;
+                }
+                $menu_id = (int) $this->db->insert_id();
+            }
+            $existing = $this->db->select('role_menu_access_id')
+                ->where(array('role_menu_id' => $menu_id, 'access_code' => $access_code))
+                ->limit(1)
+                ->get('app_role_menu_access');
+            if ($existing === FALSE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            if (!$existing->row_array() && $this->db->insert('app_role_menu_access', array(
+                'role_menu_id' => $menu_id,
+                'access_code' => $access_code,
+            )) !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        } elseif ($menu_id !== NULL) {
+            if ($this->db->where(array('role_menu_id' => $menu_id, 'access_code' => $access_code))
+                ->delete('app_role_menu_access') !== TRUE) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+        }
+        if (!$this->db->trans_status()) {
+            $this->db->trans_rollback();
+            return FALSE;
+        }
+        $this->db->trans_commit();
+        return TRUE;
+    }
+
+    /** Return the role menu primary key, NULL when absent, FALSE on query failure. */
+    private function menu_row_id($role_id, $menu_code)
+    {
+        $query = $this->db->select('role_menu_id')
+            ->where(array('role_id' => (int) $role_id, 'menu_code' => $menu_code))
+            ->limit(1)
+            ->get('app_role_menu');
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        $row = $query->row_array();
+
+        return $row ? (int) $row['role_menu_id'] : NULL;
+    }
 }

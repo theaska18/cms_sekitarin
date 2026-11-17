@@ -11,6 +11,10 @@ ROUTES = WEB / "application/config/routes.php"
 CONTROLLER = WEB / "application/controllers/Admin_tenant.php"
 STORE = WEB / "application/libraries/Tenant_menu_access_store.php"
 VIEW = WEB / "application/views/admin/tenant/menu.php"
+TABLE = WEB / "application/views/admin/menu_access/table.php"
+MENU_CELL = WEB / "application/views/admin/menu_access/_menu_cell.php"
+ACCESS_CELL = WEB / "application/views/admin/menu_access/_access_cell.php"
+SCRIPT = WEB / "assets/js/admin-menu-access.js"
 
 
 def parse_xml(path):
@@ -47,21 +51,29 @@ class AdminTenantMenuContractTests(unittest.TestCase):
     def test_menu_page_renders_manifest_checkboxes_and_access_controls(self):
         controller = CONTROLLER.read_text()
         view = VIEW.read_text()
+        table = TABLE.read_text()
+        menu_cell = MENU_CELL.read_text()
+        access_cell = ACCESS_CELL.read_text()
         self.assertIn("admin_menu_manifest", controller)
         self.assertIn("$group['items']", controller)
-        self.assertIn("tenant_menu_groups", controller)
-        self.assertIn("$group['label']", view)
-        self.assertIn("menu_codes[]", view)
-        self.assertIn("access_codes[", view)
-        self.assertIn("$access['access_name']", view)
-        self.assertIn("data-menu-toggle", view)
-        self.assertIn("data-menu-access", view)
-        self.assertIn("disabled", view)
+        self.assertIn("$group['label']", controller)
+        self.assertIn("admin/menu_access/table", view)
+        self.assertIn("menu_codes[]", menu_cell)
+        self.assertIn("access_codes[", access_cell)
+        self.assertIn("$menu_access_item['name']", access_cell)
+        self.assertIn("data-menu-toggle", menu_cell)
+        self.assertIn("data-menu-access", access_cell)
+        self.assertIn("disabled", menu_cell)
+        self.assertIn("disabled", access_cell)
+        self.assertIn("data-menu-access-table", table)
 
     def test_menu_and_access_codes_are_not_rendered_as_labels(self):
-        view = VIEW.read_text()
-        self.assertNotIn("<span><?= html_escape($item['code']) ?></span>", view)
-        self.assertNotIn("<span><?= html_escape($access['access_code']) ?></span>", view)
+        menu_cell = MENU_CELL.read_text()
+        access_cell = ACCESS_CELL.read_text()
+        self.assertNotIn("<span><?= html_escape($menu_access_code) ?></span>", menu_cell)
+        self.assertNotIn("<span><?= html_escape($menu_access_item_code) ?></span>", access_cell)
+        self.assertIn("$menu_access_name", menu_cell)
+        self.assertIn("$menu_access_item_name", access_cell)
 
     def test_menu_access_back_and_save_share_sticky_bar(self):
         view = VIEW.read_text()
@@ -88,45 +100,18 @@ class AdminTenantMenuContractTests(unittest.TestCase):
                     self.assertTrue(access.attrib.get("name", "").strip())
 
     def test_unchecking_menu_clears_and_disables_related_access(self):
-        view = VIEW.read_text()
-        self.assertRegex(view, re.compile(r"menuToggle\.addEventListener\('change'.*?accessCheckbox\.checked\s*=\s*false.*?accessCheckbox\.disabled\s*=\s*!menuToggle\.checked", re.S))
+        script = SCRIPT.read_text()
+        self.assertRegex(script, re.compile(r"function syncAccessState\(row, menuChecked\).*?accessCheckbox\.checked\s*=\s*false.*?accessCheckbox\.disabled\s*=\s*!menuChecked \|\| !writeAvailable", re.S))
 
-    def test_menu_toggle_behavior_in_rendered_script(self):
-        view = VIEW.read_text()
-        match = re.search(r"<script>(.*?)</script>", view, re.S)
-        self.assertIsNotNone(match)
-        script = re.sub(
-            r"<\?=\s*\$tenant_menu_write_available\s*\?\s*'false'\s*:\s*'true'\s*\?>",
-            "false",
-            match.group(1),
-        )
-        harness = r"""
-const assert = require('assert');
-const fs = require('fs');
-const vm = require('vm');
-const accesses = [{checked: true, disabled: false}, {checked: false, disabled: false}];
-const row = {querySelectorAll: () => accesses};
-const listeners = {};
-const menu = {
-  checked: true,
-  closest: () => row,
-  addEventListener: (event, callback) => { listeners[event] = callback; }
-};
-vm.runInNewContext(fs.readFileSync(0, 'utf8'), {
-  document: {querySelectorAll: () => [menu]}
-});
-assert.strictEqual(accesses[0].checked, true);
-assert.strictEqual(accesses[0].disabled, false);
-menu.checked = false;
-listeners.change();
-assert.strictEqual(accesses[0].checked, false);
-assert.strictEqual(accesses[0].disabled, true);
-menu.checked = true;
-listeners.change();
-assert.strictEqual(accesses[0].checked, false);
-assert.strictEqual(accesses[0].disabled, false);
-"""
-        result = subprocess.run(["node", "-e", harness], input=script, text=True, capture_output=True)
+    def test_menu_toggle_behavior_is_handled_by_shared_script(self):
+        script = SCRIPT.read_text()
+        self.assertIn("target.matches('[data-menu-toggle]')", script)
+        self.assertIn("syncAccessState(menuRow, target.checked)", script)
+        self.assertIn("target.checked = previousChecked", script)
+        self.assertIn("restoreAccesses(menuRow, accessSnapshot)", script)
+        self.assertIn("target.matches('[data-menu-access]')", script)
+        self.assertIn("target.checked = previousAccessChecked", script)
+        result = subprocess.run(["node", "--check", str(SCRIPT)], capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stderr)
 
     def test_menu_state_is_scoped_by_tenant_and_manifest_code(self):

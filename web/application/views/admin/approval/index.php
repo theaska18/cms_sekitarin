@@ -151,18 +151,26 @@
         var label=statusLabels[status]||status;
         return status==='pending'&&approver?label+' dari '+approver:label;
     }
-    var tableLanguage={
-        emptyTable:'Anda belum memiliki pengajuan persetujuan.',
-        zeroRecords:'Tidak ada pengajuan yang cocok.',
-        search:'Cari pengajuan: _INPUT_',
-        lengthMenu:'Tampilkan _MENU_ pengajuan',
-        info:'Menampilkan _START_–_END_ dari _TOTAL_ pengajuan',
-        infoEmpty:'Belum ada pengajuan',
-        infoFiltered:'(disaring dari _MAX_ pengajuan)',
-        processing:'Memuat riwayat…',
-        paginate:{first:'Pertama',last:'Terakhir',next:'Berikutnya',previous:'Sebelumnya'}
-    };
-    table.DataTable({
+     var tableLanguage={
+         emptyTable:'Anda belum memiliki pengajuan persetujuan.',
+         zeroRecords:'Tidak ada pengajuan yang cocok.',
+         search:'Cari pengajuan: _INPUT_',
+         lengthMenu:'Tampilkan _MENU_ pengajuan',
+         info:'Menampilkan _START_–_END_ dari _TOTAL_ pengajuan',
+         infoEmpty:'Belum ada pengajuan',
+         infoFiltered:'(disaring dari _MAX_ pengajuan)',
+         processing:'Memuat riwayat…',
+         paginate:{first:'Pertama',last:'Terakhir',next:'Berikutnya',previous:'Sebelumnya'}
+     };
+     var pagingLabels=tableLanguage.paginate;
+     tableLanguage.paginate={
+         first:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m11.5 4.5-5.5 5.5 5.5 5.5M17 4.5 11.5 10l5.5 5.5"/></svg>',
+         previous:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.5 4.5-5.5 5.5 5.5 5.5"/></svg>',
+         next:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>',
+         last:'<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m8.5 4.5 5.5 5.5-5.5 5.5M3 4.5 8.5 10 3 15.5"/></svg>'
+     };
+     tableLanguage.aria={paginate:pagingLabels};
+     table.DataTable({
         processing:true,serverSide:true,deferRender:true,autoWidth:false,
         pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order:[[4,'desc']],language:tableLanguage,
         ajax:{url:'/admin/system/approval/my_request_data',type:'GET',dataSrc:'data'},

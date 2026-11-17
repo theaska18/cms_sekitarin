@@ -270,26 +270,7 @@ class Admin_tenant extends Admin
         $write_available = $this->tenant_write_available($tenant_store)
             && $menu_store->schema_available();
 
-        $this->load->library('admin_menu_manifest');
-        $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
-        $manifest_access = array();
-        $menu_groups = array();
-        foreach ($groups as $group) {
-            $group_key = $group['label_key'];
-            $group_translation = preg_match('/^admin_[a-z0-9_]+$/', $group_key)
-                ? $this->lang->line($group_key)
-                : FALSE;
-            $group_fallback = $group['name'] !== '' ? $group['name'] : $group['code'];
-            $group['label'] = $this->admin_menu_manifest->resolve_label($group_translation, $group_fallback);
-            foreach ($group['items'] as $item) {
-                $codes = array();
-                foreach ($item['accesses'] as $access) {
-                    $codes[] = $access['access_code'];
-                }
-                $manifest_access[$item['code']] = $codes;
-            }
-            $menu_groups[] = $group;
-        }
+        list($menu_groups, $manifest_access) = $this->tenant_menu_catalog();
 
         $errors = array();
         $status_key = $this->session->flashdata('admin_tenant_status');
@@ -343,6 +324,12 @@ class Admin_tenant extends Admin
         }
         unset($group);
 
+        $this->load->library('menu_access_catalog');
+        $menu_rows = $this->menu_access_catalog->rows(
+            $menu_groups,
+            is_array($selected_state) ? $selected_state : array()
+        );
+
         $this->render_admin(
             'admin/tenant/menu',
             'tenant',
@@ -355,8 +342,199 @@ class Admin_tenant extends Admin
                 'tenant_menu_status_key' => is_string($status_key) ? $status_key : '',
                 'tenant_menu_backend_available' => $backend_available,
                 'tenant_menu_write_available' => $write_available,
+                'menu_access_rows' => $menu_rows,
+                'menu_access_table_id' => 'tenant-menu-table',
+                'menu_access_datatable_url' => '/admin/system/tenant/menu/data/' . rawurlencode($tenant_code),
+                'menu_access_toggle_url' => '/admin/system/tenant/menu/toggle/' . rawurlencode($tenant_code),
+                'menu_access_write_available' => $write_available,
             )
         );
+    }
+
+    /** DataTables server-side endpoint for one tenant's menu access catalog. */
+    public function tenant_menu_data($tenant_code)
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_menu_access')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        if (!$this->is_valid_tenant_code($tenant_code)) {
+            $this->datatable_server->error(404);
+            return;
+        }
+        $tenant_store = $this->tenant_store();
+        if ($tenant_store === NULL || !$tenant_store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $tenant = $tenant_store->find($tenant_code);
+        if (!is_array($tenant)) {
+            $this->datatable_server->error(404);
+            return;
+        }
+
+        $this->load->database();
+        $this->db->db_debug = FALSE;
+        $this->load->library('tenant_menu_access_store');
+        $menu_store = $this->tenant_menu_access_store;
+        if (!$menu_store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $state = $menu_store->state((int) $tenant['tenant_id']);
+        if ($state === FALSE) {
+            $this->datatable_server->error(503);
+            return;
+        }
+
+        list($menu_groups) = $this->tenant_menu_catalog();
+        $this->load->library('menu_access_catalog');
+        $catalog = $this->menu_access_catalog;
+        $rows = $catalog->rows($menu_groups, $state);
+        $write_available = $this->tenant_write_available($tenant_store);
+        $this->datatable_server->respond(
+            array(0 => 'group', 1 => 'menu'),
+            function () use ($rows) {
+                return count($rows);
+            },
+            function ($search) use ($rows, $catalog) {
+                return count($catalog->filter($rows, $search));
+            },
+            function ($search, $length, $start, $order, $direction) use ($rows, $catalog, $write_available) {
+                $filtered = $catalog->filter($rows, $search);
+                $sorted = $catalog->sort($filtered, $order, $direction);
+                $page = $catalog->slice($sorted, $length, $start);
+
+                return $this->menu_access_payload($page, $write_available);
+            },
+            array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
+        );
+    }
+
+    /** Toggle one tenant menu or access checkbox and answer with a fresh CSRF hash. */
+    public function tenant_menu_toggle($tenant_code)
+    {
+        if (!$this->has_admin_menu_code('sys_tenant') || !$this->has_admin_access_code('sys_tenant_menu_access')) {
+            $this->menu_access_json(403, array('saved' => FALSE));
+            return;
+        }
+        if ($this->input->method(TRUE) !== 'POST') {
+            $this->menu_access_json(405, array('saved' => FALSE));
+            return;
+        }
+        if (!$this->is_valid_tenant_code($tenant_code)) {
+            $this->menu_access_json(404, array('saved' => FALSE));
+            return;
+        }
+        $tenant_store = $this->tenant_store();
+        $tenant = ($tenant_store !== NULL && $tenant_store->schema_available())
+            ? $tenant_store->find($tenant_code)
+            : NULL;
+        if (!is_array($tenant)) {
+            $this->menu_access_json(404, array('saved' => FALSE));
+            return;
+        }
+        $this->load->database();
+        $this->db->db_debug = FALSE;
+        $this->load->library('tenant_menu_access_store');
+        $menu_store = $this->tenant_menu_access_store;
+        if (!$this->tenant_write_available($tenant_store) || !$menu_store->schema_available()) {
+            $this->menu_access_json(503, array('saved' => FALSE));
+            return;
+        }
+
+        list(, $manifest_access) = $this->tenant_menu_catalog();
+        $menu_code = $this->input->post('menu_code', FALSE);
+        $access_code = $this->input->post('access_code', FALSE);
+        $checked = $this->input->post('checked', FALSE) === '1';
+        if (!is_string($menu_code) || $menu_code === '' || !isset($manifest_access[$menu_code])) {
+            $this->menu_access_json(422, array('saved' => FALSE));
+            return;
+        }
+        if (is_string($access_code) && $access_code !== '') {
+            if (!in_array($access_code, $manifest_access[$menu_code], TRUE)) {
+                $this->menu_access_json(422, array('saved' => FALSE));
+                return;
+            }
+            $saved = $menu_store->toggle_access(
+                (int) $tenant['tenant_id'],
+                $menu_code,
+                $access_code,
+                $checked,
+                $manifest_access
+            );
+        } else {
+            $saved = $menu_store->toggle_menu(
+                (int) $tenant['tenant_id'],
+                $menu_code,
+                $checked,
+                $manifest_access
+            );
+        }
+        $this->menu_access_json($saved ? 200 : 500, array('saved' => (bool) $saved));
+    }
+
+    /** Render menu/access cells for DataTables rows through the shared partials. */
+    private function menu_access_payload($rows, $write_available)
+    {
+        $payload = array();
+        foreach ($rows as $row) {
+            $payload[] = array(
+                'menu' => $this->load->view('admin/menu_access/_menu_cell', array(
+                    'menu_access_row' => $row,
+                    'menu_access_write_available' => $write_available,
+                ), TRUE),
+                'group' => html_escape($row['group_label']),
+                'accesses' => $this->load->view('admin/menu_access/_access_cell', array(
+                    'menu_access_row' => $row,
+                    'menu_access_write_available' => $write_available,
+                ), TRUE),
+            );
+        }
+
+        return $payload;
+    }
+
+    private function menu_access_json($status, $payload)
+    {
+        $payload['csrf'] = array(
+            'name' => $this->security->get_csrf_token_name(),
+            'hash' => $this->security->get_csrf_hash(),
+        );
+        $this->output
+            ->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0')
+            ->set_header('Pragma: no-cache')
+            ->set_status_header((int) $status)
+            ->set_content_type('application/json')
+            ->set_output(json_encode($payload));
+    }
+
+    /** Manifest groups with resolved labels plus the code-to-access allow-list. */
+    private function tenant_menu_catalog()
+    {
+        $this->load->library('admin_menu_manifest');
+        $groups = $this->admin_menu_manifest->load(APPPATH . 'views/admin/menu_manifest/manifest.xml');
+        $manifest_access = array();
+        $menu_groups = array();
+        foreach ($groups as $group) {
+            $group_key = $group['label_key'];
+            $group_translation = preg_match('/^admin_[a-z0-9_]+$/', $group_key)
+                ? $this->lang->line($group_key)
+                : FALSE;
+            $group_fallback = $group['name'] !== '' ? $group['name'] : $group['code'];
+            $group['label'] = $this->admin_menu_manifest->resolve_label($group_translation, $group_fallback);
+            foreach ($group['items'] as $item) {
+                $codes = array();
+                foreach ($item['accesses'] as $access) {
+                    $codes[] = $access['access_code'];
+                }
+                $manifest_access[$item['code']] = $codes;
+            }
+            $menu_groups[] = $group;
+        }
+
+        return array($menu_groups, $manifest_access);
     }
 
     private function tenant_store()
