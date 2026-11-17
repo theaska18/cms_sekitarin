@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu-group code="finance_transaction" name="Finance - Transaction" label_key="admin_finance_transaction_group" version="1.0.0" sort_order="5">
     <menu code="fin_all_transactions" name="All Transactions" label_key="admin_finance_all_transactions" icon="list-ordered" route="/admin/finance/all_transactions" module_key="finance_all_transactions" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="2" status="active">
-        <access code="fin_all_transactions_add" name="Add" />
-        <access code="fin_all_transactions_update" name="Update" />
     </menu>
     <menu code="fin_income" name="Income" label_key="admin_finance_income" icon="default" route="/admin/finance/income" module_key="finance_income" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="3" status="active">
         <access code="fin_income_add" name="Add" />

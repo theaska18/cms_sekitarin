@@ -75,6 +75,8 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
                         <th scope="col" aria-label="<?= html_escape($labels['property_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['property_code_label']) ?></th>
                         <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['property_name_label']) ?></th>
+                        <th scope="col" class="min-w-48 px-2 py-3.5 sm:px-6"><?= html_escape($labels['property_description_label']) ?></th>
+                        <th scope="col" class="min-w-32 px-2 py-3.5 sm:px-6"><?= html_escape($labels['property_value_label']) ?></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -109,11 +111,15 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
                                 </td>
                                 <th scope="row" class="whitespace-nowrap px-2 py-3 font-mono text-xs font-semibold text-slate-700 sm:px-6 sm:py-4"><?= html_escape($property_code) ?></th>
                                 <td class="min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4"><?= html_escape($property['property_name']) ?></td>
+                                <td class="min-w-48 break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape(isset($property['description']) ? $property['description'] : '') ?></td>
+                                <td class="min-w-32 break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4"><?= html_escape(isset($property['value']) ? $property['value'] : '') ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php elseif (!$backend_available): ?>
                         <tr>
                             <td class="px-4 py-6 text-center text-sm text-slate-500"><?= html_escape($labels['property_unavailable']) ?></td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                         </tr>
@@ -199,7 +205,7 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
             order: [[<?= $sort === 'property_name' ? 2 : 1 ?>, <?= json_encode(strtolower($direction)) ?>]],
             language: tableLanguage,
             ajax: {url: '/admin/system/property/data', type: 'GET', dataSrc: 'data'},
-            columns: [
+                columns: [
                 {
                     data: null,
                     orderable: false,
@@ -231,6 +237,20 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
                     data: 'property_name',
                     name: 'property_name',
                     className: 'min-w-[8rem] break-words px-2 py-3 font-medium text-slate-900 sm:min-w-56 sm:px-6 sm:py-4',
+                    render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }
+                },
+                {
+                    data: 'description',
+                    name: 'description',
+                    orderable: false,
+                    className: 'min-w-48 break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4',
+                    render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }
+                },
+                {
+                    data: 'value',
+                    name: 'value',
+                    orderable: false,
+                    className: 'min-w-32 break-words px-2 py-3 text-slate-700 sm:px-6 sm:py-4',
                     render: function (data, type) { return type === 'display' ? escapeHtml(data) : data; }
                 }
             ]

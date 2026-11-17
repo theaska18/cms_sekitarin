@@ -16,6 +16,8 @@ HEADER = ROOT / "web/application/views/admin/header.php"
 PROPERTY_VIEW = ROOT / "web/application/views/admin/property/index.php"
 PROPERTY_FORM_VIEW = ROOT / "web/application/views/admin/property/form.php"
 PROPERTY_STORE = ROOT / "web/application/libraries/Property_store.php"
+WELCOME_CONTROLLER = ROOT / "web/application/controllers/Welcome.php"
+PAGES_CONTROLLER = ROOT / "web/application/controllers/Pages.php"
 DATATABLE_SERVER = ROOT / "web/application/libraries/Datatable_server.php"
 LANGUAGES = ROOT / "web/application/language"
 MANIFEST_FILE = ROOT / "web/application/views/admin/menu_manifest/system.xml"
@@ -87,6 +89,35 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn("config_item('csrf_protection')", self.property_controller)
         self.assertIn("ENVIRONMENT === 'development'", self.property_controller)
         self.assertIn("strlen($property_code) <= 255", self.property_controller)
+
+    def test_landing_page_property_controls_public_routes_only(self):
+        store = PROPERTY_STORE.read_text(encoding="utf-8")
+        welcome = WELCOME_CONTROLLER.read_text(encoding="utf-8")
+        pages = PAGES_CONTROLLER.read_text(encoding="utf-8")
+
+        self.assertIn("$this->find('landing_page')", store)
+        self.assertIn("!== 'N'", store)
+        self.assertIn("public_landing_page_enabled()", welcome)
+        self.assertIn("redirect('/admin', 'location', 303)", welcome)
+        self.assertIn("redirect_if_public_landing_disabled()", pages)
+        self.assertIn("redirect('/admin', 'location', 303)", pages)
+        for route in ("features", "about", "contact"):
+            method = re.search(
+                rf"public function {route}\(\)\s*\{{(.*?)\n    \}}",
+                pages,
+                re.DOTALL,
+            )
+            self.assertIsNotNone(method, route)
+            self.assertIn("redirect_if_public_landing_disabled()", method.group(1))
+        # Login must remain available so a redirect to the admin area cannot
+        # prevent unauthenticated users from signing in.
+        login = re.search(r"public function login\(\)\s*\{(.*?)\n    \}", pages, re.DOTALL)
+        self.assertIsNotNone(login)
+        self.assertNotIn("redirect_if_public_landing_disabled()", login.group(1))
+
+    def test_property_store_loads_database_for_public_controllers(self):
+        self.assertIn("if (!isset($CI->db))", self.store)
+        self.assertIn("$CI->load->database();", self.store)
 
     def test_property_code_validation_avoids_malformed_character_class(self):
         self.assertIn("strpos($property_code, '/') === FALSE", self.property_controller)
@@ -430,6 +461,18 @@ console.log(JSON.stringify({{ unchangedBeforeBlur, preservedCase, exampleValue: 
         self.assertIn("affected_rows()", self.store)
         self.assertNotIn("truncate", self.store.lower())
         self.assertNotIn("delete_all", self.store.lower())
+
+    def test_property_list_includes_description_and_value_columns(self):
+        page_method = self.store.split("public function page(", 1)[1].split(
+            "public function find(", 1
+        )[0]
+        self.assertIn("array('description', 'value')", page_method)
+        self.assertIn("'property_description_label'", self.view)
+        self.assertIn("'property_value_label'", self.view)
+        self.assertIn("data: 'description'", self.view)
+        self.assertIn("data: 'value'", self.view)
+        self.assertIn("$property['description']", self.view)
+        self.assertIn("$property['value']", self.view)
 
 
 if __name__ == "__main__":

@@ -77,6 +77,19 @@ class AdminAuthContractTests(unittest.TestCase):
         self.assertIn('method="post" action="/logout"', header)
         self.assertIn("$csrf_hash", header)
 
+    def test_logout_refreshes_rotating_csrf_token_before_post(self):
+        admin = (APP / "controllers" / "Admin.php").read_text()
+        footer = (APP / "views" / "admin" / "footer.php").read_text()
+        routes = (APP / "config" / "routes.php").read_text()
+        self.assertIn("$route['admin/csrf-token'] = 'admin/csrf_token';", routes)
+        self.assertIn("public function csrf_token()", admin)
+        self.assertIn("$this->security->get_csrf_hash()", admin)
+        self.assertIn("Cache-Control: no-store", admin)
+        self.assertIn("fetch('/admin/csrf-token'", footer)
+        self.assertIn("logoutForm.requestSubmit", footer)
+        self.assertIn("input.name = token.name", footer)
+        self.assertIn("input.value = token.hash", footer)
+
     def test_admin_profile_name_comes_from_session_identity(self):
         header = (APP / "views" / "admin" / "header.php").read_text()
         identity = (APP / "libraries" / "Admin_identity.php").read_text()

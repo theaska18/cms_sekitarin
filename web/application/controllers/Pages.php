@@ -16,17 +16,36 @@ class Pages extends CI_Controller
 
     public function features()
     {
+        if (!$this->redirect_if_public_landing_disabled()) {
+            return;
+        }
         $this->render_page('features', 'Features');
     }
 
     public function about()
     {
+        if (!$this->redirect_if_public_landing_disabled()) {
+            return;
+        }
         $this->render_page('about', 'About');
     }
 
     public function contact()
     {
+        if (!$this->redirect_if_public_landing_disabled()) {
+            return;
+        }
         $this->render_page('contact', 'Contact');
+    }
+
+    private function redirect_if_public_landing_disabled()
+    {
+        $this->load->library('property_store');
+        if ($this->property_store->landing_page_enabled()) {
+            return TRUE;
+        }
+        redirect('/admin', 'location', 303);
+        return FALSE;
     }
 
     public function login()

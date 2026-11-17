@@ -84,6 +84,9 @@ class MenuAccessToggleContractTest(unittest.TestCase):
         self.assertIn("queue.push", script)
         self.assertIn("task.revert()", script)
         self.assertIn("data.csrf.hash", script)
+        self.assertIn("document.addEventListener('change'", script)
+        self.assertIn("target.closest('[data-menu-access-table]')", script)
+        self.assertIn("syncAccessState(menuRow, target.checked)", script)
         tenant_controller = (APP / "controllers/Admin_tenant.php").read_text()
         role_controller = (APP / "controllers/Admin_role.php").read_text()
         for controller in (tenant_controller, role_controller):

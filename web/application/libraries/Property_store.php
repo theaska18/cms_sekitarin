@@ -13,6 +13,9 @@ class Property_store
     {
         if ($db === NULL) {
             $CI =& get_instance();
+            if (!isset($CI->db)) {
+                $CI->load->database();
+            }
             $db = $CI->db;
         }
         $this->db = $db;
@@ -73,7 +76,13 @@ class Property_store
         if (!$this->schema_available()) {
             return FALSE;
         }
-        $query = $this->db->select('property_code, property_name')
+        $select = array('property_code', 'property_name');
+        foreach (array('description', 'value') as $optional_column) {
+            if (isset($this->columns[$optional_column])) {
+                $select[] = $optional_column;
+            }
+        }
+        $query = $this->db->select(implode(', ', $select))
             ->from('sys_property');
         $this->apply_filters($filters);
         $sort_column = $sort === 'property_name' ? 'property_name' : 'property_code';
@@ -84,7 +93,19 @@ class Property_store
         }
         $query = $query->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))
             ->get();
-        return $query === FALSE ? FALSE : $query->result_array();
+        if ($query === FALSE) {
+            return FALSE;
+        }
+        $records = $query->result_array();
+        foreach ($records as &$record) {
+            foreach (array('description', 'value') as $optional_column) {
+                if (!array_key_exists($optional_column, $record)) {
+                    $record[$optional_column] = '';
+                }
+            }
+        }
+        unset($record);
+        return $records;
     }
 
     public function find($property_code)
@@ -102,6 +123,19 @@ class Property_store
             return FALSE;
         }
         return $query->num_rows() ? $query->row_array() : NULL;
+    }
+
+    /**
+     * Whether public landing pages should be rendered.
+     * Missing/unavailable configuration preserves the current public behavior.
+     */
+    public function landing_page_enabled()
+    {
+        $setting = $this->find('landing_page');
+        if (!is_array($setting) || !isset($setting['value'])) {
+            return TRUE;
+        }
+        return strtoupper(trim((string) $setting['value'])) !== 'N';
     }
 
     public function insert($data)

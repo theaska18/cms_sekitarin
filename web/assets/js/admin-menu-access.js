@@ -76,6 +76,10 @@
             return row ? row.querySelectorAll('[data-menu-access]') : [];
         }
 
+        function menuRowFor(element) {
+            return element && element.closest ? element.closest('[data-menu-row], tr') : null;
+        }
+
         function syncAccessState(row, menuChecked) {
             accessCheckboxes(row).forEach(function (accessCheckbox) {
                 if (!menuChecked) {
@@ -134,15 +138,41 @@
             flush();
         }
 
-        if (canSave) table.addEventListener('change', function (event) {
+        // Keep dependent controls in sync immediately as the menu checkbox is
+        // clicked, including with table rows created by DataTables.
+        document.addEventListener('click', function (event) {
+            var target = event.target;
+            if (!target || !target.closest) return;
+            var menuToggle = target.closest('[data-menu-toggle]');
+            if (!menuToggle || !menuToggle.closest('[data-menu-access-table]')) return;
+            // A click on the menu label can target the label rather than the
+            // input. Wait until the browser has applied the checkbox toggle.
+            window.setTimeout(function () {
+                var menuRow = menuRowFor(menuToggle);
+                accessCheckboxes(menuRow).forEach(function (accessCheckbox) {
+                    accessCheckbox.disabled = !menuToggle.checked || !writeAvailable;
+                    if (!menuToggle.checked) accessCheckbox.checked = false;
+                });
+            }, 0);
+        });
+
+        // Delegate changes so DataTables redraws do not lose the autosave handler.
+        document.addEventListener('change', function (event) {
             var target = event.target;
             if (!target || !target.matches) return;
+            if (!target.closest('[data-menu-access-table]')) return;
 
             if (target.matches('[data-menu-toggle]')) {
-                var menuRow = target.closest('[data-menu-row]');
+                var menuRow = menuRowFor(target);
                 var previousChecked = !target.checked;
                 var accessSnapshot = snapshotAccesses(menuRow);
                 syncAccessState(menuRow, target.checked);
+                if (!canSave) {
+                    target.checked = previousChecked;
+                    restoreAccesses(menuRow, accessSnapshot);
+                    syncAccessState(menuRow, previousChecked);
+                    return;
+                }
                 enqueue({
                     menu_code: target.value,
                     checked: target.checked ? '1' : '0'
@@ -155,10 +185,14 @@
             }
 
             if (target.matches('[data-menu-access]')) {
-                var accessRow = target.closest('[data-menu-row]');
+                var accessRow = menuRowFor(target);
                 var menuToggle = accessRow ? accessRow.querySelector('[data-menu-toggle]') : null;
                 if (!menuToggle) return;
                 var previousAccessChecked = !target.checked;
+                if (!canSave) {
+                    target.checked = previousAccessChecked;
+                    return;
+                }
                 enqueue({
                     menu_code: menuToggle.value,
                     access_code: target.value,

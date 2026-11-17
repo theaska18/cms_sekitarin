@@ -43,6 +43,23 @@ class Admin extends CI_Controller
         );
     }
 
+    /** Return the current CSRF token for authenticated same-origin forms. */
+    public function csrf_token()
+    {
+        if ($this->input->method(TRUE) !== 'GET') {
+            $this->output->set_header('Allow: GET')->set_status_header(405);
+            return;
+        }
+        $this->output
+            ->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0')
+            ->set_header('Pragma: no-cache')
+            ->set_content_type('application/json')
+            ->set_output(json_encode(array(
+                'name' => $this->security->get_csrf_token_name(),
+                'hash' => $this->security->get_csrf_hash(),
+            )));
+    }
+
     public function setting()
     {
         $db = $this->load->database('default', TRUE);
@@ -577,7 +594,30 @@ class Admin extends CI_Controller
         }
         $menu_groups = $this->load_admin_menu_groups();
         $popular_menu_items = array();
+        $dashboard_tenant_name = '';
         if ($view === 'admin/dashboard') {
+            $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+            if ($tenant_id > 0) {
+                $tenant_db = $this->load->database('default', TRUE);
+                if ($tenant_db && $tenant_db->table_exists('sys_tenant')
+                    && $tenant_db->field_exists('tenant_id', 'sys_tenant')
+                    && $tenant_db->field_exists('tenant_name', 'sys_tenant')) {
+                    $tenant_query = $tenant_db->select('tenant_name')
+                        ->from('sys_tenant')
+                        ->where('tenant_id', $tenant_id)
+                        ->limit(1)
+                        ->get();
+                    if ($tenant_query !== FALSE && $tenant_query->num_rows() === 1) {
+                        $tenant_row = $tenant_query->row_array();
+                        $dashboard_tenant_name = isset($tenant_row['tenant_name'])
+                            ? trim((string) $tenant_row['tenant_name'])
+                            : '';
+                    }
+                }
+                if ($dashboard_tenant_name === '') {
+                    $dashboard_tenant_name = 'Tenant #' . $tenant_id;
+                }
+            }
             $this->load->library('admin_menu_analytics');
             $menu_lookup = array();
             $allowed_codes = array();
@@ -683,6 +723,7 @@ class Admin extends CI_Controller
             'csrf_hash' => $this->security->get_csrf_hash(),
             'menu_groups' => $menu_groups,
             'popular_menu_items' => $popular_menu_items,
+            'dashboard_tenant_name' => $dashboard_tenant_name,
         );
         $data = array_merge($data, $extra_data);
         if ($view_language_pack === 'notifications') {

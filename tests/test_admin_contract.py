@@ -162,6 +162,15 @@ class AdminDashboardContractTests(unittest.TestCase):
         self.assertIn("$labels['profile']", markup)
         self.assertIn("$labels['sidebar_navigation']", markup)
 
+    def test_dashboard_loads_active_tenant_name_and_escapes_it_in_responsive_hero(self):
+        controller = CONTROLLER.read_text()
+        dashboard = VIEW.read_text()
+        self.assertIn("$this->current_user['tenant_id']", controller)
+        self.assertIn("->where('tenant_id', $tenant_id)", controller)
+        self.assertIn("'dashboard_tenant_name' => $dashboard_tenant_name", controller)
+        self.assertIn("html_escape($dashboard_tenant_name)", dashboard)
+        self.assertIn("lg:grid-cols-[minmax(0,1fr)_auto]", dashboard)
+
     def test_parameter_navigation_uses_its_manifest_route_and_registered_module(self):
         header = HEADER.read_text()
         routes = ROUTES.read_text()
@@ -170,11 +179,10 @@ class AdminDashboardContractTests(unittest.TestCase):
         parameter = next(item for item in manifest.findall("menu") if item.attrib["code"] == "sys_parameter")
         self.assertEqual("/admin/system/parameter", parameter.attrib["route"])
         self.assertIn("$item['route']", header)
-        self.assertIn("$route['admin/system/property'] = 'admin_property/property_index';", routes)
         self.assertIn("$current_admin_path === $item_base_route", header)
         self.assertIn("strpos($current_admin_path, $item_base_route . '/') === 0", header)
-        self.assertIn("$route['admin/system/parameter'] = 'admin_parameter/parameter_index';", routes)
-        self.assertIn("$route['system/parameter'] = 'admin/module/system/parameter';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
         self.assertIn("'system/parameter' => array(", controller)
 
     def test_mobile_header_does_not_show_language_selector(self):
@@ -219,20 +227,10 @@ class AdminDashboardContractTests(unittest.TestCase):
     def test_requested_admin_module_urls_resolve_and_keep_manifest_destinations(self):
         routes = ROUTES.read_text()
         header = HEADER.read_text()
-        for uri in (
-            "admin/system/menu", "admin/system/sequence",
-            "admin/app/sequence", "admin/app/role", "admin/app/user",
-        ):
-            with self.subTest(uri=uri):
-                target = "admin/module/" + uri.removeprefix("admin/")
-                self.assertIn("$route['" + uri + "'] = '" + target + "';", routes)
-        for uri, target in (
-            ("admin/application/employee", "admin/module/app/sequence"),
-            ("admin/application/role", "admin_role/role_index"),
-            ("admin/application/user", "admin_user/user_index"),
-        ):
-            with self.subTest(manifest_uri=uri):
-                self.assertIn("$route['" + uri + "'] = '" + target + "';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)'] = 'admin_$2/$2_index';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3';", routes)
+        self.assertIn("$route['admin/(:any)/(:any)/(:any)/(:any)'] = 'admin_$2/$2_$3/$4';", routes)
+        self.assertIn("$route['admin/(:any)/user/employees'] = 'admin_user/employee_lookup';", routes)
         self.assertIn("$item['route']", header)
 
     def test_module_pages_are_contextual_and_disclose_unavailable_backend(self):

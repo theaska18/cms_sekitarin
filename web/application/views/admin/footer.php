@@ -304,6 +304,44 @@
             { trigger: document.getElementById('admin-messages-toggle'), panel: document.getElementById('admin-messages-panel') }
         ].filter(function (item) { return item.trigger && item.panel; });
 
+        var logoutForm = document.querySelector('form[action="/logout"]');
+        if (logoutForm && window.fetch) {
+            var logoutReady = false;
+            logoutForm.addEventListener('submit', function (event) {
+                if (logoutReady) {
+                    logoutReady = false;
+                    return;
+                }
+                event.preventDefault();
+                var submitButton = event.submitter || logoutForm.querySelector('button[type="submit"]');
+                if (submitButton) submitButton.disabled = true;
+                fetch('/admin/csrf-token', {
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    headers: {'Accept': 'application/json'}
+                }).then(function (response) {
+                    if (!response.ok) throw new Error('CSRF token refresh failed');
+                    return response.json();
+                }).then(function (token) {
+                    if (!token || typeof token.name !== 'string' || typeof token.hash !== 'string') {
+                        throw new Error('CSRF token is unavailable');
+                    }
+                    var input = logoutForm.querySelector('input[type="hidden"]');
+                    if (!input) throw new Error('Logout CSRF field is unavailable');
+                    input.name = token.name;
+                    input.value = token.hash;
+                    logoutReady = true;
+                    if (typeof logoutForm.requestSubmit === 'function') {
+                        logoutForm.requestSubmit(submitButton || undefined);
+                    } else {
+                        logoutForm.submit();
+                    }
+                }).catch(function () {
+                    if (submitButton) submitButton.disabled = false;
+                });
+            });
+        }
+
         var ignoreNextDocumentClick = null;
         function closePopovers(except) {
             popovers.forEach(function (item) {

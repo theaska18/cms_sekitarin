@@ -15,6 +15,7 @@ $route['contact'] = 'pages/contact';
 $route['login'] = 'auth/index';
 $route['logout'] = 'auth/logout';
 $route['admin'] = 'admin/index';
+$route['admin/csrf-token'] = 'admin/csrf_token';
 $route['admin/notifications'] = 'admin_notifications/index';
 $route['admin/notifications/mark-viewed'] = 'admin_notifications/mark_viewed';
 $route['admin/notifications/delete'] = 'admin_notifications/delete';

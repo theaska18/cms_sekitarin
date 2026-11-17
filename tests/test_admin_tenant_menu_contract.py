@@ -102,6 +102,9 @@ class AdminTenantMenuContractTests(unittest.TestCase):
     def test_unchecking_menu_clears_and_disables_related_access(self):
         script = SCRIPT.read_text()
         self.assertRegex(script, re.compile(r"function syncAccessState\(row, menuChecked\).*?accessCheckbox\.checked\s*=\s*false.*?accessCheckbox\.disabled\s*=\s*!menuChecked \|\| !writeAvailable", re.S))
+        self.assertIn("document.addEventListener('click'", script)
+        self.assertIn("accessCheckbox.disabled = !menuToggle.checked || !writeAvailable", script)
+        self.assertIn("element.closest('[data-menu-row], tr')", script)
 
     def test_menu_toggle_behavior_is_handled_by_shared_script(self):
         script = SCRIPT.read_text()
