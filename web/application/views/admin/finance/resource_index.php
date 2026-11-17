@@ -46,7 +46,7 @@ $can_edit = $finance_can_update && $finance_write_available;
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
             <h2 id="finance-resource-heading" class="sr-only"><?= html_escape($title) ?></h2>
             <div class="overflow-x-auto p-2 sm:p-5">
-                <table id="finance-resource-table" class="min-w-full text-sm">
+                <table id="finance-resource-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead><tr>
                         <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>
                         <?php foreach ($finance_resource['columns'] as $column): ?>
@@ -64,6 +64,7 @@ $can_edit = $finance_can_update && $finance_write_available;
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/finance-list.js?v=<?= is_file(FCPATH . 'assets/js/finance-list.js') ? filemtime(FCPATH . 'assets/js/finance-list.js') : '1' ?>"></script>
 <script>
 (function () {
     var table = $('#finance-resource-table');
@@ -78,10 +79,11 @@ $can_edit = $finance_can_update && $finance_write_available;
     if (canEdit) {
         columns.push({
             data: null, orderable: false, searchable: false,
-            render: function (data, type, row) {
+            render: function (data, type, row, meta) {
                 if (type !== 'display') return '';
                 var url = <?= json_encode($current_path . '/edit/', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?> + encodeURIComponent(row[<?= json_encode($finance_resource['id']) ?>]);
-                return '<a class="font-semibold text-indigo-700 hover:text-indigo-900" href="' + escapeHtml(url) + '"><?= html_escape(isset($labels['finance_edit']) ? $labels['finance_edit'] : 'Edit') ?></a>';
+                var menuId = 'resource-actions-' + meta.row;
+                return '<div class="relative inline-flex"><button type="button" data-finance-menu-toggle aria-label="<?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-finance-menu hidden role="menu" class="fixed z-[60] mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg"><a href="' + escapeHtml(url) + '" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"><?= html_escape(isset($labels['finance_edit']) ? $labels['finance_edit'] : 'Edit') ?></a></div></div>';
             }
         });
     }

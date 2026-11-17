@@ -566,3 +566,7 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Finance list tables stay on one line; long content is horizontally scrollable. */
+.finance-list-table th,
+.finance-list-table td { white-space: nowrap; }

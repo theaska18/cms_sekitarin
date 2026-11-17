@@ -94,3 +94,53 @@
     window.financeFormatLocalTimes = formatLocalTimes;
     window.financeLocalTimeHtml = localTimeHtml;
 })(window, document);
+
+/* Reusable three-dot action menu for Finance list tables. */
+(function (window, document) {
+    'use strict';
+
+    function closeMenus() {
+        document.querySelectorAll('[data-finance-menu]').forEach(function (menu) {
+            menu.hidden = true;
+            var toggle = document.querySelector('[aria-controls="' + menu.id + '"][data-finance-menu-toggle]');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    function openMenu(toggle, menu) {
+        closeMenus();
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        var rect = toggle.getBoundingClientRect();
+        var size = menu.getBoundingClientRect();
+        var top = rect.bottom + 4;
+        if (top + size.height > window.innerHeight - 8 && rect.top - size.height - 4 >= 8) {
+            top = rect.top - size.height - 4;
+        }
+        var left = Math.max(8, Math.min(rect.right - size.width, window.innerWidth - size.width - 8));
+        menu.style.top = Math.max(8, top) + 'px';
+        menu.style.left = left + 'px';
+        var first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+    }
+
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-finance-menu-toggle]');
+        if (toggle) {
+            var menu = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (menu && menu.hidden) openMenu(toggle, menu);
+            else closeMenus();
+            return;
+        }
+        if (event.target.closest('[data-finance-menu] [role="menuitem"]')) {
+            closeMenus();
+            return;
+        }
+        if (!event.target.closest('[data-finance-menu]')) closeMenus();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeMenus();
+    });
+
+    window.financeCloseActionMenus = closeMenus;
+})(window, document);

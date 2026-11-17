@@ -35,7 +35,7 @@ $t_labels = array(
 <?php endif; ?>
 <?php if(!$finance_transfer_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_transfer_unavailable']) ? $labels['finance_transfer_unavailable'] : 'Transfer storage is unavailable.') ?></div><?php else: ?>
 <section class="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:p-4">
-<table id="finance-transfer-table" class="min-w-full whitespace-nowrap text-sm">
+<table id="finance-transfer-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
 <thead><tr>
 <th><?= html_escape($t_labels['actions']) ?></th>
 <th><?= html_escape(isset($labels['finance_transfer_column_number'])?$labels['finance_transfer_column_number']:'Transfer') ?></th>

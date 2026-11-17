@@ -87,7 +87,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
     <?php else: ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="overflow-x-auto p-2 sm:p-5">
-                <table id="finance-transaction-table" class="min-w-full whitespace-nowrap text-sm">
+                <table id="finance-transaction-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead><tr>
                         <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_number']) ? $labels['finance_tx_column_number'] : 'Number') ?></th>

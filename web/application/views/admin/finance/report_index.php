@@ -41,7 +41,7 @@ $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report',
     <?php elseif (!$finance_report_errors): ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="overflow-x-auto p-2 sm:p-5">
-                <table id="finance-report-table" class="min-w-full text-sm">
+                <table id="finance-report-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead><tr><?php foreach ($finance_report_columns as $column): $label_key = isset($column['label_key']) ? $column['label_key'] : ''; ?><th scope="col"><?= html_escape($label_key !== '' && isset($labels[$label_key]) ? $labels[$label_key] : $column['label']) ?></th><?php endforeach; ?></tr></thead>
                 </table>
             </div>
@@ -50,6 +50,7 @@ $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report',
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/finance-list.js?v=<?= is_file(FCPATH . 'assets/js/finance-list.js') ? filemtime(FCPATH . 'assets/js/finance-list.js') : '1' ?>"></script>
 <script>
 (function () {
     var table = $('#finance-report-table');
@@ -70,7 +71,7 @@ $date_as_of = in_array($finance_report_slug, array('balance_sheet', 'ar_report',
                 if (type !== 'display') return value;
                 if (numeric.indexOf(column.name) >= 0 && value !== null && value !== '') {
                     var amount = Number(value);
-                    return Number.isFinite(amount) ? escapeHtml(amount.toFixed(2)) : '';
+                    return Number.isFinite(amount) ? escapeHtml(window.financeFormatAmount(amount)) : '';
                 }
                 return escapeHtml(value);
             }

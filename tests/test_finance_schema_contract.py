@@ -165,6 +165,64 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("$doc['status'] !== 'approved'", document)
         self.assertIn("$row['status']!=='approved'", reconciliation)
 
+    def test_finance_currency_lists_use_grouped_amount_formatting(self):
+        views = (
+            "views/admin/finance/document_index.php",
+            "views/admin/finance/payment_index.php",
+            "views/admin/finance/reconciliation_index.php",
+            "views/admin/finance/report_index.php",
+            "views/admin/finance/transaction_index.php",
+            "views/admin/finance/transfer_index.php",
+            "views/admin/finance/journal_index.php",
+        )
+        for path in views:
+            with self.subTest(view=path):
+                content = (APP / path).read_text()
+                self.assertNotIn("toFixed(2)", content)
+        for path in (
+            "views/admin/finance/document_index.php",
+            "views/admin/finance/payment_index.php",
+            "views/admin/finance/reconciliation_index.php",
+            "views/admin/finance/report_index.php",
+        ):
+            with self.subTest(shared=path):
+                self.assertIn("finance-list.js", (APP / path).read_text())
+
+    def test_all_finance_list_tables_are_no_wrap(self):
+        views = (
+            "views/admin/finance/transaction_index.php",
+            "views/admin/finance/transfer_index.php",
+            "views/admin/finance/journal_index.php",
+            "views/admin/finance/document_index.php",
+            "views/admin/finance/payment_index.php",
+            "views/admin/finance/reconciliation_index.php",
+            "views/admin/finance/resource_index.php",
+            "views/admin/finance/report_index.php",
+            "views/admin/finance/dashboard.php",
+        )
+        for path in views:
+            with self.subTest(view=path):
+                content = (APP / path).read_text()
+                self.assertIn("finance-list-table", content)
+                self.assertIn("whitespace-nowrap", content)
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn(".finance-list-table th", css)
+        self.assertIn("white-space: nowrap", css)
+
+    def test_document_payment_and_reconciliation_lists_use_three_dot_actions(self):
+        for path in (
+            "views/admin/finance/document_index.php",
+            "views/admin/finance/payment_index.php",
+            "views/admin/finance/reconciliation_index.php",
+            "views/admin/finance/resource_index.php",
+        ):
+            with self.subTest(view=path):
+                content = (APP / path).read_text()
+                self.assertIn("data-finance-menu-toggle", content)
+                self.assertIn("data-finance-menu", content)
+                self.assertIn('role="menuitem"', content)
+                self.assertNotIn('class="me-3 font-semibold text-indigo-700"', content)
+
     def test_zero_rate_tax_configuration_does_not_require_a_tax_account(self):
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()

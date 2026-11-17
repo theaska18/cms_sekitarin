@@ -49,7 +49,7 @@ $money = function ($value) use ($currency) {
                 <p class="px-5 py-8 text-center text-sm text-slate-500"><?= html_escape(isset($labels['finance_dashboard_no_journals']) ? $labels['finance_dashboard_no_journals'] : 'No posted journal entries yet.') ?></p>
             <?php else: ?>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="finance-list-table min-w-full divide-y divide-slate-200 whitespace-nowrap text-sm">
                         <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th class="px-5 py-3"><?= html_escape(isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date') ?></th>
