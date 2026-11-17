@@ -550,3 +550,19 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper .dt-proce
     color: #e2e8f0 !important;
 }
 html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-layout-row:not(.dt-layout-table):last-child { border-color: #334155 !important; }
+
+/* Keep sidebar labels on one line and ellipsize long translations. */
+#admin-sidebar .admin-menu-link { min-width: 0; }
+#admin-sidebar .admin-menu-label {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#admin-sidebar [data-admin-menu-group] > h2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

@@ -88,6 +88,14 @@ class AdminHeaderContractTests(unittest.TestCase):
         self.assertNotIn("admin-topbar--scrolled", blur_rules)
         self.assertIn("backdrop-filter: blur(18px) saturate(150%)", blur_rules)
 
+    def test_sidebar_labels_use_single_line_ellipsis_with_tooltips(self):
+        theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
+        self.assertIn("#admin-sidebar .admin-menu-label", theme)
+        self.assertIn("text-overflow: ellipsis", theme)
+        self.assertIn("white-space: nowrap", theme)
+        self.assertIn('title="<?php echo html_escape($item[\'label\']); ?>"', self.header)
+        self.assertIn('title="<?php echo html_escape($group[\'label\']); ?>"', self.header)
+
     def test_mobile_sidebar_open_does_not_focus_its_filter(self):
         self.assertIn("if (!window.matchMedia('(max-width: 767px)').matches)", self.footer)
         self.assertIn("firstControl.focus()", self.footer)
