@@ -14,7 +14,6 @@
           module_key="sequence"
           module_description_key="module_backend_unavailable"
           module_focus_key="module_focus">
-        <access code="app_sequence_add" name="Add" />
         <access code="app_sequence_update"  name="Update"/>
         <access code="app_sequence_set_default" name="Set to Default" />
     </menu>

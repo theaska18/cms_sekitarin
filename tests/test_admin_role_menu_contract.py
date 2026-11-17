@@ -15,6 +15,14 @@ class AdminRoleMenuContractTest(unittest.TestCase):
         self.assertIn("rawurlencode($role_code_value)", index)
         self.assertIn("$labels['role_menu_access']", index)
 
+    def test_role_action_menu_places_menu_access_after_edit(self):
+        index = (APP / "views/admin/role/index.php").read_text()
+        edit = index.index("$labels['role_edit']")
+        menu_access = index.index("$labels['role_menu_access']")
+        delete = index.index("$labels['role_delete']")
+        self.assertLess(edit, menu_access)
+        self.assertLess(menu_access, delete)
+
     def test_role_menu_stores_validate_manifest_catalog_and_role_selections(self):
         tenant_store = (APP / "libraries/Tenant_menu_access_store.php").read_text()
         role_store_path = APP / "libraries/Role_menu_access_store.php"

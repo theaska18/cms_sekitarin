@@ -24,7 +24,6 @@
           sort_order="2"
           status="active">
         <access code="hr_hierarchy_add" name="Add" />
-        <access code="hr_hierarchy_set_leader" name="Set Leader" />
         <access code="hr_hierarchy_update" name="Update"/>
         <access code="hr_hierarchy_delete" name="Delete"/>
     </menu>
