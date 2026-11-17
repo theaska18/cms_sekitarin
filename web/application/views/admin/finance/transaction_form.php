@@ -70,7 +70,7 @@ $kind_fields = array(
                 <?php endforeach; ?>
                 <div>
                     <label for="amount" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_tx_field_amount']) ? $labels['finance_tx_field_amount'] : 'Line amount (before tax)') ?> *</label>
-                    <input id="amount" name="amount" type="text" inputmode="decimal" required value="<?= html_escape($record['amount']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+                    <input id="amount" name="amount" type="text" inputmode="decimal" required data-currency-input data-decimal="2" data-currency-default="0" value="<?= html_escape($record['amount']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-end text-sm tabular-nums">
                 </div>
                 <div>
                     <label for="exchange_rate" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_tx_field_exchange_rate']) ? $labels['finance_tx_field_exchange_rate'] : 'Exchange rate to base currency') ?> *</label>
@@ -91,6 +91,7 @@ $kind_fields = array(
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/jquery-ui.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery-ui.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery-ui.min.js') : '1' ?>"></script>
+<script src="/assets/js/currency-input.js?v=<?= is_file(FCPATH . 'assets/js/currency-input.js') ? filemtime(FCPATH . 'assets/js/currency-input.js') : '1' ?>"></script>
 <script>
 (function () {
     $('[data-finance-lookup]').each(function () {
