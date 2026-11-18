@@ -537,3 +537,4 @@ $lang['finance_supplier'] = 'Lieferant';
 $lang['finance_dt_empty'] = 'Keine Datensätze gefunden';
 $lang['finance_dt_zero'] = 'Keine passenden Datensätze';
 $lang['finance_doc_form_error'] = 'Der Dokumententwurf konnte nicht gespeichert werden.';
+$lang['finance_column_integration_number'] = 'Integrationsrechnungsnr.';

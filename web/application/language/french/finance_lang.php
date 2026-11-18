@@ -537,3 +537,4 @@ $lang['finance_supplier'] = 'Fournisseur';
 $lang['finance_dt_empty'] = 'Aucun enregistrement trouvé';
 $lang['finance_dt_zero'] = 'Aucun enregistrement correspondant';
 $lang['finance_doc_form_error'] = 'Le brouillon du document n’a pas pu être enregistré.';
+$lang['finance_column_integration_number'] = 'N° facture intégration';

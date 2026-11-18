@@ -537,3 +537,4 @@ $lang['finance_supplier'] = '供应商';
 $lang['finance_dt_empty'] = '未找到记录';
 $lang['finance_dt_zero'] = '没有匹配记录';
 $lang['finance_doc_form_error'] = '单据草稿无法保存。';
+$lang['finance_column_integration_number'] = '集成发票号';

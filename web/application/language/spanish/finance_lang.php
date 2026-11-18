@@ -537,3 +537,4 @@ $lang['finance_supplier'] = 'Proveedor';
 $lang['finance_dt_empty'] = 'No se encontraron registros';
 $lang['finance_dt_zero'] = 'No hay registros coincidentes';
 $lang['finance_doc_form_error'] = 'No se pudo guardar el borrador del documento.';
+$lang['finance_column_integration_number'] = 'N.º factura integración';

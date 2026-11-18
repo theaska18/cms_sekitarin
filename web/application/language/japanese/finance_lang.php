@@ -537,3 +537,4 @@ $lang['finance_supplier'] = '仕入先';
 $lang['finance_dt_empty'] = 'レコードが見つかりません';
 $lang['finance_dt_zero'] = '一致するレコードがありません';
 $lang['finance_doc_form_error'] = '伝票の下書きを保存できませんでした。';
+$lang['finance_column_integration_number'] = '統合請求書番号';

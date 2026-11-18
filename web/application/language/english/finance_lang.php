@@ -549,3 +549,4 @@ $lang['finance_integration_zero'] = 'No matching integration data';
 $lang['finance_integration_source'] = 'Integration data';
 $lang['finance_integration_amount_locked'] = 'The amount and description come from the integration submission and cannot be changed here.';
 $lang['finance_integration_document_date'] = 'Document date';
+$lang['finance_column_integration_number'] = 'Integration Invoice No.';

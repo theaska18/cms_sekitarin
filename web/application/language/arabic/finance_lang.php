@@ -537,3 +537,4 @@ $lang['finance_supplier'] = 'المورد';
 $lang['finance_dt_empty'] = 'لم يتم العثور على سجلات';
 $lang['finance_dt_zero'] = 'لا توجد سجلات مطابقة';
 $lang['finance_doc_form_error'] = 'تعذر حفظ مسودة المستند.';
+$lang['finance_column_integration_number'] = 'رقم فاتورة التكامل';

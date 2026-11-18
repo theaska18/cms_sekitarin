@@ -537,3 +537,4 @@ $lang['finance_supplier'] = '공급업체';
 $lang['finance_dt_empty'] = '기록을 찾을 수 없습니다';
 $lang['finance_dt_zero'] = '일치하는 기록이 없습니다';
 $lang['finance_doc_form_error'] = '문서 초안을 저장할 수 없습니다.';
+$lang['finance_column_integration_number'] = '통합 인보이스 번호';

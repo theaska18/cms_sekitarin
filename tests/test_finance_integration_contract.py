@@ -9,10 +9,12 @@ DATES_MIGRATION = ROOT / "database/migrations/20261119000500_add_finance_inbox_d
 REFERENCE_MIGRATION = ROOT / "database/migrations/20261119000600_add_finance_draft_integration_reference.sql"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
+ADMIN_CONTROLLER = APP / "controllers/Admin_finance.php"
 STORE = APP / "libraries/Finance_integration_store.php"
 DOCUMENT_STORE = APP / "libraries/Finance_document_store.php"
 LIST_VIEW = APP / "views/admin/finance/integration_index.php"
 FORM_VIEW = APP / "views/admin/finance/document_form.php"
+DOCUMENT_INDEX = APP / "views/admin/finance/document_index.php"
 ROUTES = APP / "config/routes.php"
 CONFIG = APP / "config/config.php"
 SALES_MENU = APP / "views/admin/menu_manifest/finance_sales.xml"
@@ -133,6 +135,16 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("$spec['date'] => (string) $data['date']", store)
         self.assertIn("->where('status !=', 'cancelled')", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
+
+    def test_sales_invoice_list_shows_integration_number(self):
+        index_view = DOCUMENT_INDEX.read_text()
+        self.assertIn("finance_column_integration_number", index_view)
+        self.assertIn("integration_number", index_view)
+        controller = ADMIN_CONTROLLER.read_text()
+        self.assertIn("2 => 'integration_number'", controller)
+        document_store = DOCUMENT_STORE.read_text()
+        self.assertIn("d.integration_number", document_store)
+        self.assertIn("or_like('d.integration_number'", document_store)
 
     def test_menus_and_labels_exist(self):
         sales = SALES_MENU.read_text()

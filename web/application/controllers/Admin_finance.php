@@ -2136,7 +2136,9 @@ class Admin_finance extends Admin
             : array('bill_number', 'bill_date', 'due_date');
         $number_column = $spec[0];
         $date_column = $spec[1];
-        $columns = array(1 => $number_column, 2 => $date_column, 3 => 'due_date', 4 => 'total_amount', 5 => 'currency_code', 6 => 'status');
+        $columns = $kind === 'sales'
+            ? array(1 => $number_column, 2 => 'integration_number', 3 => $date_column, 4 => 'due_date', 5 => 'total_amount', 6 => 'currency_code', 7 => 'status')
+            : array(1 => $number_column, 2 => $date_column, 3 => 'due_date', 4 => 'total_amount', 5 => 'currency_code', 6 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
         $this->datatable_server->respond(
             $columns,

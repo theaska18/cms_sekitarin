@@ -549,3 +549,4 @@ $lang['finance_integration_zero'] = 'Tidak ada data integrasi yang cocok';
 $lang['finance_integration_source'] = 'Data dari integrasi';
 $lang['finance_integration_amount_locked'] = 'Nilai dan deskripsi mengikuti data integrasi dan tidak dapat diubah di sini.';
 $lang['finance_integration_document_date'] = 'Tanggal dokumen';
+$lang['finance_column_integration_number'] = 'No. Invoice Integrasi';
