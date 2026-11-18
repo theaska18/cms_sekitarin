@@ -17,6 +17,12 @@ class EmployeeManagementContractTests(unittest.TestCase):
                 self.assertIn(field, INDEX)
         self.assertRegex(INDEX, r"DateTime(?:Immutable)?::createFromFormat|date_diff|DateInterval")
 
+    def test_employee_list_uses_avatar_placeholder_when_photo_is_missing_or_broken(self):
+        self.assertIn("/assets/images/avatar-placeholder.svg", INDEX)
+        self.assertIn("onerror=\"this.onerror=null;this.src='/assets/images/avatar-placeholder.svg'\"", INDEX)
+        self.assertIn('loading="lazy"', INDEX)
+        self.assertNotIn('<span aria-hidden="true" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">', INDEX)
+
     def test_form_collects_required_fields_and_optional_photo(self):
         self.assertIn('action="<?= html_escape(\'/\' . uri_string()) ?>"', FORM)
         self.assertIn('enctype="multipart/form-data"', FORM)
