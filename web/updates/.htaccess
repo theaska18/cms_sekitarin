@@ -1,0 +1,6 @@
+Options -Indexes
+
+# Packages are streamed by the update API so only the catalog release is served.
+<FilesMatch "\.zip$">
+    Require all denied
+</FilesMatch>

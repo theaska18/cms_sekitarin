@@ -5,6 +5,7 @@ $lang['admin_dashboard'] = 'Admin-Dashboard';
 $lang['admin_system'] = 'System';
 $lang['admin_application'] = 'Anwendung';
 $lang['admin_property'] = 'Eigenschaften';
+$lang['admin_update'] = 'Aktualisierung';
 $lang['admin_parameter'] = 'Parameter';
 $lang['admin_menu'] = 'Menü';
 $lang['admin_hr'] = 'Personalwesen';

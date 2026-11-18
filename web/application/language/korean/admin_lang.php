@@ -5,6 +5,7 @@ $lang['admin_dashboard'] = '대시보드';
 $lang['admin_system'] = '시스템';
 $lang['admin_application'] = '애플리케이션';
 $lang['admin_property'] = '속성';
+$lang['admin_update'] = '업데이트';
 $lang['admin_parameter'] = '매개변수';
 $lang['admin_menu'] = '메뉴';
 $lang['admin_hr'] = '인사';

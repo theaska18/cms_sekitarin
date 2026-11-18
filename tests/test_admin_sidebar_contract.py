@@ -147,7 +147,7 @@ class AdminSidebarContractTests(unittest.TestCase):
                 manifest_icons.add(item.attrib["icon"])
         system_manifest = parse_menu_xml(MANIFEST_DIR / "system.xml")
         tenant_item = next(item for item in system_manifest.findall("menu") if item.attrib["code"] == "sys_tenant")
-        self.assertEqual(42, len(manifest_routes))
+        self.assertEqual(43, len(manifest_routes))
         self.assertEqual("building", tenant_item.attrib["icon"])
         self.assertIn("'building' =>", icon_map)
         self.assertTrue(manifest_icons.issubset(icon_names), manifest_icons - icon_names)
@@ -178,6 +178,7 @@ class AdminSidebarContractTests(unittest.TestCase):
             "hr_hierarchy": "hierarchy",
             "hr_approval_flow": "workflow",
             "sys_approval": "approval",
+            "sys_update": "download",
             "fin_dashboard": "finance",
         }
         for menu_code, icon_name in expected.items():

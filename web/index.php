@@ -140,6 +140,49 @@ if (PHP_SAPI !== 'cli')
 
 /*
  *---------------------------------------------------------------
+ * MAINTENANCE MODE
+ *---------------------------------------------------------------
+ * The one-click updater writes this flag while files and migrations are
+ * being replaced. Stale flags older than 30 minutes are ignored so a fatal
+ * request cannot keep the site offline forever.
+ */
+if (PHP_SAPI !== 'cli')
+{
+    $maintenance_file = __DIR__ . '/application/cache/maintenance.flag';
+    if (is_file($maintenance_file))
+    {
+        $maintenance_started = (int) trim((string) @file_get_contents($maintenance_file));
+        if ($maintenance_started > 0 && time() - $maintenance_started <= 1800)
+        {
+            $request_path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+            $is_update_page = is_string($request_path) && (strpos($request_path, '/admin/system/update') === 0
+                || strpos($request_path, '/api/update/') === 0);
+            $is_asset = is_string($request_path) && strpos($request_path, '/assets/') === 0;
+            if (!$is_update_page && !$is_asset)
+            {
+                header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
+                header('Retry-After: 120');
+                header('Content-Type: text/html; charset=UTF-8');
+                echo '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                    . '<meta name="viewport" content="width=device-width, initial-scale=1">'
+                    . '<title>Maintenance</title></head>'
+                    . '<body style="margin:0;Font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:grid;place-items:center;min-height:100vh">'
+                    . '<main style="max-width:32rem;padding:2rem;text-align:center">'
+                    . '<h1 style="font-size:1.5rem;margin:0 0 1rem">Sedang diperbarui</h1>'
+                    . '<p style="line-height:1.6;color:#94a3b8;margin:0">Aplikasi sedang menjalani update. '
+                    . 'Halaman ini akan tersedia kembali sebentar lagi.</p></main></body></html>';
+                exit;
+            }
+        }
+        elseif ($maintenance_started > 0)
+        {
+            @unlink($maintenance_file);
+        }
+    }
+}
+
+/*
+ *---------------------------------------------------------------
  * SYSTEM DIRECTORY NAME
  *---------------------------------------------------------------
  *

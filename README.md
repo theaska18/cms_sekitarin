@@ -130,6 +130,50 @@ gunzip -c database_backup/cmsdb-YYYYMMDD-HHMMSS.sql.gz \
   | docker compose exec -T cms-db mysql -u root -p cmsdb
 ```
 
+## Update aplikasi
+
+Halaman **System → Update** membaca versi terpasang dari
+`web/application/config/version.php` dan memeriksa katalog rilis melalui API
+yang disimpan di property `link_update` (default
+`https://cms.ckamal.com/api/update/check`).
+
+- Katalog rilis ada di `web/updates/latest.json`; paket ZIP disajikan melalui
+  `GET /api/update/package/<nama-paket>` dan tidak dapat diakses langsung.
+- Menu `sys_update` memberi akses melihat, sedangkan `sys_update_run` memberi
+  akses menjalankan update. Migration awal memberi akses tersebut kepada
+  tenant/role yang sudah dapat mengelola **Property**.
+- Sebelum mengganti file, runner membuat backup database dengan `mysqldump`
+  dan menyalin file yang akan diganti. Migration SQL dari paket dicatat di
+  `sys_update_migration`.
+- Proses memakai `application/cache/maintenance.flag`; front controller
+  mengembalikan HTTP 503 untuk request lain selama update berlangsung.
+- User PHP harus dapat menulis ke web root dan `application/config`, serta
+  binary `mysqldump`/`mysql` harus tersedia. Di Compose, entrypoint menyiapkan
+  izin tulis direktori web.
+- Format paket dan katalog dijelaskan di `web/updates/README.md`.
+
+### Membuat rilis update
+
+Rilis dibangun dari perubahan Git, bukan dari daftar file manual:
+
+```bash
+# Tag baseline rilis sebelumnya, misalnya v1.0.0.
+python3 tools/build_update.py \
+  --version 1.0.1 \
+  --from v1.0.0 \
+  --changelog "Perbaikan halaman properti." \
+  --publish web/updates
+```
+
+Generator memilih file berubah di `web/`, mendeteksi migration SQL baru di
+`database/migrations/`, menolak file terlarang dan migration yang sudah
+diubah, lalu menghasilkan ZIP + `manifest.json` + `latest.json`. Setelah build
+sukses, generator juga menulis versi baru ke `version.php`; commit dan tag
+perubahan tersebut sebelum membuat rilis berikutnya. Gunakan
+`--allow-destructive` hanya untuk migration yang memang menghapus data/tabel.
+Migration dengan nama dan checksum yang sama tidak dijalankan ulang oleh
+client.
+
 ## Variabel lingkungan (`.env`)
 
 Compose membaca `.env` dari root repository untuk interpolasi, lalu meneruskan variabel yang diperlukan ke container. CI3 menerima konfigurasi sebagai variabel lingkungan runtime; aplikasi tidak memuat file `.env` secara langsung. Gunakan `.env.example` sebagai template aman untuk konfigurasi lokal. Tabel ini hanya menjelaskan nama dan tujuan variabel—bukan nilai rahasia. `TIME_ZONE` diteruskan hanya ke layanan `cms-app`; konfigurasi CI3 menggunakannya sebagai zona waktu default PHP untuk operasi tanggal/waktu aplikasi. Nilai Compose bawaan adalah `utc` bila variabel kosong atau tidak disetel. Untuk override, atur `TIME_ZONE=Asia/Jakarta` di `.env` (gunakan identifier zona waktu PHP yang valid). Ini tidak mengubah zona waktu host maupun layanan `cms-db`.

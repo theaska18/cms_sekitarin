@@ -74,4 +74,15 @@
         <access code="sys_approval_flow_template_delete" name="Delete" />
     </menu>
 
+    <menu code="sys_update"
+          name="Update"
+          label_key="admin_update"
+          icon="download"
+          route="/admin/system/update"
+          sort_order="6"
+          status="active">
+        <access code="sys_update" name="View" />
+        <access code="sys_update_run" name="Run Update" />
+    </menu>
+
 </menu-group>

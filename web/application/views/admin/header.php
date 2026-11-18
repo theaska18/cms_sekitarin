@@ -74,6 +74,7 @@ $menu_icons = array(
     'menu' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r=".8"/><circle cx="4.5" cy="12" r=".8"/><circle cx="4.5" cy="18" r=".8"/>',
     'list-ordered' => '<path stroke-linecap="round" stroke-linejoin="round" d="M4 7h12l-3-3m3 3-3 3M20 17H8l3 3m-3-3 3-3"/>',
     'approval' => '<rect x="5" y="4" width="14" height="17" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 4V3h6v1m-6 7 2 2 4-4M9 17h6"/>',
+    'download' => '<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/>',
     'hierarchy' => '<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4M6 12h12M6 12v4M18 12v4"/>',
     'users' => '<circle cx="9" cy="8" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0-1-5.8M17 14a5 5 0 0 1 4 5"/>',
     'workflow' => '<circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M7 12h3m4 0h3m-2-2 2 2-2 2"/>',

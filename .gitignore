@@ -36,3 +36,9 @@ Thumbs.db
 /web/data/*
 !/web/data/.htaccess
 !/web/data/.gitkeep
+
+# Release packages are built artifacts, not source
+/web/updates/*.zip
+
+# Update release build artifacts
+/dist/

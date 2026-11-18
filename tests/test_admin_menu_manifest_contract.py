@@ -275,8 +275,11 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                         "fin_ar_report", "fin_ap_report", "fin_general_ledger",
                     }
                     no_access_menus = {"fin_dashboard", "fin_all_transactions"}
+                    run_only_menus = {"sys_update"}
                     if code in no_access_menus:
                         required_access_codes = set()
+                    elif code in run_only_menus:
+                        required_access_codes = {"sys_update", "sys_update_run"}
                     elif code in export_only_menus:
                         required_access_codes = {f"{code}_export"}
                     elif code in update_only_menus:
@@ -288,6 +291,10 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                         self.assertEqual(len(access_codes), len(set(access_codes)), "menu access codes must be unique")
                     if code in update_only_menus:
                         with self.subTest(file=path.name, menu=code, rule="override-only"):
+                            self.assertNotIn(f"{code}_add", access_codes)
+                            self.assertNotIn(f"{code}_delete", access_codes)
+                    if code in run_only_menus:
+                        with self.subTest(file=path.name, menu=code, rule="run-only"):
                             self.assertNotIn(f"{code}_add", access_codes)
                             self.assertNotIn(f"{code}_delete", access_codes)
                     if code in export_only_menus:

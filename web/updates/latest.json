@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "released_at": "2026-11-18",
+  "changelog": "Rilis dasar CMSNivo.",
+  "min_php": "8.1",
+  "requires_version": "1.0.0",
+  "package": "",
+  "sha256": "",
+  "size": 0,
+  "migrations": []
+}

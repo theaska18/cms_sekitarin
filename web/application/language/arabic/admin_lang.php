@@ -5,6 +5,7 @@ $lang['admin_dashboard'] = 'لوحة التحكم';
 $lang['admin_system'] = 'النظام';
 $lang['admin_application'] = 'التطبيق';
 $lang['admin_property'] = 'الخصائص';
+$lang['admin_update'] = 'التحديث';
 $lang['admin_parameter'] = 'المعلمات';
 $lang['admin_menu'] = 'القائمة';
 $lang['admin_hr'] = 'الموارد البشرية';

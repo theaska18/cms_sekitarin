@@ -5,6 +5,7 @@ $lang['admin_dashboard'] = 'ダッシュボード';
 $lang['admin_system'] = 'システム';
 $lang['admin_application'] = 'アプリケーション';
 $lang['admin_property'] = 'プロパティ';
+$lang['admin_update'] = 'アップデート';
 $lang['admin_parameter'] = 'パラメーター';
 $lang['admin_menu'] = 'メニュー';
 $lang['admin_hr'] = '人事';

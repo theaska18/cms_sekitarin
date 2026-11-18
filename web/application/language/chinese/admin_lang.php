@@ -5,6 +5,7 @@ $lang['admin_dashboard'] = '管理仪表盘';
 $lang['admin_system'] = '系统';
 $lang['admin_application'] = '应用程序';
 $lang['admin_property'] = '属性';
+$lang['admin_update'] = '更新';
 $lang['admin_parameter'] = '参数';
 $lang['admin_menu'] = '菜单';
 $lang['admin_hr'] = '人力资源';
