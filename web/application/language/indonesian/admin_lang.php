@@ -202,3 +202,6 @@ $lang['admin_dt_previous'] = 'Sebelumnya';
 $lang['admin_menu_access_saving'] = 'Menyimpan…';
 $lang['admin_menu_access_saved'] = 'Tersimpan';
 $lang['admin_menu_access_save_error'] = 'Perubahan tidak dapat disimpan. Silakan coba lagi.';
+
+$lang['admin_finance_sales_invoice_inbox'] = 'Integrasi Faktur Penjualan';
+$lang['admin_finance_purchase_bill_inbox'] = 'Integrasi Tagihan Pembelian';

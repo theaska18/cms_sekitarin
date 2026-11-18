@@ -15,7 +15,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
     def test_finance_schema_is_tenant_scoped(self):
         schema = SCHEMA.read_text()
         tables = re.findall(r"CREATE TABLE `(fin_[a-z_]+)`", schema)
-        self.assertEqual(26, len(tables))
+        self.assertEqual(28, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertTrue(all(name.startswith("fin_") for name in tables))
         for table in tables:

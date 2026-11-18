@@ -272,7 +272,7 @@ CREATE TABLE `app_menu_visit` (
   KEY `fk_app_menu_visit_user_id_idx` (`user_id`),
   CONSTRAINT `fk_app_menu_visit_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_app_menu_visit_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2032 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2063 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `app_notification`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -319,7 +319,7 @@ CREATE TABLE `app_role_menu` (
   PRIMARY KEY (`role_menu_id`),
   UNIQUE KEY `uk_app_role_menu` (`role_id`,`menu_code`),
   CONSTRAINT `fk_app_role_menu_role_id` FOREIGN KEY (`role_id`) REFERENCES `app_role` (`role_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=486 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=492 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `app_role_menu_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -331,7 +331,7 @@ CREATE TABLE `app_role_menu_access` (
   PRIMARY KEY (`role_menu_access_id`),
   UNIQUE KEY `uk_app_role_menu_access` (`role_menu_id`,`access_code`),
   CONSTRAINT `fk_app_role_menu_access_role_menu_id` FOREIGN KEY (`role_menu_id`) REFERENCES `app_role_menu` (`role_menu_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1530 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1542 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `app_sequence`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -352,7 +352,7 @@ CREATE TABLE `app_sequence` (
   CONSTRAINT `fk_app_sequence_repeat_type` FOREIGN KEY (`repeat_type`) REFERENCES `sys_parameter_option` (`option_code`) ON UPDATE CASCADE,
   CONSTRAINT `fk_app_sequence_sequence_code` FOREIGN KEY (`sequence_code`) REFERENCES `sys_sequence` (`sequence_code`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_app_sequence_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `app_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -836,7 +836,39 @@ CREATE TABLE `fin_purchase_bill` (
   CONSTRAINT `fk_fin_purchase_bill_posted_by` FOREIGN KEY (`posted_by`) REFERENCES `app_user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_purchase_bill_supplier_id` FOREIGN KEY (`supplier_id`) REFERENCES `fin_supplier` (`supplier_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_purchase_bill_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `fin_purchase_bill_inbox`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `fin_purchase_bill_inbox` (
+  `purchase_bill_inbox_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `created_by` bigint NOT NULL,
+  `bill_number` varchar(48) NOT NULL,
+  `supplier_name` varchar(160) NOT NULL,
+  `supplier_code` varchar(32) DEFAULT NULL,
+  `amount_before_tax` decimal(20,6) NOT NULL,
+  `tax_percent` decimal(9,6) NOT NULL DEFAULT '0.000000',
+  `tax_amount` decimal(20,6) NOT NULL DEFAULT '0.000000',
+  `total_amount` decimal(20,6) NOT NULL,
+  `description` text NOT NULL,
+  `status` varchar(24) NOT NULL DEFAULT 'received',
+  `error_message` text,
+  `purchase_bill_id` bigint unsigned DEFAULT NULL,
+  `payload_json` longtext,
+  `received_at` datetime NOT NULL,
+  `processed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`purchase_bill_inbox_id`),
+  UNIQUE KEY `uk_purchase_bill_inbox_number` (`tenant_id`,`bill_number`),
+  KEY `idx_purchase_bill_inbox_status` (`tenant_id`,`status`,`received_at`),
+  KEY `idx_purchase_bill_inbox_party` (`tenant_id`,`supplier_name`),
+  KEY `fk_purchase_bill_inbox_created_by` (`created_by`),
+  KEY `fk_purchase_bill_inbox_bill_id` (`purchase_bill_id`),
+  CONSTRAINT `fk_purchase_bill_inbox_bill_id` FOREIGN KEY (`purchase_bill_id`) REFERENCES `fin_purchase_bill` (`purchase_bill_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_purchase_bill_inbox_created_by` FOREIGN KEY (`created_by`) REFERENCES `app_user` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_purchase_bill_inbox_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `fin_purchase_bill_line`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -868,7 +900,7 @@ CREATE TABLE `fin_purchase_bill_line` (
   CONSTRAINT `fk_fin_purchase_bill_line_purchase_bill_id` FOREIGN KEY (`purchase_bill_id`) REFERENCES `fin_purchase_bill` (`purchase_bill_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_purchase_bill_line_tax_id` FOREIGN KEY (`tax_id`) REFERENCES `fin_tax` (`tax_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_purchase_bill_line_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `fin_sales_invoice`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -908,7 +940,39 @@ CREATE TABLE `fin_sales_invoice` (
   CONSTRAINT `fk_fin_sales_invoice_customer_id` FOREIGN KEY (`customer_id`) REFERENCES `fin_customer` (`customer_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_sales_invoice_posted_by` FOREIGN KEY (`posted_by`) REFERENCES `app_user` (`user_id`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_sales_invoice_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `fin_sales_invoice_inbox`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `fin_sales_invoice_inbox` (
+  `sales_invoice_inbox_id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `created_by` bigint NOT NULL,
+  `invoice_number` varchar(48) NOT NULL,
+  `customer_name` varchar(160) NOT NULL,
+  `customer_code` varchar(32) DEFAULT NULL,
+  `amount_before_tax` decimal(20,6) NOT NULL,
+  `tax_percent` decimal(9,6) NOT NULL DEFAULT '0.000000',
+  `tax_amount` decimal(20,6) NOT NULL DEFAULT '0.000000',
+  `total_amount` decimal(20,6) NOT NULL,
+  `description` text NOT NULL,
+  `status` varchar(24) NOT NULL DEFAULT 'received',
+  `error_message` text,
+  `sales_invoice_id` bigint unsigned DEFAULT NULL,
+  `payload_json` longtext,
+  `received_at` datetime NOT NULL,
+  `processed_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`sales_invoice_inbox_id`),
+  UNIQUE KEY `uk_sales_invoice_inbox_number` (`tenant_id`,`invoice_number`),
+  KEY `idx_sales_invoice_inbox_status` (`tenant_id`,`status`,`received_at`),
+  KEY `idx_sales_invoice_inbox_party` (`tenant_id`,`customer_name`),
+  KEY `fk_sales_invoice_inbox_created_by` (`created_by`),
+  KEY `fk_sales_invoice_inbox_invoice_id` (`sales_invoice_id`),
+  CONSTRAINT `fk_sales_invoice_inbox_created_by` FOREIGN KEY (`created_by`) REFERENCES `app_user` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_sales_invoice_inbox_invoice_id` FOREIGN KEY (`sales_invoice_id`) REFERENCES `fin_sales_invoice` (`sales_invoice_id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_sales_invoice_inbox_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `fin_sales_invoice_line`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -940,7 +1004,7 @@ CREATE TABLE `fin_sales_invoice_line` (
   CONSTRAINT `fk_fin_sales_invoice_line_sales_invoice_id` FOREIGN KEY (`sales_invoice_id`) REFERENCES `fin_sales_invoice` (`sales_invoice_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_sales_invoice_line_tax_id` FOREIGN KEY (`tax_id`) REFERENCES `fin_tax` (`tax_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_sales_invoice_line_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `fin_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1386,7 +1450,7 @@ CREATE TABLE `sys_tenant_menu` (
   PRIMARY KEY (`tenant_menu_id`),
   UNIQUE KEY `uk_sys_tenant_menu` (`tenant_id`,`menu_code`),
   CONSTRAINT `fk_sys_tenant_menu_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=195 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=199 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `sys_tenant_menu_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -1398,7 +1462,7 @@ CREATE TABLE `sys_tenant_menu_access` (
   PRIMARY KEY (`tenant_menu_access_id`),
   UNIQUE KEY `uk_sys_tenant_menu_access` (`tenant_menu_id`,`access_code`),
   CONSTRAINT `fk_sys_tenant_menu_access_tenant_menu_id` FOREIGN KEY (`tenant_menu_id`) REFERENCES `sys_tenant_menu` (`tenant_menu_id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=472 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=480 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `sys_update`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

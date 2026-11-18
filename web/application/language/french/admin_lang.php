@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = 'Précédent';
 $lang['admin_menu_access_saving'] = 'Enregistrement…';
 $lang['admin_menu_access_saved'] = 'Enregistré';
 $lang['admin_menu_access_save_error'] = "Impossible d'enregistrer la modification. Veuillez réessayer.";
+
+$lang['admin_finance_sales_invoice_inbox'] = 'Intégration des factures de vente';
+$lang['admin_finance_purchase_bill_inbox'] = 'Integration des factures achat';

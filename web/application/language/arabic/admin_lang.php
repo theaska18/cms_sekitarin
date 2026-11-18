@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = 'السابق';
 $lang['admin_menu_access_saving'] = 'جارٍ الحفظ…';
 $lang['admin_menu_access_saved'] = 'تم الحفظ';
 $lang['admin_menu_access_save_error'] = 'تعذر حفظ التغيير. حاول مرة أخرى.';
+
+$lang['admin_finance_sales_invoice_inbox'] = 'تكامل فواتير البيع';
+$lang['admin_finance_purchase_bill_inbox'] = 'تكامل فواتير الشراء';

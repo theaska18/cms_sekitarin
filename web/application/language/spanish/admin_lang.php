@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = 'Anterior';
 $lang['admin_menu_access_saving'] = 'Guardando…';
 $lang['admin_menu_access_saved'] = 'Guardado';
 $lang['admin_menu_access_save_error'] = 'No se pudo guardar el cambio. Inténtalo de nuevo.';
+
+$lang['admin_finance_sales_invoice_inbox'] = 'Integración de facturas de venta';
+$lang['admin_finance_purchase_bill_inbox'] = 'Integración de facturas de compra';

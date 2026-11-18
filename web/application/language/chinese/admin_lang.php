@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = '上一页';
 $lang['admin_menu_access_saving'] = '正在保存…';
 $lang['admin_menu_access_saved'] = '已保存';
 $lang['admin_menu_access_save_error'] = '无法保存更改，请重试。';
+
+$lang['admin_finance_sales_invoice_inbox'] = '销售发票集成';
+$lang['admin_finance_purchase_bill_inbox'] = '采购账单集成';

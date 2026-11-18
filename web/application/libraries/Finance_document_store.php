@@ -5,6 +5,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Finance_document_store
 {
     private $db;
+    public $last_saved_id = 0;
 
     public function __construct($db = NULL)
     {
@@ -219,6 +220,7 @@ class Finance_document_store
             $this->db->trans_rollback();
             return 'save_error';
         }
+        $this->last_saved_id = (int) $doc_id;
         $this->db->trans_commit();
         return 'saved';
     }

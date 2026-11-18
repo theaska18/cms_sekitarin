@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = 'Zurück';
 $lang['admin_menu_access_saving'] = 'Speichern…';
 $lang['admin_menu_access_saved'] = 'Gespeichert';
 $lang['admin_menu_access_save_error'] = 'Die Änderung konnte nicht gespeichert werden. Bitte erneut versuchen.';
+
+$lang['admin_finance_sales_invoice_inbox'] = 'Verkaufsrechnungsintegration';
+$lang['admin_finance_purchase_bill_inbox'] = 'Einkaufsrechnungsintegration';

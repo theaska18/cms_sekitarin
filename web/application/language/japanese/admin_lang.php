@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = '前へ';
 $lang['admin_menu_access_saving'] = '保存中…';
 $lang['admin_menu_access_saved'] = '保存しました';
 $lang['admin_menu_access_save_error'] = '変更を保存できませんでした。もう一度お試しください。';
+
+$lang['admin_finance_sales_invoice_inbox'] = '売上請求書統合';
+$lang['admin_finance_purchase_bill_inbox'] = '仕入請求書統合';

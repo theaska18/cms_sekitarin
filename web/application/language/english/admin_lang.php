@@ -202,3 +202,6 @@ $lang['admin_dt_previous'] = 'Previous';
 $lang['admin_menu_access_saving'] = 'Saving…';
 $lang['admin_menu_access_saved'] = 'Saved';
 $lang['admin_menu_access_save_error'] = 'Could not save the change. Please try again.';
+
+$lang['admin_finance_sales_invoice_inbox'] = 'Sales Invoice Integration';
+$lang['admin_finance_purchase_bill_inbox'] = 'Purchase Bill Integration';

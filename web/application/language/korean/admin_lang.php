@@ -187,3 +187,6 @@ $lang['admin_dt_previous'] = '이전';
 $lang['admin_menu_access_saving'] = '저장 중…';
 $lang['admin_menu_access_saved'] = '저장됨';
 $lang['admin_menu_access_save_error'] = '변경 사항을 저장하지 못했습니다. 다시 시도하세요.';
+
+$lang['admin_finance_sales_invoice_inbox'] = '판매 인보이스 통합';
+$lang['admin_finance_purchase_bill_inbox'] = '구매 청구서 통합';
