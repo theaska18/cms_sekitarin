@@ -35,7 +35,7 @@ class Finance_report_store
             $required['fin_supplier'] = array('tenant_id', 'supplier_id', 'supplier_name');
             $required['fin_supplier_payment_allocation'] = array('tenant_id', 'purchase_bill_id', 'base_amount');
             $required['fin_supplier_payment'] = array('tenant_id', 'supplier_payment_id', 'status');
-        } elseif ($report === 'cash_flow') {
+        } elseif (in_array($report, array('cash_flow', 'cash_flow_detail'), TRUE)) {
             $required['fin_cash_account'] = array('tenant_id', 'cash_account_id', 'account_id', 'account_code', 'account_name');
         }
         foreach ($required as $table => $columns) {
@@ -413,6 +413,299 @@ class Finance_report_store
         );
     }
 
+    /**
+     * Cash flow statement in direct or indirect presentation. Cash movements
+     * are read from journals that touch a cash/bank account. Opening balance
+     * journals are treated as beginning cash instead of period cash flow.
+     */
+    public function cash_flow_statement($tenant_id, $start, $end, $method = 'direct')
+    {
+        if (!$this->available('cash_flow') || $start === '' || $end === '') {
+            return FALSE;
+        }
+        $method = $method === 'indirect' ? 'indirect' : 'direct';
+        $tenant_id = (int) $tenant_id;
+        $account_query = $this->db->select('account_id,parent_account_id,account_code,account_name,account_type,normal_balance,posting_flag')
+            ->from('fin_account')->where('tenant_id', $tenant_id)->get();
+        $cash_query = $this->db->select('account_id')->from('fin_cash_account')->where('tenant_id', $tenant_id)->get();
+        if ($account_query === FALSE || $cash_query === FALSE) {
+            return FALSE;
+        }
+        $accounts = array();
+        foreach ($account_query->result_array() as $account) {
+            $accounts[(int) $account['account_id']] = $account;
+        }
+        $cash_accounts = array();
+        foreach ($cash_query->result_array() as $cash_account) {
+            $cash_accounts[(int) $cash_account['account_id']] = TRUE;
+        }
+
+        $line_query = $this->db->select('je.journal_entry_id,je.source_type,jl.account_id,jl.debit_base_amount,jl.credit_base_amount', FALSE)
+            ->from('fin_journal_entry je')
+            ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+            ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')
+            ->where('je.journal_date >=', $start)->where('je.journal_date <=', $end)
+            ->order_by('je.journal_entry_id', 'ASC')->order_by('jl.line_number', 'ASC')->get();
+        if ($line_query === FALSE) {
+            return FALSE;
+        }
+        $journals = array();
+        $period_movements = array();
+        foreach ($line_query->result_array() as $line) {
+            $journal_id = (int) $line['journal_entry_id'];
+            if (!isset($journals[$journal_id])) {
+                $journals[$journal_id] = array('source_type' => (string) $line['source_type'], 'lines' => array());
+            }
+            $journals[$journal_id]['lines'][] = array(
+                'account_id' => (int) $line['account_id'],
+                'debit' => (float) $line['debit_base_amount'],
+                'credit' => (float) $line['credit_base_amount'],
+            );
+            if ($line['source_type'] !== 'opening_balance') {
+                $account_id = (int) $line['account_id'];
+                if (!isset($period_movements[$account_id])) {
+                    $period_movements[$account_id] = 0.0;
+                }
+                $period_movements[$account_id] += (float) $line['debit_base_amount'] - (float) $line['credit_base_amount'];
+            }
+        }
+
+        $sections = array(
+            'operating' => array('items' => array(), 'total' => 0.0),
+            'investing' => array('items' => array(), 'total' => 0.0),
+            'financing' => array('items' => array(), 'total' => 0.0),
+        );
+        $actual_net_change = 0.0;
+        foreach ($journals as $journal) {
+            if ($journal['source_type'] === 'opening_balance') {
+                continue;
+            }
+            $cash_net = 0.0;
+            $counterparts = array();
+            foreach ($journal['lines'] as $line) {
+                if (isset($cash_accounts[$line['account_id']])) {
+                    $cash_net += $line['debit'] - $line['credit'];
+                } else {
+                    $counterparts[] = $line;
+                }
+            }
+            if (abs($cash_net) < 0.005) {
+                continue;
+            }
+            $actual_net_change += $cash_net;
+            foreach ($counterparts as $line) {
+                $account_id = (int) $line['account_id'];
+                if (!isset($accounts[$account_id])) {
+                    continue;
+                }
+                $effect = -($line['debit'] - $line['credit']);
+                if (abs($effect) < 0.005) {
+                    continue;
+                }
+                list($section, $kind) = $this->cash_flow_classify($accounts[$account_id], $accounts);
+                if (!isset($sections[$section]['items'][$account_id])) {
+                    $sections[$section]['items'][$account_id] = array(
+                        'code' => (string) $accounts[$account_id]['account_code'],
+                        'name' => (string) $accounts[$account_id]['account_name'],
+                        'account_type' => (string) $accounts[$account_id]['account_type'],
+                        'kind' => $kind,
+                        'amount' => 0.0,
+                    );
+                }
+                $sections[$section]['items'][$account_id]['amount'] += $effect;
+            }
+        }
+        foreach ($sections as $section_key => &$section) {
+            uasort($section['items'], function ($left, $right) {
+                return strcmp((string) $left['code'], (string) $right['code']);
+            });
+            $section['total'] = 0.0;
+            foreach ($section['items'] as $account_id => $item) {
+                if (abs($item['amount']) < 0.005) {
+                    unset($section['items'][$account_id]);
+                    continue;
+                }
+                $section['total'] += $item['amount'];
+            }
+        }
+        unset($section);
+
+        $presented_total = $sections['operating']['total'] + $sections['investing']['total'] + $sections['financing']['total'];
+        $difference = $actual_net_change - $presented_total;
+        if (abs($difference) >= 0.005) {
+            $sections['operating']['items']['other'] = array(
+                'code' => '',
+                'name' => '',
+                'name_key' => 'finance_cf_other_adjustment',
+                'account_type' => 'other',
+                'kind' => 'other',
+                'amount' => $difference,
+            );
+            $sections['operating']['total'] += $difference;
+        }
+
+        $net_profit = 0.0;
+        $non_cash = array();
+        $working_capital = array();
+        foreach ($period_movements as $account_id => $movement) {
+            if (!isset($accounts[$account_id]) || isset($cash_accounts[$account_id])) {
+                continue;
+            }
+            $account = $accounts[$account_id];
+            if ($account['account_type'] === 'revenue') {
+                $net_profit -= $movement;
+                continue;
+            }
+            if ($account['account_type'] === 'expense') {
+                $net_profit -= $movement;
+                if ($this->cash_flow_is_non_cash_expense((string) $account['account_name'])) {
+                    if (abs($movement) >= 0.005) {
+                        $non_cash[] = array(
+                            'code' => (string) $account['account_code'],
+                            'name' => (string) $account['account_name'],
+                            'amount' => $movement,
+                        );
+                    }
+                }
+                continue;
+            }
+            list($section, $kind) = $this->cash_flow_classify($account, $accounts);
+            if ($section !== 'operating') {
+                continue;
+            }
+            if ($account['account_type'] === 'asset') {
+                $effect = -$movement;
+                $direction = $movement >= 0 ? 'increase' : 'decrease';
+            } elseif ($account['account_type'] === 'liability') {
+                $balance_change = -$movement;
+                $effect = $balance_change;
+                $direction = $balance_change >= 0 ? 'increase' : 'decrease';
+            } else {
+                continue;
+            }
+            if (abs($effect) < 0.005) {
+                continue;
+            }
+            $working_capital[] = array(
+                'code' => (string) $account['account_code'],
+                'name' => (string) $account['account_name'],
+                'amount' => $effect,
+                'direction' => $direction,
+            );
+        }
+        usort($non_cash, function ($left, $right) {
+            return strcmp((string) $left['code'], (string) $right['code']);
+        });
+        usort($working_capital, function ($left, $right) {
+            return strcmp((string) $left['code'], (string) $right['code']);
+        });
+
+        $adjustment_total = 0.0;
+        foreach ($non_cash as $item) {
+            $adjustment_total += $item['amount'];
+        }
+        foreach ($working_capital as $item) {
+            $adjustment_total += $item['amount'];
+        }
+        $indirect_operating = $net_profit + $adjustment_total;
+        $indirect_difference = $sections['operating']['total'] - $indirect_operating;
+        if (abs($indirect_difference) >= 0.005) {
+            $working_capital[] = array(
+                'code' => '',
+                'name' => '',
+                'name_key' => 'finance_cf_other_adjustment',
+                'amount' => $indirect_difference,
+                'direction' => 'other',
+            );
+        }
+
+        $begin_before = $this->cash_balance_before($tenant_id, $start);
+        $begin_opening = $this->cash_balance_opening_in($tenant_id, $start, $end);
+        if ($begin_before === FALSE || $begin_opening === FALSE) {
+            return FALSE;
+        }
+        $beginning_cash = $begin_before + $begin_opening;
+        $net_change = $sections['operating']['total'] + $sections['investing']['total'] + $sections['financing']['total'];
+
+        return array(
+            'method' => $method,
+            'period_start' => $start,
+            'period_end' => $end,
+            'sections' => $sections,
+            'net_profit' => $net_profit,
+            'non_cash' => $non_cash,
+            'working_capital' => $working_capital,
+            'adjustment_total' => $adjustment_total,
+            'indirect_total' => $sections['operating']['total'],
+            'net_change' => $net_change,
+            'beginning_cash' => $beginning_cash,
+            'ending_cash' => $beginning_cash + $net_change,
+        );
+    }
+
+    private function cash_flow_classify($account, $accounts)
+    {
+        $type = (string) $account['account_type'];
+        list($group_id, $group) = $this->account_group($account, $accounts);
+        $group_code = (string) $group['account_code'];
+        $group_name = strtolower((string) $group['account_name']);
+        if ($type === 'asset') {
+            if (strpos($group_code, '15') === 0
+                || strpos($group_name, 'aset tetap') !== FALSE
+                || strpos($group_name, 'investasi') !== FALSE
+                || strpos($group_name, 'peralatan') !== FALSE
+                || strpos($group_name, 'kendaraan') !== FALSE
+                || strpos($group_name, 'bangunan') !== FALSE
+                || strpos($group_name, 'tanah') !== FALSE) {
+                return array('investing', 'investing');
+            }
+            return array('operating', 'working_capital');
+        }
+        if ($type === 'liability') {
+            if (strpos($group_code, '22') === 0
+                || strpos($group_name, 'jangka panjang') !== FALSE
+                || strpos($group_name, 'obligasi') !== FALSE) {
+                return array('financing', 'financing');
+            }
+            return array('operating', 'working_capital');
+        }
+        if ($type === 'equity') {
+            return array('financing', 'financing');
+        }
+        return array('operating', 'operating');
+    }
+
+    private function cash_flow_is_non_cash_expense($account_name)
+    {
+        $name = strtolower($account_name);
+        return strpos($name, 'penyusutan') !== FALSE
+            || strpos($name, 'depresiasi') !== FALSE
+            || strpos($name, 'amortisasi') !== FALSE;
+    }
+
+    private function cash_balance_before($tenant_id, $date)
+    {
+        $query = $this->db->select('COALESCE(SUM(jl.debit_base_amount-jl.credit_base_amount),0) AS balance', FALSE)
+            ->from('fin_journal_entry je')
+            ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+            ->join('fin_cash_account ca', 'ca.account_id=jl.account_id AND ca.tenant_id=jl.tenant_id')
+            ->where('je.tenant_id', (int) $tenant_id)->where('je.status', 'posted')
+            ->where('je.journal_date <', $date)->get();
+        return $query === FALSE ? FALSE : (float) $query->row()->balance;
+    }
+
+    private function cash_balance_opening_in($tenant_id, $start, $end)
+    {
+        $query = $this->db->select('COALESCE(SUM(jl.debit_base_amount-jl.credit_base_amount),0) AS balance', FALSE)
+            ->from('fin_journal_entry je')
+            ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
+            ->join('fin_cash_account ca', 'ca.account_id=jl.account_id AND ca.tenant_id=jl.tenant_id')
+            ->where('je.tenant_id', (int) $tenant_id)->where('je.status', 'posted')
+            ->where('je.journal_date >=', $start)->where('je.journal_date <=', $end)
+            ->where('je.source_type', 'opening_balance')->get();
+        return $query === FALSE ? FALSE : (float) $query->row()->balance;
+    }
+
     /** Return the top-level ancestor of an account. */
     private function account_top($account, $accounts)
     {
@@ -462,6 +755,8 @@ class Finance_report_store
     {
         if ($report === 'profit_loss_detail') {
             $report = 'profit_loss';
+        } elseif ($report === 'cash_flow_detail') {
+            $report = 'cash_flow';
         }
         $binds = array((int) $tenant_id);
         $search = is_string($search) ? trim(substr($search, 0, 120)) : '';

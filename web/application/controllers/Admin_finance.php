@@ -36,6 +36,10 @@ class Admin_finance extends Admin
             $this->finance_reconciliation_index();
             return;
         }
+        if ($slug === 'cash_flow') {
+            $this->finance_cash_flow_statement();
+            return;
+        }
         if ($slug === 'profit_loss') {
             $this->finance_profit_loss_statement();
             return;
@@ -93,6 +97,8 @@ class Admin_finance extends Admin
                     && !($slug === 'financial_settings' && $available
                         && $store->count($resource, (int) $this->current_user['tenant_id']) > 0),
                 'finance_can_update' => $this->has_admin_access_code($resource['menu_code'] . '_update'),
+                'finance_can_export' => $this->has_admin_access_code($resource['menu_code'] . '_export'),
+                'finance_can_import' => $this->has_admin_access_code($resource['menu_code'] . '_import'),
                 'finance_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
@@ -122,6 +128,8 @@ class Admin_finance extends Admin
                 'finance_chart_of_accounts_available' => $available,
                 'finance_chart_of_accounts_can_add' => $this->has_admin_access_code($menu . '_add'),
                 'finance_chart_of_accounts_can_update' => $this->has_admin_access_code($menu . '_update'),
+                'finance_chart_of_accounts_can_export' => $this->has_admin_access_code($menu . '_export'),
+                'finance_chart_of_accounts_can_import' => $this->has_admin_access_code($menu . '_import'),
                 'finance_chart_of_accounts_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
                 'finance_coa_import_errors' => $this->session->flashdata('coa_import_errors'),
@@ -200,7 +208,8 @@ class Admin_finance extends Admin
 
     public function tax_export()
     {
-        if (!$this->has_admin_menu_code('fin_tax_configuration')) {
+        if (!$this->has_admin_menu_code('fin_tax_configuration')
+            || !$this->has_admin_access_code('fin_tax_configuration_export')) {
             $this->finance_forbidden();
             return;
         }
@@ -231,7 +240,7 @@ class Admin_finance extends Admin
             return;
         }
         if (!$this->has_admin_menu_code('fin_tax_configuration')
-            || !$this->has_admin_access_code('fin_tax_configuration_update')) {
+            || !$this->has_admin_access_code('fin_tax_configuration_import')) {
             $this->finance_forbidden();
             return;
         }
@@ -400,7 +409,8 @@ class Admin_finance extends Admin
 
     public function category_export()
     {
-        if (!$this->has_admin_menu_code('fin_categories')) {
+        if (!$this->has_admin_menu_code('fin_categories')
+            || !$this->has_admin_access_code('fin_categories_export')) {
             $this->finance_forbidden();
             return;
         }
@@ -430,7 +440,7 @@ class Admin_finance extends Admin
             return;
         }
         if (!$this->has_admin_menu_code('fin_categories')
-            || !$this->has_admin_access_code('fin_categories_update')) {
+            || !$this->has_admin_access_code('fin_categories_import')) {
             $this->finance_forbidden();
             return;
         }
@@ -562,7 +572,8 @@ class Admin_finance extends Admin
 
     public function chart_of_accounts_export()
     {
-        if (!$this->has_admin_menu_code('fin_chart_of_accounts')) {
+        if (!$this->has_admin_menu_code('fin_chart_of_accounts')
+            || !$this->has_admin_access_code('fin_chart_of_accounts_export')) {
             $this->finance_forbidden();
             return;
         }
@@ -606,7 +617,7 @@ class Admin_finance extends Admin
             return;
         }
         if (!$this->has_admin_menu_code('fin_chart_of_accounts')
-            || !$this->has_admin_access_code('fin_chart_of_accounts_update')) {
+            || !$this->has_admin_access_code('fin_chart_of_accounts_import')) {
             $this->finance_forbidden();
             return;
         }
@@ -2672,8 +2683,13 @@ class Admin_finance extends Admin
             show_404();
             return;
         }
-        if (!$this->has_admin_menu_code($menu_code)) {
+        if (!$this->has_admin_menu_code($menu_code)
+            || !$this->has_admin_access_code($menu_code . '_export')) {
             $this->finance_forbidden();
+            return;
+        }
+        if ($slug === 'cash_flow') {
+            $this->finance_cash_flow_export();
             return;
         }
         if ($slug === 'profit_loss') {
@@ -2793,6 +2809,186 @@ class Admin_finance extends Admin
             ->set_output("\xEF\xBB\xBF" . $csv);
     }
 
+    private function finance_cash_flow_statement()
+    {
+        if (!$this->has_admin_menu_code('fin_cash_flow')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $filters = $this->finance_report_dates();
+        $method = strtolower((string) $this->input->get('method', TRUE)) === 'indirect' ? 'indirect' : 'direct';
+        $this->load->library('finance_report_store');
+        $statement = empty($filters['errors'])
+            ? $this->finance_report_store->cash_flow_statement(
+                (int) $this->current_user['tenant_id'],
+                $filters['start_on'],
+                $filters['end_on'],
+                $method
+            )
+            : FALSE;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : '';
+        $this->render_admin(
+            'admin/finance/report_cash_flow',
+            'admin_finance_cash_flow',
+            '/admin/finance/cash_flow',
+            array(
+                'finance_report_filters' => $filters,
+                'finance_report_errors' => isset($filters['errors']) ? $filters['errors'] : array(),
+                'finance_cf' => $statement,
+                'finance_cf_method' => $method,
+                'finance_cf_available' => $this->finance_report_store->available('cash_flow'),
+                'finance_cf_currency' => $base_currency,
+                'finance_cf_tenant' => $tenant_name,
+                'finance_cf_can_export' => $this->has_admin_access_code('fin_cash_flow_export'),
+            )
+        );
+    }
+
+    private function finance_cash_flow_export()
+    {
+        $this->lang->load('finance', $this->resolve_admin_locale());
+        $filters = $this->finance_report_dates();
+        $method = strtolower((string) $this->input->get('method', TRUE)) === 'indirect' ? 'indirect' : 'direct';
+        if (!empty($filters['errors'])) {
+            $this->session->set_flashdata('finance_status', 'invalid_range');
+            redirect('/admin/finance/cash_flow?method=' . $method, 'location', 303);
+            return;
+        }
+        $this->load->library('finance_report_store');
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $statement = $this->finance_report_store->cash_flow_statement($tenant_id, $filters['start_on'], $filters['end_on'], $method);
+        if ($statement === FALSE) {
+            $this->session->set_flashdata('finance_status', 'unavailable');
+            redirect('/admin/finance/cash_flow?method=' . $method, 'location', 303);
+            return;
+        }
+        $settings = $this->db->select('base_currency')->where('tenant_id', $tenant_id)->limit(1)->get('fin_settings');
+        $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
+        $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
+        $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : (string) $tenant_id;
+        $title = $this->finance_report_text('finance_cash_flow', 'Cash Flow');
+        $method_label = $method === 'indirect'
+            ? $this->finance_report_text('finance_cf_indirect', 'Indirect Method')
+            : $this->finance_report_text('finance_cf_direct', 'Direct Method');
+        $section_labels = array(
+            'operating' => $this->finance_report_text('finance_cf_operating', 'Cash flows from operating activities'),
+            'investing' => $this->finance_report_text('finance_cf_investing', 'Cash flows from investing activities'),
+            'financing' => $this->finance_report_text('finance_cf_financing', 'Cash flows from financing activities'),
+        );
+        $total_labels = array(
+            'operating' => $this->finance_report_text('finance_cf_net_operating', 'Net cash from operating activities'),
+            'investing' => $this->finance_report_text('finance_cf_net_investing', 'Net cash from investing activities'),
+            'financing' => $this->finance_report_text('finance_cf_net_financing', 'Net cash from financing activities'),
+        );
+        $prepared_by = isset($this->current_user['full_name']) && trim((string) $this->current_user['full_name']) !== ''
+            ? (string) $this->current_user['full_name']
+            : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
+        $stream = fopen('php://temp', 'r+');
+        fputcsv($stream, array('Report Name', $title));
+        fputcsv($stream, array('Report Code', 'cash_flow'));
+        fputcsv($stream, array('Tenant', $tenant_name));
+        fputcsv($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
+        fputcsv($stream, array('Method', $method_label));
+        fputcsv($stream, array('Base Currency', $base_currency));
+        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
+        fputcsv($stream, array('Prepared By', $prepared_by));
+        fputcsv($stream, array('Source', 'Posted journals'));
+        fputcsv($stream, array());
+        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $row_number = 0;
+        if ($method === 'direct') {
+            foreach ($statement['sections'] as $section_key => $section) {
+                foreach ($section['items'] as $item) {
+                    fputcsv($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
+                }
+                fputcsv($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
+                fputcsv($stream, array());
+            }
+        } else {
+            fputcsv($stream, array(++$row_number, $section_labels['operating'], '', '', $this->finance_report_text('finance_cf_net_profit', 'Profit before tax'), number_format((float) $statement['net_profit'], 2, '.', '')));
+            fputcsv($stream, array('', $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), '', '', ''));
+            foreach ($statement['non_cash'] as $item) {
+                fputcsv($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), $item['code'], $item['name'], number_format((float) $item['amount'], 2, '.', '')));
+            }
+            foreach ($statement['working_capital'] as $item) {
+                fputcsv($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_working_capital', 'Changes in working capital'), $item['code'], $this->finance_cash_flow_item_label($item, 'working_capital'), number_format((float) $item['amount'], 2, '.', '')));
+            }
+            fputcsv($stream, array('', $section_labels['operating'], '', '', $total_labels['operating'], number_format((float) $statement['indirect_total'], 2, '.', '')));
+            fputcsv($stream, array());
+            foreach (array('investing', 'financing') as $section_key) {
+                $section = $statement['sections'][$section_key];
+                foreach ($section['items'] as $item) {
+                    fputcsv($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
+                }
+                fputcsv($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
+                fputcsv($stream, array());
+            }
+        }
+        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_net_change', 'Net increase (decrease) in cash and cash equivalents'), number_format((float) $statement['net_change'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_beginning_cash', 'Cash and cash equivalents at beginning of period'), number_format((float) $statement['beginning_cash'], 2, '.', '')));
+        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_ending_cash', 'Cash and cash equivalents at end of period'), number_format((float) $statement['ending_cash'], 2, '.', '')));
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+        $tenant_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $tenant_name);
+        $report_code = preg_replace('/[^A-Za-z0-9_-]+/', '-', $title);
+        if ($report_code === '') {
+            $report_code = 'Arus-Kas';
+        }
+        $method_code = $method === 'indirect' ? 'Tidak-Langsung' : 'Langsung';
+        $filename = trim($report_code, '-') . '-' . $method_code . '-' . trim($tenant_code, '-') . '-' . $filters['start_on'] . '-' . $filters['end_on'] . '.csv';
+        $this->output->set_content_type('text/csv', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output("\xEF\xBB\xBF" . $csv);
+    }
+
+    private function finance_cash_flow_item_label($item, $flow = 'direct')
+    {
+        if (isset($item['name_key']) && $item['name_key'] !== '') {
+            return $this->finance_report_text($item['name_key'], $item['name_key']);
+        }
+        $name = isset($item['name']) ? (string) $item['name'] : '';
+        $amount = isset($item['amount']) ? (float) $item['amount'] : 0.0;
+        if ($flow === 'working_capital') {
+            $direction = isset($item['direction']) ? $item['direction'] : '';
+            if ($direction === 'increase') {
+                return $this->finance_report_text('finance_cf_increase', 'Increase in') . ' ' . $name;
+            }
+            if ($direction === 'decrease') {
+                return $this->finance_report_text('finance_cf_decrease', 'Decrease in') . ' ' . $name;
+            }
+            return $name;
+        }
+        $type = isset($item['account_type']) ? $item['account_type'] : '';
+        $kind = isset($item['kind']) ? $item['kind'] : '';
+        if ($type === 'revenue') {
+            return $this->finance_report_text('finance_cf_receipt', 'Receipts from') . ' ' . $name;
+        }
+        if ($type === 'expense') {
+            return $this->finance_report_text('finance_cf_payment', 'Payments for') . ' ' . $name;
+        }
+        if ($kind === 'investing') {
+            return $amount < 0
+                ? $this->finance_report_text('finance_cf_purchase', 'Purchase of') . ' ' . $name
+                : $this->finance_report_text('finance_cf_sale', 'Sale of') . ' ' . $name;
+        }
+        if ($type === 'liability') {
+            return $amount < 0
+                ? $this->finance_report_text('finance_cf_repayment', 'Repayment of') . ' ' . $name
+                : $this->finance_report_text('finance_cf_receipt', 'Receipts from') . ' ' . $name;
+        }
+        if ($type === 'equity') {
+            return $amount < 0
+                ? $this->finance_report_text('finance_cf_reduction', 'Reduction of') . ' ' . $name
+                : $this->finance_report_text('finance_cf_addition', 'Addition to') . ' ' . $name;
+        }
+        return $name;
+    }
+
     private function finance_profit_loss_statement()
     {
         if (!$this->has_admin_menu_code('fin_profit_loss')) {
@@ -2824,6 +3020,7 @@ class Admin_finance extends Admin
                 'finance_pl_available' => $this->finance_report_store->available('profit_loss'),
                 'finance_pl_currency' => $base_currency,
                 'finance_pl_tenant' => $tenant_name,
+                'finance_pl_can_export' => $this->has_admin_access_code('fin_profit_loss_export'),
             )
         );
     }
@@ -2849,7 +3046,7 @@ class Admin_finance extends Admin
         $base_currency = $settings !== FALSE && $settings->num_rows() ? (string) $settings->row()->base_currency : '';
         $tenant = $this->db->select('tenant_name')->where('tenant_id', $tenant_id)->limit(1)->get('sys_tenant');
         $tenant_name = $tenant !== FALSE && $tenant->num_rows() ? (string) $tenant->row()->tenant_name : (string) $tenant_id;
-        $title = $this->finance_report_text('admin_finance_profit_loss', 'Profit and Loss');
+        $title = $this->finance_report_text('finance_profit_loss', 'Profit and Loss');
         $prepared_by = isset($this->current_user['full_name']) && trim((string) $this->current_user['full_name']) !== ''
             ? (string) $this->current_user['full_name']
             : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
@@ -2944,6 +3141,7 @@ class Admin_finance extends Admin
                 'finance_skontro_available' => $this->finance_report_store->available('balance_sheet'),
                 'finance_skontro_currency' => $base_currency,
                 'finance_skontro_tenant' => $tenant_name,
+                'finance_skontro_can_export' => $this->has_admin_access_code('fin_balance_sheet_export'),
             )
         );
     }
@@ -3074,6 +3272,7 @@ class Admin_finance extends Admin
                 'finance_report_available' => $this->finance_report_store->available($slug),
                 'finance_report_summary' => $summary,
                 'finance_report_base_currency' => $base_currency,
+                'finance_report_can_export' => $this->has_admin_access_code($menu_code . '_export'),
                 'finance_report_balance_totals' => $balance_totals,
             )
         );
@@ -3165,6 +3364,7 @@ class Admin_finance extends Admin
             'balance_sheet' => 'fin_balance_sheet',
             'balance_sheet_skontro' => 'fin_balance_sheet',
             'cash_flow' => 'fin_cash_flow',
+            'cash_flow_detail' => 'fin_cash_flow',
             'trial_balance' => 'fin_trial_balance',
             'ar_report' => 'fin_ar_report',
             'ap_report' => 'fin_ap_report',
@@ -3175,6 +3375,9 @@ class Admin_finance extends Admin
 
     private function finance_report_columns($slug)
     {
+        if ($slug === 'cash_flow_detail') {
+            $slug = 'cash_flow';
+        }
         $columns = array(
             'general_ledger' => array(
                 array('name' => 'journal_date', 'label' => 'Date'),

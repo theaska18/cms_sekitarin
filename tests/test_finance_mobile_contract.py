@@ -13,7 +13,7 @@ def read(path):
 class FinanceMobileContractTests(unittest.TestCase):
     def test_finance_pages_use_narrow_mobile_padding(self):
         views = sorted(path for path in FINANCE.glob("*.php") if "<main" in read(path))
-        self.assertEqual(len(views), 19)
+        self.assertEqual(len(views), 20)
         for path in views:
             source = read(path)
             self.assertIn("px-2 py-6 sm:px-6", source, path.name)

@@ -8,8 +8,4 @@
         <access code="fin_supplier_payments_add" name="Add" />
         <access code="fin_supplier_payments_update" name="Update" />
     </menu>
-    <menu code="fin_accounts_payable" name="Accounts Payable" label_key="admin_finance_accounts_payable" icon="default" route="/admin/finance/accounts_payable" module_key="finance_accounts_payable" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="11" status="active">
-        <access code="fin_accounts_payable_add" name="Add" />
-        <access code="fin_accounts_payable_update" name="Update" />
-    </menu>
 </menu-group>

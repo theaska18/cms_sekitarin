@@ -41,11 +41,13 @@ $can_edit = $finance_can_update && $finance_write_available;
                 </div>
             </div>
             <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <?php if ($finance_can_export): ?>
                 <a href="<?= html_escape($current_path . '/export') ?>" class="finance-data-exchange-export inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
                     <?= html_escape(isset($labels['finance_category_export']) ? $labels['finance_category_export'] : 'Export Categories') ?>
                 </a>
-                <?php if ($finance_can_update): ?>
+                <?php endif; ?>
+                <?php if ($finance_can_import): ?>
                 <form method="post" action="<?= html_escape($current_path . '/import') ?>" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
                     <input id="category-file" type="file" name="category_file" accept=".csv,text/csv" required class="sr-only" data-category-file-input data-category-file-default="<?= html_escape(isset($labels['finance_category_choose_file']) ? $labels['finance_category_choose_file'] : 'Choose CSV') ?>">
@@ -77,11 +79,13 @@ $can_edit = $finance_can_update && $finance_write_available;
                 </div>
             </div>
             <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <?php if ($finance_can_export): ?>
                 <a href="<?= html_escape($current_path . '/export') ?>" class="finance-data-exchange-export inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
                     <?= html_escape(isset($labels['finance_tax_export']) ? $labels['finance_tax_export'] : 'Export Taxes') ?>
                 </a>
-                <?php if ($finance_can_update): ?>
+                <?php endif; ?>
+                <?php if ($finance_can_import): ?>
                 <form method="post" action="<?= html_escape($current_path . '/import') ?>" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
                     <input id="tax-file" type="file" name="tax_file" accept=".csv,text/csv" required class="sr-only" data-tax-file-input data-tax-file-default="<?= html_escape(isset($labels['finance_tax_choose_file']) ? $labels['finance_tax_choose_file'] : 'Choose CSV') ?>">

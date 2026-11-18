@@ -270,9 +270,19 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                     code = element.attrib["code"]
                     access_codes = [access.attrib.get("code") for access in element.findall("access")]
                     update_only_menus = {"hr_approval_flow"}
-                    required_access_codes = (
-                        {f"{code}_update"} if code in update_only_menus else {f"{code}_add", f"{code}_update"}
-                    )
+                    export_only_menus = {
+                        "fin_profit_loss", "fin_balance_sheet", "fin_cash_flow", "fin_trial_balance",
+                        "fin_ar_report", "fin_ap_report", "fin_general_ledger",
+                    }
+                    no_access_menus = {"fin_dashboard", "fin_all_transactions"}
+                    if code in no_access_menus:
+                        required_access_codes = set()
+                    elif code in export_only_menus:
+                        required_access_codes = {f"{code}_export"}
+                    elif code in update_only_menus:
+                        required_access_codes = {f"{code}_update"}
+                    else:
+                        required_access_codes = {f"{code}_add", f"{code}_update"}
                     with self.subTest(file=path.name, menu=code):
                         self.assertTrue(required_access_codes.issubset(access_codes), required_access_codes - set(access_codes))
                         self.assertEqual(len(access_codes), len(set(access_codes)), "menu access codes must be unique")
@@ -280,6 +290,14 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                         with self.subTest(file=path.name, menu=code, rule="override-only"):
                             self.assertNotIn(f"{code}_add", access_codes)
                             self.assertNotIn(f"{code}_delete", access_codes)
+                    if code in export_only_menus:
+                        with self.subTest(file=path.name, menu=code, rule="export-only"):
+                            self.assertNotIn(f"{code}_add", access_codes)
+                            self.assertNotIn(f"{code}_update", access_codes)
+                            self.assertNotIn(f"{code}_delete", access_codes)
+                    if code in no_access_menus:
+                        with self.subTest(file=path.name, menu=code, rule="read-only"):
+                            self.assertEqual([], access_codes)
 
     def test_finance_manifest_registers_all_listed_items_without_business_logic_or_grants(self):
         manifest = parse_xml(MANIFEST_DIR / "manifest.xml")
@@ -293,13 +311,13 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             finance = parse_xml(MANIFEST_DIR / group.attrib["file"])
             items.extend(finance.findall("menu"))
             group_names.add(finance.attrib["name"])
-        self.assertEqual(33, len(items))
+        self.assertEqual(30, len(items))
         self.assertEqual(9, len(finance_groups))
         self.assertIn("Finance - Transaction", group_names)
         self.assertIn("Finance - Report", group_names)
         self.assertIn("Finance - Master", group_names)
-        self.assertEqual(33, len({item.attrib["code"] for item in items}))
-        self.assertEqual(33, len({item.attrib["route"] for item in items}))
+        self.assertEqual(30, len({item.attrib["code"] for item in items}))
+        self.assertEqual(30, len({item.attrib["route"] for item in items}))
         self.assertTrue(all(item.attrib["route"].startswith("/admin/finance/") for item in items))
         self.assertTrue(all(item.attrib.get("module_key") for item in items))
         self.assertIn("$this->module('finance', $slug)", (APP / "controllers/Admin_finance.php").read_text())
@@ -339,7 +357,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
 
     def test_saved_short_language_codes_resolve_to_finance_menu_language_packs(self):
         controller = CONTROLLER.read_text()
-        resolver = controller.split("private function resolve_admin_locale", 1)[1].split("private function load_admin_menu_groups", 1)[0]
+        resolver = controller.split("function resolve_admin_locale", 1)[1].split("private function load_admin_menu_groups", 1)[0]
         for short_code, locale in (
             ("'ja' => 'japanese'", "japanese"), ("'zh' => 'chinese'", "chinese"),
             ("'ar' => 'arabic'", "arabic"), ("'ko' => 'korean'", "korean"),

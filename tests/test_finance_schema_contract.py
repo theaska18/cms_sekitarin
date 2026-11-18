@@ -39,6 +39,29 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertNotIn("drop_table", FOUNDATION.read_text().lower())
         self.assertIn("$config['migration_enabled'] = FALSE;", MIGRATION_CONFIG.read_text())
 
+    def test_finance_export_and_import_access_codes_are_explicit(self):
+        report_manifest = (ROOT / "web/application/views/admin/menu_manifest/finance_report.xml").read_text()
+        accounting_manifest = (ROOT / "web/application/views/admin/menu_manifest/finance_accounting.xml").read_text()
+        master_manifest = (ROOT / "web/application/views/admin/menu_manifest/finance_master.xml").read_text()
+        controller = FINANCE_CONTROLLER.read_text()
+        for code in ("fin_profit_loss", "fin_balance_sheet", "fin_cash_flow", "fin_trial_balance", "fin_ar_report", "fin_ap_report"):
+            with self.subTest(report=code):
+                self.assertIn(f'access code="{code}_export" name="Export"', report_manifest)
+                self.assertNotIn(f'access code="{code}_add"', report_manifest)
+                self.assertNotIn(f'access code="{code}_update"', report_manifest)
+        self.assertIn('access code="fin_general_ledger_export" name="Export"', accounting_manifest)
+        self.assertNotIn('access code="fin_general_ledger_update"', accounting_manifest)
+        for code in ("fin_chart_of_accounts", "fin_categories", "fin_tax_configuration"):
+            with self.subTest(master=code):
+                self.assertIn(f'access code="{code}_export" name="Export"', accounting_manifest + master_manifest)
+                self.assertIn(f'access code="{code}_import" name="Import"', accounting_manifest + master_manifest)
+                self.assertIn(f"has_admin_access_code('{code}_export')", controller)
+                self.assertIn(f"has_admin_access_code('{code}_import')", controller)
+        self.assertIn("$menu_code . '_export'", controller)
+        self.assertIn("finance_report_can_export", (APP / "views/admin/finance/report_index.php").read_text())
+        self.assertIn("finance_chart_of_accounts_can_export", (APP / "views/admin/finance/chart_of_accounts_index.php").read_text())
+        self.assertIn("finance_can_import", (APP / "views/admin/finance/resource_index.php").read_text())
+
     def test_finance_setup_pages_use_tenant_scoped_server_side_data_access(self):
         controller = FINANCE_CONTROLLER.read_text()
         store = FINANCE_STORE.read_text()
@@ -286,6 +309,10 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("chart_of_accounts/import", routes)
         self.assertIn("public function chart_of_accounts_export", controller)
         self.assertIn("public function chart_of_accounts_import", controller)
+        self.assertIn("fin_chart_of_accounts_export", controller)
+        self.assertIn("fin_chart_of_accounts_import", controller)
+        self.assertIn("finance_chart_of_accounts_can_export", view)
+        self.assertIn("finance_chart_of_accounts_can_import", view)
         self.assertIn("$conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)))", controller)
         self.assertIn("Import dibatalkan. Kode akun sudah ada di tenant", controller)
         self.assertIn("Siklus parent terdeteksi", controller)
@@ -307,6 +334,10 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("categories/import", routes)
         self.assertIn("public function category_export", controller)
         self.assertIn("public function category_import", controller)
+        self.assertIn("fin_categories_export", controller)
+        self.assertIn("fin_categories_import", controller)
+        self.assertIn("finance_can_export", view)
+        self.assertIn("finance_can_import", view)
         self.assertIn("$key = $type . '|' . $code", controller)
         self.assertIn("Import dibatalkan. Kategori sudah ada di tenant", controller)
         self.assertIn("category_file", view)
@@ -325,6 +356,8 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("tax_configuration/import", routes)
         self.assertIn("public function tax_export", controller)
         self.assertIn("public function tax_import", controller)
+        self.assertIn("fin_tax_configuration_export", controller)
+        self.assertIn("fin_tax_configuration_import", controller)
         self.assertIn("Akun pajak ' . $row['account_code'] . ' tidak ditemukan.", controller)
         self.assertIn("Akun pajak ' . $row['account_code'] . ' harus bertipe aset atau liabilitas.", controller)
         self.assertIn("akun pajak wajib untuk tarif lebih dari 0", controller)
@@ -359,6 +392,8 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("'Prepared By'", controller)
         self.assertIn("$report_code = preg_replace", controller)
         self.assertIn("$as_of_report", controller)
+        self.assertIn("$menu_code . '_export'", controller)
+        self.assertIn("finance_report_can_export", view)
         self.assertIn("array_merge(array('No'), $column_labels)", controller)
         self.assertIn("finance_report_export", view)
         for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
@@ -366,11 +401,36 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
                 self.assertIn("$lang['finance_report_export']", content)
 
+    def test_finance_cash_flow_supports_direct_and_indirect_methods(self):
+        controller = FINANCE_CONTROLLER.read_text()
+        store = (APP / "libraries/Finance_report_store.php").read_text()
+        view = (APP / "views/admin/finance/report_cash_flow.php").read_text()
+        self.assertIn("private function finance_cash_flow_statement(", controller)
+        self.assertIn("public function cash_flow_statement($tenant_id, $start, $end, $method = 'direct')", store)
+        self.assertIn("$method === 'indirect'", store)
+        self.assertIn("cash_flow_classify", store)
+        self.assertIn("working_capital", store)
+        self.assertIn("finance_cf_direct", view)
+        self.assertIn("finance_cf_indirect", view)
+        self.assertIn("finance_cf_operating", view)
+        self.assertIn("finance_cf_beginning_cash", view)
+        self.assertIn("finance_cf_ending_cash", view)
+        self.assertIn("cash_flow_detail", controller)
+        self.assertIn("method=direct", view)
+        self.assertIn("method=indirect", view)
+        for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
+            with self.subTest(locale=locale):
+                content = (APP / "language" / locale / "finance_lang.php").read_text(encoding="utf-8")
+                self.assertIn("$lang['finance_cf_direct']", content)
+                self.assertIn("$lang['finance_cf_indirect']", content)
+                self.assertIn("$lang['finance_cf_ending_cash']", content)
+
     def test_finance_detail_reports_keep_sidebar_menu_active(self):
         header = (APP / "views/admin/header.php").read_text()
-        self.assertIn("$admin_menu_path_aliases", header)
-        self.assertIn("'/admin/finance/profit_loss_detail' => '/admin/finance/profit_loss'", header)
-        self.assertIn("'/admin/finance/balance_sheet_skontro' => '/admin/finance/balance_sheet'", header)
+        self.assertIn("$admin_detail_aliases", header)
+        self.assertIn("'profit_loss_detail' => 'profit_loss'", header)
+        self.assertIn("'balance_sheet_skontro' => 'balance_sheet'", header)
+        self.assertIn("'cash_flow_detail' => 'cash_flow'", header)
         self.assertIn("$current_admin_path = $active_current_path;", header)
 
     def test_finance_profit_loss_uses_formatted_statement_with_subtotals(self):

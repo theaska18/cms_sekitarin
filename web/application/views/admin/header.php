@@ -29,13 +29,17 @@ $finance_help_topics = array(
     'finance_setting' => 'setting',
 );
 $normalized_current_path = '/' . trim(isset($current_path) ? (string) $current_path : '', '/');
-$admin_menu_path_aliases = array(
-    '/admin/finance/profit_loss_detail' => '/admin/finance/profit_loss',
-    '/admin/finance/balance_sheet_skontro' => '/admin/finance/balance_sheet',
+$admin_detail_aliases = array(
+    'profit_loss_detail' => 'profit_loss',
+    'cash_flow_detail' => 'cash_flow',
+    'balance_sheet_skontro' => 'balance_sheet',
 );
-$active_current_path = isset($admin_menu_path_aliases[$normalized_current_path])
-    ? $admin_menu_path_aliases[$normalized_current_path]
-    : $normalized_current_path;
+$active_current_path = $normalized_current_path;
+$current_segments = explode('/', trim($normalized_current_path, '/'));
+$current_leaf = end($current_segments);
+if (strpos($normalized_current_path, '/admin/finance/') === 0 && isset($admin_detail_aliases[$current_leaf])) {
+    $active_current_path = '/admin/finance/' . $admin_detail_aliases[$current_leaf];
+}
 foreach ($menu_groups as $finance_help_group) {
     if (strpos((string) $finance_help_group['code'], 'finance') !== 0) {
         continue;

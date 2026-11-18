@@ -1,27 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu-group code="finance_report" name="Finance - Report" label_key="admin_finance_report_group" version="1.0.0" sort_order="10">
     <menu code="fin_profit_loss" name="Profit &amp; Loss" label_key="admin_finance_profit_loss" icon="list-ordered" route="/admin/finance/profit_loss" module_key="finance_profit_loss" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="20" status="active">
-        <access code="fin_profit_loss_add" name="Add" />
-        <access code="fin_profit_loss_update" name="Update" />
+        <access code="fin_profit_loss_export" name="Export" />
     </menu>
     <menu code="fin_balance_sheet" name="Balance Sheet" label_key="admin_finance_balance_sheet" icon="list-ordered" route="/admin/finance/balance_sheet" module_key="finance_balance_sheet" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="21" status="active">
-        <access code="fin_balance_sheet_add" name="Add" />
-        <access code="fin_balance_sheet_update" name="Update" />
+        <access code="fin_balance_sheet_export" name="Export" />
     </menu>
     <menu code="fin_cash_flow" name="Cash Flow" label_key="admin_finance_cash_flow" icon="list-ordered" route="/admin/finance/cash_flow" module_key="finance_cash_flow" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="22" status="active">
-        <access code="fin_cash_flow_add" name="Add" />
-        <access code="fin_cash_flow_update" name="Update" />
+        <access code="fin_cash_flow_export" name="Export" />
     </menu>
     <menu code="fin_trial_balance" name="Trial Balance" label_key="admin_finance_trial_balance" icon="list-ordered" route="/admin/finance/trial_balance" module_key="finance_trial_balance" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="23" status="active">
-        <access code="fin_trial_balance_add" name="Add" />
-        <access code="fin_trial_balance_update" name="Update" />
+        <access code="fin_trial_balance_export" name="Export" />
     </menu>
     <menu code="fin_ar_report" name="Accounts Receivable Report" label_key="admin_finance_ar_report" icon="list-ordered" route="/admin/finance/ar_report" module_key="finance_ar_report" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="24" status="active">
-        <access code="fin_ar_report_add" name="Add" />
-        <access code="fin_ar_report_update" name="Update" />
+        <access code="fin_ar_report_export" name="Export" />
     </menu>
     <menu code="fin_ap_report" name="Accounts Payable Report" label_key="admin_finance_ap_report" icon="list-ordered" route="/admin/finance/ap_report" module_key="finance_ap_report" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="25" status="active">
-        <access code="fin_ap_report_add" name="Add" />
-        <access code="fin_ap_report_update" name="Update" />
+        <access code="fin_ap_report_export" name="Export" />
     </menu>
 </menu-group>

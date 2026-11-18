@@ -8,8 +8,4 @@
         <access code="fin_customer_payments_add" name="Add" />
         <access code="fin_customer_payments_update" name="Update" />
     </menu>
-    <menu code="fin_accounts_receivable" name="Accounts Receivable" label_key="admin_finance_accounts_receivable" icon="default" route="/admin/finance/accounts_receivable" module_key="finance_accounts_receivable" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="8" status="active">
-        <access code="fin_accounts_receivable_add" name="Add" />
-        <access code="fin_accounts_receivable_update" name="Update" />
-    </menu>
 </menu-group>
