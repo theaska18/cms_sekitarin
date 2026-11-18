@@ -2222,6 +2222,7 @@ class Admin_finance extends Admin
                     ? array('number' => 'invoice_number', 'date' => 'invoice_date')
                     : array('number' => 'bill_number', 'date' => 'bill_date');
                 $record = array_merge($record, $saved);
+                $record['person_id'] = $saved[$kind === 'sales' ? 'customer_id' : 'supplier_id'];
                 $record['document_date'] = $saved[$spec['date']];
                 if (!empty($saved['line'])) {
                     $record['account_id'] = $saved['line']['account_id'];
