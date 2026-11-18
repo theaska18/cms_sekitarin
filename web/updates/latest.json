@@ -1,11 +1,11 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "released_at": "2026-11-18",
-  "changelog": "Perbaikan halaman properti.",
+  "changelog": "Optimalisasi Halaman Karyawan.",
   "min_php": "8.1",
-  "requires_version": "1.0.4",
-  "package": "cms-1.0.5.zip",
-  "sha256": "0eac0b138ebc11770a4724bc1e8928d534d747a2d67051d14f5d123c36f97624",
-  "size": 22711,
+  "requires_version": "1.0.5",
+  "package": "cms-1.0.6.zip",
+  "sha256": "ca77d46ada0dfc6c6755033ca1704d6e726a11ceef95256e38120be8f3a306d1",
+  "size": 6932,
   "migrations": []
 }

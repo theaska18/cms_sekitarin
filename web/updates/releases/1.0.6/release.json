@@ -1,0 +1,31 @@
+{
+  "version": "1.0.6",
+  "from_version": "1.0.5",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.5",
+  "changelog": "Optimalisasi Halaman Karyawan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "1388ef25f9d5423ba97a5012a5dffbf60dfdd86e049db519aebc4d6901d91e0d",
+      "size": 448
+    },
+    {
+      "path": "application/views/admin/employee/index.php",
+      "sha256": "c510887e30583d18a4395eb48b061cc28cfc0a8375a55abe3e6718e65d2a9240",
+      "size": 27904
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.6.zip",
+    "sha256": "ca77d46ada0dfc6c6755033ca1704d6e726a11ceef95256e38120be8f3a306d1",
+    "size": 6932
+  },
+  "from_ref": "v1.0.5",
+  "generated_at": "2026-11-18T19:41:46+00:00"
+}
