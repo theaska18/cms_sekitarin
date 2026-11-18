@@ -31,16 +31,35 @@ $notifications_delete_confirm_body = isset($notifications_delete_confirm_body) ?
 $notifications_confirm_delete = isset($notifications_confirm_delete) ? $notifications_confirm_delete : 'Delete notification';
 $notifications_cancel = isset($notifications_cancel) ? $notifications_cancel : 'Cancel';
 $notifications_approval_view = isset($notifications_approval_view) ? $notifications_approval_view : 'View approval';
+$notifications_search_label = isset($notifications_search_label) ? $notifications_search_label : 'Search';
+$notifications_search_placeholder = isset($notifications_search_placeholder) ? $notifications_search_placeholder : 'Search title or message';
+$notifications_filter_status = isset($notifications_filter_status) ? $notifications_filter_status : 'Status';
+$notifications_filter_all = isset($notifications_filter_all) ? $notifications_filter_all : 'All';
+$notifications_filter_unread = isset($notifications_filter_unread) ? $notifications_filter_unread : 'Unread';
+$notifications_filter_read = isset($notifications_filter_read) ? $notifications_filter_read : 'Read';
+$notifications_filter_apply = isset($notifications_filter_apply) ? $notifications_filter_apply : 'Apply';
+$notifications_filter_reset = isset($notifications_filter_reset) ? $notifications_filter_reset : 'Reset';
+$notifications_per_page_label = isset($notifications_per_page_label) ? $notifications_per_page_label : 'Per page';
+$notifications_first = isset($notifications_first) ? $notifications_first : 'First';
+$notifications_last = isset($notifications_last) ? $notifications_last : 'Last';
+$notifications_no_results = isset($notifications_no_results) ? $notifications_no_results : 'No notifications match this filter.';
+$notifications_no_results_hint = isset($notifications_no_results_hint) ? $notifications_no_results_hint : 'Try another search or reset the filter.';
 $notifications = isset($notifications) && is_array($notifications) ? $notifications : array();
+$notifications_search = isset($notifications_search) ? (string) $notifications_search : '';
+$notifications_status = isset($notifications_status) ? (string) $notifications_status : 'all';
+$notifications_per_page_value = isset($notifications_per_page) ? (int) $notifications_per_page : 20;
+$notifications_page_sizes = isset($notifications_page_sizes) && is_array($notifications_page_sizes) ? $notifications_page_sizes : array(20, 50, 100);
 $notifications_page = isset($notifications_page) ? (int) $notifications_page : 1;
 $notifications_total_pages = isset($notifications_total_pages) ? (int) $notifications_total_pages : 1;
 $notifications_error = !empty($notifications_error);
 $selected_notification_id = isset($selected_notification_id) ? (int) $selected_notification_id : 0;
-$selected_notification = NULL;
-foreach ($notifications as $notification) {
-    if ((int) $notification['id'] === $selected_notification_id) {
-        $selected_notification = $notification;
-        break;
+$selected_notification = isset($selected_notification) && is_array($selected_notification) ? $selected_notification : NULL;
+if ($selected_notification === NULL) {
+    foreach ($notifications as $notification) {
+        if ((int) $notification['id'] === $selected_notification_id) {
+            $selected_notification = $notification;
+            break;
+        }
     }
 }
 $approval_notification = function ($message) use ($notifications_approval_view) {
@@ -116,6 +135,25 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
     }
     return $notifications_time_just_now;
 };
+$notifications_filter_query = array();
+if ($notifications_search !== '') {
+    $notifications_filter_query['q'] = $notifications_search;
+}
+if ($notifications_status !== 'all') {
+    $notifications_filter_query['status'] = $notifications_status;
+}
+if ($notifications_per_page_value !== 20) {
+    $notifications_filter_query['per_page'] = $notifications_per_page_value;
+}
+$notifications_page_link = function ($target_page) use ($notifications_filter_query) {
+    return '/admin/notifications?' . http_build_query(array_merge($notifications_filter_query, array('page' => (int) $target_page)));
+};
+$notifications_item_link = function ($notification_id) use ($notifications_filter_query, $notifications_page) {
+    return '/admin/notifications?' . http_build_query(array_merge($notifications_filter_query, array(
+        'selected' => (int) $notification_id,
+        'page' => (int) $notifications_page,
+    )));
+};
 ?>
 <section class="mx-auto w-full max-w-7xl px-0 py-6 sm:px-6 sm:py-8 lg:px-8">
             <nav aria-label="<?php echo html_escape($notifications_heading); ?>" class="mb-5 text-sm text-slate-500"><ol class="flex flex-wrap items-center gap-2"><li><?php echo html_escape($notifications_breadcrumb_parent); ?></li><li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800"><?php echo html_escape($notifications_heading); ?></li></ol></nav>
@@ -129,8 +167,8 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
         <div class="grid min-h-80 place-items-center rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm">
             <div>
                 <svg class="mx-auto h-10 w-10 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-                <h2 class="mt-3 text-base font-semibold text-slate-800"><?php echo html_escape($notifications_empty); ?></h2>
-                <p class="mt-1 text-sm text-slate-500"><?php echo html_escape($notifications_empty_hint); ?></p>
+                <h2 class="mt-3 text-base font-semibold text-slate-800"><?php echo html_escape(!empty($notifications_filter_active) ? $notifications_no_results : $notifications_empty); ?></h2>
+                <p class="mt-1 text-sm text-slate-500"><?php echo html_escape(!empty($notifications_filter_active) ? $notifications_no_results_hint : $notifications_empty_hint); ?></p>
             </div>
         </div>
     <?php else: ?>
@@ -147,7 +185,7 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
                         $status_label = $is_read ? $notifications_read : $notifications_unread;
                         ?>
                         <li class="notification-list-row <?php echo $is_selected ? 'is-selected bg-indigo-50/70' : 'bg-white'; ?>">
-                            <a href="/admin/notifications?selected=<?php echo (int) $notification['id']; ?>&page=<?php echo (int) $notifications_page; ?>" data-notification-unread="<?php echo $is_read ? 'false' : 'true'; ?>" class="notification-list-item block min-w-0 border-l-4 px-2 py-4 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:px-3 <?php echo $is_selected ? 'border-indigo-600' : 'border-transparent'; ?>"<?php echo $is_selected ? ' aria-current="true"' : ''; ?>>
+                            <a href="<?php echo html_escape($notifications_item_link($notification['id'])); ?>" data-notification-unread="<?php echo $is_read ? 'false' : 'true'; ?>" class="notification-list-item block min-w-0 border-l-4 px-2 py-4 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 sm:px-3 <?php echo $is_selected ? 'border-indigo-600' : 'border-transparent'; ?>"<?php echo $is_selected ? ' aria-current="true"' : ''; ?>>
                                 <div class="flex items-center gap-2">
                                     <h3 class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900"><?php echo html_escape($notification['title'] !== '' ? $notification['title'] : '#' . (int) $notification['id']); ?></h3>
                                     <?php if (!$is_read): ?><span class="h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="<?php echo html_escape($notifications_unread); ?>" title="<?php echo html_escape($notifications_unread); ?>"></span><?php endif; ?>
@@ -158,12 +196,46 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
                         </li>
                     <?php endforeach; ?>
                 </ol>
-                <?php if ($notifications_total_pages > 1): ?>
-                    <nav class="flex items-center justify-between gap-3 border-t border-slate-200 px-4 py-3" aria-label="<?php echo html_escape($notifications_pagination); ?>">
+                <?php if (!empty($notifications)): ?>
+                    <nav class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" aria-label="<?php echo html_escape($notifications_pagination); ?>">
                         <span class="text-sm text-slate-500"><?php echo (int) $notifications_page; ?> / <?php echo (int) $notifications_total_pages; ?></span>
-                        <div class="flex gap-2">
-                            <?php if ($notifications_page > 1): ?><a class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="/admin/notifications?page=<?php echo (int) ($notifications_page - 1); ?>"><?php echo html_escape($notifications_previous); ?></a><?php endif; ?>
-                            <?php if ($notifications_page < $notifications_total_pages): ?><a class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="/admin/notifications?page=<?php echo (int) ($notifications_page + 1); ?>"><?php echo html_escape($notifications_next); ?></a><?php endif; ?>
+                        <div class="flex flex-wrap items-center gap-1">
+                            <?php if ($notifications_page > 1): ?>
+                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link(1)); ?>" aria-label="<?php echo html_escape($notifications_first); ?>" title="<?php echo html_escape($notifications_first); ?>">&laquo;</a>
+                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page - 1)); ?>"><?php echo html_escape($notifications_previous); ?></a>
+                            <?php else: ?>
+                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-2 text-sm font-medium text-slate-400" aria-disabled="true">&laquo;</span>
+                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-400" aria-disabled="true"><?php echo html_escape($notifications_previous); ?></span>
+                            <?php endif; ?>
+                            <?php
+                            $page_start = max(1, $notifications_page - 2);
+                            $page_end = min($notifications_total_pages, $notifications_page + 2);
+                            if ($page_start > 1) {
+                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link(1)) . '">1</a>';
+                                if ($page_start > 2) {
+                                    echo '<span class="px-1 text-sm text-slate-400">…</span>';
+                                }
+                            }
+                            for ($page_number = $page_start; $page_number <= $page_end; $page_number++) {
+                                $page_class = $page_number === $notifications_page
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'border border-slate-300 text-slate-700 hover:bg-slate-50';
+                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold ' . $page_class . '" href="' . html_escape($notifications_page_link($page_number)) . '"' . ($page_number === $notifications_page ? ' aria-current="page"' : '') . '>' . (int) $page_number . '</a>';
+                            }
+                            if ($page_end < $notifications_total_pages) {
+                                if ($page_end < $notifications_total_pages - 1) {
+                                    echo '<span class="px-1 text-sm text-slate-400">…</span>';
+                                }
+                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link($notifications_total_pages)) . '">' . (int) $notifications_total_pages . '</a>';
+                            }
+                            ?>
+                            <?php if ($notifications_page < $notifications_total_pages): ?>
+                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page + 1)); ?>"><?php echo html_escape($notifications_next); ?></a>
+                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_total_pages)); ?>" aria-label="<?php echo html_escape($notifications_last); ?>" title="<?php echo html_escape($notifications_last); ?>">&raquo;</a>
+                            <?php else: ?>
+                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-400" aria-disabled="true"><?php echo html_escape($notifications_next); ?></span>
+                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-2 text-sm font-medium text-slate-400" aria-disabled="true">&raquo;</span>
+                            <?php endif; ?>
                         </div>
                     </nav>
                 <?php endif; ?>
@@ -171,7 +243,7 @@ $relative_time = function ($value) use ($notifications_time_just_now, $notificat
 
             <section class="<?php echo $selected_notification !== NULL ? 'block' : 'hidden lg:block'; ?> min-h-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7" aria-live="polite">
                 <?php if ($selected_notification !== NULL): ?>
-                    <a href="/admin/notifications?page=<?php echo (int) $notifications_page; ?>" class="mb-5 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-indigo-700 hover:text-indigo-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 lg:hidden">
+                    <a href="<?php echo html_escape($notifications_page_link($notifications_page)); ?>" class="mb-5 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-indigo-700 hover:text-indigo-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 lg:hidden">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6M9 12h12"/></svg>
                         <?php echo html_escape($notifications_back); ?>
                     </a>

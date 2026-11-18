@@ -5,7 +5,9 @@ require_once APPPATH . 'controllers/Admin.php';
 
 class Admin_notifications extends Admin
 {
-    const PAGE_SIZE = 20;
+    const DEFAULT_PAGE_SIZE = 20;
+    private $page_sizes = array(20, 50, 100);
+    private $statuses = array('all', 'unread', 'read');
 
     public function index($page = 1)
     {
@@ -17,11 +19,33 @@ class Admin_notifications extends Admin
             }
         }
 
+        $search = trim((string) $this->input->get('q', TRUE));
+        if (function_exists('mb_strlen') && mb_strlen($search, 'UTF-8') > 120) {
+            $search = mb_substr($search, 0, 120, 'UTF-8');
+        } elseif (strlen($search) > 120) {
+            $search = substr($search, 0, 120);
+        }
+        $status = strtolower(trim((string) $this->input->get('status', TRUE)));
+        if (!in_array($status, $this->statuses, TRUE)) {
+            $status = 'all';
+        }
+        $per_page = (int) $this->input->get('per_page', TRUE);
+        if (!in_array($per_page, $this->page_sizes, TRUE)) {
+            $per_page = self::DEFAULT_PAGE_SIZE;
+        }
+
         $data = array(
             'notifications' => array(),
             'notifications_page' => $page,
             'notifications_total_pages' => 1,
+            'notifications_total' => 0,
+            'notifications_per_page' => $per_page,
+            'notifications_page_sizes' => $this->page_sizes,
+            'notifications_search' => $search,
+            'notifications_status' => $status,
+            'notifications_filter_active' => $search !== '' || $status !== 'all',
             'notifications_error' => FALSE,
+            'selected_notification' => NULL,
         );
         $selected_id = $this->input->get('selected', TRUE);
         if ($selected_id !== NULL && ctype_digit((string) $selected_id)) {
@@ -46,11 +70,15 @@ class Admin_notifications extends Admin
             }
 
             if (isset($fields['user_id'], $fields['notification_id'], $fields['title'], $fields['message'])) {
-                $count = $db->from('app_notification')->where('user_id', $user_id)->count_all_results();
-                $total_pages = max(1, (int) ceil($count / self::PAGE_SIZE));
+                $count_query = $db->from('app_notification')->where('user_id', $user_id);
+                $this->apply_notification_filters($count_query, $fields, $search, $status);
+                $count = $count_query->count_all_results();
+                $count = $count === FALSE ? 0 : (int) $count;
+                $total_pages = max(1, (int) ceil($count / $per_page));
                 $page = min($page, $total_pages);
                 $data['notifications_page'] = $page;
                 $data['notifications_total_pages'] = $total_pages;
+                $data['notifications_total'] = $count;
 
                 $select = array('notification_id', 'title', 'message');
                 $order_date_field = NULL;
@@ -64,32 +92,44 @@ class Admin_notifications extends Admin
                 $read_flag_field = isset($fields['read_flag']) ? 'read_flag' : NULL;
                 if ($read_flag_field !== NULL) {
                     $select[] = $read_flag_field;
-                    $selected_notification_id = isset($data['selected_notification_id']) ? (int) $data['selected_notification_id'] : 0;
-                    if ($selected_notification_id > 0) {
-                        // Only mark a notification belonging to the authenticated user as read.
-                        $db->where('notification_id', $selected_notification_id)
-                            ->where('user_id', $user_id)
-                            ->update('app_notification', array('read_flag' => 1));
-                    }
                 }
+                $selected_notification_id = isset($data['selected_notification_id']) ? (int) $data['selected_notification_id'] : 0;
+                if ($read_flag_field !== NULL && $selected_notification_id > 0) {
+                    // Only mark a notification belonging to the authenticated user as read.
+                    $db->where('notification_id', $selected_notification_id)
+                        ->where('user_id', $user_id)
+                        ->update('app_notification', array('read_flag' => 1));
+                }
+
                 $query = $db->select(implode(', ', $select), FALSE)
                     ->from('app_notification')
                     ->where('user_id', $user_id);
+                $this->apply_notification_filters($query, $fields, $search, $status);
                 if ($order_date_field !== NULL) {
                     $query->order_by($order_date_field, 'DESC');
                 }
                 $result = $query->order_by('notification_id', 'DESC')
-                    ->limit(self::PAGE_SIZE, ($page - 1) * self::PAGE_SIZE)
+                    ->limit($per_page, ($page - 1) * $per_page)
                     ->get();
                 if ($result !== FALSE) {
                     $data['notifications_error'] = FALSE;
                     foreach ($result->result_array() as $row) {
-                        $data['notifications'][] = array(
-                            'id' => isset($row['notification_id']) ? (int) $row['notification_id'] : 0,
-                            'title' => isset($row['title']) ? (string) $row['title'] : '',
-                            'message' => isset($row['message']) ? (string) $row['message'] : '',
-                            'created_at' => $order_date_field !== NULL && isset($row[$order_date_field]) ? (string) $row[$order_date_field] : '',
-                            'read_flag' => $read_flag_field !== NULL && isset($row[$read_flag_field]) ? (string) $row[$read_flag_field] : '0',
+                        $data['notifications'][] = $this->notification_row($row, $order_date_field, $read_flag_field);
+                    }
+                }
+
+                if ($selected_notification_id > 0) {
+                    $selected_query = $db->select(implode(', ', $select), FALSE)
+                        ->from('app_notification')
+                        ->where('notification_id', $selected_notification_id)
+                        ->where('user_id', $user_id)
+                        ->limit(1)
+                        ->get();
+                    if ($selected_query !== FALSE && $selected_query->num_rows() === 1) {
+                        $data['selected_notification'] = $this->notification_row(
+                            $selected_query->row_array(),
+                            $order_date_field,
+                            $read_flag_field
                         );
                     }
                 }
@@ -97,6 +137,34 @@ class Admin_notifications extends Admin
         }
 
         $this->render_admin('admin/notifications/index', 'notifications_heading', '/admin/notifications', $data);
+    }
+
+    private function apply_notification_filters($query, $fields, $search, $status)
+    {
+        if ($search !== '') {
+            $query->group_start()
+                ->like('title', $search)
+                ->or_like('message', $search)
+                ->group_end();
+        }
+        if (isset($fields['read_flag'])) {
+            if ($status === 'unread') {
+                $query->where('read_flag', 0);
+            } elseif ($status === 'read') {
+                $query->where('read_flag', 1);
+            }
+        }
+    }
+
+    private function notification_row($row, $order_date_field, $read_flag_field)
+    {
+        return array(
+            'id' => isset($row['notification_id']) ? (int) $row['notification_id'] : 0,
+            'title' => isset($row['title']) ? (string) $row['title'] : '',
+            'message' => isset($row['message']) ? (string) $row['message'] : '',
+            'created_at' => $order_date_field !== NULL && isset($row[$order_date_field]) ? (string) $row[$order_date_field] : '',
+            'read_flag' => $read_flag_field !== NULL && isset($row[$read_flag_field]) ? (string) $row[$read_flag_field] : '0',
+        );
     }
 
     public function mark_viewed()

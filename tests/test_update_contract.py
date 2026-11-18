@@ -13,7 +13,7 @@ MANIFEST = APP / "views/admin/menu_manifest/system.xml"
 class UpdateContractTests(unittest.TestCase):
     def test_version_config_is_semantic_and_used_by_installer_layout(self):
         version = (APP / "config/version.php").read_text()
-        self.assertIn("$config['app_version'] = '1.0.0';", version)
+        self.assertRegex(version, r"\$config\['app_version'\] = '\d+\.\d+\.\d+';")
         self.assertIn("app_update_channel", version)
 
     def test_update_schema_and_link_property_contract(self):

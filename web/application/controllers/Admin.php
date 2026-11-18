@@ -728,7 +728,7 @@ class Admin extends CI_Controller
         );
         $data = array_merge($data, $extra_data);
         if ($view_language_pack === 'notifications') {
-            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago') as $key) {
+            foreach (array('heading', 'intro', 'unavailable', 'empty', 'empty_hint', 'pagination', 'previous', 'next', 'first', 'last', 'back', 'select_prompt', 'select_hint', 'list_label', 'read', 'unread', 'time_just_now', 'time_year', 'time_month', 'time_week', 'time_day', 'time_hour', 'time_minute', 'time_ago', 'search_label', 'search_placeholder', 'filter_status', 'filter_all', 'filter_unread', 'filter_read', 'filter_apply', 'filter_reset', 'per_page_label', 'no_results', 'no_results_hint') as $key) {
                 $data['notifications_' . $key] = $labels['notifications_' . $key];
             }
             foreach (array('actions', 'delete', 'delete_confirm_title', 'delete_confirm_body', 'confirm_delete', 'cancel', 'approval_view') as $key) {
