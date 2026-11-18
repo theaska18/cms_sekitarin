@@ -65,3 +65,7 @@ $lang['update_status_failed'] = 'Failed';
 $lang['update_status_rolled_back'] = 'Rolled back';
 $lang['update_yes'] = 'Yes';
 $lang['update_no'] = 'No';
+$lang['update_setup_schema'] = 'Create update tables';
+$lang['update_setup_schema_hint'] = 'The update tables are missing. Create them now; existing data is not changed.';
+$lang['update_notice_schema_ready'] = 'Update tables are ready.';
+$lang['update_notice_schema_failed'] = 'Update tables could not be created. Check database permissions and server logs.';

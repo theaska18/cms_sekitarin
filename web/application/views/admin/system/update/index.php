@@ -95,7 +95,17 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
 
     <?php if (!$schema_available): ?>
         <div role="alert" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-            <?= html_escape($labels['update_schema_unavailable']) ?>
+            <p><?= html_escape($labels['update_schema_unavailable']) ?></p>
+            <?php if (!empty($update_can_run)): ?>
+                <p class="mt-2"><?= html_escape($labels['update_setup_schema_hint']) ?></p>
+                <form method="post" action="/admin/system/update/schema" class="mt-3">
+                    <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-amber-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2">
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v10m0 0 4-4m-4 4-4-4M4 17h12"/></svg>
+                        <?= html_escape($labels['update_setup_schema']) ?>
+                    </button>
+                </form>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 

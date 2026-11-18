@@ -72,6 +72,23 @@ class Admin_update extends Admin
         redirect('/admin/system/update', 'location', 303);
     }
 
+    public function update_schema()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            $this->output->set_header('Allow: POST')->set_status_header(405);
+            return;
+        }
+        if (!$this->has_admin_access_code('sys_update_run')) {
+            $this->output->set_status_header(403);
+            show_error('You do not have permission to prepare the update tables.', 403);
+            return;
+        }
+
+        $error = $this->update_store()->bootstrap_schema();
+        $this->session->set_flashdata('admin_update_notice', $error === '' ? 'schema_ready' : 'schema_failed');
+        redirect('/admin/system/update', 'location', 303);
+    }
+
     public function update_run()
     {
         if ($this->input->method(TRUE) !== 'POST') {

@@ -198,6 +198,82 @@ class Update_store
         return $this->db->table_exists('sys_update') && $this->db->table_exists('sys_update_migration');
     }
 
+    /** Create the update tables on an existing installation without them. */
+    public function bootstrap_schema()
+    {
+        $debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        try {
+            $statements = array(
+                "CREATE TABLE IF NOT EXISTS `sys_update` ("
+                . " `update_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+                . " `version` VARCHAR(32) NOT NULL,"
+                . " `previous_version` VARCHAR(32) NOT NULL,"
+                . " `status` VARCHAR(24) NOT NULL DEFAULT 'pending',"
+                . " `package_url` VARCHAR(512) NOT NULL,"
+                . " `checksum` VARCHAR(64) NOT NULL,"
+                . " `changelog` TEXT NULL,"
+                . " `log` LONGTEXT NULL,"
+                . " `started_on` DATETIME NULL,"
+                . " `finished_on` DATETIME NULL,"
+                . " `created_by` INT UNSIGNED NOT NULL DEFAULT 0,"
+                . " PRIMARY KEY (`update_id`),"
+                . " KEY `status` (`status`),"
+                . " KEY `version` (`version`)"
+                . ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+                "CREATE TABLE IF NOT EXISTS `sys_update_migration` ("
+                . " `update_migration_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,"
+                . " `update_id` BIGINT UNSIGNED NOT NULL,"
+                . " `migration_name` VARCHAR(191) NOT NULL,"
+                . " `checksum` VARCHAR(64) NOT NULL,"
+                . " `applied_on` DATETIME NOT NULL,"
+                . " PRIMARY KEY (`update_migration_id`),"
+                . " UNIQUE KEY `uk_sys_update_migration` (`update_id`, `migration_name`),"
+                . " CONSTRAINT `fk_sys_update_migration_update_id` FOREIGN KEY (`update_id`)"
+                . " REFERENCES `sys_update` (`update_id`) ON UPDATE CASCADE ON DELETE CASCADE"
+                . ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+            );
+            foreach ($statements as $statement) {
+                if ($this->db->query($statement) === FALSE) {
+                    $error = $this->db->error();
+                    return is_array($error) && isset($error['message']) ? $error['message'] : 'query failed';
+                }
+            }
+
+            $constraint = $this->db->query(
+                'SELECT 1 FROM information_schema.TABLE_CONSTRAINTS'
+                . ' WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?'
+                . ' AND CONSTRAINT_TYPE = \'FOREIGN KEY\' LIMIT 1',
+                array($this->db->database, 'sys_update_migration', 'fk_sys_update_migration_update_id')
+            );
+            if ($constraint !== FALSE && $constraint->num_rows() === 0) {
+                if ($this->db->query(
+                    'ALTER TABLE `sys_update_migration` ADD CONSTRAINT `fk_sys_update_migration_update_id`'
+                    . ' FOREIGN KEY (`update_id`) REFERENCES `sys_update` (`update_id`)'
+                    . ' ON UPDATE CASCADE ON DELETE CASCADE'
+                ) === FALSE) {
+                    $error = $this->db->error();
+                    return is_array($error) && isset($error['message']) ? $error['message'] : 'foreign key failed';
+                }
+            }
+
+            if ($this->db->table_exists('sys_property')) {
+                if ($this->db->query(
+                    "INSERT INTO sys_property (property_code, property_name, description, value)"
+                    . " SELECT 'link_update', 'Link Update', 'Alamat API pemeriksaan update aplikasi.',"
+                    . " 'https://cms.ckamal.com/api/update/check' FROM DUAL"
+                    . " WHERE NOT EXISTS (SELECT 1 FROM sys_property WHERE property_code='link_update')"
+                ) === FALSE) {
+                    $error = $this->db->error();
+                    return is_array($error) && isset($error['message']) ? $error['message'] : 'property insert failed';
+                }
+            }
+            return '';
+        } finally {
+            $this->db->db_debug = $debug;
+        }
+    }
+
     /** Runtime capabilities required by the one-click runner. */
     public function runner_checks()
     {

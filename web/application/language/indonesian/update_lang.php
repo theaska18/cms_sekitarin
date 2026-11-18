@@ -65,3 +65,7 @@ $lang['update_status_failed'] = 'Gagal';
 $lang['update_status_rolled_back'] = 'Dipulihkan';
 $lang['update_yes'] = 'Ya';
 $lang['update_no'] = 'Tidak';
+$lang['update_setup_schema'] = 'Buat tabel update';
+$lang['update_setup_schema_hint'] = 'Tabel update belum ada. Buat sekarang; data yang sudah ada tidak diubah.';
+$lang['update_notice_schema_ready'] = 'Tabel update sudah siap.';
+$lang['update_notice_schema_failed'] = 'Tabel update tidak dapat dibuat. Periksa izin database dan log server.';
