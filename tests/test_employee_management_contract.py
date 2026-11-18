@@ -54,6 +54,13 @@ class EmployeeManagementContractTests(unittest.TestCase):
         self.assertIn("active_flag", STORE)
         self.assertIn("parameter_code", STORE)
 
+    def test_employee_name_capitalizes_first_letter_on_blur_and_server(self):
+        self.assertIn('data-normalize="name"', FORM)
+        self.assertIn("toLocaleUpperCase", FORM)
+        self.assertIn("employee_title_case", CONTROLLER)
+        self.assertIn("$record['employee_name'] = $this->employee_title_case($record['employee_name']);", CONTROLLER)
+        self.assertIn("mb_strtoupper", CONTROLLER)
+
     def test_write_gate_uses_database_nullability_and_auto_increment_metadata(self):
         self.assertIn("SHOW COLUMNS FROM", STORE)
         self.assertIn("$definition['Null']", STORE)

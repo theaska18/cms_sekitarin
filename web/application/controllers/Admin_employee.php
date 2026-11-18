@@ -162,6 +162,7 @@ class Admin_employee extends Admin
                 if ($field === 'employee_code' && $employee_id === NULL && $employee_auto_numbered) { continue; }
                 $record[$field] = trim((string) $this->input->post($field, TRUE));
             }
+            $record['employee_name'] = $this->employee_title_case($record['employee_name']);
             $specs = $store->field_specs();
             foreach (array('employee_code', 'identity_id', 'employee_name', 'email_address', 'gender', 'birth_date', 'birth_place') as $field) {
                 if ($field === 'employee_code' && $employee_id === NULL && $employee_auto_numbered) { continue; }
@@ -294,6 +295,17 @@ class Admin_employee extends Admin
             'employee_available' => $store !== NULL && $store->schema_available(),
             'employee_write_available' => $write_available,
         ));
+    }
+
+    /** Uppercase the first character of each word while preserving the rest. */
+    private function employee_title_case($value)
+    {
+        return preg_replace_callback('/(^|\s)(\S)/u', function ($matches) {
+            $first = function_exists('mb_strtoupper')
+                ? mb_strtoupper($matches[2], 'UTF-8')
+                : strtoupper($matches[2]);
+            return $matches[1] . $first;
+        }, (string) $value);
     }
 
     private function employee_valid_date($value)
