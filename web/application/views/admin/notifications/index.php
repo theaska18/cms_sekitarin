@@ -154,6 +154,16 @@ $notifications_item_link = function ($notification_id) use ($notifications_filte
         'page' => (int) $notifications_page,
     )));
 };
+$notifications_page_icon = function ($name) {
+    $paths = array(
+        'first' => '<path stroke-linecap="round" stroke-linejoin="round" d="m11 5-5 5 5 5M16 5l-5 5 5 5"/>',
+        'previous' => '<path stroke-linecap="round" stroke-linejoin="round" d="m12.5 5-5 5 5 5"/>',
+        'next' => '<path stroke-linecap="round" stroke-linejoin="round" d="m7.5 5 5 5-5 5"/>',
+        'last' => '<path stroke-linecap="round" stroke-linejoin="round" d="m9 5 5 5-5 5M4 5l5 5-5 5"/>',
+    );
+    $path = isset($paths[$name]) ? $paths[$name] : $paths['next'];
+    return '<svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false">' . $path . '</svg>';
+};
 ?>
 <section class="mx-auto w-full max-w-7xl px-0 py-6 sm:px-6 sm:py-8 lg:px-8">
             <nav aria-label="<?php echo html_escape($notifications_heading); ?>" class="mb-5 text-sm text-slate-500"><ol class="flex flex-wrap items-center gap-2"><li><?php echo html_escape($notifications_breadcrumb_parent); ?></li><li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800"><?php echo html_escape($notifications_heading); ?></li></ol></nav>
@@ -177,7 +187,7 @@ $notifications_item_link = function ($notification_id) use ($notifications_filte
                 <div class="border-b border-slate-300 px-4 py-4 sm:px-5">
                     <h2 class="text-sm font-semibold text-slate-800"><?php echo html_escape($notifications_list_label); ?></h2>
                 </div>
-                <ol class="max-h-[36rem] divide-y divide-slate-300 overflow-y-auto">
+                <ol class="notification-list-scroll max-h-[36rem] divide-y divide-slate-300 overflow-y-auto">
                     <?php foreach ($notifications as $notification): ?>
                         <?php
                         $is_selected = ((int) $notification['id'] === $selected_notification_id);
@@ -201,17 +211,17 @@ $notifications_item_link = function ($notification_id) use ($notifications_filte
                         <span class="text-sm text-slate-500"><?php echo (int) $notifications_page; ?> / <?php echo (int) $notifications_total_pages; ?></span>
                         <div class="flex flex-wrap items-center gap-1">
                             <?php if ($notifications_page > 1): ?>
-                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link(1)); ?>" aria-label="<?php echo html_escape($notifications_first); ?>" title="<?php echo html_escape($notifications_first); ?>">&laquo;</a>
-                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page - 1)); ?>"><?php echo html_escape($notifications_previous); ?></a>
+                                <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link(1)); ?>" aria-label="<?php echo html_escape($notifications_first); ?>" title="<?php echo html_escape($notifications_first); ?>"><?php echo $notifications_page_icon('first'); ?></a>
+                                <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page - 1)); ?>" aria-label="<?php echo html_escape($notifications_previous); ?>" title="<?php echo html_escape($notifications_previous); ?>"><?php echo $notifications_page_icon('previous'); ?></a>
                             <?php else: ?>
-                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-2 text-sm font-medium text-slate-400" aria-disabled="true">&laquo;</span>
-                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-400" aria-disabled="true"><?php echo html_escape($notifications_previous); ?></span>
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?php echo html_escape($notifications_first); ?>"><?php echo $notifications_page_icon('first'); ?></span>
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?php echo html_escape($notifications_previous); ?>"><?php echo $notifications_page_icon('previous'); ?></span>
                             <?php endif; ?>
                             <?php
                             $page_start = max(1, $notifications_page - 2);
                             $page_end = min($notifications_total_pages, $notifications_page + 2);
                             if ($page_start > 1) {
-                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link(1)) . '">1</a>';
+                                echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link(1)) . '">1</a>';
                                 if ($page_start > 2) {
                                     echo '<span class="px-1 text-sm text-slate-400">…</span>';
                                 }
@@ -220,21 +230,21 @@ $notifications_item_link = function ($notification_id) use ($notifications_filte
                                 $page_class = $page_number === $notifications_page
                                     ? 'bg-indigo-600 text-white'
                                     : 'border border-slate-300 text-slate-700 hover:bg-slate-50';
-                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold ' . $page_class . '" href="' . html_escape($notifications_page_link($page_number)) . '"' . ($page_number === $notifications_page ? ' aria-current="page"' : '') . '>' . (int) $page_number . '</a>';
+                                echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold ' . $page_class . '" href="' . html_escape($notifications_page_link($page_number)) . '"' . ($page_number === $notifications_page ? ' aria-current="page"' : '') . '>' . (int) $page_number . '</a>';
                             }
                             if ($page_end < $notifications_total_pages) {
                                 if ($page_end < $notifications_total_pages - 1) {
                                     echo '<span class="px-1 text-sm text-slate-400">…</span>';
                                 }
-                                echo '<a class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link($notifications_total_pages)) . '">' . (int) $notifications_total_pages . '</a>';
+                                echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($notifications_page_link($notifications_total_pages)) . '">' . (int) $notifications_total_pages . '</a>';
                             }
                             ?>
                             <?php if ($notifications_page < $notifications_total_pages): ?>
-                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page + 1)); ?>"><?php echo html_escape($notifications_next); ?></a>
-                                <a class="inline-flex min-h-9 items-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_total_pages)); ?>" aria-label="<?php echo html_escape($notifications_last); ?>" title="<?php echo html_escape($notifications_last); ?>">&raquo;</a>
+                                <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_page + 1)); ?>" aria-label="<?php echo html_escape($notifications_next); ?>" title="<?php echo html_escape($notifications_next); ?>"><?php echo $notifications_page_icon('next'); ?></a>
+                                <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?php echo html_escape($notifications_page_link($notifications_total_pages)); ?>" aria-label="<?php echo html_escape($notifications_last); ?>" title="<?php echo html_escape($notifications_last); ?>"><?php echo $notifications_page_icon('last'); ?></a>
                             <?php else: ?>
-                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-400" aria-disabled="true"><?php echo html_escape($notifications_next); ?></span>
-                                <span class="inline-flex min-h-9 items-center rounded-lg border border-slate-200 px-2 text-sm font-medium text-slate-400" aria-disabled="true">&raquo;</span>
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?php echo html_escape($notifications_next); ?>"><?php echo $notifications_page_icon('next'); ?></span>
+                                <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?php echo html_escape($notifications_last); ?>"><?php echo $notifications_page_icon('last'); ?></span>
                             <?php endif; ?>
                         </div>
                     </nav>

@@ -46,6 +46,12 @@ class AdminNotificationsContractTests(unittest.TestCase):
         self.assertIn("!empty($notifications)", view)
         self.assertNotIn('name="q"', view)
         self.assertIn("http_build_query", view)
+        self.assertIn("notification-list-scroll", view)
+        self.assertIn("notifications_page_icon", view)
+        self.assertIn("<?php echo $notifications_page_icon('first'); ?>", view)
+        self.assertIn("<?php echo $notifications_page_icon('previous'); ?>", view)
+        self.assertIn("<?php echo $notifications_page_icon('next'); ?>", view)
+        self.assertIn("<?php echo $notifications_page_icon('last'); ?>", view)
 
     def test_admin_renderer_forwards_notification_filter_labels(self):
         admin = ADMIN.read_text()

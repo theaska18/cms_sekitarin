@@ -35,6 +35,21 @@ class AdminTopbarActionsContractTests(unittest.TestCase):
         self.assertIn("ignoreNextDocumentClick", footer)
         self.assertIn("event.target === ignoreNextDocumentClick.target", footer)
 
+    def test_notification_icon_uses_the_sidebar_active_state(self):
+        self.assertIn(
+            "$notifications_page_active ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100' : ''",
+            HEADER,
+        )
+        self.assertNotIn("bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200", HEADER)
+        self.assertIn('aria-current="page"', HEADER)
+
+    def test_notification_scrollbar_is_hidden_until_hover_or_focus(self):
+        self.assertIn(".notification-list-scroll{scrollbar-width:thin;scrollbar-color:transparent transparent", CSS)
+        self.assertIn(".notification-list-scroll::-webkit-scrollbar{width:6px}", CSS)
+        self.assertIn(".notification-list-scroll:focus-within,.notification-list-scroll:hover", CSS)
+        self.assertIn("background:#94a3b8", CSS)
+        self.assertIn("background:#64748b", CSS)
+
     def test_profile_menu_settings_and_logout_have_icons(self):
         menu = HEADER.split('id="admin-profile-menu"', 1)[1]
         settings = menu.split('href="/admin/setting"', 1)[1].split("</a>", 1)[0]
