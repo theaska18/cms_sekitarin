@@ -50,6 +50,16 @@ class AdminTopbarActionsContractTests(unittest.TestCase):
         self.assertIn("background:#94a3b8", CSS)
         self.assertIn("background:#64748b", CSS)
 
+    def test_notification_panel_item_is_a_whole_row_link_with_hover(self):
+        panel = HEADER.split('id="admin-notifications-panel"', 1)[1].split('</section>', 1)[0]
+        self.assertIn('<a class="admin-demo-item admin-demo-item-link" href="/admin/notifications?selected=', panel)
+        self.assertNotIn('<div class="admin-demo-item">', panel)
+        self.assertNotIn('<a class="font-semibold', panel)
+        self.assertIn(".admin-topbar .admin-demo-item-link{color:inherit;text-decoration:none;cursor:pointer", CSS)
+        self.assertIn(".admin-topbar .admin-demo-item-link:hover,.admin-topbar .admin-demo-item-link:focus-visible{background:#f8fafc}", CSS)
+        self.assertIn("background:#263449", CSS)
+        self.assertIn(".admin-topbar .admin-demo-item-link:focus-visible{outline:2px solid #10b981", CSS)
+
     def test_profile_menu_settings_and_logout_have_icons(self):
         menu = HEADER.split('id="admin-profile-menu"', 1)[1]
         settings = menu.split('href="/admin/setting"', 1)[1].split("</a>", 1)[0]
