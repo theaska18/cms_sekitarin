@@ -1,11 +1,11 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "released_at": "2026-11-18",
-  "changelog": "Perbaikan halaman properti.",
+  "changelog": "Perbaikan Notifikasi.",
   "min_php": "8.1",
-  "requires_version": "1.0.0",
-  "package": "cms-1.0.1.zip",
-  "sha256": "087d4929543ec903116fd9a4f1a0a76a70c17e1db5f324138bbb77ea50449645",
-  "size": 2124,
+  "requires_version": "1.0.1",
+  "package": "cms-1.0.2.zip",
+  "sha256": "2b2aaea6c7ff2a7ef07d43f758c26490352ba141bcd988f4c2fd9ac60e87b2d0",
+  "size": 42259,
   "migrations": []
 }
