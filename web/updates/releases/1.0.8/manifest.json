@@ -1,0 +1,115 @@
+{
+  "version": "1.0.8",
+  "from_version": "1.0.7",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.7",
+  "changelog": "Optimalisasi Finance.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "da32a5e5de42980f6e9752fe244f7bd018eafb6da5db06b7f6eec121209ef5f8",
+      "size": 448
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "bcd81b0fa991e4714f07a4ba7d179285087233847e0942c8e2275a029491bdeb",
+      "size": 214866
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "524af4730aa76800c4eccb962a3b69b109b400bfdf645632e38ae81eec8ea818",
+      "size": 12883
+    },
+    {
+      "path": "application/controllers/Finance_api.php",
+      "sha256": "f947e3c68ab5385d78aa7f850e694d342b2f95a1d8df36797c89f368cb0bb03f",
+      "size": 15475
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "0d9fe19e4e1bc89190466d0124a1f2fc208d19218d3dba845d587d6a0133e2ab",
+      "size": 44329
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "b02214a2ce79c92b64875285e4f9dfc290a1288a304a624fafbd10a41e9d901b",
+      "size": 34593
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "19ff2919752f0ea18baf897f6d3f3a2de77c9a6572a5f8762daee2c9e72315eb",
+      "size": 37063
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "bc96dabdc206243e651371f032d3edd9fbab09abb7ff5587c94197b507202f6b",
+      "size": 39760
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "6d1742efd3448a54158abc28e1bedfdd144b44253ff1f55267f7666f2bfc12c3",
+      "size": 38710
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "e936d9b2fbcb888b80c9d735b0391f85e1e66ecbcb93b36f9c1e3fa41b707a2e",
+      "size": 37408
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "e7f3f1259ddf0d7c6aaf977f249745a7f1dab68e45b887332aa58ab4dab8a0bf",
+      "size": 39410
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "716f8277772c6a0336950ecd811bb27f294b74b47b9fd4f76043a17507dc911f",
+      "size": 38177
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "1a91256e860e1a853f9489330c31d38ebf16adf8caf8d022001b29f41d2a0f5c",
+      "size": 39089
+    },
+    {
+      "path": "application/libraries/Finance_document_store.php",
+      "sha256": "a13a5b284f8d275af199728616677a996b50b6e310e25f254bdb52919df29c3e",
+      "size": 24518
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "fe4ad16373f2046201185973282f0fe678cc6c3edb469b3322c04c00975d5b98",
+      "size": 9188
+    },
+    {
+      "path": "application/views/admin/finance/document_form.php",
+      "sha256": "a42aad12295147cd1eec884acd10293c8c36d058e474aee9e6495983ee1f4d4f",
+      "size": 14107
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "071c7675f02eb7a29cdfc28929eeae228ba17bd408d4e95aaad39436d0830a72",
+      "size": 14480
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "8bce38e59714c22e6f307b97815919d793515720c2b11b6431d313a5ca1e257a",
+      "size": 9802
+    },
+    {
+      "path": "assets/js/currency-input.js",
+      "sha256": "7adc32850fc15a2a77583fcfedec0e08f131531763239315b97fa686a4573324",
+      "size": 11535
+    }
+  ],
+  "delete": [],
+  "migrations": [
+    "20261119000500_add_finance_inbox_dates.sql",
+    "20261119000600_add_finance_draft_integration_reference.sql"
+  ],
+  "migration_checksums": {
+    "20261119000500_add_finance_inbox_dates.sql": "c76c1ddd8d2b2e47d130830eefd590279a4f5974c5ede4c263109f957efdd19c",
+    "20261119000600_add_finance_draft_integration_reference.sql": "68b1fe06581f4c722c05e43e7054810fef8037901d003d27f914ad5540d04b81"
+  }
+}

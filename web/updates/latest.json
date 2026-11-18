@@ -1,14 +1,14 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "released_at": "2026-11-18",
-  "changelog": "Optimalisasi Halaman Karyawan.",
+  "changelog": "Optimalisasi Finance.",
   "min_php": "8.1",
-  "requires_version": "1.0.6",
-  "package": "cms-1.0.7.zip",
-  "sha256": "630df40f150089745278d8fd097616a72cfa849da6fe078f357c2584b1b6a46a",
-  "size": 88161,
+  "requires_version": "1.0.7",
+  "package": "cms-1.0.8.zip",
+  "sha256": "1817446ca53ff08bb5f9be5ef2ab287cf8b704b68ad505b8e09b63d7c5eb9b22",
+  "size": 127338,
   "migrations": [
-    "20261119000200_create_finance_inbox.sql",
-    "20261119000400_add_finance_inbox_cancelled.sql"
+    "20261119000500_add_finance_inbox_dates.sql",
+    "20261119000600_add_finance_draft_integration_reference.sql"
   ]
 }
