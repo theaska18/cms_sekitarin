@@ -17,6 +17,14 @@ $history_pages = isset($update_history_pages) ? (int) $update_history_pages : 1;
 $history_page_link = function ($target) {
     return '/admin/system/update?' . http_build_query(array('history_page' => (int) $target));
 };
+$history_local_time = function ($value) {
+    $value = trim((string) $value);
+    if ($value === '' || $value === '0000-00-00 00:00:00') {
+        return '<span class="text-slate-400">—</span>';
+    }
+    $iso = str_replace(' ', 'T', $value) . 'Z';
+    return '<time data-local-datetime datetime="' . html_escape($iso) . '">' . html_escape($value) . '</time>';
+};
 $history_page_icon = function ($name) {
     $paths = array(
         'first' => '<path stroke-linecap="round" stroke-linejoin="round" d="m11 5-5 5 5 5M16 5l-5 5 5 5"/>',
@@ -280,8 +288,8 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                                 <th scope="row" class="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-slate-800">v<?= html_escape((string) $entry['version']) ?></th>
                                 <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-600">v<?= html_escape((string) $entry['previous_version']) ?></td>
                                 <td class="whitespace-nowrap px-4 py-3"><span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold <?= $status_class ?>"><?= html_escape($status_text) ?></span></td>
-                                <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= html_escape((string) $entry['started_on']) ?></td>
-                                <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= html_escape((string) $entry['finished_on']) ?></td>
+                                <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= $history_local_time($entry['started_on']) ?></td>
+                                <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= $history_local_time($entry['finished_on']) ?></td>
                                 <td class="px-4 py-3 text-xs text-slate-600">
                                     <?php if ($migrations): ?>
                                         <details>
@@ -351,3 +359,29 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
         <?php endif; ?>
     </section>
 </main>
+<script>
+(function () {
+    var nodes = document.querySelectorAll('[data-local-datetime]');
+    if (!nodes.length || typeof Intl === 'undefined' || typeof Intl.DateTimeFormat !== 'function') {
+        return;
+    }
+    var locale = (document.documentElement.getAttribute('lang') || 'id-ID').trim() || 'id-ID';
+    var formatter = new Intl.DateTimeFormat(locale, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+    });
+    Array.prototype.forEach.call(nodes, function (node) {
+        var iso = node.getAttribute('datetime') || '';
+        var date = new Date(iso);
+        if (isNaN(date.getTime())) {
+            return;
+        }
+        node.textContent = formatter.format(date);
+        node.title = iso;
+    });
+})();
+</script>
