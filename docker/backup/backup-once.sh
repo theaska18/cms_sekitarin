@@ -38,6 +38,9 @@ mysqldump \
     --default-character-set=utf8mb4 \
     "$CMS_DB_NAME" > "$sql_tmp"
 
+# MariaDB clients add a sandbox header that MySQL servers reject.
+sed -i '/^\/\*M!/d' "$sql_tmp"
+
 gzip -9 -c "$sql_tmp" > "$archive_tmp"
 gzip -t "$archive_tmp"
 mv "$archive_tmp" "$target"
@@ -46,6 +49,10 @@ trap - EXIT INT TERM
 
 cp "$target" "$latest_tmp"
 mv "$latest_tmp" "$LATEST_DIR/cmsdb-latest.sql.gz"
+if id www-data >/dev/null 2>&1; then
+    chown www-data:www-data "$LATEST_DIR/cmsdb-latest.sql.gz" 2>/dev/null || true
+fi
+chmod 0640 "$LATEST_DIR/cmsdb-latest.sql.gz" 2>/dev/null || true
 find "$LATEST_DIR" -maxdepth 1 -type f -name '*.sql.gz' ! -name 'cmsdb-latest.sql.gz' -delete
 
 # Keep only the newest $BACKUP_RETENTION archives.

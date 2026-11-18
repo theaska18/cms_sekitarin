@@ -82,6 +82,35 @@ Konfigurasi yang diperiksa menunjukkan cara menjalankan stack Compose, tetapi ti
 
 Autentikasi admin hanya diaktifkan ketika `CI_ENV=development`. Pada lingkungan lain, autentikasi ditolak dan akses admin tidak tersedia. Jangan menerbitkan fitur admin sebagai panel produksi sebelum autentikasi dan kontrol akses produksi diterapkan serta diverifikasi.
 
+## Instalasi dari folder `web/`
+
+Deployment yang hanya menyalin folder `web/` dapat menggunakan installer bawaan.
+
+1. Pastikan web server menjalankan PHP dengan ekstensi `mysqli`.
+2. Letakkan file backup MySQL di:
+   ```text
+   web/data/cmsdb-latest.sql.gz
+   ```
+3. Pastikan folder berikut dapat ditulis web server:
+   - `web/application/config/`, atau
+   - `web/application/cache/`
+4. Buka aplikasi. Jika belum ada konfigurasi database, aplikasi otomatis mengarah ke:
+   ```text
+   /install/
+   ```
+5. Isi host, port, nama database, user, password, lalu pilih file backup.
+6. Installer membuat database kosong, mengimpor backup, dan menulis:
+   ```text
+   web/application/config/database.local.php
+   ```
+   atau, jika folder config tidak writable:
+   ```text
+   web/application/cache/database.local.php
+   ```
+7. Login memakai akun yang sudah ada di backup.
+
+Installer tidak menimpa database yang sudah berisi tabel. Siapkan database kosong terlebih dahulu jika user database tidak memiliki izin `CREATE DATABASE`.
+
 ## Backup database otomatis
 
 Backup harian dijalankan oleh proses di container `cms-app` pukul `02:00` **UTC**.

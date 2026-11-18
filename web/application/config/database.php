@@ -76,6 +76,7 @@ $query_builder = TRUE;
 $db['default'] = array(
 	'dsn'	=> '',
 	'hostname' => getenv('CMS_DB_HOST') ?: 'cms-db',
+	'port' => 3306,
 	'username' => getenv('CMS_DB_USER') ?: 'cmsuser',
 	'password' => getenv('CMS_DB_PASSWORD') ?: 'cmsuserpass',
 	'database' => getenv('CMS_DB_NAME') ?: 'cmsdb',
@@ -94,3 +95,18 @@ $db['default'] = array(
 	'failover' => array(),
 	'save_queries' => TRUE
 );
+
+// An installer-created local configuration takes precedence over env defaults.
+$local_database_configs = array(
+	APPPATH . 'config/database.local.php',
+	APPPATH . 'cache/database.local.php',
+);
+foreach ($local_database_configs as $local_database_config) {
+	if (is_file($local_database_config)) {
+		$local_database = include $local_database_config;
+		if (is_array($local_database)) {
+			$db['default'] = array_merge($db['default'], $local_database);
+		}
+		break;
+	}
+}

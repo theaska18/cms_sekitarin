@@ -91,6 +91,40 @@ switch (ENVIRONMENT)
 
 /*
  *---------------------------------------------------------------
+ * INSTALLER BOOTSTRAP
+ *---------------------------------------------------------------
+ * A deployment that contains only the web folder has no .env file.
+ * Redirect to the standalone installer until database.local.php exists.
+ */
+if (PHP_SAPI !== 'cli')
+{
+    $local_database_configs = array(
+        __DIR__ . '/application/config/database.local.php',
+        __DIR__ . '/application/cache/database.local.php',
+    );
+    $environment_database_password = getenv('CMS_DB_PASSWORD');
+    $has_environment_database = is_string($environment_database_password)
+        && trim($environment_database_password) !== '';
+    $has_local_database_config = FALSE;
+    foreach ($local_database_configs as $local_database_config) {
+        if (is_file($local_database_config)) {
+            $has_local_database_config = TRUE;
+            break;
+        }
+    }
+    if (!$has_local_database_config && !$has_environment_database)
+    {
+        $request_path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+        if ($request_path === FALSE || strpos($request_path, '/install/') !== 0)
+        {
+            header('Location: /install/', TRUE, 303);
+            exit;
+        }
+    }
+}
+
+/*
+ *---------------------------------------------------------------
  * SYSTEM DIRECTORY NAME
  *---------------------------------------------------------------
  *
