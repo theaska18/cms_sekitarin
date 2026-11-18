@@ -708,6 +708,7 @@ class Admin extends CI_Controller
         $this->load->library('property_store');
         $data = array(
             'web_name' => $this->property_store->web_name('CMSNivo'),
+            'landing_page_enabled' => $this->property_store->landing_page_enabled(),
             'page_title' => $labels[$title_key],
             'current_path' => $current_path,
             'page_slug' => isset($extra_data['page_slug']) ? $extra_data['page_slug'] : '',

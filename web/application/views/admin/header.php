@@ -1,5 +1,6 @@
 <?php
 $notification_count = isset($notification_count) ? max(0, (int) $notification_count) : 0;
+$landing_page_enabled = !isset($landing_page_enabled) || $landing_page_enabled;
 $notification_relative_time = function ($value) use ($labels) {
     $timestamp = strtotime((string) $value);
     if ($timestamp === FALSE) {
@@ -127,7 +128,9 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
         </div>
     <nav aria-label="<?php echo html_escape($labels['topbar_navigation']); ?>" class="admin-quick-actions shrink-0">
                 <span class="sr-only"><?php echo html_escape($labels['topbar_navigation']); ?></span>
+            <?php if ($landing_page_enabled): ?>
             <a id="admin-home-link" href="/admin" class="admin-home-action" aria-label="Home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5M5 9v11h14V9M9 20v-6h6v6"/></svg><span>Home</span></a>
+            <?php endif; ?>
             <div class="relative shrink-0">
                 <?php $notifications_page_active = isset($current_path) && $current_path === '/admin/notifications'; ?>
                 <button id="admin-notifications-toggle" type="button" class="admin-quick-action <?php echo $notifications_page_active ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100' : ''; ?>" aria-label="<?php $notification_aria_label = $labels['notifications_label']; if ($notification_count > 0) { $notification_aria_label .= ', ' . sprintf($labels['notifications_unread_count'], $notification_count); } echo html_escape($notification_aria_label); ?>" aria-expanded="false" aria-controls="admin-notifications-panel" data-mark-viewed-url="/admin/notifications/mark-viewed" data-csrf-name="<?php echo html_escape($csrf_token_name); ?>" data-csrf-hash="<?php echo html_escape($csrf_hash); ?>"<?php echo $notifications_page_active ? ' aria-current="page"' : ''; ?>><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><?php if ($notification_count > 0): ?><span class="admin-action-badge" aria-hidden="true"><?php echo (int) $notification_count; ?></span><?php endif; ?></button>
@@ -171,7 +174,9 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
         <nav id="admin-sidebar-navigation" aria-label="<?php echo html_escape($labels['sidebar_navigation']); ?>" class="flex-none overflow-visible space-y-2">
             <section data-admin-menu-group aria-label="<?php echo html_escape($labels['dashboard']); ?>">
                 <ul class="space-y-1">
+                    <?php if ($landing_page_enabled): ?>
                     <li><button id="admin-home-link-mobile" type="button" data-menu-label="Home" aria-label="Home" title="Home" class="admin-menu-link flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-start text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 md:hidden"><svg class="admin-menu-icon h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5L12 3l9 7.5M5 9v11h14V9M9 20v-6h6v6"/></svg><span class="admin-menu-label">Home</span></button></li>
+                    <?php endif; ?>
                     <li data-admin-menu-item><a href="/admin" data-admin-menu-link data-menu-label="<?php echo html_escape($labels['dashboard']); ?>" title="<?php echo html_escape($labels['dashboard']); ?>" class="admin-menu-link flex min-h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 <?php echo $current_path === '/admin' ? 'bg-emerald-50 text-emerald-800 ring-1 ring-emerald-100' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'; ?>"<?php echo $current_path === '/admin' ? ' aria-current="page"' : ''; ?>><svg class="admin-menu-icon h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><?php echo $menu_icons['dashboard']; ?></svg><span class="admin-menu-label"><?php echo html_escape($labels['dashboard']); ?></span></a></li>
                 </ul>
             </section>

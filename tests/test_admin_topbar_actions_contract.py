@@ -19,6 +19,12 @@ class AdminTopbarActionsContractTests(unittest.TestCase):
         self.assertIn('a[aria-label*="Home"] img', dark_css)
         self.assertIn('id="admin-home-link-mobile"', HEADER)
 
+    def test_home_buttons_are_hidden_when_landing_page_is_disabled(self):
+        self.assertIn("'landing_page_enabled' => $this->property_store->landing_page_enabled()", (ROOT / "web/application/controllers/Admin.php").read_text())
+        self.assertIn("<?php if ($landing_page_enabled): ?>", HEADER)
+        self.assertGreaterEqual(HEADER.count("<?php if ($landing_page_enabled): ?>"), 2)
+        self.assertIn("$landing_page_enabled = !isset($landing_page_enabled) || $landing_page_enabled;", HEADER)
+
     def test_home_dialog_does_not_close_from_its_opening_click_bubbling(self):
         footer = (ROOT / "web/application/views/admin/footer.php").read_text()
         self.assertIn("homeLink.addEventListener('click', function (event)", footer)
