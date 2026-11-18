@@ -48,6 +48,9 @@ admin-contract locale expectation that omits `hr` resources.
 - Admin views live in `views/admin/<feature>/`; follow adjacent controller/store
   naming and PHP view patterns. Escape output with `html_escape`. Preserve
   tenant scoping and permission checks on every data path.
+- New menu manifest entries are not automatically granted to tenants or roles.
+  Do not seed `sys_tenant_menu`/`app_role_menu` rows from migrations; let
+  administrators assign access through System → Tenant and Role menu access.
 - For large datasets, use jQuery UI Autocomplete—not a huge `<select>`,
   `<datalist>`, or browser-only filtering—with tenant/permission-scoped server
   search, minimum query length, bounded results, and keyboard accessibility.

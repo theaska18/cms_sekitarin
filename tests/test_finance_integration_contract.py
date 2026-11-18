@@ -4,7 +4,6 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
 MIGRATION = ROOT / "database/migrations/20261119000200_create_finance_inbox.sql"
-GRANT = ROOT / "database/migrations/20261119000300_grant_finance_inbox_access.sql"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
 STORE = APP / "libraries/Finance_integration_store.php"
@@ -32,11 +31,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         ):
             with self.subTest(column=column):
                 self.assertIn("`" + column + "`", migration)
-        grant = GRANT.read_text()
-        self.assertIn("fin_sales_invoice_inbox", grant)
-        self.assertIn("fin_purchase_bill_inbox", grant)
-        self.assertIn("sys_tenant_menu", grant)
-        self.assertIn("app_role_menu", grant)
+        self.assertFalse((ROOT / "database/migrations/20261119000300_grant_finance_inbox_access.sql").exists())
 
     def test_api_uses_user_secret_and_tenant_scope(self):
         api = API.read_text()
