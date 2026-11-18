@@ -4,3 +4,4 @@
 node_modules
 database_backup
 web/data/*.sql.gz
+web/.env

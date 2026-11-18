@@ -11,9 +11,9 @@ services:
       - "8086:80"
     restart: unless-stopped
     environment:
-      CI_ENV: ${CI_ENV:-development}
       CI_BASE_URL: ${CI_BASE_URL:-http://localhost:8086/}
       CMS_DB_HOST: ${CMS_DB_HOST:-cms-db}
+      CMS_DB_PORT: ${CMS_DB_PORT:-3306}
       CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb}
       CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
       CMS_DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}

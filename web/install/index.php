@@ -1,16 +1,39 @@
 <?php
 /**
  * Standalone installer for deployments that contain only the web/ folder.
- * It restores a MySQL dump from web/data and writes database.local.php.
+ * It restores a MySQL dump from web/data and writes web/.env.
  */
 session_start();
 
 define('INSTALL_ROOT', dirname(__DIR__));
-define('INSTALL_CONFIG_CANDIDATES', array(INSTALL_ROOT . '/application/config/database.local.php', INSTALL_ROOT . '/application/cache/database.local.php'));
+define('INSTALL_ENV', INSTALL_ROOT . '/.env');
 define('INSTALL_DATA', INSTALL_ROOT . '/data');
 
 function h($value) {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+}
+
+function install_env_value($value) {
+    $value = (string) $value;
+    if (strpbrk($value, " \t#\"'") !== FALSE) {
+        return '"' . addcslashes($value, "\\\"") . '"';
+    }
+    return $value;
+}
+
+function install_default_base_url() {
+    $scheme = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') ? 'https' : 'http';
+    $host = isset($_SERVER['HTTP_HOST']) && trim((string) $_SERVER['HTTP_HOST']) !== ''
+        ? trim((string) $_SERVER['HTTP_HOST']) : 'localhost';
+    $path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
+    if (!is_string($path) || $path === '') {
+        $path = '/';
+    }
+    $path = preg_replace('#/install(?:/.*)?$#', '/', $path);
+    if (!is_string($path) || $path === '') {
+        $path = '/';
+    }
+    return $scheme . '://' . $host . rtrim($path, '/') . '/';
 }
 
 function install_backups() {
@@ -62,22 +85,16 @@ button:hover, .button:hover { background: #4338ca; }
     <?php
 }
 
-$installed = FALSE;
-foreach (INSTALL_CONFIG_CANDIDATES as $candidate_config) {
-    if (is_file($candidate_config)) {
-        $installed = TRUE;
-        break;
-    }
-}
+$installed = is_file(INSTALL_ENV);
 $env_password = getenv('CMS_DB_PASSWORD');
 $env_configured = is_string($env_password) && trim($env_password) !== '';
 
 if ($installed) {
-    install_page('Sudah terpasang', '<p class="eyebrow">Installer</p><h1>Aplikasi sudah terpasang</h1><p class="lead">Konfigurasi database lokal sudah ada.</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p>');
+    install_page('Sudah terpasang', '<p class="eyebrow">Installer</p><h1>Aplikasi sudah terpasang</h1><p class="lead">File <span class="mono">web/.env</span> sudah ada.</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p>');
     exit;
 }
 if ($env_configured) {
-    install_page('Installer dinonaktifkan', '<p class="eyebrow">Installer</p><h1>Installer dinonaktifkan</h1><div class="alert warn">Konfigurasi database terdeteksi dari environment. Hapus variabel <span class="mono">CMS_DB_*</span> jika ingin memakai installer, atau buat <span class="mono">application/config/database.local.php</span> secara manual.</div>');
+    install_page('Installer dinonaktifkan', '<p class="eyebrow">Installer</p><h1>Installer dinonaktifkan</h1><div class="alert warn">Konfigurasi database terdeteksi dari environment. Hapus variabel <span class="mono">CMS_DB_*</span> jika ingin memakai installer.</div>');
     exit;
 }
 
@@ -93,6 +110,7 @@ $values = array(
     'port' => isset($_POST['port']) ? trim((string) $_POST['port']) : '3306',
     'database' => isset($_POST['database']) ? trim((string) $_POST['database']) : 'cmsdb',
     'username' => isset($_POST['username']) ? trim((string) $_POST['username']) : 'cmsdb',
+    'base_url' => isset($_POST['base_url']) ? trim((string) $_POST['base_url']) : install_default_base_url(),
     'backup' => isset($_POST['backup']) ? basename((string) $_POST['backup']) : ($backups ? basename($backups[0]) : ''),
 );
 
@@ -117,6 +135,12 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
     }
     if ($password === '') {
         $errors[] = 'Password database wajib diisi.';
+    }
+    $values['base_url'] = rtrim($values['base_url'], '/') . '/';
+    if (strlen($values['base_url']) > 255
+        || !filter_var($values['base_url'], FILTER_VALIDATE_URL)
+        || !in_array(strtolower((string) parse_url($values['base_url'], PHP_URL_SCHEME)), array('http', 'https'), TRUE)) {
+        $errors[] = 'Base URL aplikasi tidak valid. Gunakan URL http/https tanpa query string.';
     }
     $backup_path = '';
     foreach ($backups as $candidate) {
@@ -192,46 +216,33 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
         }
     }
     if (!$errors) {
-        $config = array(
-            'hostname' => $values['host'],
-            'port' => (int) $values['port'],
-            'username' => $values['username'],
-            'password' => $password,
-            'database' => $values['database'],
-            'dbdriver' => 'mysqli',
-        );
-        $content = "<?php\nreturn " . var_export($config, TRUE) . ";\n";
-        $target_config = '';
-        foreach (INSTALL_CONFIG_CANDIDATES as $candidate_config) {
-            if (is_writable(dirname($candidate_config))) {
-                $target_config = $candidate_config;
-                break;
-            }
-        }
-        if ($target_config === '') {
-            $errors[] = 'Tidak dapat menulis konfigurasi database. Pastikan application/config atau application/cache dapat ditulis.';
+        $content = "CI_BASE_URL=" . install_env_value($values['base_url']) . "\n"
+            . "CMS_DB_HOST=" . install_env_value($values['host']) . "\n"
+            . "CMS_DB_PORT=" . (int) $values['port'] . "\n"
+            . "CMS_DB_NAME=" . install_env_value($values['database']) . "\n"
+            . "CMS_DB_USER=" . install_env_value($values['username']) . "\n"
+            . "CMS_DB_PASSWORD=" . install_env_value($password) . "\n"
+            . "TIME_ZONE=utc\n";
+        $tmp = INSTALL_ENV . '.tmp';
+        if (!is_writable(INSTALL_ROOT) || file_put_contents($tmp, $content, LOCK_EX) === FALSE) {
+            $errors[] = 'Tidak dapat menulis web/.env. Pastikan folder web dapat ditulis.';
+        } elseif (!rename($tmp, INSTALL_ENV)) {
+            @unlink($tmp);
+            $errors[] = 'Tidak dapat menyimpan web/.env.';
         } else {
-            $tmp = $target_config . '.tmp';
-            if (file_put_contents($tmp, $content, LOCK_EX) === FALSE) {
-                $errors[] = 'Tidak dapat menulis file konfigurasi database.';
-            } elseif (!rename($tmp, $target_config)) {
-                @unlink($tmp);
-                $errors[] = 'Tidak dapat menyimpan konfigurasi database.';
-            } else {
-                @chmod($target_config, 0600);
-                unset($_SESSION['install_csrf']);
-                $success = TRUE;
-            }
+            @chmod(INSTALL_ENV, 0600);
+            unset($_SESSION['install_csrf']);
+            $success = TRUE;
         }
     }
 }
 
 if ($success) {
-    install_page('Instalasi selesai', '<p class="eyebrow">Installer</p><h1>Instalasi selesai</h1><p class="lead">Database berhasil dipulihkan dan konfigurasi lokal sudah dibuat.</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p><p class="muted">Installer sekarang terkunci.</p>');
+    install_page('Instalasi selesai', '<p class="eyebrow">Installer</p><h1>Instalasi selesai</h1><p class="lead">Database berhasil dipulihkan dan file <span class="mono">web/.env</span> sudah dibuat.</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p><p class="muted">Installer sekarang terkunci.</p>');
     exit;
 }
 
-$body = '<p class="eyebrow">Installer</p><h1>Instalasi CMSNivo</h1><p class="lead">Pulihkan database dari file backup di <span class="mono">web/data</span>, lalu simpan konfigurasi lokal.</p>';
+$body = '<p class="eyebrow">Installer</p><h1>Instalasi CMSNivo</h1><p class="lead">Pulihkan database dari file backup di <span class="mono">web/data</span>, lalu simpan konfigurasi ke <span class="mono">web/.env</span>.</p>';
 if (!$backups) {
     $body .= '<div class="alert">Tidak ada file <span class="mono">*.sql.gz</span> di <span class="mono">web/data</span>. Letakkan file backup di folder tersebut lalu muat ulang halaman ini.</div>';
 }
@@ -249,6 +260,9 @@ $body .= '<label for="host">Host</label><input id="host" name="host" required va
 $body .= '<div class="grid"><div><label for="port">Port</label><input id="port" name="port" inputmode="numeric" required value="' . h($values['port']) . '"></div><div><label for="database">Nama database</label><input id="database" name="database" required value="' . h($values['database']) . '"></div></div>';
 $body .= '<label for="username">User database</label><input id="username" name="username" required value="' . h($values['username']) . '">';
 $body .= '<label for="password">Password database</label><input id="password" name="password" type="password" required autocomplete="new-password">';
+$body .= '<h2>Aplikasi</h2>';
+$body .= '<label for="base_url">Base URL aplikasi</label><input id="base_url" name="base_url" type="url" required value="' . h($values['base_url']) . '">';
+$body .= '<p class="muted">Default mengikuti URL yang sedang dipakai. Akhiran <span class="mono">/</span> akan ditambahkan otomatis.</p>';
 $body .= '<h2>File backup</h2>';
 $body .= '<label for="backup">Backup database</label><select id="backup" name="backup" required>';
 foreach ($backups as $backup) {

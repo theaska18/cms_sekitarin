@@ -2,7 +2,7 @@
 
 CMSNivo adalah aplikasi web berbasis CodeIgniter 3 (CI3), dengan halaman publik dan antarmuka dashboard admin. Proyek ini memuat aplikasi CI3, konfigurasi Docker Compose, sumber CSS Tailwind, aset hasil build, dan tes kontrak berbasis Python.
 
-> **Status fitur:** halaman publik tersedia di `/`, `/features`, `/about`, dan `/contact`. Fitur login `/login` dan guard sesi admin tersedia; aplikasi tidak membuat akun bawaan. Kredensial admin tidak disertakan atau diteruskan oleh Compose bawaan. Autentikasi admin hanya aktif pada `CI_ENV=development` (nilai default Compose). Beberapa modul admin memiliki operasi CRUD yang bergantung pada backend/database, sedangkan bagian lain masih berupa placeholder. Fitur ini belum siap sebagai autentikasi admin produksi.
+> **Status fitur:** halaman publik tersedia di `/`, `/features`, `/about`, dan `/contact`. Fitur login `/login` dan guard sesi admin tersedia; aplikasi tidak membuat akun bawaan. Kredensial admin tidak disertakan atau diteruskan oleh Compose bawaan. Beberapa modul admin memiliki operasi CRUD yang bergantung pada backend/database, sedangkan bagian lain masih berupa placeholder. Fitur ini belum siap sebagai autentikasi admin produksi.
 
 ## Arsitektur singkat
 
@@ -80,7 +80,7 @@ Pada pemeriksaan terakhir, tes halaman publik lulus (11 tes) dan tes autentikasi
 
 Konfigurasi yang diperiksa menunjukkan cara menjalankan stack Compose, tetapi tidak mendefinisikan seluruh kebutuhan produksi. Sebelum deployment, verifikasi secara terpisah DNS/URL publik, TLS, reverse proxy, firewall, backup dan pemulihan database, pemantauan, serta pengelolaan rahasia. Tetapkan `CI_BASE_URL` untuk URL lingkungan yang benar dan jangan memakai nilai lokal di produksi. Perilaku proxy/TLS, kapasitas server, dan kebijakan backup tidak dapat dipastikan dari berkas repository ini.
 
-Autentikasi admin hanya diaktifkan ketika `CI_ENV=development`. Pada lingkungan lain, autentikasi ditolak dan akses admin tidak tersedia. Jangan menerbitkan fitur admin sebagai panel produksi sebelum autentikasi dan kontrol akses produksi diterapkan serta diverifikasi.
+Autentikasi admin mengikuti mode environment aplikasi. Jangan menerbitkan panel admin sebagai panel produksi sebelum autentikasi dan kontrol akses produksi diterapkan serta diverifikasi. Jangan menerbitkan fitur admin sebagai panel produksi sebelum autentikasi dan kontrol akses produksi diterapkan serta diverifikasi.
 
 ## Instalasi dari folder `web/`
 
@@ -91,25 +91,21 @@ Deployment yang hanya menyalin folder `web/` dapat menggunakan installer bawaan.
    ```text
    web/data/cmsdb-latest.sql.gz
    ```
-3. Pastikan folder berikut dapat ditulis web server:
-   - `web/application/config/`, atau
-   - `web/application/cache/`
+3. Pastikan folder `web/` dapat ditulis web server agar installer bisa membuat `web/.env`.
 4. Buka aplikasi. Jika belum ada konfigurasi database, aplikasi otomatis mengarah ke:
    ```text
    /install/
    ```
-5. Isi host, port, nama database, user, password, lalu pilih file backup.
+5. Isi host, port, nama database, user, password, base URL aplikasi, lalu pilih file backup.
+   - Base URL otomatis memakai URL yang sedang diakses dan bisa diubah.
+   - `TIME_ZONE` otomatis diisi `utc`.
 6. Installer membuat database kosong, mengimpor backup, dan menulis:
    ```text
-   web/application/config/database.local.php
-   ```
-   atau, jika folder config tidak writable:
-   ```text
-   web/application/cache/database.local.php
+   web/.env
    ```
 7. Login memakai akun yang sudah ada di backup.
 
-Installer tidak menimpa database yang sudah berisi tabel. Siapkan database kosong terlebih dahulu jika user database tidak memiliki izin `CREATE DATABASE`.
+Installer tidak menimpa database yang sudah berisi tabel. Siapkan database kosong terlebih dahulu jika user database tidak memiliki izin `CREATE DATABASE`. File `web/.env` dilindungi `.htaccess` dan tidak masuk Git.
 
 ## Backup database otomatis
 
@@ -140,12 +136,12 @@ Compose membaca `.env` dari root repository untuk interpolasi, lalu meneruskan v
 
 | Variabel | Tujuan |
 | --- | --- |
-| `CI_ENV` | Memilih lingkungan runtime CI3; Compose menyediakan default pengembangan lokal. |
 | `CI_BASE_URL` | URL dasar aplikasi yang diteruskan ke container aplikasi. Gunakan URL lokal saat pengembangan dan URL yang sesuai pada deployment. |
 | `TIME_ZONE` | Zona waktu runtime PHP pada layanan `cms-app`; default Compose `utc`, dapat dioverride dengan identifier zona waktu PHP yang valid. |
 | `BACKUP_TIME` | Jam backup harian dalam UTC; default `02:00`. |
 | `BACKUP_RETENTION` | Jumlah maksimum arsip backup di `database_backup/`; default `30`. |
 | `CMS_DB_HOST` | Host layanan database yang dipakai aplikasi. |
+| `CMS_DB_PORT` | Port koneksi database; default `3306`. |
 | `CMS_DB_NAME` | Nama database aplikasi; digunakan oleh konfigurasi aplikasi dan layanan MySQL. |
 | `CMS_DB_USER` | Akun aplikasi untuk koneksi database. |
 | `CMS_DB_PASSWORD` | Kata sandi akun aplikasi database; diperlukan oleh layanan aplikasi dan MySQL. Isi dengan rahasia lokal/deployment, bukan nilai contoh. |

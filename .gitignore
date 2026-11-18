@@ -36,6 +36,3 @@ Thumbs.db
 /web/data/*
 !/web/data/.htaccess
 !/web/data/.gitkeep
-
-# Installer-generated database configuration
-/web/application/config/database.local.php

@@ -53,6 +53,31 @@
  *
  * NOTE: If you change these, also change the error_reporting() code below
  */
+	// Load web/.env before CodeIgniter config. Process environment wins.
+	function cms_load_env_file($path)
+	{
+		if (!is_file($path) || !is_readable($path)) { return; }
+		$lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		foreach ($lines as $line) {
+			$line = trim($line);
+			if ($line === '' || $line[0] === '#' || strpos($line, '=') === FALSE) { continue; }
+			list($key, $value) = explode('=', $line, 2);
+			$key = trim($key); $value = trim($value);
+			if (!preg_match('/\A[A-Za-z_][A-Za-z0-9_]*\z/', $key)) { continue; }
+			if (strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"') {
+				$value = stripcslashes(substr($value, 1, -1));
+			} elseif (strlen($value) >= 2 && $value[0] === "'" && substr($value, -1) === "'") {
+				$value = substr($value, 1, -1);
+			}
+			$current = getenv($key);
+			if ($current === FALSE || trim((string) $current) === '') {
+				putenv($key . '=' . $value);
+				$_ENV[$key] = $value;
+				$_SERVER[$key] = $value;
+			}
+		}
+	}
+	cms_load_env_file(__DIR__ . '/.env');
 	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
 
 /*
@@ -94,25 +119,15 @@ switch (ENVIRONMENT)
  * INSTALLER BOOTSTRAP
  *---------------------------------------------------------------
  * A deployment that contains only the web folder has no .env file.
- * Redirect to the standalone installer until database.local.php exists.
+ * Redirect to the standalone installer until web/.env exists.
  */
 if (PHP_SAPI !== 'cli')
 {
-    $local_database_configs = array(
-        __DIR__ . '/application/config/database.local.php',
-        __DIR__ . '/application/cache/database.local.php',
-    );
+    $has_dotenv = is_file(__DIR__ . '/.env');
     $environment_database_password = getenv('CMS_DB_PASSWORD');
     $has_environment_database = is_string($environment_database_password)
         && trim($environment_database_password) !== '';
-    $has_local_database_config = FALSE;
-    foreach ($local_database_configs as $local_database_config) {
-        if (is_file($local_database_config)) {
-            $has_local_database_config = TRUE;
-            break;
-        }
-    }
-    if (!$has_local_database_config && !$has_environment_database)
+    if (!$has_dotenv && !$has_environment_database)
     {
         $request_path = parse_url(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/', PHP_URL_PATH);
         if ($request_path === FALSE || strpos($request_path, '/install/') !== 0)
