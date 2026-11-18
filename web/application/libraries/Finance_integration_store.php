@@ -47,7 +47,10 @@ class Finance_integration_store
             return 0;
         }
         $this->apply_search($spec, $search);
-        $count = $this->db->from($spec['table'])->where('tenant_id', (int) $tenant_id)->count_all_results();
+        $count = $this->db->from($spec['table'])
+            ->where('tenant_id', (int) $tenant_id)
+            ->where('status !=', 'cancelled')
+            ->count_all_results();
         return $count === FALSE ? 0 : (int) $count;
     }
 
@@ -75,6 +78,7 @@ class Finance_integration_store
         $this->apply_search($spec, $search);
         $query = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
+            ->where('status !=', 'cancelled')
             ->order_by($order_column, $direction)
             ->order_by($spec['id'], 'DESC')
             ->limit($limit, $offset)
@@ -154,6 +158,46 @@ class Finance_integration_store
                 $spec['document_id'] => (int) $document_id,
                 'processed_at' => date('Y-m-d H:i:s'),
             )) === TRUE;
+    }
+
+    public function document_status($kind, $tenant_id, $document_id)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || (int) $document_id < 1) {
+            return NULL;
+        }
+        $table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
+        if (!$this->db->table_exists($table)) {
+            return NULL;
+        }
+        $query = $this->db->select('status')
+            ->from($table)
+            ->where('tenant_id', (int) $tenant_id)
+            ->where($spec['document_id'], (int) $document_id)
+            ->limit(1)
+            ->get();
+        if ($query === FALSE || !$query->num_rows()) {
+            return NULL;
+        }
+        return (string) $query->row()->status;
+    }
+
+    public function cancel($kind, $tenant_id, $inbox_id, $cancelled_at)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || !$this->available($kind)
+            || !$this->db->field_exists('cancelled_at', $spec['table'])) {
+            return FALSE;
+        }
+        $this->db->where('tenant_id', (int) $tenant_id)
+            ->where($spec['id'], (int) $inbox_id)
+            ->where('status', 'received')
+            ->where($spec['document_id'] . ' IS NULL', NULL, FALSE)
+            ->update($spec['table'], array(
+                'status' => 'cancelled',
+                'cancelled_at' => (string) $cancelled_at,
+            ));
+        return $this->db->affected_rows() === 1;
     }
 
     public function spec($kind)

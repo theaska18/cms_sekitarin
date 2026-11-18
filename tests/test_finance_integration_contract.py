@@ -4,6 +4,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
 MIGRATION = ROOT / "database/migrations/20261119000200_create_finance_inbox.sql"
+CANCEL_MIGRATION = ROOT / "database/migrations/20261119000400_add_finance_inbox_cancelled.sql"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
 STORE = APP / "libraries/Finance_integration_store.php"
@@ -32,6 +33,10 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             with self.subTest(column=column):
                 self.assertIn("`" + column + "`", migration)
         self.assertFalse((ROOT / "database/migrations/20261119000300_grant_finance_inbox_access.sql").exists())
+        cancel_migration = CANCEL_MIGRATION.read_text()
+        self.assertIn("`cancelled_at`", cancel_migration)
+        self.assertIn("fin_sales_invoice_inbox", cancel_migration)
+        self.assertIn("fin_purchase_bill_inbox", cancel_migration)
 
     def test_api_uses_user_secret_and_tenant_scope(self):
         api = API.read_text()
@@ -43,6 +48,11 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "find_number", "raw_input_stream", "review_status",
             "status' => 'accepted'", "202",
             "strlen($description) > 240",
+            "function dispatch", "function read_or_cancel", "function resolve_identifier",
+            "function status_response", "function cancel_response",
+            "Document already posted.", "Draft already created.",
+            "'status' => 'cancelled'", "'GET, DELETE'", "already_cancelled",
+            "$store->cancel($kind, $tenant_id, $inbox_id, $cancelled_at)",
         ):
             self.assertIn(marker, api)
         config = CONFIG.read_text()
@@ -53,6 +63,8 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         for route in (
             "$route['api/finance/sales-invoices'] = 'finance_api/sales_invoices';",
             "$route['api/finance/purchase-bills'] = 'finance_api/purchase_bills';",
+            "$route['api/finance/sales-invoices/(:num)'] = 'finance_api/sales_invoices/$1';",
+            "$route['api/finance/purchase-bills/(:num)'] = 'finance_api/purchase_bills/$1';",
             "$route['admin/finance/sales_invoice_inbox'] = 'admin_finance_integration/sales_invoice_index';",
             "$route['admin/finance/sales_invoice_inbox/data'] = 'admin_finance_integration/sales_invoice_data';",
             "$route['admin/finance/sales_invoice_inbox/draft/(:num)'] = 'admin_finance_integration/sales_invoice_draft/$1';",
@@ -73,6 +85,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "save_draft", "last_saved_id", "mark_processed",
             "finance_document_amount_readonly", "finance_document_description_readonly",
             "Nama Pelanggan", "Nama Pemasok",
+            "This integration submission has been cancelled.",
             "'finance_' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox')",
         ):
             self.assertIn(marker, admin)
@@ -95,6 +108,10 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("function count", store)
         self.assertIn("function page", store)
         self.assertIn("function mark_processed", store)
+        self.assertIn("function document_status", store)
+        self.assertIn("function cancel", store)
+        self.assertIn("->where('status', 'received')", store)
+        self.assertIn("->where('status !=', 'cancelled')", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
 
     def test_menus_and_labels_exist(self):

@@ -125,6 +125,11 @@ class Admin_finance_integration extends Admin
             redirect('/admin/finance/' . $spec['slug'] . '/edit/' . $document_id, 'location', 303);
             return;
         }
+        if ((string) $inbox['status'] === 'cancelled') {
+            $this->output->set_status_header(409);
+            show_error('This integration submission has been cancelled.', 409);
+            return;
+        }
 
         $store = $this->finance_document_store;
         $available = $store->available($kind);

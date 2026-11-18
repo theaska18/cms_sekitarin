@@ -25,6 +25,10 @@ Finance
   -> simpan draft
   -> inbox menjadi processed dan terhubung ke draft
   -> approval/posting mengikuti alur Finance yang sudah ada
+
+Sistem eksternal
+  -> GET status berdasarkan inbox_id atau nomor dokumen
+  -> DELETE untuk membatalkan selama belum ada draft
 ```
 
 Tidak ada tabel mapping pelanggan, pemasok, akun, atau pajak. Nama pelanggan dan
@@ -37,6 +41,7 @@ yang sebenarnya di form draft.
 
    ```text
    database/migrations/20261119000200_create_finance_inbox.sql
+   database/migrations/20261119000400_add_finance_inbox_cancelled.sql
    ```
 
    Tabel yang dibuat:
@@ -45,6 +50,8 @@ yang sebenarnya di form draft.
    fin_sales_invoice_inbox
    fin_purchase_bill_inbox
    ```
+
+   Migration kedua menambahkan kolom `cancelled_at` untuk pembatalan lunak.
 
 2. Tenant harus memiliki data Finance yang lengkap agar draft bisa disimpan:
    pelanggan/pemasok aktif, akun pendapatan/biaya aktif dan posting, pajak aktif
@@ -194,6 +201,164 @@ Contoh respons `202 Accepted`:
 }
 ```
 
+## Endpoint status
+
+Status dapat dilihat berdasarkan `inbox_id` atau nomor dokumen. Gunakan salah
+satu identifier saja.
+
+```http
+GET /api/finance/sales-invoices/{inbox_id}
+GET /api/finance/sales-invoices?invoice_number=INV-EXT-2026-001
+GET /api/finance/sales-invoices?inbox_id=12
+
+GET /api/finance/purchase-bills/{inbox_id}
+GET /api/finance/purchase-bills?bill_number=BILL-EXT-2026-001
+GET /api/finance/purchase-bills?inbox_id=7
+```
+
+Contoh:
+
+```sh
+curl 'http://localhost:8086/api/finance/sales-invoices/12' \
+  -H 'Authorization: Bearer <api_secret>'
+
+curl 'http://localhost:8086/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
+  -H 'Authorization: Bearer <api_secret>'
+```
+
+Respons `200`:
+
+```json
+{
+  "status": "ok",
+  "inbox_id": 12,
+  "document_type": "sales_invoice",
+  "document_number": "INV-EXT-2026-001",
+  "party_name": "PT Contoh Pelanggan",
+  "party_code": "CUST-001",
+  "amount_before_tax": 1000000,
+  "tax_percent": 11,
+  "tax_amount": 110000,
+  "total_amount": 1110000,
+  "review_status": "received",
+  "draft_created": false,
+  "draft_id": null,
+  "draft_status": null,
+  "received_at": "2026-11-18 20:00:00",
+  "processed_at": null,
+  "cancelled_at": null
+}
+```
+
+Jika sudah menjadi draft:
+
+```json
+{
+  "review_status": "processed",
+  "draft_created": true,
+  "draft_id": 2,
+  "draft_status": "draft",
+  "processed_at": "2026-11-18 20:15:00"
+}
+```
+
+Jika draft sudah diposting:
+
+```json
+{
+  "review_status": "processed",
+  "draft_created": true,
+  "draft_id": 2,
+  "draft_status": "posted"
+}
+```
+
+## Endpoint pembatalan
+
+Pembatalan memakai **soft delete**. Baris inbox tidak dihapus; statusnya diubah
+menjadi `cancelled` dan `cancelled_at` diisi agar jejak audit tetap tersimpan.
+
+```http
+DELETE /api/finance/sales-invoices/{inbox_id}
+DELETE /api/finance/sales-invoices?invoice_number=INV-EXT-2026-001
+DELETE /api/finance/sales-invoices?inbox_id=12
+
+DELETE /api/finance/purchase-bills/{inbox_id}
+DELETE /api/finance/purchase-bills?bill_number=BILL-EXT-2026-001
+DELETE /api/finance/purchase-bills?inbox_id=7
+```
+
+Contoh:
+
+```sh
+curl -X DELETE 'http://localhost:8086/api/finance/sales-invoices/12' \
+  -H 'Authorization: Bearer <api_secret>'
+
+curl -X DELETE 'http://localhost:8086/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
+  -H 'Authorization: Bearer <api_secret>'
+```
+
+Pembatalan hanya diizinkan jika:
+
+```text
+status inbox = received
+sales_invoice_id / purchase_bill_id = NULL
+```
+
+Jika sudah dibuatkan draft, termasuk draft yang sudah posted, permintaan ditolak
+dengan `409` dan data tidak diubah.
+
+Respons sukses `200`:
+
+```json
+{
+  "status": "cancelled",
+  "review_status": "cancelled",
+  "inbox_id": 12,
+  "cancelled_at": "2026-11-18 20:30:00"
+}
+```
+
+Pembatalan ulang bersifat idempotent:
+
+```json
+{
+  "status": "cancelled",
+  "review_status": "cancelled",
+  "inbox_id": 12,
+  "cancelled_at": "2026-11-18 20:30:00",
+  "already_cancelled": true
+}
+```
+
+Jika sudah ada draft:
+
+```json
+{
+  "status": "error",
+  "message": "Draft already created.",
+  "inbox_id": 12,
+  "draft_id": 2,
+  "draft_status": "draft"
+}
+```
+
+Jika sudah posted:
+
+```json
+{
+  "status": "error",
+  "message": "Document already posted.",
+  "inbox_id": 12,
+  "draft_id": 2,
+  "draft_status": "posted"
+}
+```
+
+Pembatalan tidak menyentuh `fin_sales_invoice`, `fin_purchase_bill`, jurnal, atau
+posting. Nomor dokumen tetap tersimpan dan masih dianggap sudah pernah diterima,
+sehingga pengiriman ulang nomor yang sama akan dibalas `409`.
+
 ## Perhitungan
 
 API menghitung sendiri pajak dan total:
@@ -210,13 +375,16 @@ menghitung ulang pajak berdasarkan kode pajak yang dipilih Finance.
 
 | HTTP | Arti |
 | --- | --- |
+| `200` | Status berhasil dibaca atau pembatalan berhasil. |
 | `202` | Data diterima dan disimpan ke inbox. |
-| `400` | Body bukan JSON object yang valid. |
+| `400` | Body bukan JSON object yang valid, atau identifier status/hapus tidak valid. |
 | `401` | Secret tidak valid, akses API tidak aktif, atau user diblokir. |
-| `405` | Method bukan `POST`. Header `Allow: POST` dikirim. |
-| `409` | Nomor dokumen sudah pernah diterima untuk tenant tersebut. |
+| `404` | Data inbox tidak ditemukan dalam tenant user. |
+| `405` | Method tidak didukung. Header `Allow` dikirim. |
+| `409` | Nomor duplikat, sudah ada draft, atau dokumen sudah posted. |
 | `422` | Validasi payload gagal. Field yang bermasalah ada di `fields`. |
-| `500` | Data gagal disimpan. |
+| `500` | Data gagal disimpan atau dibatalkan. |
+| `503` | Tabel inbox belum tersedia. |
 
 Contoh `422`:
 
@@ -252,7 +420,7 @@ sales_invoice_inbox_id, tenant_id, created_by,
 invoice_number, customer_name, customer_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
-sales_invoice_id, payload_json, received_at, processed_at
+sales_invoice_id, payload_json, received_at, processed_at, cancelled_at
 ```
 
 ### `fin_purchase_bill_inbox`
@@ -264,7 +432,7 @@ purchase_bill_inbox_id, tenant_id, created_by,
 bill_number, supplier_name, supplier_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
-purchase_bill_id, payload_json, received_at, processed_at
+purchase_bill_id, payload_json, received_at, processed_at, cancelled_at
 ```
 
 Status yang dipakai:
@@ -273,9 +441,11 @@ Status yang dipakai:
 | --- | --- |
 | `received` | Data baru diterima dari API dan menunggu diproses Finance. |
 | `processed` | Sudah dikonversi menjadi draft dan terhubung ke dokumen Finance. |
+| `cancelled` | Dibatalkan lewat API sebelum dibuatkan draft. Tidak tampil di halaman inbox. |
 
 `payload_json` menyimpan body asli yang dikirim sistem eksternal untuk audit.
-`created_by` adalah user pemilik secret API.
+`created_by` adalah user pemilik secret API. Data `cancelled` tetap tersimpan dan
+masih dapat dibaca lewat endpoint status.
 
 ## Halaman admin
 
@@ -299,6 +469,10 @@ Isi halaman:
 - status;
 - tombol **Jadikan Draft**;
 - tombol **Lihat Draft** jika sudah diproses.
+
+Data berstatus `cancelled` tidak ditampilkan di daftar admin, sehingga dari sisi
+Finance terlihat seperti terhapus. Datanya tetap tersimpan untuk audit dan masih
+bisa dibaca lewat API status.
 
 Endpoint data tabel:
 
@@ -370,8 +544,8 @@ menjadi **Lihat Draft** dan mengarah ke halaman edit draft tersebut.
 
 ## Batasan saat ini
 
-- Hanya tersedia dua endpoint `POST`. Belum ada endpoint cek status, pembatalan,
-  atau webhook.
+- Endpoint yang tersedia: `POST` untuk menerima data, `GET` untuk status, dan
+  `DELETE` untuk pembatalan lunak. Belum ada webhook.
 - API tidak menerima nomor akun, kode pajak, atau ID pelanggan/pemasok. Finance
   memilih semuanya di form draft.
 - `description` dibatasi 240 karakter agar sesuai dengan kolom deskripsi baris
@@ -380,8 +554,11 @@ menjadi **Lihat Draft** dan mengarah ke halaman edit draft tersebut.
   Jika belum lengkap, form akan menampilkan error dan inbox tetap `received`.
 - Tidak ada retry otomatis. Jika konversi gagal, perbaiki data Finance lalu
   proses ulang dari halaman inbox.
-- Perubahan status hanya `received` → `processed`. Belum ada alur reject,
-  cancel, atau edit data inbox.
+- Status inbox: `received`, `processed`, atau `cancelled`. Pembatalan hanya
+  berlaku sebelum draft dibuat; draft yang sudah ada atau posted tidak bisa
+  dibatalkan lewat API inbox.
+- Nomor dokumen yang sudah dibatalkan tetap tersimpan dan masih dianggap
+  duplikat jika dikirim ulang.
 - Secret API dikirim sebagai bearer token. Gunakan HTTPS di production dan
   jangan menaruh secret di URL, log, atau repository.
 
@@ -391,16 +568,18 @@ menjadi **Lihat Draft** dan mengarah ke halaman edit draft tersebut.
 | --- | --- | --- |
 | `401` | Secret salah, user diblokir, atau `access_api_flag` mati | Periksa user dan secret. |
 | `403` di halaman inbox | Menu belum di-assign ke tenant/role | Assign lewat System → Tenant/Role → Menu Access. |
-| `405` | Memakai method selain `POST` | Kirim `POST`. |
-| `409` | Nomor dokumen sudah ada | Gunakan nomor baru atau buka inbox yang sudah ada. |
+| `404` | `inbox_id`/nomor tidak ada di tenant user | Periksa identifier dan tenant secret. |
+| `405` | Method tidak didukung | Gunakan `POST` untuk kirim, `GET` untuk status, `DELETE` untuk batal. |
+| `409` | Nomor duplikat, sudah ada draft, atau sudah posted | Cek status lewat `GET`; draft/posted tidak bisa dibatalkan. |
 | `422` | Field wajib kosong atau format angka salah | Periksa `fields` pada respons. |
 | Draft gagal disimpan | Pelanggan/pemasok, akun, pajak, atau control account tidak valid | Lengkapi data master dan `fin_settings`. |
-| Tabel inbox tidak tersedia | Migration belum dijalankan | Jalankan `20261119000200_create_finance_inbox.sql`. |
+| Tabel inbox tidak tersedia | Migration belum dijalankan | Jalankan kedua migration inbox. |
 
 ## File terkait
 
 ```text
 database/migrations/20261119000200_create_finance_inbox.sql
+database/migrations/20261119000400_add_finance_inbox_cancelled.sql
 web/application/controllers/Finance_api.php
 web/application/controllers/Admin_finance_integration.php
 web/application/libraries/Finance_integration_store.php
@@ -421,6 +600,7 @@ Tes kontrak integrasi:
 python3 -m unittest discover -s tests -p 'test_finance_integration_contract.py'
 ```
 
-Tes tersebut memeriksa kontrak sumber: endpoint, autentikasi secret, tenant
-scoping, route, readonly amount/description, menu, dan label. Tes ini bukan
-pengujian end-to-end terhadap server yang berjalan.
+Tes tersebut memeriksa kontrak sumber: endpoint kirim/status/cancel, autentikasi
+secret, tenant scoping, route, readonly amount/description, guard draft,
+pembatalan lunak, menu, dan label. Tes ini bukan pengujian end-to-end terhadap
+server yang berjalan.

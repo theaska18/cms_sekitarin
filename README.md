@@ -14,7 +14,7 @@ CMSNivo adalah aplikasi web berbasis CodeIgniter 3 (CI3), dengan halaman publik 
 | [web/readme.rst](web/readme.rst) | Dokumentasi upstream CodeIgniter 3 yang disertakan di folder `web/`. |
 | [web/updates/README.md](web/updates/README.md) | Format katalog update, generator rilis, aturan migration SQL, dan layout paket ZIP. |
 | [database/README.md](database/README.md) | Baseline schema database dan aturan migration SQL untuk rilis. |
-| [docs/FINANCE_INTEGRATION.md](docs/FINANCE_INTEGRATION.md) | API integrasi faktur penjualan/tagihan pembelian, autentikasi secret, tabel inbox, halaman admin, dan alur konversi ke draft. |
+| [docs/FINANCE_INTEGRATION.md](docs/FINANCE_INTEGRATION.md) | API integrasi faktur penjualan/tagihan pembelian: autentikasi secret, kirim data, cek status, pembatalan lunak, tabel inbox, halaman admin, dan alur konversi ke draft. |
 | [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | Status project terkini, hasil tes, environment uji, dan pekerjaan yang belum selesai. |
 
 ## Arsitektur singkat
