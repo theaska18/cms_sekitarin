@@ -1,14 +1,11 @@
 {
-  "version": "1.0.8",
+  "version": "1.0.9",
   "released_at": "2026-11-18",
   "changelog": "Optimalisasi Finance.",
   "min_php": "8.1",
-  "requires_version": "1.0.7",
-  "package": "cms-1.0.8.zip",
-  "sha256": "1817446ca53ff08bb5f9be5ef2ab287cf8b704b68ad505b8e09b63d7c5eb9b22",
-  "size": 127338,
-  "migrations": [
-    "20261119000500_add_finance_inbox_dates.sql",
-    "20261119000600_add_finance_draft_integration_reference.sql"
-  ]
+  "requires_version": "1.0.8",
+  "package": "cms-1.0.9.zip",
+  "sha256": "4de9553bed8c8c9d4c9de8f12bee7013d005253a505d80428e657a3a1ce8f8ec",
+  "size": 6603,
+  "migrations": []
 }

@@ -1,0 +1,24 @@
+{
+  "version": "1.0.9",
+  "from_version": "1.0.8",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.8",
+  "changelog": "Optimalisasi Finance.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "8270728e7abc14bfcb16ccd67b3b23b6e951cdd2898e6b17a778464815e7bfab",
+      "size": 448
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "0696bb2343d20708b9b00aa1bd9bec76081f633055b13f559a869fd874a91249",
+      "size": 29962
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
