@@ -50,11 +50,15 @@ class Finance_document_store
             return FALSE;
         }
         $spec = $this->spec($kind);
-        $this->db->from($spec['header'])->where('tenant_id', (int) $tenant_id);
+        $this->db->from($spec['header'] . ' d')
+            ->join($spec['person_table'] . ' p', 'p.' . $spec['person_id'] . ' = d.' . $spec['person_id'] . ' AND p.tenant_id = d.tenant_id', 'left')
+            ->where('d.tenant_id', (int) $tenant_id);
         if (trim((string) $search) !== '') {
-            $this->db->group_start()->like($spec['number'], $search)
-                ->or_like('integration_number', $search)
-                ->or_like('memo', $search)
+            $this->db->group_start()->like('d.' . $spec['number'], $search)
+                ->or_like('d.integration_number', $search)
+                ->or_like('p.' . $spec['person_code'], $search)
+                ->or_like('p.' . $spec['person_name'], $search)
+                ->or_like('d.memo', $search)
                 ->group_end();
         }
         $count = $this->db->count_all_results();
@@ -67,13 +71,15 @@ class Finance_document_store
             return FALSE;
         }
         $spec = $this->spec($kind);
-        $allowed = array($spec['number'], 'integration_number', $spec['date'], 'due_date', 'total_amount', 'currency_code', 'status');
+        $allowed = array($spec['number'], 'integration_number', 'person_name', $spec['date'], 'due_date', 'total_amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : $spec['date'];
         $this->db->select('d.' . $spec['id'] . ',d.' . $spec['number'] . ',d.integration_number,d.' . $spec['date'] . ',d.due_date,d.total_amount,d.currency_code,d.status,d.memo,d.approval_request_id,'
+            . 'p.' . $spec['person_code'] . ' AS person_code,p.' . $spec['person_name'] . ' AS person_name,'
             . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
             . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
             . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = d.tenant_id AND a.request_id = d.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
             ->from($spec['header'] . ' d')
+            ->join($spec['person_table'] . ' p', 'p.' . $spec['person_id'] . ' = d.' . $spec['person_id'] . ' AND p.tenant_id = d.tenant_id', 'left')
             ->join('app_user u', 'u.user_id = d.created_by AND u.tenant_id = d.tenant_id', 'left')
             ->join('app_approval_request ar', 'ar.request_id = d.approval_request_id AND ar.tenant_id = d.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
@@ -81,10 +87,12 @@ class Finance_document_store
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
                 ->or_like('d.integration_number', $search)
+                ->or_like('p.' . $spec['person_code'], $search)
+                ->or_like('p.' . $spec['person_name'], $search)
                 ->or_like('d.memo', $search)
                 ->group_end();
         }
-        $order_column = in_array($order, array('created_by_name'), TRUE) ? $order : 'd.' . $order;
+        $order_column = in_array($order, array('created_by_name', 'person_name'), TRUE) ? $order : 'd.' . $order;
         $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
             ->order_by('d.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();

@@ -149,7 +149,7 @@ class Admin_finance_integration extends Admin
             'tax_id' => '',
             'department_id' => '',
             'currency_code' => $base_currency,
-            'exchange_rate' => $kind === 'sales' ? '1.00' : '1',
+            'exchange_rate' => '1.00',
             'amount' => $this->format_amount($inbox['amount_before_tax']),
             'description' => (string) $inbox['description'],
             'memo' => 'Integrasi ' . (string) $inbox[$spec['number']] . ' · ' . (string) $inbox[$spec['party_name']],
@@ -188,7 +188,7 @@ class Admin_finance_integration extends Admin
             $record = array_merge($record, $values);
             $record['amount'] = $this->format_amount($inbox['amount_before_tax']);
             $record['description'] = (string) $inbox['description'];
-            if ($kind === 'sales' && $record['exchange_rate'] !== '') {
+            if ($record['exchange_rate'] !== '') {
                 $record['exchange_rate'] = number_format((float) $record['exchange_rate'], 2, '.', '');
             }
             foreach (array('party', 'account', 'tax') as $lookup_kind) {
@@ -268,10 +268,7 @@ class Admin_finance_integration extends Admin
         if (!preg_match('/^[A-Z]{3}$/', $values['currency_code'])) {
             $errors[] = 'currency_invalid';
         }
-        $rate_pattern = $kind === 'sales'
-            ? '/^\d{1,10}(?:\.\d{1,2})?$/'
-            : '/^\d{1,10}(?:\.\d{1,10})?$/';
-        if (!preg_match($rate_pattern, $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
+        if (!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
         if (strlen($values['memo']) > 10000) {

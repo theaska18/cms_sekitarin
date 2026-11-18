@@ -1768,10 +1768,7 @@ class Admin_finance extends Admin
         if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
             $errors[] = 'amount_invalid';
         }
-        $rate_pattern = $kind === 'sales'
-            ? '/^\d{1,10}(?:\.\d{1,2})?$/'
-            : '/^\d{1,10}(?:\.\d{1,10})?$/';
-        if (!preg_match($rate_pattern, $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
+        if (!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
         if (strlen($values['description']) > 240) {
@@ -2136,7 +2133,7 @@ class Admin_finance extends Admin
             : array('bill_number', 'bill_date', 'due_date');
         $number_column = $spec[0];
         $date_column = $spec[1];
-        $columns = array(1 => $number_column, 2 => 'integration_number', 3 => $date_column, 4 => 'due_date', 5 => 'total_amount', 6 => 'currency_code', 7 => 'status');
+        $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'currency_code', 8 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
         $this->datatable_server->respond(
             $columns,
@@ -2278,7 +2275,7 @@ class Admin_finance extends Admin
         if (isset($record['amount']) && $record['amount'] !== '' && $record['amount'] !== NULL) {
             $record['amount'] = number_format((float) $record['amount'], 2, '.', '');
         }
-        if ($kind === 'sales' && isset($record['exchange_rate']) && $record['exchange_rate'] !== '' && $record['exchange_rate'] !== NULL) {
+        if (isset($record['exchange_rate']) && $record['exchange_rate'] !== '' && $record['exchange_rate'] !== NULL) {
             $record['exchange_rate'] = number_format((float) $record['exchange_rate'], 2, '.', '');
         }
         $integration_reference = !empty($record['integration_number']) ? (string) $record['integration_number'] : '';
@@ -2349,7 +2346,7 @@ class Admin_finance extends Admin
         if (!preg_match('/^[A-Z]{3}$/', $values['currency_code'])) {
             $errors[] = 'currency_invalid';
         }
-        if (!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
+        if (!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
         if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) {

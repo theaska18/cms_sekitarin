@@ -141,12 +141,15 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         index_view = DOCUMENT_INDEX.read_text()
         self.assertIn("finance_column_integration_number", index_view)
         self.assertIn("integration_number", index_view)
+        self.assertIn("person_name", index_view)
+        self.assertIn("finance_customer", index_view)
+        self.assertIn("finance_supplier", index_view)
         controller = ADMIN_CONTROLLER.read_text()
-        self.assertIn("2 => 'integration_number'", controller)
+        self.assertIn("3 => 'person_name'", controller)
         self.assertIn("$record['person_id'] = $saved[$kind === 'sales' ? 'customer_id' : 'supplier_id'];", controller)
-        self.assertIn("$columns = array(1 => $number_column, 2 => 'integration_number'", controller)
         document_store = DOCUMENT_STORE.read_text()
         self.assertIn("d.integration_number", document_store)
+        self.assertIn("AS person_name", document_store)
         self.assertIn("or_like('d.integration_number'", document_store)
 
     def test_menus_and_labels_exist(self):
