@@ -61,7 +61,7 @@ python3 -m unittest discover -s tests -p 'test_admin_contract.py'
 python3 -m unittest discover -s tests -p 'test_admin_auth_contract.py'
 ```
 
-`tests/test_homepage_contract.py` juga tersedia. Tes itu membaca `.env` secara langsung untuk memeriksa `WEB_NAME` dan mode permission file. Jalankan hanya pada konfigurasi lokal yang boleh dibaca oleh proses tes; jangan jalankan pada lingkungan yang mengharuskan `.env` tetap tidak diakses. Tes kontrak memeriksa sumber/berkas dan bukan pengujian end-to-end.
+`tests/test_homepage_contract.py` juga tersedia. Tes ini memeriksa konfigurasi brand dari `sys_property` dan memastikan `WEB_NAME` tidak lagi menjadi konfigurasi environment. Tes kontrak memeriksa sumber/berkas dan bukan pengujian end-to-end.
 
 Pada pemeriksaan terakhir, tes halaman publik lulus (11 tes) dan tes autentikasi admin lulus (9 tes). Tes kontrak dashboard admin masih memiliki kegagalan: sembilan subtes locale menemukan kunci `hr` di resource bahasa yang tidak tercantum dalam set kunci yang diharapkan oleh tes.
 
@@ -90,7 +90,6 @@ Compose membaca `.env` dari root repository untuk interpolasi, lalu meneruskan v
 | --- | --- |
 | `CI_ENV` | Memilih lingkungan runtime CI3; Compose menyediakan default pengembangan lokal. |
 | `CI_BASE_URL` | URL dasar aplikasi yang diteruskan ke container aplikasi. Gunakan URL lokal saat pengembangan dan URL yang sesuai pada deployment. |
-| `WEB_NAME` | Nama/brand yang ditampilkan aplikasi. |
 | `TIME_ZONE` | Zona waktu runtime PHP pada layanan `cms-app`; default Compose `utc`, dapat dioverride dengan identifier zona waktu PHP yang valid. |
 | `CMS_DB_HOST` | Host layanan database yang dipakai aplikasi. |
 | `CMS_DB_NAME` | Nama database aplikasi; digunakan oleh konfigurasi aplikasi dan layanan MySQL. |
@@ -111,4 +110,4 @@ Perubahan `TIME_ZONE` pada `.env` berlaku setelah container `cms-app` dibuat ula
 - **URL bersih tidak ter-route atau menghasilkan 404:** periksa bahwa Apache menjalankan `mod_rewrite` dan mengizinkan `.htaccess` (`AllowOverride All`). Keduanya diatur oleh `Dockerfile` untuk image proyek.
 - **Aset CSS tidak berubah atau tampak hilang:** jalankan `npm ci` lalu `npm run build:css`; periksa keberadaan hasil build `web/assets/css/tailwind.css` di dalam web root yang dipetakan Compose.
 - **Akses langsung ke direktori internal ditolak:** aturan `.htaccess` memang membatasi akses langsung ke `application` dan `system`; route sistem yang diperbolehkan dibatasi oleh aturan yang tersedia di `web/system/.htaccess`.
-- **Tes homepage menyentuh `.env`:** `test_homepage_contract.py` memang membaca nilai `WEB_NAME` dan mode permission. Jalankan tes tersebut hanya di lingkungan lokal yang sesuai; tes halaman dan admin di atas tidak menggunakan file itu.
+- **Brand aplikasi:** nama aplikasi dikelola dari **System → Property** dengan kode `web_name`. Nilai `WEB_NAME` di environment sudah tidak digunakan.

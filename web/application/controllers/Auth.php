@@ -65,8 +65,9 @@ class Auth extends CI_Controller
             $error = $labels['auth_invalid'];
         }
 
+        $this->load->library('property_store');
         $this->load->view('auth/login', array(
-            'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
+            'web_name' => $this->property_store->web_name('CMSNivo'),
             'labels' => $labels,
             'error_message' => $error,
             'locale' => $locale,

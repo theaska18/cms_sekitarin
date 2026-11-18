@@ -8,6 +8,8 @@ class Property_store
     private $columns = array();
     private $schema_checked = FALSE;
     private $schema_valid = FALSE;
+    private $web_name_loaded = FALSE;
+    private $web_name_value = '';
 
     public function __construct($db = NULL)
     {
@@ -136,6 +138,22 @@ class Property_store
             return TRUE;
         }
         return strtoupper(trim((string) $setting['value'])) !== 'N';
+    }
+
+    /** Brand name managed from System -> Property (web_name). */
+    public function web_name($default = 'CMSNivo')
+    {
+        if ($this->web_name_loaded) {
+            return $this->web_name_value;
+        }
+        $this->web_name_loaded = TRUE;
+        $setting = $this->find('web_name');
+        $value = is_array($setting) && isset($setting['value']) ? trim((string) $setting['value']) : '';
+        if ($value === '') {
+            $value = is_string($default) && trim($default) !== '' ? trim($default) : 'CMSNivo';
+        }
+        $this->web_name_value = $value;
+        return $this->web_name_value;
     }
 
     public function insert($data)

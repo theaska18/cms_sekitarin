@@ -37,7 +37,7 @@ $flow_org_endpoint = isset($approval_flow_organization_search_url) ? $approval_f
         <input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">
         <input type="hidden" name="flow_code" value="<?= html_escape($flow_code) ?>">
         <div class="space-y-6">
-            <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+            <div class="approval-flow-info-panel rounded-xl border border-slate-200 p-4">
                 <dl class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <dt class="text-xs font-bold uppercase tracking-wide text-slate-500">Kode alur</dt>

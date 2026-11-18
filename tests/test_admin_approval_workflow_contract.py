@@ -209,6 +209,14 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("'active_flag'", migration)
         self.assertIn("'created_by'", migration)
 
+    def test_approval_flow_info_panel_uses_dark_mode_background(self):
+        form = (APP / "views/admin/approval_flow/add.php").read_text()
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn("approval-flow-info-panel", form)
+        self.assertNotIn("bg-slate-50/60", form)
+        self.assertIn(".approval-flow-info-panel", css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell .approval-flow-info-panel', css)
+
     def test_routes_remain_generic_without_workflow_specific_routes(self):
         routes = (APP / "config/routes.php").read_text()
         for literal in ("admin/hr/hierarchy", "admin/hr/approvalFlow", "admin/system/approval"):

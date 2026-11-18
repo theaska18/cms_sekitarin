@@ -30,7 +30,7 @@ $step_label = function ($key, $fallback) use ($step_editor_labels) {
                 ? (isset($step['org_code']) && $step['org_code'] !== '' ? $step['org_code'] . ' — ' : '') . $step['org_name']
                 : '';
             ?>
-            <li data-approval-step class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+            <li data-approval-step class="approval-flow-step-card rounded-xl border border-slate-200 p-4">
                 <div class="mb-3 flex items-center justify-between gap-3">
                     <h3 data-step-title class="font-semibold text-slate-800"><?= html_escape($step_label('step_title', 'Step')) ?> <?= (int) $index + 1 ?></h3>
                     <button type="button" data-remove-approval-step class="rounded-lg px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500" <?= $step_editor_disabled ? 'disabled' : '' ?>><?= html_escape($step_label('remove_step', 'Remove step')) ?></button>
@@ -81,7 +81,7 @@ $step_label = function ($key, $fallback) use ($step_editor_labels) {
     </div>
 </section>
 <template id="approval-step-template">
-    <li data-approval-step class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+    <li data-approval-step class="approval-flow-step-card rounded-xl border border-slate-200 p-4">
         <div class="mb-3 flex items-center justify-between gap-3">
             <h3 data-step-title class="font-semibold text-slate-800"><?= html_escape($step_label('step_title', 'Step')) ?></h3>
             <button type="button" data-remove-approval-step class="rounded-lg px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"><?= html_escape($step_label('remove_step', 'Remove step')) ?></button>

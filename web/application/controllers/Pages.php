@@ -9,7 +9,8 @@ class Pages extends CI_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->web_name = getenv('WEB_NAME') ?: 'CMS';
+        $this->load->library('property_store');
+        $this->web_name = $this->property_store->web_name('CMSNivo');
         $this->load->library('admin_identity');
         $this->admin_user = $this->admin_identity->current_user();
     }

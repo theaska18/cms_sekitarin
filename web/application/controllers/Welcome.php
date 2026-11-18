@@ -13,7 +13,7 @@ class Welcome extends CI_Controller
         $admin_user = $this->admin_identity->current_user();
 
         $this->load->view('welcome_message', array(
-            'web_name' => getenv('WEB_NAME') ?: 'CMS',
+            'web_name' => $this->property_store->web_name('CMSNivo'),
             'admin_user' => $admin_user,
         ));
     }

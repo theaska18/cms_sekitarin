@@ -112,6 +112,15 @@ class ApprovalFlowTemplateContractTests(unittest.TestCase):
         self.assertIn("method=\"post\"", form)
         self.assertIn("$csrf_token_name", form)
 
+    def test_step_editor_panels_use_dark_mode_backgrounds(self):
+        editor = STEP_EDITOR.read_text()
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn("approval-flow-step-card", editor)
+        self.assertNotIn("bg-slate-50/60", editor)
+        self.assertIn(".approval-flow-step-card", css)
+        self.assertIn('html[data-theme="dark"] #admin-app-shell .approval-flow-step-card', css)
+        self.assertIn("background-color: #1e293b !important;", css)
+
     def test_step_editor_matches_approval_flow_approver_modes(self):
         editor = STEP_EDITOR.read_text()
         for marker in (

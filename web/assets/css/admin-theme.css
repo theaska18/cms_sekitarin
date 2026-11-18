@@ -447,6 +447,18 @@ html[data-theme="dark"] #admin-app-shell #my-approval-history-table_wrapper div.
     border-color: #334155 !important;
 }
 
+/* Approval flow panels must stay readable in dark mode. */
+.approval-flow-info-panel,
+.approval-flow-step-card {
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+}
+html[data-theme="dark"] #admin-app-shell .approval-flow-info-panel,
+html[data-theme="dark"] #admin-app-shell .approval-flow-step-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
 /* Match the Property list control spacing and dark palette for Approval Flow Template. */
 #approval-flow-template-table_wrapper div.dt-layout-row:not(.dt-layout-table) {
     box-sizing: border-box;

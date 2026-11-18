@@ -13,7 +13,6 @@ services:
     environment:
       CI_ENV: ${CI_ENV:-development}
       CI_BASE_URL: ${CI_BASE_URL:-http://localhost:8086/}
-      WEB_NAME: ${WEB_NAME:-CMS}
       CMS_DB_HOST: ${CMS_DB_HOST:-cms-db}
       CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb}
       CMS_DB_USER: ${CMS_DB_USER:-cmsuser}

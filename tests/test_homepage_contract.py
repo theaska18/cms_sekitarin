@@ -9,15 +9,15 @@ COMPOSE = ROOT / "docker-compose.yml"
 
 
 class HomepageContractTests(unittest.TestCase):
-    def test_brand_is_private_env_setting(self):
-        env_file = ROOT / ".env"
-        entries = [
-            line.split("=", 1)[1]
-            for line in env_file.read_text().splitlines()
-            if line.startswith("WEB_NAME=")
-        ]
-        self.assertEqual(entries, ["CMSNivo"])
-        self.assertEqual(env_file.stat().st_mode & 0o777, 0o600)
+    def test_brand_is_managed_from_sys_property(self):
+        store = (ROOT / "web/application/libraries/Property_store.php").read_text()
+        self.assertIn("public function web_name(", store)
+        self.assertIn("find('web_name')", store)
+        for controller in ("Admin.php", "Auth.php", "Welcome.php", "Pages.php"):
+            with self.subTest(controller=controller):
+                source = (ROOT / "web/application/controllers" / controller).read_text()
+                self.assertIn("property_store->web_name('CMSNivo')", source)
+                self.assertNotIn("getenv('WEB_NAME')", source)
 
     def test_tailwind_stylesheet_is_built_locally(self):
         view = VIEW.read_text()
@@ -29,9 +29,11 @@ class HomepageContractTests(unittest.TestCase):
         self.assertIn("@media", css)
         self.assertIn(".md\\:", css)
 
-    def test_compose_passes_application_brand_from_env(self):
+    def test_web_name_is_not_environment_configuration(self):
         compose = COMPOSE.read_text()
-        self.assertRegex(compose, r"(?m)^\s+WEB_NAME:\s*\$\{WEB_NAME:")
+        self.assertNotIn("WEB_NAME", compose)
+        example = (ROOT / ".env.example").read_text()
+        self.assertNotIn("WEB_NAME=", example)
 
     def test_assets_are_inside_web_root_without_separate_compose_mount(self):
         compose = COMPOSE.read_text()
@@ -48,9 +50,9 @@ class HomepageContractTests(unittest.TestCase):
         for section in ("home", "features", "about", "contact", "workflow"):
             self.assertIn(section, sections)
 
-    def test_brand_is_read_from_container_environment(self):
-        controller = (ROOT / "web/application/controllers/Welcome.php").read_text()
-        self.assertIn("getenv('WEB_NAME')", controller)
+    def test_brand_is_rendered_from_property_value(self):
+        welcome = (ROOT / "web/application/controllers/Welcome.php").read_text()
+        self.assertIn("property_store->web_name('CMSNivo')", welcome)
         self.assertIn("html_escape($web_name)", VIEW.read_text())
 
 

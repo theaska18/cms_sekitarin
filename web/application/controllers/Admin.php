@@ -705,8 +705,9 @@ class Admin extends CI_Controller
             }
         }
         $this->record_admin_menu_visit($current_path);
+        $this->load->library('property_store');
         $data = array(
-            'web_name' => getenv('WEB_NAME') ?: 'CMSNivo',
+            'web_name' => $this->property_store->web_name('CMSNivo'),
             'page_title' => $labels[$title_key],
             'current_path' => $current_path,
             'page_slug' => isset($extra_data['page_slug']) ? $extra_data['page_slug'] : '',
