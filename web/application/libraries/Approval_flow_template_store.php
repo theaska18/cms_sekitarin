@@ -426,7 +426,7 @@ class Approval_flow_template_store
             }
             $normalized[] = array(
                 'approver_type' => $type,
-                'approver_user_id' => $user_id,
+                'approver_user_id' => $user_id > 0 ? $user_id : NULL,
                 'approver_employee_id' => $employee_id === '' ? NULL : (int) $employee_id,
                 'org_id' => $org_id === '' ? NULL : (int) $org_id,
             );
