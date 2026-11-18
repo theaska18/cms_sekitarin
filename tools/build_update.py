@@ -303,6 +303,14 @@ def build(args: argparse.Namespace) -> int:
 
     version = args.version
     parse_versions(version)
+    if args.commit_and_tag:
+        if args.allow_dirty:
+            fail("--commit-and-tag tidak boleh dipakai bersama --allow-dirty")
+        if args.no_write_version:
+            fail("--commit-and-tag memerlukan penulisan version.php")
+        tag_name = f"v{version}"
+        if run_git(root, "rev-parse", "--verify", f"refs/tags/{tag_name}", check=False).returncode == 0:
+            fail(f"tag {tag_name} sudah ada")
 
     from_ref = args.from_ref
     if not from_ref:
@@ -521,6 +529,7 @@ def build(args: argparse.Namespace) -> int:
         write_json(publish_dir / "latest.json", latest)
         print(f"Published: {publish_dir}")
 
+    version_written = False
     if not args.no_write_version:
         version_path = root / "web/application/config/version.php"
         version_path.parent.mkdir(parents=True, exist_ok=True)
@@ -528,13 +537,34 @@ def build(args: argparse.Namespace) -> int:
             # Write directly: the config directory may be owned by the web
             # server, while version.php itself is owned by the build user.
             version_path.write_bytes(version_file_contents(version, args.channel))
-            print(f"Version : {version_path} -> {version} (commit dan tag setelah ini)")
+            version_written = True
+            print(f"Version : {version_path} -> {version}")
         except OSError as error:
             warn(
                 "version.php tidak dapat ditulis di working tree "
                 f"({error}); paket dan katalog sudah benar, perbarui file ini "
                 "secara manual sebelum commit dan tag"
             )
+
+    if args.commit_and_tag:
+        if not version_written:
+            fail("version.php tidak dapat ditulis; commit dan tag dibatalkan")
+        candidate_paths = [
+            "web/application/config/version.php",
+            "web/updates/latest.json",
+            f"web/updates/releases/{version}",
+        ]
+        paths = [path for path in candidate_paths if (root / path).exists()]
+        added = run_git(root, "add", "--", *paths, check=False)
+        if added.returncode != 0:
+            fail(f"git add gagal: {(added.stderr or added.stdout).strip()}")
+        committed = run_git(root, "commit", "-m", f"Release {version}", check=False)
+        if committed.returncode != 0:
+            fail(f"git commit gagal: {(committed.stderr or committed.stdout).strip()}")
+        tagged = run_git(root, "tag", "-a", f"v{version}", "-m", f"CMSNivo {version}", check=False)
+        if tagged.returncode != 0:
+            fail(f"git tag gagal: {(tagged.stderr or tagged.stdout).strip()}")
+        print(f"Git     : commit Release {version}, tag v{version}")
 
     return 0
 
@@ -564,6 +594,7 @@ def main() -> int:
     parser.add_argument("--force", action="store_true", help="timpa katalog versi yang sudah ada")
     parser.add_argument("--dry-run", action="store_true", help="validasi tanpa menulis output")
     parser.add_argument("--no-write-version", action="store_true", help="jangan tulis version.php di working tree")
+    parser.add_argument("--commit-and-tag", action="store_true", help="commit file rilis dan buat tag v<version>")
     parser.add_argument("--php-bin", help="path binary PHP untuk lint")
     parser.add_argument("--skip-php-lint", action="store_true", help="lewati pemeriksaan php -l")
     args = parser.parse_args()

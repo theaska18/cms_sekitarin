@@ -157,6 +157,18 @@ class BuildUpdateGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(0, accepted.returncode, accepted.stderr + accepted.stdout)
 
+    def test_commit_and_tag_commits_release_and_creates_tag(self):
+        self.write("web/application/base.txt", "tagged release\n")
+        self.commit("release change")
+        result = self.build(
+            "--version", "1.0.1", "--from", "v1.0.0", "--commit-and-tag",
+        )
+        self.assertEqual(0, result.returncode, result.stderr + result.stdout)
+        self.assertEqual("v1.0.1", self.git("tag", "--list", "v1.0.1").stdout.strip())
+        self.assertIn("Release 1.0.1", self.git("log", "-1", "--pretty=%s").stdout)
+        tagged_version = self.git("show", "v1.0.1:web/application/config/version.php").stdout
+        self.assertIn("$config['app_version'] = '1.0.1';", tagged_version)
+
     def test_publish_writes_catalog_and_refuses_duplicate_version(self):
         self.write("web/application/base.txt", "published\n")
         self.commit("publish change")

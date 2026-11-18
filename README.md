@@ -179,7 +179,8 @@ python3 tools/build_update.py \
   --version 1.0.1 \
   --from v1.0.0 \
   --changelog "Perbaikan halaman properti." \
-  --publish web/updates
+  --publish web/updates \
+  --commit-and-tag
 ```
 
 Generator memilih file berubah di `web/`, mendeteksi migration SQL baru di
@@ -188,8 +189,10 @@ diubah, lalu menghasilkan ZIP + `manifest.json` + `latest.json`. Setelah build
 sukses, generator juga menulis versi baru ke `version.php`; commit dan tag
 perubahan tersebut sebelum membuat rilis berikutnya. Gunakan
 `--allow-destructive` hanya untuk migration yang memang menghapus data/tabel.
-Migration dengan nama dan checksum yang sama tidak dijalankan ulang oleh
-client.
+Opsi `--commit-and-tag` membuat commit rilis (`Release <versi>`) dan tag
+beranotasi `v<versi>` setelah publish berhasil. Opsi ini memerlukan working tree
+bersih dan tidak melakukan push ke remote. Migration dengan nama dan checksum
+yang sama tidak dijalankan ulang oleh client.
 
 ## Variabel lingkungan (`.env`)
 

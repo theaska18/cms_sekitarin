@@ -13,7 +13,8 @@ python3 tools/build_update.py \
   --version 1.0.1 \
   --from v1.0.0 \
   --changelog "Perbaikan halaman properti." \
-  --publish web/updates
+  --publish web/updates \
+  --commit-and-tag
 ```
 
 Run from the repository root. The generator:
@@ -26,7 +27,8 @@ Run from the repository root. The generator:
 - generates `version.php` with the new version;
 - writes the new version to `web/application/config/version.php` after a successful build;
 - writes `manifest.json`, `latest.json`, and `cms-<version>.zip`;
-- can publish the ZIP and catalog atomically with `--publish`.
+- can publish the ZIP and catalog atomically with `--publish`;
+- with `--commit-and-tag`, commits `version.php`, `latest.json`, and release metadata, then creates annotated tag `v<version>`. It requires a clean working tree and does not push to a remote.
 
 Output is written to `dist/releases/<version>/` by default. Use
 `--no-write-version` in CI when the build machine should not modify the source
