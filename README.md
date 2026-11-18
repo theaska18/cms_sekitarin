@@ -186,13 +186,53 @@ python3 tools/build_update.py \
 Generator memilih file berubah di `web/`, mendeteksi migration SQL baru di
 `database/migrations/`, menolak file terlarang dan migration yang sudah
 diubah, lalu menghasilkan ZIP + `manifest.json` + `latest.json`. Setelah build
-sukses, generator juga menulis versi baru ke `version.php`; commit dan tag
-perubahan tersebut sebelum membuat rilis berikutnya. Gunakan
-`--allow-destructive` hanya untuk migration yang memang menghapus data/tabel.
-Opsi `--commit-and-tag` membuat commit rilis (`Release <versi>`) dan tag
-beranotasi `v<versi>` setelah publish berhasil. Opsi ini memerlukan working tree
-bersih dan tidak melakukan push ke remote. Migration dengan nama dan checksum
-yang sama tidak dijalankan ulang oleh client.
+sukses, generator juga menulis versi baru ke `version.php`.
+
+### Opsi `--commit-and-tag`
+
+Tambahkan opsi ini pada perintah generator:
+
+```bash
+python3 tools/build_update.py \
+  --version 1.0.4 \
+  --from v1.0.3 \
+  --changelog "Optimalisasi." \
+  --publish web/updates \
+  --commit-and-tag
+```
+
+Setelah publish berhasil, generator akan:
+
+1. menambahkan `web/application/config/version.php`;
+2. menambahkan `web/updates/latest.json`;
+3. menambahkan metadata `web/updates/releases/<versi>/`;
+4. membuat commit dengan pesan:
+   ```text
+   Release <versi>
+   ```
+5. membuat tag beranotasi:
+   ```text
+   v<versi>
+   ```
+
+Syarat:
+
+- working tree harus bersih;
+- tag `v<versi>` belum ada;
+- tidak boleh digabung dengan `--allow-dirty` atau `--no-write-version`.
+
+Generator **tidak** melakukan push. Setelah selesai, push manual jika perlu:
+
+```bash
+git push
+git push origin v1.0.4
+```
+
+Tanpa `--commit-and-tag`, lakukan commit dan tag manual setelah build.
+
+Gunakan `--allow-destructive` hanya untuk migration yang memang menghapus
+data/tabel. Migration dengan nama dan checksum yang sama tidak dijalankan ulang
+oleh client.
 
 ## Variabel lingkungan (`.env`)
 

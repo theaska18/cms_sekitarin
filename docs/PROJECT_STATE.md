@@ -73,11 +73,15 @@ python3 tools/build_update.py \
   --version 1.0.1 \
   --from v1.0.0 \
   --changelog "Deskripsi rilis." \
-  --publish web/updates
+  --publish web/updates \
+  --commit-and-tag
 ```
 
-Setelah build sukses, generator juga menulis `version.php`. Commit dan tag
-perubahan tersebut sebelum membuat rilis berikutnya.
+Setelah build sukses, generator juga menulis `version.php`. Dengan
+`--commit-and-tag`, generator membuat commit `Release <versi>` dan tag
+beranotasi `v<versi>`. Opsi ini memerlukan working tree bersih, tidak boleh
+dipakai bersama `--allow-dirty` atau `--no-write-version`, dan tidak melakukan
+push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 
 ## Status tes
 
