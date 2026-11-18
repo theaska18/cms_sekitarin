@@ -4,6 +4,17 @@ CMSNivo adalah aplikasi web berbasis CodeIgniter 3 (CI3), dengan halaman publik 
 
 > **Status fitur:** halaman publik tersedia di `/`, `/features`, `/about`, dan `/contact`. Fitur login `/login` dan guard sesi admin tersedia; aplikasi tidak membuat akun bawaan. Kredensial admin tidak disertakan atau diteruskan oleh Compose bawaan. Beberapa modul admin memiliki operasi CRUD yang bergantung pada backend/database, sedangkan bagian lain masih berupa placeholder. Fitur ini belum siap sebagai autentikasi admin produksi.
 
+## Dokumentasi
+
+| Dokumen | Isi |
+| --- | --- |
+| [README.md](README.md) | Panduan utama: arsitektur, menjalankan lokal, deployment, backup, environment, dan update aplikasi. |
+| [AGENTS.md](AGENTS.md) | Panduan kerja pengembang/agent: struktur proyek, konvensi kode, build, dan verifikasi. |
+| [web/README.md](web/README.md) | Catatan singkat scaffold CodeIgniter di web root. |
+| [web/readme.rst](web/readme.rst) | Dokumentasi upstream CodeIgniter 3 yang disertakan di folder `web/`. |
+| [web/updates/README.md](web/updates/README.md) | Format katalog update, generator rilis, aturan migration SQL, dan layout paket ZIP. |
+| [database/README.md](database/README.md) | Baseline schema database dan aturan migration SQL untuk rilis. |
+
 ## Arsitektur singkat
 
 - **Aplikasi dan web root:** kode CI3 ada di `web/`; Docker memetakan direktori ini ke `/var/www/html`, yaitu document root Apache di dalam container.
@@ -150,11 +161,13 @@ yang disimpan di property `link_update` (default
 - User PHP harus dapat menulis ke web root dan `application/config`, serta
   binary `mysqldump`/`mysql` harus tersedia. Di Compose, entrypoint menyiapkan
   izin tulis direktori web.
-- Format paket dan katalog dijelaskan di `web/updates/README.md`.
+- Schema dasar ada di [`database/schema.sql`](database/schema.sql); migration CI3 lama sudah dihapus. Perubahan database baru memakai `database/migrations/*.sql`.
+- Format paket dan katalog dijelaskan di [`web/updates/README.md`](web/updates/README.md).
 
 ### Membuat rilis update
 
-Rilis dibangun dari perubahan Git, bukan dari daftar file manual:
+Rilis dibangun dari perubahan Git, bukan dari daftar file manual. Generator ada di
+[`tools/build_update.py`](tools/build_update.py):
 
 ```bash
 # Tag baseline rilis sebelumnya, misalnya v1.0.0.

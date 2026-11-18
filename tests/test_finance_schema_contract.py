@@ -4,9 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
-FOUNDATION = APP / "migrations/20261116000200_create_finance_foundation.php"
-UNIQUES = APP / "migrations/20261116000300_add_finance_unique_constraints.php"
-CLEANUP = APP / "migrations/20261116000400_remove_duplicate_finance_indexes.php"
+SCHEMA = ROOT / "database/schema.sql"
 MIGRATION_CONFIG = APP / "config/migration.php"
 FINANCE_CONTROLLER = APP / "controllers/Admin_finance.php"
 FINANCE_STORE = APP / "libraries/Finance_store.php"
@@ -14,29 +12,20 @@ FINANCE_ROUTES = APP / "config/routes.php"
 
 
 class FinanceSchemaContractTests(unittest.TestCase):
-    def test_finance_foundation_is_tenant_scoped_and_idempotent(self):
-        source = FOUNDATION.read_text()
-        tables = re.findall(r"^\s*'(fin_[a-z_]+)' => array\(", source, re.MULTILINE)
+    def test_finance_schema_is_tenant_scoped(self):
+        schema = SCHEMA.read_text()
+        tables = re.findall(r"CREATE TABLE `(fin_[a-z_]+)`", schema)
         self.assertEqual(26, len(tables))
         self.assertEqual(len(tables), len(set(tables)))
         self.assertTrue(all(name.startswith("fin_") for name in tables))
-        self.assertIn("create_if_missing", source)
-        self.assertIn("$this->db->table_exists($table)", source)
+        for table in tables:
+            block = schema.split("CREATE TABLE `" + table + "`", 1)[1].split("ENGINE=", 1)[0]
+            with self.subTest(table=table):
+                self.assertIn("`tenant_id`", block)
 
-        definitions = re.split(r"^\s*'fin_[a-z_]+' => array\(", source, flags=re.MULTILINE)[1:]
-        for definition in definitions:
-            with self.subTest(definition=definition[:80]):
-                self.assertIn("'tenant_id' =>", definition.split("'indexes' =>", 1)[0])
-
-    def test_finance_business_keys_are_unique_and_migrations_preserve_data_on_rollback(self):
-        unique_source = UNIQUES.read_text()
-        cleanup_source = CLEANUP.read_text()
-        self.assertIn("add_unique_if_missing", unique_source)
-        self.assertIn("information_schema.statistics", unique_source)
-        self.assertIn("DROP INDEX", cleanup_source)
-        self.assertIn("down()", FOUNDATION.read_text())
-        self.assertIn("Finance data", FOUNDATION.read_text())
-        self.assertNotIn("drop_table", FOUNDATION.read_text().lower())
+    def test_finance_schema_has_unique_constraints_and_legacy_migrations_are_disabled(self):
+        schema = SCHEMA.read_text()
+        self.assertIn("UNIQUE KEY", schema)
         self.assertIn("$config['migration_enabled'] = FALSE;", MIGRATION_CONFIG.read_text())
 
     def test_finance_export_and_import_access_codes_are_explicit(self):
@@ -161,7 +150,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn("$lang['finance_created_at']", content)
 
     def test_finance_document_payment_and_reconciliation_approval_support(self):
-        migration = (APP / "migrations/20261117000700_link_finance_documents_to_approval.php").read_text()
+        schema = SCHEMA.read_text()
         approval = (APP / "libraries/Approval_workflow_store.php").read_text()
         controller = FINANCE_CONTROLLER.read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()
@@ -170,7 +159,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         reconciliation = (APP / "libraries/Finance_reconciliation_store.php").read_text()
         for table in ("fin_sales_invoice", "fin_purchase_bill", "fin_customer_payment", "fin_supplier_payment", "fin_bank_reconciliation"):
             with self.subTest(table=table):
-                self.assertIn("'" + table + "'", migration)
+                self.assertIn("CREATE TABLE `" + table + "`", schema)
         for source in ("fin_sales_invoice", "fin_purchase_bill", "fin_customer_payment", "fin_supplier_payment", "fin_bank_reconciliation"):
             with self.subTest(source=source):
                 self.assertIn("'" + source + "' => array('table'", approval)
@@ -284,14 +273,15 @@ class FinanceSchemaContractTests(unittest.TestCase):
                 self.assertIn("$lang['finance_coa_tree_empty']", content)
 
     def test_group_accounts_are_excluded_from_posting_lookups(self):
-        migration = (APP / "migrations/20261117000800_add_account_posting_flag.php").read_text()
+        schema = SCHEMA.read_text()
+        account_schema = schema.split("CREATE TABLE `fin_account`", 1)[1].split("ENGINE=", 1)[0]
         journal = (APP / "libraries/Finance_journal_store.php").read_text()
         transaction = (APP / "libraries/Finance_transaction_store.php").read_text()
         document = (APP / "libraries/Finance_document_store.php").read_text()
         controller = FINANCE_CONTROLLER.read_text()
         view = (APP / "views/admin/finance/chart_of_accounts_index.php").read_text()
-        self.assertIn("posting_flag", migration)
-        self.assertIn("'posting_flag' => 0", migration)
+        self.assertIn("`posting_flag`", account_schema)
+        self.assertIn("DEFAULT '1'", account_schema)
         self.assertIn("->where('posting_flag', 1)", journal)
         self.assertIn("$this->db->where('posting_flag', 1);", transaction)
         self.assertIn("$this->db->where('posting_flag', 1);", document)

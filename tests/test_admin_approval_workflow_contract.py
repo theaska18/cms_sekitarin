@@ -137,19 +137,16 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("has_admin_menu_code('sys_approval')", decide)
         self.assertIn("$this->input->method(TRUE)!=='POST'", decide)
 
-    def test_migration_creates_all_workflow_tables_and_is_non_destructive_on_rollback(self):
-        migration = (APP / "migrations/20261112000200_create_hr_approval_workflow.php").read_text()
+    def test_schema_creates_all_workflow_tables(self):
+        schema = (ROOT / "database/schema.sql").read_text()
         for table in ("app_approval_flow", "app_approval_flow_step", "app_approval_request", "app_approval_action"):
-            self.assertIn("'" + table + "'", migration)
-        self.assertNotIn("hr_employee_hierarchy", migration)
-        self.assertIn("Retain approval history", migration)
-        self.assertNotRegex(migration, r"function down\(\).*?drop_table")
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", schema)
 
     def test_approval_submission_creates_temporary_approver_link_notification(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
         controller = (APP / "controllers/Admin_approval.php").read_text()
-        migration = (APP / "migrations/20261112000300_create_approval_link_tokens.php").read_text()
-        self.assertIn("app_approval_link_token", migration)
+        self.assertIn("CREATE TABLE `app_approval_link_token`", (ROOT / "database/schema.sql").read_text())
         self.assertIn("random_bytes(32)", store)
         self.assertIn("hash('sha256'", store)
         self.assertIn("expires_at", store)
@@ -173,7 +170,12 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         step_editor = (APP / "views/admin/approval_flow/_step_editor.php").read_text()
         controller = (APP / "controllers/Admin_approvalFlow.php").read_text()
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        migration = (APP / "migrations/20261117000200_refactor_app_approval_flow_to_template_overrides.php").read_text()
+        schema = (ROOT / "database/schema.sql").read_text()
+        flow = schema.split("CREATE TABLE `sys_approval_flow`", 1)[1].split("ENGINE=", 1)[0]
+        for column in ("flow_code", "flow_name", "active_flag", "created_by"):
+            with self.subTest(column=column):
+                self.assertIn("`" + column + "`", flow)
+        self.assertNotIn("`request_type`", flow)
         self.assertNotIn('/admin/hr/approvalFlow/add', listing)
         self.assertNotIn('/admin/hr/approvalFlow/delete', listing)
         self.assertNotIn('<dialog', listing)
@@ -203,11 +205,6 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("sys_approval_flow_menu", store)
         self.assertIn("public function effective_steps", store)
         self.assertIn("public function save_override", store)
-        self.assertIn("'flow_code'", migration)
-        self.assertIn("'flow_name'", migration)
-        self.assertIn("'request_type'", migration)
-        self.assertIn("'active_flag'", migration)
-        self.assertIn("'created_by'", migration)
 
     def test_approval_flow_info_panel_uses_dark_mode_background(self):
         form = (APP / "views/admin/approval_flow/add.php").read_text()
@@ -241,14 +238,13 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         controller = (APP / "controllers/Admin_approval.php").read_text()
         view = (APP / "views/admin/approval/errors.php").read_text()
         approval_view = (APP / "views/admin/approval/index.php").read_text()
-        migration = (APP / "migrations/20261116000100_add_dynamic_approval_routing.php").read_text()
+        self.assertIn("CREATE TABLE `app_approval_error`", (ROOT / "database/schema.sql").read_text())
         self.assertIn("public function approval_errors()", controller)
         self.assertIn("public function approval_error_data()", controller)
         self.assertIn("assign_approval_error", controller)
         self.assertIn("public function assign_approval_error", store)
         self.assertIn("needs_assignment", store)
         self.assertIn("insert_approval_error", store)
-        self.assertIn("'app_approval_error'", migration)
         self.assertIn("serverSide:true", view)
         self.assertIn("data-approval-error-form", view)
         self.assertIn("data-error-employee-search", view)
@@ -315,7 +311,9 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
         flow_form = (APP / "views/admin/approval_flow/_step_editor.php").read_text()
         request_form = (APP / "views/admin/approval/index.php").read_text()
-        migration = (APP / "migrations/20261116000100_add_dynamic_approval_routing.php").read_text()
+        schema = (ROOT / "database/schema.sql").read_text()
+        request = schema.split("CREATE TABLE `app_approval_request`", 1)[1].split("ENGINE=", 1)[0]
+        flow_step = schema.split("CREATE TABLE `sys_approval_flow_step`", 1)[1].split("ENGINE=", 1)[0]
         for step_type in ("superior", "organization", "employee"):
             self.assertIn("'" + step_type + "'", store)
             self.assertIn('value="' + step_type + '"', flow_form)
@@ -325,8 +323,8 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("if ((int)$previous_org_id>0)", store)
         self.assertIn("$this->hierarchy_org($parent_id)", store)
         self.assertIn("$step['approver_type']==='organization'", store)
-        self.assertIn("'request_type'", migration)
-        self.assertIn("'current_approver_user_id'", migration)
+        self.assertIn("`current_approver_user_id`", request)
+        self.assertIn("`approver_type`", flow_step)
 
     def test_requester_sees_own_approval_history_and_unapproved_step_checklist(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()

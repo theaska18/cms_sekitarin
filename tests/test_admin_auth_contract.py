@@ -100,16 +100,16 @@ class AdminAuthContractTests(unittest.TestCase):
         self.assertIn("image", identity)
         self.assertIn("profile_image", header)
 
-    def test_menu_visit_migration_creates_indexed_per_visit_analytics_table(self):
-        migration = (APP / "migrations" / "202611120001_create_app_menu_visit.php").read_text()
-        config = (APP / "config" / "migration.php").read_text()
-        self.assertIn("class Migration_202611120001_create_app_menu_visit", migration)
+    def test_menu_visit_schema_creates_indexed_per_visit_analytics_table(self):
+        schema = (ROOT / "database/schema.sql").read_text()
+        visit = schema.split("CREATE TABLE `app_menu_visit`", 1)[1].split("ENGINE=", 1)[0]
         for column in ("menu_visit_id", "tenant_id", "user_id", "menu_code", "visited_at"):
-            self.assertIn("'" + column + "'", migration)
-        self.assertIn("add_key(array('tenant_id', 'visited_at', 'menu_code'))", migration)
-        self.assertIn("add_key(array('tenant_id', 'user_id', 'visited_at'))", migration)
+            self.assertIn("`" + column + "`", visit)
+        self.assertIn("KEY `tenant_id_visited_at_menu_code` (`tenant_id`,`visited_at`,`menu_code`)", visit)
+        self.assertIn("KEY `tenant_id_user_id_visited_at` (`tenant_id`,`user_id`,`visited_at`)", visit)
+        config = (APP / "config" / "migration.php").read_text()
         self.assertIn("'migration_type'] = 'timestamp'", config)
-        self.assertIn("'migration_version'] = 202611120001", config)
+        self.assertIn("$config['migration_enabled'] = FALSE;", config)
 
     def test_chat_icon_visibility_uses_authenticated_users_chat_flag(self):
         header = (APP / "views" / "admin" / "header.php").read_text()

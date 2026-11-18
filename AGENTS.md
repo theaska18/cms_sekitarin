@@ -37,8 +37,10 @@ admin-contract locale expectation that omits `hr` resources.
 ## Project conventions
 
 - Application code is under `web/application/` (`controllers`, `models`,
-  `libraries`, `views`, `config`, `language`, `migrations`); public assets are in
-  `web/assets/`. Migrations use timestamp names and CI migration/dbforge APIs.
+  `libraries`, `views`, `config`, `language`); public assets are in
+  `web/assets/`. Legacy CI3 migrations are removed. The base schema is
+  `database/schema.sql`; release database changes use timestamped SQL files in
+  `database/migrations/` and are recorded in `sys_update_migration`.
 - Admin views live in `views/admin/<feature>/`; follow adjacent controller/store
   naming and PHP view patterns. Escape output with `html_escape`. Preserve
   tenant scoping and permission checks on every data path.

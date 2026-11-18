@@ -9,17 +9,16 @@ JOURNAL = APP / "libraries/Finance_journal_store.php"
 APPROVAL = APP / "libraries/Approval_workflow_store.php"
 FORM = APP / "views/admin/finance/journal_form.php"
 INDEX = APP / "views/admin/finance/journal_index.php"
-MIGRATION = APP / "migrations/20261117000500_link_opening_balances_to_approval.php"
+SCHEMA = ROOT / "database/schema.sql"
 LOCALES = ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish")
 
 
 class FinanceOpeningBalanceApprovalContractTests(unittest.TestCase):
-    def test_migration_links_journal_entries_and_registers_the_sequence(self):
-        migration = MIGRATION.read_text()
-        self.assertIn("fin_journal_entry", migration)
-        self.assertIn("approval_request_id", migration)
-        self.assertIn("journal_opening_balance", migration)
-        self.assertIn("OB-{Y}{M}{D}-{NNNNN}", migration)
+    def test_schema_links_journal_entries_to_approval_requests(self):
+        schema = SCHEMA.read_text()
+        journal = schema.split("CREATE TABLE `fin_journal_entry`", 1)[1].split("ENGINE=", 1)[0]
+        self.assertIn("`approval_request_id`", journal)
+        self.assertIn("idx_fin_journal_entry_approval", journal)
 
     def test_approval_store_finalizes_opening_balance_statuses(self):
         approval = APPROVAL.read_text()

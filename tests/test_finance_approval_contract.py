@@ -4,7 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
-MIGRATION = APP / "migrations/20261117000300_link_finance_transactions_to_approval.php"
+SCHEMA = ROOT / "database/schema.sql"
 FINANCE_STORE = APP / "libraries/Finance_transaction_store.php"
 SEQUENCE_STORE = APP / "libraries/Application_sequence_store.php"
 APPROVAL_STORE = APP / "libraries/Approval_workflow_store.php"
@@ -16,14 +16,16 @@ ROUTES = APP / "config/routes.php"
 
 
 class FinanceApprovalContractTests(unittest.TestCase):
-    def test_migration_links_finance_documents_to_approval_requests(self):
-        migration = MIGRATION.read_text()
-        for column in ("source_type", "source_id", "approval_request_id"):
+    def test_schema_links_finance_documents_to_approval_requests(self):
+        schema = SCHEMA.read_text()
+        request = schema.split("CREATE TABLE `app_approval_request`", 1)[1].split("ENGINE=", 1)[0]
+        transaction = schema.split("CREATE TABLE `fin_transaction`", 1)[1].split("ENGINE=", 1)[0]
+        for column in ("source_type", "source_id"):
             with self.subTest(column=column):
-                self.assertIn("'" + column + "'", migration)
-        self.assertIn("app_approval_request", migration)
-        self.assertIn("fin_transaction", migration)
-        self.assertIn("information_schema.STATISTICS", migration)
+                self.assertIn("`" + column + "`", request)
+        self.assertIn("`approval_request_id`", transaction)
+        self.assertIn("idx_fin_transaction_approval", transaction)
+        self.assertIn("app_approval_request", transaction)
 
     def test_income_and_expense_numbers_use_tenant_sequences(self):
         store = FINANCE_STORE.read_text()

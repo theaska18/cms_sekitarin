@@ -6,8 +6,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | Enable/Disable Migrations
 |--------------------------------------------------------------------------
 |
-| Migrations are disabled by default for security reasons. Enable this only
-| while deliberately running a schema migration, then disable it afterward.
+| Legacy CI3 migration files have been removed from web/application/migrations.
+| Release database changes use database/migrations/*.sql through the update
+| runner. Keep this disabled; do not run CI3 migrations against this app.
 |
 */
 $config['migration_enabled'] = FALSE;

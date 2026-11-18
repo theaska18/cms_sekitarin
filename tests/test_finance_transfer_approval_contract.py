@@ -4,7 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
-MIGRATION = APP / "migrations/20261117000400_link_cash_transfers_to_approval.php"
+SCHEMA = ROOT / "database/schema.sql"
 STORE = APP / "libraries/Finance_transfer_store.php"
 CONTROLLER = APP / "controllers/Admin_finance.php"
 APPROVAL_STORE = APP / "libraries/Approval_workflow_store.php"
@@ -12,11 +12,11 @@ VIEW = APP / "views/admin/finance/transfer_index.php"
 
 
 class FinanceTransferApprovalContractTests(unittest.TestCase):
-    def test_migration_links_cash_transfers_to_approval_requests(self):
-        migration = MIGRATION.read_text()
-        self.assertIn("'approval_request_id'", migration)
-        self.assertIn("fin_cash_transfer", migration)
-        self.assertIn("idx_fin_cash_transfer_approval", migration)
+    def test_schema_links_cash_transfers_to_approval_requests(self):
+        schema = SCHEMA.read_text()
+        transfer = schema.split("CREATE TABLE `fin_cash_transfer`", 1)[1].split("ENGINE=", 1)[0]
+        self.assertIn("`approval_request_id`", transfer)
+        self.assertIn("idx_fin_cash_transfer_approval", transfer)
 
     def test_transfer_approval_details_name_both_accounts_and_amounts(self):
         controller = CONTROLLER.read_text()

@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
-MIGRATION = APP / "migrations/20261117000100_create_sys_approval_flow.php"
+SCHEMA = ROOT / "database/schema.sql"
 STORE = APP / "libraries/Approval_flow_template_store.php"
 CONTROLLER = APP / "controllers/Admin_approval_flow_template.php"
 INDEX = APP / "views/admin/approval_flow_template/index.php"
@@ -40,20 +40,23 @@ LOCALE_KEYS = (
 
 
 class ApprovalFlowTemplateContractTests(unittest.TestCase):
-    def test_migration_creates_system_flow_tables_without_tenant_columns(self):
-        migration = MIGRATION.read_text()
+    def test_schema_creates_system_flow_tables_without_tenant_columns(self):
+        schema = SCHEMA.read_text()
         for table in ("sys_approval_flow", "sys_approval_flow_step", "sys_approval_flow_menu"):
             with self.subTest(table=table):
-                self.assertIn("'" + table + "'", migration)
+                self.assertIn("CREATE TABLE `" + table + "`", schema)
+                block = schema.split("CREATE TABLE `" + table + "`", 1)[1].split("ENGINE=", 1)[0]
+                for removed in ("`tenant_id`", "`request_type`"):
+                    self.assertNotIn(removed, block)
+        flow = schema.split("CREATE TABLE `sys_approval_flow`", 1)[1].split("ENGINE=", 1)[0]
         for column in ("flow_code", "flow_name", "description", "active_flag", "created_by", "create_on", "update_on"):
             with self.subTest(column=column):
-                self.assertIn("'" + column + "'", migration)
-        for removed in ("'tenant_id'", "'request_type'"):
-            self.assertNotIn(removed, migration)
-        self.assertIn("'flow_menu_id'", migration)
-        self.assertIn("'menu_code'", migration)
-        self.assertIn("add_foreign_key(", migration)
-        self.assertIn("ON DELETE CASCADE ON UPDATE CASCADE", migration)
+                self.assertIn("`" + column + "`", flow)
+        flow_menu = schema.split("CREATE TABLE `sys_approval_flow_menu`", 1)[1].split("ENGINE=", 1)[0]
+        self.assertIn("`flow_menu_id`", flow_menu)
+        self.assertIn("`menu_code`", flow_menu)
+        self.assertIn("FOREIGN KEY", flow_menu)
+        self.assertIn("ON DELETE CASCADE ON UPDATE CASCADE", flow_menu)
 
     def test_store_is_schema_checked_and_transactional(self):
         store = STORE.read_text()

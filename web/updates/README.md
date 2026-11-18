@@ -1,5 +1,8 @@
 # Update catalog
 
+Panduan utama proyek ada di [`README.md`](../../README.md). Generator rilis ada
+di [`tools/build_update.py`](../../tools/build_update.py).
+
 `latest.json` is read by `GET /api/update/check`. Packages are built with
 `tools/build_update.py` from Git changes and publish directly into this folder.
 
@@ -31,6 +34,10 @@ tree; locally, the generator updates `version.php` so it can be committed and
 tagged for the next baseline.
 
 ## Database changes
+
+Legacy CI3 migration files in `web/application/migrations/` have been removed.
+The only database change path for releases is SQL under `database/migrations/`.
+The base schema snapshot lives in [`database/schema.sql`](../../database/schema.sql).
 
 Use SQL files:
 

@@ -16,22 +16,22 @@ class UpdateContractTests(unittest.TestCase):
         self.assertIn("$config['app_version'] = '1.0.0';", version)
         self.assertIn("app_update_channel", version)
 
-    def test_update_migrations_create_history_and_link_property(self):
-        migration = (APP / "migrations/20261118000500_create_sys_update.php").read_text()
-        property_migration = (APP / "migrations/20261118000600_add_link_update_property.php").read_text()
-        grant = (APP / "migrations/20261118000700_grant_sys_update_access.php").read_text()
+    def test_update_schema_and_link_property_contract(self):
+        schema = (ROOT / "database/schema.sql").read_text()
+        for table in ("sys_update", "sys_update_migration"):
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", schema)
         for marker in (
-            "sys_update", "sys_update_migration", "update_id", "version",
-            "previous_version", "status", "package_url", "checksum",
-            "changelog", "log", "started_on", "finished_on", "created_by",
-            "migration_name", "applied_on", "ON DELETE CASCADE",
+            "update_id", "version", "previous_version", "status", "package_url",
+            "checksum", "changelog", "log", "started_on", "finished_on",
+            "created_by", "migration_name", "applied_on",
         ):
-            self.assertIn(marker, migration)
-        self.assertIn("link_update", property_migration)
-        self.assertIn("https://cms.ckamal.com/api/update/check", property_migration)
-        self.assertIn("sys_update_run", grant)
-        self.assertIn("sys_tenant_menu", grant)
-        self.assertIn("app_role_menu", grant)
+            self.assertIn("`" + marker + "`", schema)
+        self.assertIn("ON DELETE CASCADE", schema.split("CREATE TABLE `sys_update_migration`", 1)[1])
+        store = (APP / "libraries/Update_store.php").read_text()
+        self.assertIn("link_update", store)
+        self.assertIn("https://cms.ckamal.com/api/update/check", store)
+        self.assertIn("sys_update_run", (APP / "views/admin/menu_manifest/system.xml").read_text())
 
     def test_update_menu_is_in_system_manifest(self):
         root = ET.fromstring(MANIFEST.read_text().lstrip())
@@ -105,6 +105,14 @@ class UpdateContractTests(unittest.TestCase):
         self.assertIn("Retry-After: 120", index)
         self.assertIn("503 Service Unavailable", index)
         self.assertIn("/admin/system/update", index)
+
+    def test_database_baseline_replaces_legacy_migrations(self):
+        schema = (ROOT / "database/schema.sql").read_text()
+        self.assertIn("CREATE TABLE `sys_update`", schema)
+        self.assertIn("CREATE TABLE `sys_update_migration`", schema)
+        self.assertNotIn("INSERT INTO", schema)
+        self.assertFalse((APP / "migrations").exists())
+        self.assertTrue((ROOT / "database/migrations").is_dir())
 
     def test_release_generator_uses_git_and_immutable_sql_migrations(self):
         generator = (ROOT / "tools/build_update.py").read_text()
