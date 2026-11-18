@@ -136,12 +136,13 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("->where('status !=', 'cancelled')", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
 
-    def test_sales_invoice_list_shows_integration_number(self):
+    def test_invoice_and_bill_lists_show_integration_number(self):
         index_view = DOCUMENT_INDEX.read_text()
         self.assertIn("finance_column_integration_number", index_view)
         self.assertIn("integration_number", index_view)
         controller = ADMIN_CONTROLLER.read_text()
         self.assertIn("2 => 'integration_number'", controller)
+        self.assertIn("$columns = array(1 => $number_column, 2 => 'integration_number'", controller)
         document_store = DOCUMENT_STORE.read_text()
         self.assertIn("d.integration_number", document_store)
         self.assertIn("or_like('d.integration_number'", document_store)
