@@ -11,6 +11,22 @@ $result = isset($update_result) && is_array($update_result) ? $update_result : N
 $active = isset($update_active) && is_array($update_active) ? $update_active : NULL;
 $history = isset($update_history) && is_array($update_history) ? $update_history : array();
 $history_migrations = isset($update_history_migrations) && is_array($update_history_migrations) ? $update_history_migrations : array();
+$history_total = isset($update_history_total) ? (int) $update_history_total : count($history);
+$history_page = isset($update_history_page) ? (int) $update_history_page : 1;
+$history_pages = isset($update_history_pages) ? (int) $update_history_pages : 1;
+$history_page_link = function ($target) {
+    return '/admin/system/update?' . http_build_query(array('history_page' => (int) $target));
+};
+$history_page_icon = function ($name) {
+    $paths = array(
+        'first' => '<path stroke-linecap="round" stroke-linejoin="round" d="m11 5-5 5 5 5M16 5l-5 5 5 5"/>',
+        'previous' => '<path stroke-linecap="round" stroke-linejoin="round" d="m12.5 5-5 5 5 5"/>',
+        'next' => '<path stroke-linecap="round" stroke-linejoin="round" d="m7.5 5 5 5-5 5"/>',
+        'last' => '<path stroke-linecap="round" stroke-linejoin="round" d="m9 5 5 5-5 5M4 5l5 5-5 5"/>',
+    );
+    $path = isset($paths[$name]) ? $paths[$name] : $paths['next'];
+    return '<svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false">' . $path . '</svg>';
+};
 $checks = isset($update_checks) && is_array($update_checks) ? $update_checks : array();
 $runner_ready = !empty($checks['writable']) && !empty($checks['archive']) && !empty($checks['exec']) && !empty($checks['mysql_client']);
 $schema_available = !empty($update_schema_available);
@@ -290,5 +306,48 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                 </tbody>
             </table>
         </div>
+        <?php if ($history_total > 0): ?>
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-sm text-slate-500"><?= (int) $history_page ?> / <?= (int) $history_pages ?></span>
+                <div class="flex flex-wrap items-center gap-1">
+                    <?php if ($history_page > 1): ?>
+                        <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?= html_escape($history_page_link(1)) ?>" aria-label="<?= html_escape($labels['update_history_first']) ?>" title="<?= html_escape($labels['update_history_first']) ?>"><?= $history_page_icon('first') ?></a>
+                        <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?= html_escape($history_page_link($history_page - 1)) ?>" aria-label="<?= html_escape($labels['update_history_previous']) ?>" title="<?= html_escape($labels['update_history_previous']) ?>"><?= $history_page_icon('previous') ?></a>
+                    <?php else: ?>
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?= html_escape($labels['update_history_first']) ?>"><?= $history_page_icon('first') ?></span>
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?= html_escape($labels['update_history_previous']) ?>"><?= $history_page_icon('previous') ?></span>
+                    <?php endif; ?>
+                    <?php
+                    $history_page_start = max(1, $history_page - 2);
+                    $history_page_end = min($history_pages, $history_page + 2);
+                    if ($history_page_start > 1) {
+                        echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($history_page_link(1)) . '">1</a>';
+                        if ($history_page_start > 2) {
+                            echo '<span class="px-1 text-sm text-slate-400">…</span>';
+                        }
+                    }
+                    for ($history_page_number = $history_page_start; $history_page_number <= $history_page_end; $history_page_number++) {
+                        $history_page_class = $history_page_number === $history_page
+                            ? 'bg-indigo-600 text-white'
+                            : 'border border-slate-300 text-slate-700 hover:bg-slate-50';
+                        echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-sm font-semibold ' . $history_page_class . '" href="' . html_escape($history_page_link($history_page_number)) . '"' . ($history_page_number === $history_page ? ' aria-current="page"' : '') . '>' . (int) $history_page_number . '</a>';
+                    }
+                    if ($history_page_end < $history_pages) {
+                        if ($history_page_end < $history_pages - 1) {
+                            echo '<span class="px-1 text-sm text-slate-400">…</span>';
+                        }
+                        echo '<a class="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-slate-300 px-2 text-sm font-medium text-slate-700 hover:bg-slate-50" href="' . html_escape($history_page_link($history_pages)) . '">' . (int) $history_pages . '</a>';
+                    }
+                    ?>
+                    <?php if ($history_page < $history_pages): ?>
+                        <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?= html_escape($history_page_link($history_page + 1)) ?>" aria-label="<?= html_escape($labels['update_history_next']) ?>" title="<?= html_escape($labels['update_history_next']) ?>"><?= $history_page_icon('next') ?></a>
+                        <a class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50" href="<?= html_escape($history_page_link($history_pages)) ?>" aria-label="<?= html_escape($labels['update_history_last']) ?>" title="<?= html_escape($labels['update_history_last']) ?>"><?= $history_page_icon('last') ?></a>
+                    <?php else: ?>
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?= html_escape($labels['update_history_next']) ?>"><?= $history_page_icon('next') ?></span>
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400" aria-disabled="true" aria-label="<?= html_escape($labels['update_history_last']) ?>"><?= $history_page_icon('last') ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </section>
 </main>

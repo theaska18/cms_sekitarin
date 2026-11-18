@@ -69,3 +69,7 @@ $lang['update_setup_schema'] = 'Buat tabel update';
 $lang['update_setup_schema_hint'] = 'Tabel update belum ada. Buat sekarang; data yang sudah ada tidak diubah.';
 $lang['update_notice_schema_ready'] = 'Tabel update sudah siap.';
 $lang['update_notice_schema_failed'] = 'Tabel update tidak dapat dibuat. Periksa izin database dan log server.';
+$lang['update_history_first'] = 'Halaman pertama';
+$lang['update_history_previous'] = 'Halaman sebelumnya';
+$lang['update_history_next'] = 'Halaman berikutnya';
+$lang['update_history_last'] = 'Halaman terakhir';

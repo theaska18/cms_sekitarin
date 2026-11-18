@@ -69,3 +69,7 @@ $lang['update_setup_schema'] = 'Create update tables';
 $lang['update_setup_schema_hint'] = 'The update tables are missing. Create them now; existing data is not changed.';
 $lang['update_notice_schema_ready'] = 'Update tables are ready.';
 $lang['update_notice_schema_failed'] = 'Update tables could not be created. Check database permissions and server logs.';
+$lang['update_history_first'] = 'First page';
+$lang['update_history_previous'] = 'Previous page';
+$lang['update_history_next'] = 'Next page';
+$lang['update_history_last'] = 'Last page';

@@ -162,17 +162,27 @@ class Update_store
         return $row;
     }
 
-    public function history($limit = 25)
+    public function history_count()
+    {
+        if (!$this->schema_available()) {
+            return 0;
+        }
+        $count = $this->db->from('sys_update')->count_all_results();
+        return $count === FALSE ? 0 : (int) $count;
+    }
+
+    public function history($limit = 25, $offset = 0)
     {
         if (!$this->schema_available()) {
             return array();
         }
         $limit = min(100, max(1, (int) $limit));
+        $offset = max(0, (int) $offset);
         $query = $this->db->select('update_id, version, previous_version, status, changelog,'
                 . ' started_on, finished_on, created_by')
             ->from('sys_update')
             ->order_by('update_id', 'DESC')
-            ->limit($limit)
+            ->limit($limit, $offset)
             ->get();
         if ($query === FALSE) {
             return array();

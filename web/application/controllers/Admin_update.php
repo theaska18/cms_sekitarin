@@ -26,7 +26,12 @@ class Admin_update extends Admin
         }
         $result = $this->session->flashdata('admin_update_result');
         $notice = (string) $this->session->flashdata('admin_update_notice');
-        $history = $store->history(25);
+        $history_per_page = 25;
+        $history_total = $store->history_count();
+        $history_pages = max(1, (int) ceil($history_total / $history_per_page));
+        $history_page = max(1, (int) $this->input->get('history_page', TRUE));
+        $history_page = min($history_page, $history_pages);
+        $history = $store->history($history_per_page, ($history_page - 1) * $history_per_page);
         $history_migrations = array();
         foreach ($history as $entry) {
             $history_migrations[(int) $entry['update_id']] = $store->migrations_for((int) $entry['update_id']);
@@ -45,6 +50,10 @@ class Admin_update extends Admin
                 'update_active' => $store->active_update(),
                 'update_history' => $history,
                 'update_history_migrations' => $history_migrations,
+                'update_history_total' => $history_total,
+                'update_history_page' => $history_page,
+                'update_history_pages' => $history_pages,
+                'update_history_per_page' => $history_per_page,
                 'update_can_run' => $this->has_admin_access_code('sys_update_run'),
                 'update_link' => $store->update_link(),
                 'update_checks' => $store->runner_checks(),

@@ -33,11 +33,16 @@ class UpdateContractTests(unittest.TestCase):
         self.assertIn("https://cms.ckamal.com/api/update/check", store)
         self.assertIn("bootstrap_schema", store)
         self.assertIn("create table if not exists `sys_update`", store.lower())
+        self.assertIn("function history_count", store)
+        self.assertIn("->limit($limit, $offset)", store)
         self.assertIn("sys_update_run", (APP / "views/admin/menu_manifest/system.xml").read_text())
         controller = (APP / "controllers/Admin_update.php").read_text()
         self.assertIn("public function update_schema", controller)
         view = (APP / "views/admin/system/update/index.php").read_text()
         self.assertIn("update_setup_schema", view)
+        self.assertIn("history_page_link", view)
+        self.assertIn("update_history_first", view)
+        self.assertIn("update_history_last", view)
         self.assertTrue((ROOT / "database/migrations/20261119000100_create_sys_update_tables.sql").is_file())
 
     def test_update_menu_is_in_system_manifest(self):
