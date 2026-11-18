@@ -5,6 +5,10 @@ the app and MySQL. Tailwind source is `tailwind/input.css`; build output is
 `web/assets/css/tailwind.css`. Python tests are source-level contract checks, not
 end-to-end tests.
 
+Current project status, known test failures, and unfinished work are recorded in
+[`docs/PROJECT_STATE.md`](docs/PROJECT_STATE.md). Keep that file updated when the
+release, migration, or test state changes.
+
 ## Local development
 
 - Work from the repository root. Copy `.env.example` with `cp -n .env.example .env`,
