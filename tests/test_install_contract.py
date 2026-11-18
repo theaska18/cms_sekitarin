@@ -32,6 +32,10 @@ class InstallContractTests(unittest.TestCase):
             "TIME_ZONE=utc",
             "password",
             "csrf",
+            "Mode instalasi",
+            "existing",
+            "Database berhasil terhubung",
+            "$existing_mode",
         ):
             self.assertIn(marker, installer)
 

@@ -112,6 +112,7 @@ $values = array(
     'username' => isset($_POST['username']) ? trim((string) $_POST['username']) : 'cmsdb',
     'base_url' => isset($_POST['base_url']) ? trim((string) $_POST['base_url']) : install_default_base_url(),
     'backup' => isset($_POST['backup']) ? basename((string) $_POST['backup']) : ($backups ? basename($backups[0]) : ''),
+    'mode' => isset($_POST['mode']) ? (string) $_POST['mode'] : 'restore',
 );
 
 if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_METHOD']) === 'POST') {
@@ -133,6 +134,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
     if ($values['username'] === '' || strlen($values['username']) > 128) {
         $errors[] = 'Username database wajib diisi.';
     }
+    if (!in_array($values['mode'], array('restore', 'existing'), TRUE)) {
+        $errors[] = 'Mode instalasi tidak valid.';
+    }
     if ($password === '') {
         $errors[] = 'Password database wajib diisi.';
     }
@@ -143,18 +147,20 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
         $errors[] = 'Base URL aplikasi tidak valid. Gunakan URL http/https tanpa query string.';
     }
     $backup_path = '';
-    foreach ($backups as $candidate) {
-        if (basename($candidate) === $values['backup']) {
-            $backup_path = $candidate;
-            break;
+    if ($values['mode'] === 'restore') {
+        foreach ($backups as $candidate) {
+            if (basename($candidate) === $values['backup']) {
+                $backup_path = $candidate;
+                break;
+            }
         }
-    }
-    if ($backup_path === '') {
-        $errors[] = 'File backup tidak ditemukan di web/data.';
-    } elseif (!is_readable($backup_path)) {
-        $errors[] = 'File backup tidak dapat dibaca oleh web server. Periksa permission file.';
-    } elseif (strtolower(pathinfo($backup_path, PATHINFO_EXTENSION)) !== 'gz') {
-        $errors[] = 'File backup harus berformat .sql.gz.';
+        if ($backup_path === '') {
+            $errors[] = 'File backup tidak ditemukan di web/data.';
+        } elseif (!is_readable($backup_path)) {
+            $errors[] = 'File backup tidak dapat dibaca oleh web server. Periksa permission file.';
+        } elseif (strtolower(pathinfo($backup_path, PATHINFO_EXTENSION)) !== 'gz') {
+            $errors[] = 'File backup harus berformat .sql.gz.';
+        }
     }
     if (!$errors) {
         mysqli_report(MYSQLI_REPORT_OFF);
@@ -162,17 +168,22 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
         if ($mysqli->connect_errno) {
             $errors[] = 'Koneksi database gagal: ' . $mysqli->connect_error;
         } else {
+            $existing_mode = $values['mode'] === 'existing';
             $db = '`' . str_replace('`', '``', $values['database']) . '`';
             $exists = $mysqli->query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME=' . "'" . $mysqli->real_escape_string($values['database']) . "'");
             if ($exists === FALSE) {
                 $errors[] = 'Tidak dapat memeriksa database: ' . $mysqli->error;
-            } elseif ($exists->num_rows === 0 && !$mysqli->query('CREATE DATABASE ' . $db . ' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci')) {
-                $errors[] = 'Database belum ada dan tidak dapat dibuat: ' . $mysqli->error;
+            } elseif ($exists->num_rows === 0) {
+                if ($existing_mode) {
+                    $errors[] = 'Database tidak ditemukan. Periksa nama database atau gunakan mode restore.';
+                } elseif (!$mysqli->query('CREATE DATABASE ' . $db . ' CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci')) {
+                    $errors[] = 'Database belum ada dan tidak dapat dibuat: ' . $mysqli->error;
+                }
             }
             if (!$errors && !$mysqli->select_db($values['database'])) {
                 $errors[] = 'Tidak dapat memilih database: ' . $mysqli->error;
             }
-            if (!$errors) {
+            if (!$errors && !$existing_mode) {
                 $tables = $mysqli->query('SHOW TABLES');
                 if ($tables === FALSE) {
                     $errors[] = 'Tidak dapat membaca daftar tabel: ' . $mysqli->error;
@@ -180,7 +191,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
                     $errors[] = 'Database tujuan tidak kosong. Gunakan database baru atau kosongkan terlebih dahulu.';
                 }
             }
-            if (!$errors) {
+            if (!$errors && !$existing_mode) {
                 $sql = gzdecode(file_get_contents($backup_path));
                 if (is_string($sql)) {
                     $sql = preg_replace('/^\/\*M![^\n]*\n?/m', '', $sql);
@@ -209,7 +220,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
             if (!$errors) {
                 $check = $mysqli->query("SHOW TABLES LIKE 'app_user'");
                 if ($check === FALSE || $check->num_rows === 0) {
-                    $errors[] = 'Backup tidak berisi tabel aplikasi (app_user).';
+                    $errors[] = $existing_mode
+                        ? 'Database tidak berisi tabel aplikasi (app_user).'
+                        : 'Backup tidak berisi tabel aplikasi (app_user).';
                 }
             }
             $mysqli->close();
@@ -238,13 +251,16 @@ if (isset($_SERVER['REQUEST_METHOD']) && strtoupper((string) $_SERVER['REQUEST_M
 }
 
 if ($success) {
-    install_page('Instalasi selesai', '<p class="eyebrow">Installer</p><h1>Instalasi selesai</h1><p class="lead">Database berhasil dipulihkan dan file <span class="mono">web/.env</span> sudah dibuat.</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p><p class="muted">Installer sekarang terkunci.</p>');
+    $success_lead = $values['mode'] === 'existing'
+        ? 'Database berhasil terhubung dan file <span class="mono">web/.env</span> sudah dibuat.'
+        : 'Database berhasil dipulihkan dan file <span class="mono">web/.env</span> sudah dibuat.';
+    install_page('Instalasi selesai', '<p class="eyebrow">Installer</p><h1>Instalasi selesai</h1><p class="lead">' . $success_lead . '</p><p><a class="button" href="/login">Masuk ke aplikasi</a></p><p class="muted">Installer sekarang terkunci.</p>');
     exit;
 }
 
-$body = '<p class="eyebrow">Installer</p><h1>Instalasi CMSNivo</h1><p class="lead">Pulihkan database dari file backup di <span class="mono">web/data</span>, lalu simpan konfigurasi ke <span class="mono">web/.env</span>.</p>';
+$body = '<p class="eyebrow">Installer</p><h1>Instalasi CMSNivo</h1><p class="lead">Pulihkan database dari file backup di <span class="mono">web/data</span>, atau sambungkan ke database yang sudah ada, lalu simpan konfigurasi ke <span class="mono">web/.env</span>.</p>';
 if (!$backups) {
-    $body .= '<div class="alert">Tidak ada file <span class="mono">*.sql.gz</span> di <span class="mono">web/data</span>. Letakkan file backup di folder tersebut lalu muat ulang halaman ini.</div>';
+    $body .= '<div class="alert">Tidak ada file <span class="mono">*.sql.gz</span> di <span class="mono">web/data</span>. Mode restore tidak tersedia; mode sambung ke database yang sudah ada tetap bisa dipakai.</div>';
 }
 if ($errors) {
     $body .= '<div class="alert"><strong>Instalasi gagal.</strong><ul>';
@@ -256,6 +272,10 @@ if ($errors) {
 $body .= '<form method="post" autocomplete="off">';
 $body .= '<input type="hidden" name="csrf" value="' . h($_SESSION['install_csrf']) . '">';
 $body .= '<h2>Database</h2>';
+$body .= '<label for="mode">Mode instalasi</label><select id="mode" name="mode">';
+$body .= '<option value="restore"' . ($values['mode'] === 'restore' ? ' selected' : '') . '>Buat/restore dari file backup</option>';
+$body .= '<option value="existing"' . ($values['mode'] === 'existing' ? ' selected' : '') . '>Sambungkan ke database yang sudah ada</option>';
+$body .= '</select>';
 $body .= '<label for="host">Host</label><input id="host" name="host" required value="' . h($values['host']) . '">';
 $body .= '<div class="grid"><div><label for="port">Port</label><input id="port" name="port" inputmode="numeric" required value="' . h($values['port']) . '"></div><div><label for="database">Nama database</label><input id="database" name="database" required value="' . h($values['database']) . '"></div></div>';
 $body .= '<label for="username">User database</label><input id="username" name="username" required value="' . h($values['username']) . '">';
@@ -263,13 +283,17 @@ $body .= '<label for="password">Password database</label><input id="password" na
 $body .= '<h2>Aplikasi</h2>';
 $body .= '<label for="base_url">Base URL aplikasi</label><input id="base_url" name="base_url" type="url" required value="' . h($values['base_url']) . '">';
 $body .= '<p class="muted">Default mengikuti URL yang sedang dipakai. Akhiran <span class="mono">/</span> akan ditambahkan otomatis.</p>';
+$body .= '<div id="install-backup-section">';
 $body .= '<h2>File backup</h2>';
-$body .= '<label for="backup">Backup database</label><select id="backup" name="backup" required>';
+$body .= '<label for="backup">Backup database</label><select id="backup" name="backup">';
 foreach ($backups as $backup) {
     $name = basename($backup);
     $body .= '<option value="' . h($name) . '"' . ($name === $values['backup'] ? ' selected' : '') . '>' . h($name) . ' — ' . h(date('Y-m-d H:i:s', filemtime($backup))) . '</option>';
 }
 $body .= '</select><p class="muted">Database tujuan harus kosong. Data lama dari backup akan dipulihkan.</p>';
-$body .= '<div class="actions"><button type="submit">Pulihkan &amp; Pasang</button><a class="button secondary" href="/">Batal</a></div>';
+$body .= '</div>';
+$body .= '<p class="muted" id="install-existing-hint" hidden>Installer akan memeriksa koneksi dan tabel <span class="mono">app_user</span>, tanpa membuat database atau mengimpor backup.</p>';
+$body .= '<div class="actions"><button type="submit">Pasang aplikasi</button><a class="button secondary" href="/">Batal</a></div>';
 $body .= '</form>';
+$body .= '<script>(function(){var mode=document.getElementById("mode");var section=document.getElementById("install-backup-section");var hint=document.getElementById("install-existing-hint");var backup=document.getElementById("backup");function sync(){var existing=mode.value==="existing";section.hidden=existing;hint.hidden=!existing;backup.required=!existing;}mode.addEventListener("change",sync);sync();})();</script>';
 install_page('Instalasi CMSNivo', $body);

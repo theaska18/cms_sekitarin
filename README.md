@@ -108,16 +108,19 @@ Deployment yang hanya menyalin folder `web/` dapat menggunakan installer bawaan.
    ```text
    /install/
    ```
-5. Isi host, port, nama database, user, password, base URL aplikasi, lalu pilih file backup.
+5. Pilih mode instalasi:
+   - **Buat/restore dari file backup** — installer membuat database kosong, mengimpor backup, lalu menulis `web/.env`.
+   - **Sambungkan ke database yang sudah ada** — installer hanya memeriksa koneksi dan tabel `app_user`, tanpa membuat database atau mengimpor backup, lalu menulis `web/.env`.
+6. Isi host, port, nama database, user, password, dan base URL aplikasi.
    - Base URL otomatis memakai URL yang sedang diakses dan bisa diubah.
    - `TIME_ZONE` otomatis diisi `utc`.
-6. Installer membuat database kosong, mengimpor backup, dan menulis:
+7. Untuk mode restore, pilih file backup. Installer menulis:
    ```text
    web/.env
    ```
-7. Login memakai akun yang sudah ada di backup.
+8. Login memakai akun yang tersedia di database/backup.
 
-Installer tidak menimpa database yang sudah berisi tabel. Siapkan database kosong terlebih dahulu jika user database tidak memiliki izin `CREATE DATABASE`. File `web/.env` dilindungi `.htaccess` dan tidak masuk Git.
+Installer tidak menimpa database yang sudah berisi tabel pada mode restore. Siapkan database kosong terlebih dahulu jika user database tidak memiliki izin `CREATE DATABASE`. File `web/.env` dilindungi `.htaccess` dan tidak masuk Git.
 
 ## Backup database otomatis
 

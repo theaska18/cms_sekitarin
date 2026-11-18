@@ -17,6 +17,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
+- Installer mendukung dua mode: restore dari backup, atau sambung ke database
+  yang sudah ada lalu hanya menulis `web/.env`.
 
 ## Sistem update
 
