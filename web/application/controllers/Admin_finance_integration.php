@@ -46,7 +46,7 @@ class Admin_finance_integration extends Admin
         }
         $this->render_admin(
             'admin/finance/integration_index',
-            $spec['menu_code'],
+            'finance_' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox'),
             '/admin/finance/' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox'),
             array(
                 'finance_integration_kind' => $kind,

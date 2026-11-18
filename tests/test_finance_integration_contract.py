@@ -72,6 +72,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "save_draft", "last_saved_id", "mark_processed",
             "finance_document_amount_readonly", "finance_document_description_readonly",
             "Nama Pelanggan", "Nama Pemasok",
+            "'finance_' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox')",
         ):
             self.assertIn(marker, admin)
         self.assertIn("values['amount'] = (string) $inbox['amount_before_tax']", admin)

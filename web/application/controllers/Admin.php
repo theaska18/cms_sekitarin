@@ -706,10 +706,13 @@ class Admin extends CI_Controller
         }
         $this->record_admin_menu_visit($current_path);
         $this->load->library('property_store');
+        $page_title = isset($labels[$title_key])
+            ? $labels[$title_key]
+            : (isset($labels['dashboard']) ? $labels['dashboard'] : 'Dashboard');
         $data = array(
             'web_name' => $this->property_store->web_name('CMSNivo'),
             'landing_page_enabled' => $this->property_store->landing_page_enabled(),
-            'page_title' => $labels[$title_key],
+            'page_title' => $page_title,
             'current_path' => $current_path,
             'page_slug' => isset($extra_data['page_slug']) ? $extra_data['page_slug'] : '',
             'labels' => $labels,
