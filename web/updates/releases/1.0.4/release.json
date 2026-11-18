@@ -1,0 +1,46 @@
+{
+  "version": "1.0.4",
+  "from_version": "1.0.3",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.3",
+  "changelog": "Optimalisasi.",
+  "files": [
+    {
+      "path": "application/config/config.php",
+      "sha256": "61a44dfcc83c1bc04f712915e92b5d05f97edc9694bedf6b396bebcb9e51a345",
+      "size": 19670
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "62ce93d356495e65616a57487325c70f00dfd778c3c68c99aaa6e7ca9b592c96",
+      "size": 448
+    },
+    {
+      "path": "application/controllers/Admin.php",
+      "sha256": "b2f1de0e5c42812b3f570c46ea9cace7d9b7b17d8ba1ac6729bdd2e48d92fdea",
+      "size": 38468
+    },
+    {
+      "path": "application/libraries/Update_store.php",
+      "sha256": "641cc073a289e9e6abcf13812fe51593f3938e0d7181223ddda9f97196622df3",
+      "size": 54409
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "682dcb0e55575d56427087b7373ebb4aa2eddf6e7c59a8220b1b9c922dc2ac0b",
+      "size": 34799
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.4.zip",
+    "sha256": "5872fcbe8e3614095de4f3176a320cf74e4bfd0e3f4ac067009ed0beece0ceda",
+    "size": 34744
+  },
+  "from_ref": "v1.0.3",
+  "generated_at": "2026-11-18T19:31:00+00:00"
+}
