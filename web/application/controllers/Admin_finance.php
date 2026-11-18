@@ -1768,7 +1768,10 @@ class Admin_finance extends Admin
         if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
             $errors[] = 'amount_invalid';
         }
-        if (!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
+        $rate_pattern = $kind === 'sales'
+            ? '/^\d{1,10}(?:\.\d{1,2})?$/'
+            : '/^\d{1,10}(?:\.\d{1,10})?$/';
+        if (!preg_match($rate_pattern, $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
         if (strlen($values['description']) > 240) {
@@ -2243,7 +2246,7 @@ class Admin_finance extends Admin
                 return;
             }
             $values = $this->finance_document_values();
-            $errors = $this->finance_document_validate($values);
+            $errors = $this->finance_document_validate($values, $kind);
             if (!$errors) {
                 $previous_db_debug = $this->db->db_debug;
                 $this->db->db_debug = FALSE;
@@ -2273,6 +2276,9 @@ class Admin_finance extends Admin
         }
         if (isset($record['amount']) && $record['amount'] !== '' && $record['amount'] !== NULL) {
             $record['amount'] = number_format((float) $record['amount'], 2, '.', '');
+        }
+        if ($kind === 'sales' && isset($record['exchange_rate']) && $record['exchange_rate'] !== '' && $record['exchange_rate'] !== NULL) {
+            $record['exchange_rate'] = number_format((float) $record['exchange_rate'], 2, '.', '');
         }
         $integration_reference = !empty($record['integration_number']) ? (string) $record['integration_number'] : '';
         $integration_party = '';
@@ -2319,7 +2325,7 @@ class Admin_finance extends Admin
         return $values;
     }
 
-    private function finance_document_validate($values)
+    private function finance_document_validate($values, $kind = 'sales')
     {
         $errors = array();
         foreach (array('person_id', 'account_id') as $id) {

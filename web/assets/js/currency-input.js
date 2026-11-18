@@ -16,6 +16,7 @@
  * Attributes:
  *   data-decimal           Minimum fraction digits shown on blur (0-6, default 0).
  *                          Extra decimals entered by the user (up to 6) are kept.
+ *   data-max-decimal       Maximum fraction digits accepted (0-6, default 6).
  *   data-currency-default  Value used when the field is empty (default "0";
  *                          use data-currency-default="" to allow an empty value).
  *   data-allow-negative    "1" allows a leading minus sign (default disallowed).
@@ -101,7 +102,7 @@
      *     ("1250,500"), so the locale decimal separator takes priority and the
      *     other punctuation is treated as a grouping character.
      */
-    function parseValue(value, allowNegative, separators, preferDecimal) {
+    function parseValue(value, allowNegative, separators, preferDecimal, maxFraction) {
         var text = latinDigits(value)
             .replace(/\u066b/g, '.')
             .replace(/\u066c/g, ',')
@@ -150,7 +151,8 @@
             fraction = '';
         } else {
             integer = text.slice(0, decimalIndex).replace(/[.,]/g, '');
-            fraction = text.slice(decimalIndex + 1).replace(/[.,]/g, '').slice(0, MAX_FRACTION_DIGITS);
+            var fractionLimit = typeof maxFraction === 'number' ? maxFraction : MAX_FRACTION_DIGITS;
+            fraction = text.slice(decimalIndex + 1).replace(/[.,]/g, '').slice(0, fractionLimit);
         }
 
         integer = integer.replace(/^0+(?=\d)/, '').slice(0, MAX_INTEGER_DIGITS);
@@ -218,7 +220,7 @@
     }
 
     function setValue($input, value, options) {
-        var raw = parseValue(value, options.allowNegative, null);
+        var raw = parseValue(value, options.allowNegative, null, false, options.maxFraction);
         if (raw === '') {
             raw = options.defaultRaw;
         }
@@ -239,14 +241,21 @@
         }
         decimals = Math.min(decimals, MAX_FRACTION_DIGITS);
 
+        var maxFraction = parseInt($input.attr('data-max-decimal'), 10);
+        if (isNaN(maxFraction) || maxFraction < 0) {
+            maxFraction = MAX_FRACTION_DIGITS;
+        }
+        maxFraction = Math.min(maxFraction, MAX_FRACTION_DIGITS);
+
         var defaultAttr = $input.attr('data-currency-default');
         var allowNegative = $input.attr('data-allow-negative') === '1';
         var options = {
             decimals: decimals,
+            maxFraction: maxFraction,
             allowNegative: allowNegative,
             defaultRaw: typeof defaultAttr === 'undefined'
                 ? '0'
-                : parseValue(defaultAttr, allowNegative, null),
+                : parseValue(defaultAttr, allowNegative, null, false, maxFraction),
             separators: localeSeparators()
         };
         $input.data('currencyInputOptions', options);
@@ -269,7 +278,7 @@
         });
 
         $input.on('input.currencyInput', function () {
-            storeRaw($input, parseValue($input.val(), options.allowNegative, options.separators, true));
+            storeRaw($input, parseValue($input.val(), options.allowNegative, options.separators, true, options.maxFraction));
         });
 
         $input.on('blur.currencyInput', function () {

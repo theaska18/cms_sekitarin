@@ -31,6 +31,7 @@ class CurrencyInputContractTests(unittest.TestCase):
         self.assertIn("data-decimal", source)
         self.assertIn("data-currency-default", source)
         self.assertIn("data-allow-negative", source)
+        self.assertIn("data-max-decimal", source)
 
     def test_library_keeps_canonical_values_for_the_server(self):
         source = read(LIBRARY)
@@ -79,6 +80,10 @@ class CurrencyInputContractTests(unittest.TestCase):
             source = read(FINANCE / filename)
             for line in source.splitlines():
                 if any(field in line for field in rate_fields):
+                    if filename == "document_form.php" and 'name="exchange_rate"' in line:
+                        self.assertIn('data-currency-input', line, filename)
+                        self.assertIn('data-max-decimal="2"', line, filename)
+                        continue
                     self.assertNotIn("data-currency-input", line, filename)
 
     def test_negative_balances_allow_a_minus_sign(self):
@@ -100,6 +105,7 @@ class CurrencyInputContractTests(unittest.TestCase):
     def test_server_still_validates_canonical_decimal_format(self):
         controller = read(APP / "controllers/Admin_finance.php")
         self.assertIn(r"/^\d{1,14}(?:\.\d{1,6})?$/", controller)
+        self.assertIn(r"/^\d{1,10}(?:\.\d{1,2})?$/", controller)
 
 
 if __name__ == "__main__":
