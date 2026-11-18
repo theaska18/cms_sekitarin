@@ -1,0 +1,6 @@
+.git
+.env
+.env.*
+node_modules
+database_backup
+web/data/*.sql.gz

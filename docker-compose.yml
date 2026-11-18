@@ -18,8 +18,13 @@ services:
       CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
       CMS_DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
       TIME_ZONE: ${TIME_ZONE:-utc}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-1}
+      BACKUP_TIME: ${BACKUP_TIME:-02:00}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-30}
+      TZ: UTC
     volumes:
       - ./web:/var/www/html
+      - ./database_backup:/backup
       - app_cache:/var/www/html/application/cache
       - app_logs:/var/www/html/application/logs
 

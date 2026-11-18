@@ -29,3 +29,10 @@ htmlcov/
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Database backups
+/database_backup/*
+!/database_backup/.gitkeep
+/web/data/*
+!/web/data/.htaccess
+!/web/data/.gitkeep

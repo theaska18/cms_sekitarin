@@ -82,6 +82,29 @@ Konfigurasi yang diperiksa menunjukkan cara menjalankan stack Compose, tetapi ti
 
 Autentikasi admin hanya diaktifkan ketika `CI_ENV=development`. Pada lingkungan lain, autentikasi ditolak dan akses admin tidak tersedia. Jangan menerbitkan fitur admin sebagai panel produksi sebelum autentikasi dan kontrol akses produksi diterapkan serta diverifikasi.
 
+## Backup database otomatis
+
+Backup harian dijalankan oleh proses di container `cms-app` pukul `02:00` **UTC**.
+
+- Arsip harian disimpan di `database_backup/`.
+- Retensi default: **30 file**.
+- Arsip terbaru juga disalin ke `web/data/cmsdb-latest.sql.gz`.
+- `web/data` dilindungi `.htaccess`; backup tidak boleh diakses langsung dari URL.
+- File backup diabaikan oleh Git.
+
+Jalankan backup manual:
+
+```bash
+docker compose exec cms-app /usr/local/bin/cms-backup/backup-once.sh
+```
+
+Restore:
+
+```bash
+gunzip -c database_backup/cmsdb-YYYYMMDD-HHMMSS.sql.gz \
+  | docker compose exec -T cms-db mysql -u root -p cmsdb
+```
+
 ## Variabel lingkungan (`.env`)
 
 Compose membaca `.env` dari root repository untuk interpolasi, lalu meneruskan variabel yang diperlukan ke container. CI3 menerima konfigurasi sebagai variabel lingkungan runtime; aplikasi tidak memuat file `.env` secara langsung. Gunakan `.env.example` sebagai template aman untuk konfigurasi lokal. Tabel ini hanya menjelaskan nama dan tujuan variabel—bukan nilai rahasia. `TIME_ZONE` diteruskan hanya ke layanan `cms-app`; konfigurasi CI3 menggunakannya sebagai zona waktu default PHP untuk operasi tanggal/waktu aplikasi. Nilai Compose bawaan adalah `utc` bila variabel kosong atau tidak disetel. Untuk override, atur `TIME_ZONE=Asia/Jakarta` di `.env` (gunakan identifier zona waktu PHP yang valid). Ini tidak mengubah zona waktu host maupun layanan `cms-db`.
@@ -91,6 +114,8 @@ Compose membaca `.env` dari root repository untuk interpolasi, lalu meneruskan v
 | `CI_ENV` | Memilih lingkungan runtime CI3; Compose menyediakan default pengembangan lokal. |
 | `CI_BASE_URL` | URL dasar aplikasi yang diteruskan ke container aplikasi. Gunakan URL lokal saat pengembangan dan URL yang sesuai pada deployment. |
 | `TIME_ZONE` | Zona waktu runtime PHP pada layanan `cms-app`; default Compose `utc`, dapat dioverride dengan identifier zona waktu PHP yang valid. |
+| `BACKUP_TIME` | Jam backup harian dalam UTC; default `02:00`. |
+| `BACKUP_RETENTION` | Jumlah maksimum arsip backup di `database_backup/`; default `30`. |
 | `CMS_DB_HOST` | Host layanan database yang dipakai aplikasi. |
 | `CMS_DB_NAME` | Nama database aplikasi; digunakan oleh konfigurasi aplikasi dan layanan MySQL. |
 | `CMS_DB_USER` | Akun aplikasi untuk koneksi database. |
