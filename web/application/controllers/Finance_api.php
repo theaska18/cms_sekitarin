@@ -64,7 +64,7 @@ class Finance_api extends CI_Controller
         if (!preg_match('/^\d{1,3}(?:\.\d{1,6})?$/', $tax_raw) || (float) $tax_raw < 0 || (float) $tax_raw > 100) {
             $errors[] = 'tax_percent';
         }
-        if ($description === '' || strlen($description) > 10000) {
+        if ($description === '' || strlen($description) > 240) {
             $errors[] = 'description';
         }
         if ($errors) {

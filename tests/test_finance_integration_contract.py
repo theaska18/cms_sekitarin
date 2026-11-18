@@ -42,6 +42,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "access_api_flag", "block_flag", "tenant_id",
             "find_number", "raw_input_stream", "review_status",
             "status' => 'accepted'", "202",
+            "strlen($description) > 240",
         ):
             self.assertIn(marker, api)
         config = CONFIG.read_text()
