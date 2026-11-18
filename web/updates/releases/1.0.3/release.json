@@ -1,0 +1,140 @@
+{
+  "version": "1.0.3",
+  "from_version": "1.0.1",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.1",
+  "changelog": "Perbaikan Input Karyawan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "6e73202870977ebd4894704f0ac82149905699a88121926048420945911992dd",
+      "size": 448
+    },
+    {
+      "path": "application/controllers/Admin.php",
+      "sha256": "a2ca528d2d88218aa12ebf94b9b375bff7b307c290206638c94d77b0a5f9bccb",
+      "size": 38383
+    },
+    {
+      "path": "application/controllers/Admin_employee.php",
+      "sha256": "94cea79d77b160a0895a28e20c6530a41e1944cf379e726195a7533915be444d",
+      "size": 19981
+    },
+    {
+      "path": "application/controllers/Admin_notifications.php",
+      "sha256": "d25b3f5ba77ddfb99f5348b0db43b0348dd58e04b403ae4c1603347a6ca11f27",
+      "size": 11087
+    },
+    {
+      "path": "application/controllers/Admin_update.php",
+      "sha256": "b1e38fae78dc1718c0ff80eb60c16456223f86edd6e0e5afa0b27b7cfb4465a9",
+      "size": 5548
+    },
+    {
+      "path": "application/language/arabic/notifications_lang.php",
+      "sha256": "6e78099e793465a122c9b590c6ca281a09a9661707b592d0f54b9bafd9342f5a",
+      "size": 2668
+    },
+    {
+      "path": "application/language/chinese/notifications_lang.php",
+      "sha256": "cbf63310d18600fcf3bb0a07c24c8f77927fdd9c31698c6a389a850d0d63e954",
+      "size": 2216
+    },
+    {
+      "path": "application/language/english/notifications_lang.php",
+      "sha256": "84aedea8936233bf0a20a494e5895fb95cf305bbd95fb0cd417a0dcfb11f5d3b",
+      "size": 2339
+    },
+    {
+      "path": "application/language/english/update_lang.php",
+      "sha256": "98baa81e1308b472b61533487f9fd5d59de8b382ceb9d885e749afdea716c4bf",
+      "size": 4800
+    },
+    {
+      "path": "application/language/french/notifications_lang.php",
+      "sha256": "e1657e727715693b8fc41807e0b95419428133f2dfdde209dcb8caa85ed1067d",
+      "size": 2503
+    },
+    {
+      "path": "application/language/german/notifications_lang.php",
+      "sha256": "6af31b66684af90735d0e9fe9190543fa20b2f70235de66a80ebe3492f058408",
+      "size": 2509
+    },
+    {
+      "path": "application/language/indonesian/notifications_lang.php",
+      "sha256": "99cd41695b7719e61512db3a970aa907b6a14d92a0390ccd16659c9b1a9e2a1f",
+      "size": 2355
+    },
+    {
+      "path": "application/language/indonesian/update_lang.php",
+      "sha256": "b2447bd593a4347f64fc2bdc5d3c2bfb3ace9cb8a797fbb4f10415fb479e52e8",
+      "size": 4718
+    },
+    {
+      "path": "application/language/japanese/notifications_lang.php",
+      "sha256": "e81c6c335566b5cee787048584fbd44ddaa12f22e6233d8873dd48425bc0651f",
+      "size": 2502
+    },
+    {
+      "path": "application/language/korean/notifications_lang.php",
+      "sha256": "6e9bbdb4e52a813d1f7c3be5f67a336c4c5ddb25bd9ab7712435a9ef50520d2a",
+      "size": 2420
+    },
+    {
+      "path": "application/language/spanish/notifications_lang.php",
+      "sha256": "eb7e48e6139031d574c4121fec845765b6c651043bad90fd734a2d60ec47cca3",
+      "size": 2467
+    },
+    {
+      "path": "application/libraries/Update_store.php",
+      "sha256": "56c6f1e7298ce81b7c5842e30488fbebb38d40fd07b7c2b9097e030a98823209",
+      "size": 53604
+    },
+    {
+      "path": "application/views/admin/employee/form.php",
+      "sha256": "8173911eb9020a0b898262c02f71665f66fc2934ccc77bc1f1e3e111c6da9b8a",
+      "size": 9843
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "340dd7873e4a5101626d51497cc92ece58779ba5f3be63bde97e7295707317c5",
+      "size": 34549
+    },
+    {
+      "path": "application/views/admin/notifications/index.php",
+      "sha256": "857b6980e2ffc44fd7ee5d76d71091837e7125b9fc112f14bf8bcc90528d88da",
+      "size": 33592
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "5ec8bbaf4bacb367f141fa69dddba09811846956667e9952c49a603234edce22",
+      "size": 22433
+    },
+    {
+      "path": "assets/css/admin-topbar-actions.css",
+      "sha256": "0fe8a2cdb6089b43ee7865cab3f677b4479f0271d18a57141cbb8e6f821e5ea3",
+      "size": 9859
+    },
+    {
+      "path": "install/index.php",
+      "sha256": "179dee8c26b92a759381e261f7f8af90f5387817c88541e297300021149c1663",
+      "size": 16535
+    }
+  ],
+  "delete": [],
+  "migrations": [
+    "20261119000100_create_sys_update_tables.sql"
+  ],
+  "migration_checksums": {
+    "20261119000100_create_sys_update_tables.sql": "786d8f0d6a02187b429a6c9af9b55c309ca468813edc8e541590766ea1b92de3"
+  },
+  "package": {
+    "name": "cms-1.0.3.zip",
+    "sha256": "2aa117813a993cdefa879c60a1614e5265a87315e731dc341e70db2b7a9500b5",
+    "size": 70877
+  },
+  "from_ref": "v1.0.1",
+  "generated_at": "2026-11-18T19:06:09+00:00"
+}

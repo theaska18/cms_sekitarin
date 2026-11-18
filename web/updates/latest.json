@@ -1,11 +1,13 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "released_at": "2026-11-18",
-  "changelog": "Perbaikan Notifikasi.",
+  "changelog": "Perbaikan Input Karyawan.",
   "min_php": "8.1",
   "requires_version": "1.0.1",
-  "package": "cms-1.0.2.zip",
-  "sha256": "2b2aaea6c7ff2a7ef07d43f758c26490352ba141bcd988f4c2fd9ac60e87b2d0",
-  "size": 42259,
-  "migrations": []
+  "package": "cms-1.0.3.zip",
+  "sha256": "2aa117813a993cdefa879c60a1614e5265a87315e731dc341e70db2b7a9500b5",
+  "size": 70877,
+  "migrations": [
+    "20261119000100_create_sys_update_tables.sql"
+  ]
 }
