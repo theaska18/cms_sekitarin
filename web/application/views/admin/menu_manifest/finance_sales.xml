@@ -8,7 +8,7 @@
         <access code="fin_customer_payments_add" name="Add" />
         <access code="fin_customer_payments_update" name="Update" />
     </menu>
-    <menu code="fin_sales_invoice_inbox" name="Integrasi Faktur Penjualan" label_key="admin_finance_sales_invoice_inbox" icon="download" route="/admin/finance/sales_invoice_inbox" module_key="finance_sales_invoice_inbox" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="8" status="active">
+    <menu code="fin_sales_invoice_inbox" name="Integrasi Faktur Penjualan" label_key="admin_finance_sales_invoice_inbox" icon="download" route="/admin/finance/sales_invoice_inbox" module_key="finance_sales_invoice_inbox" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="5" status="active">
         <access code="fin_sales_invoice_inbox_add" name="Process" />
         <access code="fin_sales_invoice_inbox_update" name="Retry" />
     </menu>

@@ -8,7 +8,7 @@
         <access code="fin_supplier_payments_add" name="Add" />
         <access code="fin_supplier_payments_update" name="Update" />
     </menu>
-    <menu code="fin_purchase_bill_inbox" name="Integrasi Tagihan Pembelian" label_key="admin_finance_purchase_bill_inbox" icon="download" route="/admin/finance/purchase_bill_inbox" module_key="finance_purchase_bill_inbox" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="11" status="active">
+    <menu code="fin_purchase_bill_inbox" name="Integrasi Tagihan Pembelian" label_key="admin_finance_purchase_bill_inbox" icon="download" route="/admin/finance/purchase_bill_inbox" module_key="finance_purchase_bill_inbox" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="8" status="active">
         <access code="fin_purchase_bill_inbox_add" name="Process" />
         <access code="fin_purchase_bill_inbox_update" name="Retry" />
     </menu>
