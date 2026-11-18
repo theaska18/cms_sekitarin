@@ -1,0 +1,24 @@
+{
+  "version": "1.0.1",
+  "from_version": "1.0.0",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.0",
+  "changelog": "Perbaikan halaman properti.",
+  "files": [
+    {
+      "path": "application/config/autoload.php",
+      "sha256": "4441bdca395760c4bfc47be2be7cf123ae83174ceed5b0124090662c409d6bb8",
+      "size": 4041
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "eaae5bd469124de70e368e8a260e70ad3fed4616bd1e141f603495fbbd6e58b4",
+      "size": 448
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

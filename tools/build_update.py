@@ -524,10 +524,17 @@ def build(args: argparse.Namespace) -> int:
     if not args.no_write_version:
         version_path = root / "web/application/config/version.php"
         version_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = version_path.with_name(version_path.name + ".tmp")
-        temporary.write_bytes(version_file_contents(version, args.channel))
-        os.replace(temporary, version_path)
-        print(f"Version : {version_path} -> {version} (commit dan tag setelah ini)")
+        try:
+            # Write directly: the config directory may be owned by the web
+            # server, while version.php itself is owned by the build user.
+            version_path.write_bytes(version_file_contents(version, args.channel))
+            print(f"Version : {version_path} -> {version} (commit dan tag setelah ini)")
+        except OSError as error:
+            warn(
+                "version.php tidak dapat ditulis di working tree "
+                f"({error}); paket dan katalog sudah benar, perbarui file ini "
+                "secara manual sebelum commit dan tag"
+            )
 
     return 0
 

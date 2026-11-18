@@ -1,11 +1,11 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "released_at": "2026-11-18",
-  "changelog": "Rilis dasar CMSNivo.",
+  "changelog": "Perbaikan halaman properti.",
   "min_php": "8.1",
   "requires_version": "1.0.0",
-  "package": "",
-  "sha256": "",
-  "size": 0,
+  "package": "cms-1.0.1.zip",
+  "sha256": "087d4929543ec903116fd9a4f1a0a76a70c17e1db5f324138bbb77ea50449645",
+  "size": 2124,
   "migrations": []
 }
