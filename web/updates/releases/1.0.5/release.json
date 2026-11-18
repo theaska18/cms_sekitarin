@@ -1,0 +1,51 @@
+{
+  "version": "1.0.5",
+  "from_version": "1.0.4",
+  "channel": "stable",
+  "released_at": "2026-11-18",
+  "min_php": "8.1",
+  "requires_version": "1.0.4",
+  "changelog": "Perbaikan halaman properti.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "5200d7b4695ba40877f7d993517a8c97730f66c64f589ed0e832af66cf0a4f21",
+      "size": 448
+    },
+    {
+      "path": "application/controllers/Admin_update.php",
+      "sha256": "e6c715f6de9171da358205a051b83b2c84a58e40e849e3cef3b24394411def0b",
+      "size": 6142
+    },
+    {
+      "path": "application/language/english/update_lang.php",
+      "sha256": "cc951060b091d0ce4d0a2bbdf3e77b4622a20bd28cc3270d35ac930faa2d8eec",
+      "size": 4986
+    },
+    {
+      "path": "application/language/indonesian/update_lang.php",
+      "sha256": "091213715a1500d38031ce4f5ed2f85a56b38c4d1dfa2e367373b72c70430737",
+      "size": 4930
+    },
+    {
+      "path": "application/libraries/Update_store.php",
+      "sha256": "b0117a7c3228078ff2bffc06cdc809f92988242207d089057f8694e921bd3cbe",
+      "size": 54716
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "fdb9baa4b212bddabe4087a3aeec6b1e03ff704c7438a316b825cb198c0f4376",
+      "size": 28756
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.5.zip",
+    "sha256": "0eac0b138ebc11770a4724bc1e8928d534d747a2d67051d14f5d123c36f97624",
+    "size": 22711
+  },
+  "from_ref": "v1.0.4",
+  "generated_at": "2026-11-18T19:37:23+00:00"
+}
