@@ -472,6 +472,7 @@ class Update_store
         if (!$this->is_http_url($package_url)) {
             return NULL;
         }
+        $package_url = $this->upgrade_package_url($package_url, $base_link);
         $migrations = array();
         if (isset($release['migrations']) && is_array($release['migrations'])) {
             foreach ($release['migrations'] as $name) {
@@ -1259,6 +1260,21 @@ class Update_store
             return FALSE;
         }
         return TRUE;
+    }
+
+    /** Upgrade an HTTP package URL when the configured API endpoint is HTTPS. */
+    private function upgrade_package_url($package_url, $base_link)
+    {
+        $base = parse_url($base_link);
+        $package = parse_url($package_url);
+        if (!is_array($base) || !is_array($package)
+            || !isset($base['scheme'], $base['host'], $package['scheme'], $package['host'])
+            || strtolower((string) $base['scheme']) !== 'https'
+            || strtolower((string) $package['scheme']) !== 'http'
+            || strtolower((string) $base['host']) !== strtolower((string) $package['host'])) {
+            return $package_url;
+        }
+        return preg_replace('#\Ahttp://#i', 'https://', $package_url);
     }
 
     private function is_http_url($url)

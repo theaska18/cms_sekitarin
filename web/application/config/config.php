@@ -25,7 +25,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $config['base_url'] = rtrim(getenv('CI_BASE_URL') ?: 'http://localhost:8086/', '/') . '/';
 if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== '') {
-    $is_https = !empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off';
+    $forwarded_proto = '';
+    if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $forwarded_proto = strtolower(trim(explode(',', (string) $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+    }
+    $cloudflare_scheme = isset($_SERVER['HTTP_CF_VISITING_SCHEME'])
+        ? strtolower(trim((string) $_SERVER['HTTP_CF_VISITING_SCHEME'])) : '';
+    $is_https = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+        || $forwarded_proto === 'https'
+        || $cloudflare_scheme === 'https';
     $scheme = $is_https ? 'https' : 'http';
     $config['base_url'] = $scheme . '://' . $_SERVER['HTTP_HOST'] . '/';
 }

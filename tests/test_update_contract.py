@@ -70,10 +70,19 @@ class UpdateContractTests(unittest.TestCase):
             "database_backup", "application/cache", "application/logs",
             "CURLOPT_PROTOCOLS", "split_sql", "database_tables_snapshot",
             "drop_created_tables", "--skip-ssl", "ssl-mode=DISABLED",
+            "upgrade_package_url",
         ):
             self.assertIn(marker, store)
         self.assertIn("update.lock", store)
         self.assertIn("runner_checks", store)
+
+    def test_proxy_https_scheme_and_package_url_upgrade(self):
+        config = (APP / "config/config.php").read_text()
+        self.assertIn("HTTP_X_FORWARDED_PROTO", config)
+        self.assertIn("HTTP_CF_VISITING_SCHEME", config)
+        store = (APP / "libraries/Update_store.php").read_text()
+        self.assertIn("upgrade_package_url", store)
+        self.assertIn("preg_replace('#\\Ahttp://#i', 'https://'", store)
 
     def test_update_api_and_catalog(self):
         controller = (APP / "controllers/Update_api.php").read_text()
