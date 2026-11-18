@@ -120,6 +120,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("$finance_document_description_readonly", form)
         self.assertIn("$finance_document_party_label", form)
         self.assertIn("$finance_document_integration_party", form)
+        self.assertIn("selectedLabel", form)
         self.assertIn("read-only:bg-slate-50", form)
         document_store = DOCUMENT_STORE.read_text()
         self.assertIn("integration_number", document_store)

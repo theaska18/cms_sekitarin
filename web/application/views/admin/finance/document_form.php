@@ -59,12 +59,13 @@ $account_kind = 'account';
 (function(){
     $('[data-document-lookup]').each(function(){
         var input=$(this),hidden=$('#'+input.attr('data-target'));
+        if(hidden.val()!==''){input.data('selectedLabel',input.val());}
         input.autocomplete({
             minLength:0,delay:250,
             source:function(request,response){$.getJSON('/admin/finance/<?= html_escape($finance_document_slug) ?>/lookup/'+encodeURIComponent(input.attr('data-document-lookup')),{term:request.term}).done(response).fail(function(){response([]);});},
-            select:function(event,item){hidden.val(item.item.id);input.val(item.item.label);return false;},
-            change:function(event,item){if(!item.item)hidden.val('');}
-        }).on('focus',function(){if(input.val()==='')input.autocomplete('search','');}).on('input',function(){hidden.val('');});
+            select:function(event,item){hidden.val(item.item.id);input.val(item.item.label);input.data('selectedLabel',item.item.label);return false;},
+            change:function(event,item){if(item.item){input.data('selectedLabel',item.item.label);return;}if(input.val()!==input.data('selectedLabel')){hidden.val('');input.removeData('selectedLabel');}}
+        }).on('focus',function(){if(input.val()==='')input.autocomplete('search','');}).on('input',function(){hidden.val('');input.removeData('selectedLabel');});
     });
     var currency=document.getElementById('currency-code');currency.addEventListener('blur',function(){currency.value=currency.value.toUpperCase().replace(/\s+/g,'');});
 })();
