@@ -436,6 +436,11 @@ class Finance_document_store
             'status' => 'draft',
             'memo' => $values['memo'],
         );
+        foreach (array('integration_number', 'integration_party_name', 'integration_party_code') as $field) {
+            if (array_key_exists($field, $values)) {
+                $header[$field] = $values[$field] !== '' ? (string) $values[$field] : NULL;
+            }
+        }
         return $header;
     }
 

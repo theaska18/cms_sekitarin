@@ -12,6 +12,7 @@ $number_field = $kind === 'sales' ? 'invoice_number' : 'bill_number';
 $party_field = $kind === 'sales' ? 'customer_name' : 'supplier_name';
 $code_field = $kind === 'sales' ? 'customer_code' : 'supplier_code';
 $inbox_field = $kind === 'sales' ? 'sales_invoice_inbox_id' : 'purchase_bill_inbox_id';
+$date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -28,6 +29,7 @@ $inbox_field = $kind === 'sales' ? 'sales_invoice_inbox_id' : 'purchase_bill_inb
                 <thead><tr>
                     <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Diterima') ?></th>
+                    <th scope="col"><?= html_escape(isset($labels['finance_integration_document_date']) ? $labels['finance_integration_document_date'] : 'Tanggal') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_column_number']) ? $labels['finance_column_number'] : 'Nomor') ?></th>
                     <th scope="col"><?= html_escape($kind === 'sales' ? (isset($labels['finance_customer']) ? $labels['finance_customer'] : 'Pelanggan') : (isset($labels['finance_supplier']) ? $labels['finance_supplier'] : 'Pemasok')) ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_party_code']) ? $labels['finance_integration_party_code'] : 'Kode') ?></th>
@@ -52,7 +54,9 @@ $inbox_field = $kind === 'sales' ? 'sales_invoice_inbox_id' : 'purchase_bill_inb
     var canProcess = <?= $can_process ? 'true' : 'false' ?>;
     var documentField = <?= json_encode($document_field) ?>;
     var inboxField = <?= json_encode($inbox_field) ?>;
+    var dateField = <?= json_encode($date_field) ?>;
     function amount(value) { return window.financeFormatAmount ? window.financeFormatAmount(value) : value; }
+    function documentDate(value) { return window.financeFormatDate ? window.financeFormatDate(value) : value; }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
         pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[1, 'desc']],
@@ -67,6 +71,7 @@ $inbox_field = $kind === 'sales' ? 'sales_invoice_inbox_id' : 'purchase_bill_inb
                 return '<a class="inline-flex min-h-9 items-center rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700" href="' + escapeHtml(base + '/draft/' + parseInt(row[inboxField], 10)) + '"><?= html_escape(isset($labels['finance_integration_make_draft']) ? $labels['finance_integration_make_draft'] : 'Jadikan Draft') ?></a>';
             }},
             {data: 'received_at', name: 'received_at', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
+            {data: dateField, name: dateField, render: function (v, t) { return t === 'display' ? escapeHtml(documentDate(v)) : v; }},
             {data: <?= json_encode($number_field) ?>, name: <?= json_encode($number_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: <?= json_encode($party_field) ?>, name: <?= json_encode($party_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: <?= json_encode($code_field) ?>, name: <?= json_encode($code_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},

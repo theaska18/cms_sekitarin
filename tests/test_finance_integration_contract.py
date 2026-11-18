@@ -5,9 +5,12 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "web/application"
 MIGRATION = ROOT / "database/migrations/20261119000200_create_finance_inbox.sql"
 CANCEL_MIGRATION = ROOT / "database/migrations/20261119000400_add_finance_inbox_cancelled.sql"
+DATES_MIGRATION = ROOT / "database/migrations/20261119000500_add_finance_inbox_dates.sql"
+REFERENCE_MIGRATION = ROOT / "database/migrations/20261119000600_add_finance_draft_integration_reference.sql"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
 STORE = APP / "libraries/Finance_integration_store.php"
+DOCUMENT_STORE = APP / "libraries/Finance_document_store.php"
 LIST_VIEW = APP / "views/admin/finance/integration_index.php"
 FORM_VIEW = APP / "views/admin/finance/document_form.php"
 ROUTES = APP / "config/routes.php"
@@ -37,6 +40,12 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("`cancelled_at`", cancel_migration)
         self.assertIn("fin_sales_invoice_inbox", cancel_migration)
         self.assertIn("fin_purchase_bill_inbox", cancel_migration)
+        dates_migration = DATES_MIGRATION.read_text()
+        for column in ("invoice_date", "bill_date", "due_date"):
+            self.assertIn("`" + column + "`", dates_migration)
+        reference_migration = REFERENCE_MIGRATION.read_text()
+        for column in ("integration_number", "integration_party_name", "integration_party_code"):
+            self.assertIn("`" + column + "`", reference_migration)
 
     def test_api_uses_user_secret_and_tenant_scope(self):
         api = API.read_text()
@@ -53,6 +62,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "Document already posted.", "Draft already created.",
             "'status' => 'cancelled'", "'GET, DELETE'", "already_cancelled",
             "$store->cancel($kind, $tenant_id, $inbox_id, $cancelled_at)",
+            "function valid_date", "invoice_date", "bill_date", "due_date",
         ):
             self.assertIn(marker, api)
         config = CONFIG.read_text()
@@ -86,6 +96,8 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "finance_document_amount_readonly", "finance_document_description_readonly",
             "Nama Pelanggan", "Nama Pemasok",
             "This integration submission has been cancelled.",
+            "integration_number", "integration_party_name", "integration_party_code",
+            "finance_document_integration_party", "function format_amount",
             "'finance_' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox')",
         ):
             self.assertIn(marker, admin)
@@ -99,11 +111,18 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("Lihat Draft", view)
         self.assertIn("amount_before_tax", view)
         self.assertIn("tax_percent", view)
+        self.assertIn("dateField", view)
+        self.assertIn("finance_integration_document_date", view)
         form = FORM_VIEW.read_text()
         self.assertIn("$finance_document_amount_readonly", form)
         self.assertIn("$finance_document_description_readonly", form)
         self.assertIn("$finance_document_party_label", form)
+        self.assertIn("$finance_document_integration_party", form)
         self.assertIn("read-only:bg-slate-50", form)
+        document_store = DOCUMENT_STORE.read_text()
+        self.assertIn("integration_number", document_store)
+        self.assertIn("integration_party_name", document_store)
+        self.assertIn("integration_party_code", document_store)
         store = STORE.read_text()
         self.assertIn("function count", store)
         self.assertIn("function page", store)
@@ -111,6 +130,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("function document_status", store)
         self.assertIn("function cancel", store)
         self.assertIn("->where('status', 'received')", store)
+        self.assertIn("$spec['date'] => (string) $data['date']", store)
         self.assertIn("->where('status !=', 'cancelled')", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
 

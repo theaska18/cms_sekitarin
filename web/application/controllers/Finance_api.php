@@ -54,6 +54,8 @@ class Finance_api extends CI_Controller
 
         $spec = $this->payload_spec($kind);
         $number = isset($payload[$spec['number']]) ? trim((string) $payload[$spec['number']]) : '';
+        $document_date = isset($payload[$spec['date']]) ? trim((string) $payload[$spec['date']]) : '';
+        $due_date = isset($payload['due_date']) ? trim((string) $payload['due_date']) : '';
         $party = isset($payload[$spec['party']]) ? trim((string) $payload[$spec['party']]) : '';
         $party_code = isset($payload[$spec['code']]) ? trim((string) $payload[$spec['code']]) : '';
         $amount_raw = isset($payload['amount_before_tax']) ? trim((string) $payload['amount_before_tax']) : '';
@@ -63,6 +65,14 @@ class Finance_api extends CI_Controller
         $errors = array();
         if ($number === '' || strlen($number) > 48) {
             $errors[] = $spec['number'];
+        }
+        if (!$this->valid_date($document_date)) {
+            $errors[] = $spec['date'];
+        }
+        if ($due_date !== '' && !$this->valid_date($due_date)) {
+            $errors[] = 'due_date';
+        } elseif ($this->valid_date($document_date) && $due_date !== '' && $due_date < $document_date) {
+            $errors[] = 'due_date';
         }
         if ($party === '' || strlen($party) > 160) {
             $errors[] = $spec['party'];
@@ -104,6 +114,8 @@ class Finance_api extends CI_Controller
 
         $created = $store->create($kind, $tenant_id, (int) $user['user_id'], array(
             'number' => $number,
+            'date' => $document_date,
+            'due_date' => $due_date,
             'party_name' => $party,
             'party_code' => $party_code,
             'amount_before_tax' => $subtotal,
@@ -124,14 +136,17 @@ class Finance_api extends CI_Controller
         }
 
         $inbox_id = (int) $this->db->insert_id();
-        $this->json(array(
+        $response = array(
             'status' => 'accepted',
             'inbox_id' => $inbox_id,
             'review_status' => 'received',
             'document_type' => $kind === 'sales' ? 'sales_invoice' : 'purchase_bill',
             'document_number' => $number,
+            $spec['date'] => $document_date,
+            'due_date' => $due_date !== '' ? $due_date : NULL,
             'total_amount' => $total,
-        ), 202);
+        );
+        $this->json($response, 202);
     }
 
     private function read_or_cancel($kind, $path_id, $method)
@@ -219,6 +234,8 @@ class Finance_api extends CI_Controller
             'inbox_id' => (int) $row[$spec['id']],
             'document_type' => $kind === 'sales' ? 'sales_invoice' : 'purchase_bill',
             'document_number' => (string) $row[$spec['number']],
+            $spec['date'] => $row[$spec['date']],
+            'due_date' => $row['due_date'],
             'party_name' => (string) $row[$spec['party_name']],
             'party_code' => $row[$spec['party_code']] !== NULL ? (string) $row[$spec['party_code']] : NULL,
             'amount_before_tax' => (float) $row['amount_before_tax'],
@@ -322,8 +339,17 @@ class Finance_api extends CI_Controller
     private function payload_spec($kind)
     {
         return $kind === 'sales'
-            ? array('number' => 'invoice_number', 'party' => 'customer_name', 'code' => 'customer_code')
-            : array('number' => 'bill_number', 'party' => 'supplier_name', 'code' => 'supplier_code');
+            ? array('number' => 'invoice_number', 'date' => 'invoice_date', 'party' => 'customer_name', 'code' => 'customer_code')
+            : array('number' => 'bill_number', 'date' => 'bill_date', 'party' => 'supplier_name', 'code' => 'supplier_code');
+    }
+
+    private function valid_date($value)
+    {
+        if (!is_string($value) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return FALSE;
+        }
+        $date = DateTime::createFromFormat('!Y-m-d', $value);
+        return $date !== FALSE && $date->format('Y-m-d') === $value;
     }
 
     private function authenticate()

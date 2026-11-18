@@ -33,7 +33,8 @@ class Finance_integration_store
         }
         $fields = $this->db->list_fields($spec['table']);
         $required = array(
-            $spec['id'], 'tenant_id', 'created_by', $spec['number'], $spec['party_name'],
+            $spec['id'], 'tenant_id', 'created_by', $spec['number'], $spec['date'],
+            'due_date', $spec['party_name'],
             'amount_before_tax', 'tax_percent', 'tax_amount', 'total_amount',
             'description', 'status', 'received_at', 'processed_at', $spec['document_id'],
         );
@@ -64,6 +65,7 @@ class Finance_integration_store
         $offset = max(0, (int) $offset);
         $order_map = array(
             'received_at' => 'received_at',
+            $spec['date'] => $spec['date'],
             $spec['number'] => $spec['number'],
             $spec['party_name'] => $spec['party_name'],
             $spec['party_code'] => $spec['party_code'],
@@ -130,6 +132,8 @@ class Finance_integration_store
             'tenant_id' => (int) $tenant_id,
             'created_by' => (int) $user_id,
             $spec['number'] => (string) $data['number'],
+            $spec['date'] => (string) $data['date'],
+            'due_date' => $data['due_date'] !== '' ? (string) $data['due_date'] : NULL,
             $spec['party_name'] => (string) $data['party_name'],
             $spec['party_code'] => $data['party_code'] !== '' ? (string) $data['party_code'] : NULL,
             'amount_before_tax' => $data['amount_before_tax'],
@@ -207,6 +211,7 @@ class Finance_integration_store
                 'table' => 'fin_sales_invoice_inbox',
                 'id' => 'sales_invoice_inbox_id',
                 'number' => 'invoice_number',
+                'date' => 'invoice_date',
                 'party_name' => 'customer_name',
                 'party_code' => 'customer_code',
                 'document_id' => 'sales_invoice_id',
@@ -220,6 +225,7 @@ class Finance_integration_store
                 'table' => 'fin_purchase_bill_inbox',
                 'id' => 'purchase_bill_inbox_id',
                 'number' => 'bill_number',
+                'date' => 'bill_date',
                 'party_name' => 'supplier_name',
                 'party_code' => 'supplier_code',
                 'document_id' => 'purchase_bill_id',
@@ -239,6 +245,7 @@ class Finance_integration_store
         }
         $this->db->group_start()
             ->like($spec['number'], $search)
+            ->or_like($spec['date'], $search)
             ->or_like($spec['party_name'], $search)
             ->or_like($spec['party_code'], $search)
             ->group_end();

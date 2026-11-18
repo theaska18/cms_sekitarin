@@ -121,6 +121,8 @@ curl -X POST 'http://localhost:8086/api/finance/sales-invoices' \
   -H 'Content-Type: application/json' \
   -d '{
     "invoice_number": "INV-EXT-2026-001",
+    "invoice_date": "2026-11-18",
+    "due_date": "2026-12-18",
     "customer_name": "PT Contoh Pelanggan",
     "customer_code": "CUST-001",
     "amount_before_tax": 1000000,
@@ -134,6 +136,8 @@ Field:
 | Field | Wajib | Tipe | Keterangan |
 | --- | --- | --- | --- |
 | `invoice_number` | Ya | string, maks. 48 | Nomor faktur dari sistem eksternal. Unik per tenant. |
+| `invoice_date` | Ya | `YYYY-MM-DD` | Tanggal invoice dari sistem eksternal. |
+| `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `invoice_date`. |
 | `customer_name` | Ya | string, maks. 160 | Nama pelanggan sebagai referensi. Tidak dipakai untuk mapping. |
 | `customer_code` | Tidak | string, maks. 32 | Kode pelanggan sebagai referensi. |
 | `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 6 desimal | Nilai sebelum pajak. |
@@ -149,6 +153,8 @@ Contoh respons `202 Accepted`:
   "review_status": "received",
   "document_type": "sales_invoice",
   "document_number": "INV-EXT-2026-001",
+  "invoice_date": "2026-11-18",
+  "due_date": "2026-12-18",
   "total_amount": 1110000
 }
 ```
@@ -169,6 +175,8 @@ curl -X POST 'http://localhost:8086/api/finance/purchase-bills' \
   -H 'Content-Type: application/json' \
   -d '{
     "bill_number": "BILL-EXT-2026-001",
+    "bill_date": "2026-11-18",
+    "due_date": "2026-12-18",
     "supplier_name": "PT Contoh Pemasok",
     "supplier_code": "SUP-001",
     "amount_before_tax": 500000,
@@ -182,6 +190,8 @@ Field:
 | Field | Wajib | Tipe | Keterangan |
 | --- | --- | --- | --- |
 | `bill_number` | Ya | string, maks. 48 | Nomor tagihan dari sistem eksternal. Unik per tenant. |
+| `bill_date` | Ya | `YYYY-MM-DD` | Tanggal tagihan dari sistem eksternal. |
+| `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `bill_date`. |
 | `supplier_name` | Ya | string, maks. 160 | Nama pemasok sebagai referensi. Tidak dipakai untuk mapping. |
 | `supplier_code` | Tidak | string, maks. 32 | Kode pemasok sebagai referensi. |
 | `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 6 desimal | Nilai sebelum pajak. |
@@ -197,6 +207,8 @@ Contoh respons `202 Accepted`:
   "review_status": "received",
   "document_type": "purchase_bill",
   "document_number": "BILL-EXT-2026-001",
+  "bill_date": "2026-11-18",
+  "due_date": "2026-12-18",
   "total_amount": 555000
 }
 ```
@@ -234,6 +246,8 @@ Respons `200`:
   "inbox_id": 12,
   "document_type": "sales_invoice",
   "document_number": "INV-EXT-2026-001",
+  "invoice_date": "2026-11-18",
+  "due_date": "2026-12-18",
   "party_name": "PT Contoh Pelanggan",
   "party_code": "CUST-001",
   "amount_before_tax": 1000000,
@@ -417,7 +431,7 @@ Kolom utama:
 
 ```text
 sales_invoice_inbox_id, tenant_id, created_by,
-invoice_number, customer_name, customer_code,
+invoice_number, invoice_date, due_date, customer_name, customer_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
 sales_invoice_id, payload_json, received_at, processed_at, cancelled_at
@@ -429,7 +443,7 @@ Kolom utama:
 
 ```text
 purchase_bill_inbox_id, tenant_id, created_by,
-bill_number, supplier_name, supplier_code,
+bill_number, bill_date, due_date, supplier_name, supplier_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
 purchase_bill_id, payload_json, received_at, processed_at, cancelled_at
@@ -464,7 +478,7 @@ masih dapat dibaca lewat endpoint status.
 Isi halaman:
 
 - daftar data masuk dengan DataTables server-side;
-- waktu diterima, nomor dokumen, nama pelanggan/pemasok, kode;
+- waktu diterima, tanggal invoice/bill, nomor dokumen, nama pelanggan/pemasok, kode;
 - nilai sebelum pajak, persen pajak, total;
 - status;
 - tombol **Jadikan Draft**;
@@ -525,8 +539,12 @@ Supplier Payments
 1. Finance membuka halaman integrasi.
 2. Klik **Jadikan Draft** pada baris berstatus `received`.
 3. Form draft terbuka dengan:
+   - nama dan kode integrasi tampil di atas input pelanggan/pemasok;
    - nilai dari `amount_before_tax` dan `description` inbox;
-   - keduanya **read-only**;
+   - jumlah sebelum pajak ditampilkan 2 desimal, tetapi penyimpanan tetap
+     memakai nilai asli inbox;
+   - `amount` dan `description` **read-only**;
+   - tanggal invoice/bill dan due date terisi dari data API;
    - field pelanggan/pemasok, akun, pajak, tanggal, currency, exchange rate,
      department, dan memo tetap bisa dipilih Finance;
    - label partai memakai **Nama Pelanggan** atau **Nama Pemasok**.
@@ -534,9 +552,12 @@ Supplier Payments
 5. Server mengabaikan `amount` dan `description` yang dikirim dari browser dan
    selalu memakai nilai inbox. Ini mencegah manipulasi nilai lewat POST.
 6. Draft disimpan lewat `Finance_document_store::save_draft`.
-7. Inbox diubah menjadi `processed`, `processed_at` diisi, dan
+7. Nomor draft tetap dibuat oleh sequence, misalnya `INV-20261118-00001`.
+   Nomor dari API disimpan terpisah di `integration_number` beserta
+   `integration_party_name` dan `integration_party_code`.
+8. Inbox diubah menjadi `processed`, `processed_at` diisi, dan
    `sales_invoice_id`/`purchase_bill_id` dihubungkan ke draft.
-8. Draft belum posted. Approval dan posting tetap mengikuti alur Finance yang
+9. Draft belum posted. Approval dan posting tetap mengikuti alur Finance yang
    sudah ada.
 
 Jika inbox sudah memiliki `sales_invoice_id`/`purchase_bill_id`, tombol berubah
@@ -573,13 +594,15 @@ menjadi **Lihat Draft** dan mengarah ke halaman edit draft tersebut.
 | `409` | Nomor duplikat, sudah ada draft, atau sudah posted | Cek status lewat `GET`; draft/posted tidak bisa dibatalkan. |
 | `422` | Field wajib kosong atau format angka salah | Periksa `fields` pada respons. |
 | Draft gagal disimpan | Pelanggan/pemasok, akun, pajak, atau control account tidak valid | Lengkapi data master dan `fin_settings`. |
-| Tabel inbox tidak tersedia | Migration belum dijalankan | Jalankan kedua migration inbox. |
+| Tabel inbox tidak tersedia | Migration belum dijalankan | Jalankan seluruh migration inbox terbaru. |
 
 ## File terkait
 
 ```text
 database/migrations/20261119000200_create_finance_inbox.sql
 database/migrations/20261119000400_add_finance_inbox_cancelled.sql
+database/migrations/20261119000500_add_finance_inbox_dates.sql
+database/migrations/20261119000600_add_finance_draft_integration_reference.sql
 web/application/controllers/Finance_api.php
 web/application/controllers/Admin_finance_integration.php
 web/application/libraries/Finance_integration_store.php

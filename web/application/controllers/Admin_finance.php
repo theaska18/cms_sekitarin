@@ -2271,6 +2271,17 @@ class Admin_finance extends Admin
                     : '';
             }
         }
+        if (isset($record['amount']) && $record['amount'] !== '' && $record['amount'] !== NULL) {
+            $record['amount'] = number_format((float) $record['amount'], 2, '.', '');
+        }
+        $integration_reference = !empty($record['integration_number']) ? (string) $record['integration_number'] : '';
+        $integration_party = '';
+        if (!empty($record['integration_party_name'])) {
+            $integration_party = (string) $record['integration_party_name'];
+            if (!empty($record['integration_party_code'])) {
+                $integration_party .= ' (' . (string) $record['integration_party_code'] . ')';
+            }
+        }
         $this->render_admin(
             'admin/finance/document_form',
             'finance_' . $slug,
@@ -2284,6 +2295,8 @@ class Admin_finance extends Admin
                 'finance_document_available' => $available,
                 'finance_document_write_available' => $write_available,
                 'finance_document_lookup_labels' => $labels,
+                'finance_document_integration_reference' => $integration_reference,
+                'finance_document_integration_party' => $integration_party,
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )

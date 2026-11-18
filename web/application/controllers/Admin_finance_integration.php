@@ -77,13 +77,14 @@ class Admin_finance_integration extends Admin
         $tenant_id = (int) $this->current_user['tenant_id'];
         $columns = array(
             1 => 'received_at',
-            2 => $spec['number'],
-            3 => $spec['party_name'],
-            4 => $spec['party_code'],
-            5 => 'amount_before_tax',
-            6 => 'tax_percent',
-            7 => 'total_amount',
-            8 => 'status',
+            2 => $spec['date'],
+            3 => $spec['number'],
+            4 => $spec['party_name'],
+            5 => $spec['party_code'],
+            6 => 'amount_before_tax',
+            7 => 'tax_percent',
+            8 => 'total_amount',
+            9 => 'status',
         );
         $this->datatable_server->respond(
             $columns,
@@ -138,16 +139,18 @@ class Admin_finance_integration extends Admin
         if ($settings !== FALSE && $settings->num_rows()) {
             $base_currency = strtoupper((string) $settings->row()->base_currency);
         }
+        $document_date = !empty($inbox[$spec['date']]) ? (string) $inbox[$spec['date']] : date('Y-m-d');
+        $due_date = !empty($inbox['due_date']) ? (string) $inbox['due_date'] : '';
         $record = array(
-            'document_date' => date('Y-m-d'),
-            'due_date' => '',
+            'document_date' => $document_date,
+            'due_date' => $due_date,
             'person_id' => '',
             'account_id' => '',
             'tax_id' => '',
             'department_id' => '',
             'currency_code' => $base_currency,
             'exchange_rate' => '1',
-            'amount' => (string) $inbox['amount_before_tax'],
+            'amount' => $this->format_amount($inbox['amount_before_tax']),
             'description' => (string) $inbox['description'],
             'memo' => 'Integrasi ' . (string) $inbox[$spec['number']] . ' · ' . (string) $inbox[$spec['party_name']],
         );
@@ -162,6 +165,9 @@ class Admin_finance_integration extends Admin
             $values = $this->values();
             $values['amount'] = (string) $inbox['amount_before_tax'];
             $values['description'] = (string) $inbox['description'];
+            $values['integration_number'] = (string) $inbox[$spec['number']];
+            $values['integration_party_name'] = (string) $inbox[$spec['party_name']];
+            $values['integration_party_code'] = $inbox[$spec['party_code']] !== NULL ? (string) $inbox[$spec['party_code']] : '';
             $errors = $this->validate($values);
             if (!$errors) {
                 $previous_debug = $this->db->db_debug;
@@ -180,7 +186,7 @@ class Admin_finance_integration extends Admin
                 $errors[] = 'document_' . $result;
             }
             $record = array_merge($record, $values);
-            $record['amount'] = (string) $inbox['amount_before_tax'];
+            $record['amount'] = $this->format_amount($inbox['amount_before_tax']);
             $record['description'] = (string) $inbox['description'];
             foreach (array('party', 'account', 'tax') as $lookup_kind) {
                 $field = $lookup_kind === 'party' ? 'person_id' : ($lookup_kind === 'account' ? 'account_id' : 'tax_id');
@@ -207,11 +213,17 @@ class Admin_finance_integration extends Admin
                 'finance_document_description_readonly' => TRUE,
                 'finance_document_party_label' => $kind === 'sales' ? 'Nama Pelanggan' : 'Nama Pemasok',
                 'finance_document_cancel_url' => '/admin/finance/' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox'),
-                'finance_document_integration_reference' => (string) $inbox[$spec['number']] . ' · ' . (string) $inbox[$spec['party_name']] . ($inbox[$spec['party_code']] !== NULL && $inbox[$spec['party_code']] !== '' ? ' (' . (string) $inbox[$spec['party_code']] . ')' : ''),
+                'finance_document_integration_reference' => trim((string) $inbox[$spec['number']] . (!empty($inbox[$spec['date']]) ? ' · ' . (string) $inbox[$spec['date']] : '')),
+                'finance_document_integration_party' => trim((string) $inbox[$spec['party_name']] . ($inbox[$spec['party_code']] !== NULL && $inbox[$spec['party_code']] !== '' ? ' (' . (string) $inbox[$spec['party_code']] . ')' : '')),
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )
         );
+    }
+
+    private function format_amount($value)
+    {
+        return number_format((float) $value, 2, '.', '');
     }
 
     private function values()
