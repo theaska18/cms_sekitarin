@@ -602,46 +602,9 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
     vertical-align: middle;
 }
 
-#admin-app-shell .finance-list-table .finance-cell-wrap-content {
-    display: block;
-    max-width: 16rem;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-}
 
-@media (min-width: 1280px) {
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] {
-        table-layout: fixed;
-        width: 100%;
-    }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th,
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td.finance-cell-wrap {
-        white-space: normal;
-        overflow: visible;
-    }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(1),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(1) { width: 13%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(2),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(2) { width: 14%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(3),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(3) { width: 10%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(4),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(4) { width: 11%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(5),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(5) { width: 23%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(6),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(6) { width: 10%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(7),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(7) { width: 11%; }
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > thead > tr > th:nth-child(8),
-    #admin-app-shell .finance-list-table[data-finance-layout="cancellation"] > tbody > tr > td:nth-child(8) { width: 8%; }
-}
+
+
 
 .finance-table-scroll {
     position: relative;

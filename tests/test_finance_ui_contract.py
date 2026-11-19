@@ -20,7 +20,7 @@ class FinanceUiContractTests(unittest.TestCase):
         for marker in (
             "finance_cancellation_history_intro", "finance_cancellation_history_empty",
             "pending_count", "approved_count", "rejected_count",
-            "cancellationStatuses", "finance-cell-wrap",
+            "cancellationStatuses", "financeLocalTimeHtml",
             "financeLocalTimeHtml",
         ):
             self.assertIn(marker, source)
@@ -29,6 +29,8 @@ class FinanceUiContractTests(unittest.TestCase):
         theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
         self.assertIn("td.finance-cell-wrap", theme)
         self.assertIn(".finance-cell-truncate", theme)
+        self.assertNotIn('data-finance-layout="cancellation"', source)
+        self.assertNotIn("finance-cell-wrap-content", source)
         for name in ("transaction_index.php", "journal_index.php", "payment_index.php",
                      "reconciliation_index.php", "document_index.php"):
             source = (FIN / name).read_text(encoding="utf-8")
@@ -89,12 +91,12 @@ class FinanceUiContractTests(unittest.TestCase):
         source = (FIN / "partials/filter_panel.php").read_text(encoding="utf-8")
         self.assertEqual(source.count("<div"), source.count("</div>"))
 
-    def test_cancellation_history_fits_desktop_report_shell(self):
+    def test_cancellation_history_uses_natural_columns_without_ellipsis(self):
         source = (FIN / "report_index.php").read_text(encoding="utf-8")
         theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
-        self.assertIn('data-finance-layout="cancellation"', source)
-        self.assertIn('[data-finance-layout="cancellation"]', theme)
-        self.assertIn("@media (min-width: 1280px)", theme)
+        self.assertNotIn('data-finance-layout="cancellation"', source)
+        self.assertNotIn('[data-finance-layout="cancellation"]', theme)
+        self.assertNotIn("finance-cell-wrap-content", source)
 
     def test_long_forms_use_sticky_action_bars(self):
         for name in ("journal_form.php", "reconciliation_form.php"):

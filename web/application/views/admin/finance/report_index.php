@@ -142,7 +142,7 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
     <?php if (!$finance_report_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_report_unavailable']) ? $labels['finance_report_unavailable'] : 'Finance report data is unavailable.') ?></div>
     <?php elseif (!$finance_report_errors): ?>
-        <?= $this->finance_list_table->open('finance-report-table', $finance_report_slug === 'cancellation_history' ? array('table_attrs' => 'data-finance-layout="cancellation"') : array()) ?>
+        <?= $this->finance_list_table->open('finance-report-table') ?>
                     <thead><tr><?php foreach ($finance_report_columns as $column): $label_key = isset($column['label_key']) ? $column['label_key'] : ''; ?><th scope="col"><?= html_escape($label_key !== '' && isset($labels[$label_key]) ? $labels[$label_key] : $column['label']) ?></th><?php endforeach; ?></tr></thead>
                 <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
@@ -205,7 +205,6 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
     }
     var columns = definitions.map(function (column) {
         var className = numeric.indexOf(column.name) >= 0 ? 'text-right tabular-nums' : '';
-        if (isCancellationHistory && column.name === 'reason') className += ' finance-cell-wrap';
         return {
             data: column.name,
             name: column.name,
@@ -235,13 +234,9 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
                         if (value === null || value === undefined || value === '') return '<span class="text-slate-400">—</span>';
                         return window.financeLocalTimeHtml ? window.financeLocalTimeHtml(value) : escapeHtml(value);
                     }
-                    if (column.name === 'reason') {
+                    if (column.name === 'reason' || column.name === 'requested_by_name') {
                         value = String(value == null ? '' : value);
-                        return value === '' ? '<span class="text-slate-400">—</span>' : '<div class="finance-cell-wrap-content">' + escapeHtml(value) + '</div>';
-                    }
-                    if (column.name === 'requested_by_name') {
-                        value = String(value == null ? '' : value);
-                        return value === '' ? '<span class="text-slate-400">—</span>' : '<span class="finance-cell-truncate" title="' + escapeHtml(value) + '">' + escapeHtml(value) + '</span>';
+                        return value === '' ? '<span class="text-slate-400">—</span>' : escapeHtml(value);
                     }
                 }
                 return escapeHtml(value);
