@@ -1,0 +1,19 @@
+{
+  "version": "1.0.16",
+  "from_version": "1.0.15",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.15",
+  "changelog": "Rilis 1.0.16: pembaruan versi. Perbaikan DataTable, panel filter, padding dashboard, dan update berantai sudah termasuk pada 1.0.15.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "6e82ab0286d5d5a60dc6fb904990be58f4bdc51cd9e6a1a6eedc02ddf2410575",
+      "size": 449
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
