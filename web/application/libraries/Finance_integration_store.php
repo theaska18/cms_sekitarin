@@ -51,7 +51,6 @@ class Finance_integration_store
         $this->apply_filters($spec, $filters);
         $count = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
-            ->where('status !=', 'cancelled')
             ->count_all_results();
         return $count === FALSE ? 0 : (int) $count;
     }
@@ -82,7 +81,6 @@ class Finance_integration_store
         $this->apply_filters($spec, $filters);
         $query = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
-            ->where('status !=', 'cancelled')
             ->order_by($order_column, $direction)
             ->order_by($spec['id'], 'DESC')
             ->limit($limit, $offset)
@@ -199,6 +197,33 @@ class Finance_integration_store
             ->where($spec['id'], (int) $inbox_id)
             ->where('status', 'received')
             ->where($spec['document_id'] . ' IS NULL', NULL, FALSE)
+            ->update($spec['table'], array(
+                'status' => 'cancelled',
+                'cancelled_at' => (string) $cancelled_at,
+            ));
+        return $this->db->affected_rows() === 1;
+    }
+
+    /** Soft-remove an inbox row whose linked draft document is already cancelled. */
+    public function cancel_linked_cancelled($kind, $tenant_id, $inbox_id, $cancelled_at)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || !$this->available($kind)
+            || !$this->db->field_exists('cancelled_at', $spec['table'])) {
+            return FALSE;
+        }
+        $row = $this->find($kind, $tenant_id, $inbox_id);
+        if (!is_array($row)) {
+            return FALSE;
+        }
+        $document_id = (int) $row[$spec['document_id']];
+        if ($document_id < 1
+            || $this->document_status($kind, $tenant_id, $document_id) !== 'cancelled') {
+            return FALSE;
+        }
+        $this->db->where('tenant_id', (int) $tenant_id)
+            ->where($spec['id'], (int) $inbox_id)
+            ->where('status !=', 'cancelled')
             ->update($spec['table'], array(
                 'status' => 'cancelled',
                 'cancelled_at' => (string) $cancelled_at,

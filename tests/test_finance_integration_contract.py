@@ -7,6 +7,8 @@ MIGRATION = ROOT / "database/migrations/20261119000200_create_finance_inbox.sql"
 CANCEL_MIGRATION = ROOT / "database/migrations/20261119000400_add_finance_inbox_cancelled.sql"
 DATES_MIGRATION = ROOT / "database/migrations/20261119000500_add_finance_inbox_dates.sql"
 REFERENCE_MIGRATION = ROOT / "database/migrations/20261119000600_add_finance_draft_integration_reference.sql"
+SYNC_MIGRATION = ROOT / "database/migrations/20261119000900_sync_finance_inbox_cancelled_status.sql"
+CANCELLATION_STORE = APP / "libraries/Finance_cancellation_store.php"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
 ADMIN_CONTROLLER = APP / "controllers/Admin_finance.php"
@@ -64,6 +66,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "Document already posted.", "Draft already created.",
             "'status' => 'cancelled'", "'GET, DELETE'", "already_cancelled",
             "$store->cancel($kind, $tenant_id, $inbox_id, $cancelled_at)",
+            "cancel_linked_cancelled", "draft_status !== 'cancelled'",
             "function valid_date", "invoice_date", "bill_date", "due_date",
         ):
             self.assertIn(marker, api)
@@ -134,8 +137,27 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("function cancel", store)
         self.assertIn("->where('status', 'received')", store)
         self.assertIn("$spec['date'] => (string) $data['date']", store)
-        self.assertIn("->where('status !=', 'cancelled')", store)
+        self.assertIn("function cancel_linked_cancelled", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
+
+    def test_cancelled_drafts_sync_their_integration_inbox_rows(self):
+        store = CANCELLATION_STORE.read_text(encoding="utf-8")
+        self.assertIn("sync_integration_inbox", store)
+        self.assertIn("fin_sales_invoice_inbox", store)
+        self.assertIn("fin_purchase_bill_inbox", store)
+        self.assertIn("'sales_invoice_id'", store)
+        self.assertIn("'purchase_bill_id'", store)
+        self.assertIn("'status' => 'cancelled'", store)
+        self.assertIn("'cancelled_at'", store)
+        migration = SYNC_MIGRATION.read_text(encoding="utf-8")
+        for marker in (
+            "UPDATE `fin_sales_invoice_inbox`", "UPDATE `fin_purchase_bill_inbox`",
+            "d.`status` = 'cancelled'", "i.`status` <> 'cancelled'", "COALESCE(i.`cancelled_at`, NOW())",
+        ):
+            self.assertIn(marker, migration)
+        view = LIST_VIEW.read_text(encoding="utf-8")
+        self.assertIn("finance_integration_cancelled", view)
+        self.assertIn("statusLabels", view)
 
     def test_invoice_and_bill_lists_show_integration_number(self):
         index_view = DOCUMENT_INDEX.read_text()

@@ -258,18 +258,6 @@ class Finance_api extends CI_Controller
         $inbox_id = (int) $row[$spec['id']];
         $draft_id = (int) $row[$spec['document_id']];
 
-        if ($draft_id > 0) {
-            $draft_status = $store->document_status($kind, $tenant_id, $draft_id);
-            $this->json(array(
-                'status' => 'error',
-                'message' => $draft_status === 'posted' ? 'Document already posted.' : 'Draft already created.',
-                'inbox_id' => $inbox_id,
-                'draft_id' => $draft_id,
-                'draft_status' => $draft_status,
-            ), 409);
-            return;
-        }
-
         if ((string) $row['status'] === 'cancelled') {
             $this->json(array(
                 'status' => 'cancelled',
@@ -277,6 +265,43 @@ class Finance_api extends CI_Controller
                 'inbox_id' => $inbox_id,
                 'cancelled_at' => array_key_exists('cancelled_at', $row) ? $row['cancelled_at'] : NULL,
                 'already_cancelled' => TRUE,
+            ), 200);
+            return;
+        }
+
+        if ($draft_id > 0) {
+            $draft_status = $store->document_status($kind, $tenant_id, $draft_id);
+            if ($draft_status !== 'cancelled') {
+                $this->json(array(
+                    'status' => 'error',
+                    'message' => $draft_status === 'posted' ? 'Document already posted.' : 'Draft already created.',
+                    'inbox_id' => $inbox_id,
+                    'draft_id' => $draft_id,
+                    'draft_status' => $draft_status,
+                ), 409);
+                return;
+            }
+            $cancelled_at = date('Y-m-d H:i:s');
+            if ($store->cancel_linked_cancelled($kind, $tenant_id, $inbox_id, $cancelled_at) !== TRUE) {
+                $fresh = $store->find($kind, $tenant_id, $inbox_id);
+                if (is_array($fresh) && (string) $fresh['status'] === 'cancelled') {
+                    $this->json(array(
+                        'status' => 'cancelled',
+                        'review_status' => 'cancelled',
+                        'inbox_id' => $inbox_id,
+                        'cancelled_at' => array_key_exists('cancelled_at', $fresh) ? $fresh['cancelled_at'] : NULL,
+                        'already_cancelled' => TRUE,
+                    ), 200);
+                    return;
+                }
+                $this->json(array('status' => 'error', 'message' => 'Unable to cancel submission.'), 500);
+                return;
+            }
+            $this->json(array(
+                'status' => 'cancelled',
+                'review_status' => 'cancelled',
+                'inbox_id' => $inbox_id,
+                'cancelled_at' => $cancelled_at,
             ), 200);
             return;
         }

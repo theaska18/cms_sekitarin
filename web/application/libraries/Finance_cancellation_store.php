@@ -137,6 +137,7 @@ class Finance_cancellation_store
                 'decided_on' => date('Y-m-d H:i:s'),
                 'reversal_journal_id' => $reversal_id ? (int) $reversal_id : NULL,
             ));
+            $this->sync_integration_inbox($tenant_id, (string) $cancellation['source_type'], $source_id);
             return TRUE;
         }
         $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
@@ -174,6 +175,32 @@ class Finance_cancellation_store
         $fallback = $this->db->select('flow_code')->from('sys_approval_flow')
             ->where('flow_code', 'finance_cancel')->where('active_flag', 1)->limit(1)->get();
         return $fallback !== FALSE && $fallback->num_rows() ? 'finance_cancel' : '';
+    }
+
+    /** Keep integration inbox rows in sync with a cancelled draft document. */
+    private function sync_integration_inbox($tenant_id, $source_type, $source_id)
+    {
+        $targets = array(
+            'fin_sales_invoice' => array('table' => 'fin_sales_invoice_inbox', 'id' => 'sales_invoice_id'),
+            'fin_purchase_bill' => array('table' => 'fin_purchase_bill_inbox', 'id' => 'purchase_bill_id'),
+        );
+        if (!isset($targets[$source_type])) {
+            return;
+        }
+        $target = $targets[$source_type];
+        if (!$this->db->table_exists($target['table'])
+            || !$this->db->field_exists('cancelled_at', $target['table'])) {
+            return;
+        }
+        $this->db->where(array(
+            'tenant_id' => (int) $tenant_id,
+            $target['id'] => (int) $source_id,
+        ))
+            ->where('status !=', 'cancelled')
+            ->update($target['table'], array(
+                'status' => 'cancelled',
+                'cancelled_at' => date('Y-m-d H:i:s'),
+            ));
     }
 
     private function create_reversal($tenant_id, $cancellation)

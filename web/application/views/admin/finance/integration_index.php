@@ -52,6 +52,14 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
     var base = <?= json_encode($current_path, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     var canProcess = <?= $can_process ? 'true' : 'false' ?>;
+    var statusLabels = {
+        received: <?= json_encode(isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Received') ?>,
+        processed: <?= json_encode(isset($labels['finance_integration_processed']) ? $labels['finance_integration_processed'] : 'Processed') ?>,
+        cancelled: <?= json_encode(isset($labels['finance_integration_cancelled']) ? $labels['finance_integration_cancelled'] : 'Cancelled') ?>,
+        needs_review: <?= json_encode(isset($labels['finance_integration_needs_review']) ? $labels['finance_integration_needs_review'] : 'Needs Review') ?>,
+        failed: <?= json_encode(isset($labels['finance_integration_failed']) ? $labels['finance_integration_failed'] : 'Failed') ?>,
+        duplicate: <?= json_encode(isset($labels['finance_integration_duplicate']) ? $labels['finance_integration_duplicate'] : 'Duplicate') ?>
+    };
     var documentField = <?= json_encode($document_field) ?>;
     var inboxField = <?= json_encode($inbox_field) ?>;
     var dateField = <?= json_encode($date_field) ?>;
@@ -78,7 +86,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
             {data: 'amount_before_tax', name: 'amount_before_tax', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
             {data: 'tax_percent', name: 'tax_percent', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(v) + '%' : v; }},
             {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
-            {data: 'status', name: 'status', render: function (v, t) { if (t !== 'display') return v; var map = {received: 'Diterima', processed: 'Diproses', needs_review: 'Perlu Review', failed: 'Gagal', duplicate: 'Duplikat'}; return escapeHtml(map[v] || v); }}
+            {data: 'status', name: 'status', render: function (v, t) { if (t !== 'display') return v; return escapeHtml(statusLabels[v] || v); }}
         ],
         language: {emptyTable: <?= json_encode(isset($labels['finance_integration_empty']) ? $labels['finance_integration_empty'] : 'Belum ada data integrasi') ?>, search: <?= json_encode(isset($labels['finance_dt_search']) ? $labels['finance_dt_search'] : 'Cari:') ?>, lengthMenu: <?= json_encode(isset($labels['finance_dt_length']) ? $labels['finance_dt_length'] : 'Tampilkan _MENU_') ?>, info: <?= json_encode(isset($labels['finance_dt_info']) ? $labels['finance_dt_info'] : 'Menampilkan _START_ sampai _END_ dari _TOTAL_') ?>, infoEmpty: <?= json_encode(isset($labels['finance_integration_empty']) ? $labels['finance_integration_empty'] : 'Belum ada data') ?>, zeroRecords: <?= json_encode(isset($labels['finance_integration_zero']) ? $labels['finance_integration_zero'] : 'Tidak ada data yang cocok') ?>, processing: <?= json_encode(isset($labels['finance_dt_processing']) ? $labels['finance_dt_processing'] : 'Memuat…') ?>}
     });
