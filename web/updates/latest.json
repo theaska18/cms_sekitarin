@@ -1,11 +1,11 @@
 {
-  "version": "1.0.25",
+  "version": "1.0.26",
   "released_at": "2026-11-19",
-  "changelog": "Melokalkan seluruh label dan nilai laporan Riwayat Pembatalan: kolom tanggal, sumber, status, alasan, pemohon, dan jurnal reversal kini mengikuti bahasa aktif.",
+  "changelog": "Perbaikan UI Finance: kontrol tanggal/export laporan disatukan, tampilan Riwayat Pembatalan dengan badge dan ringkasan status, waktu lokal, alasan wrap, aksi hapus/batal terlokalisasi memakai dialog konfirmasi bersama, izin aksi dihormati, inbox integrasi lebih rapi, action bar form panjang sticky, dan warna aksi utama diseragamkan.",
   "min_php": "8.1",
-  "requires_version": "1.0.24",
-  "package": "cms-1.0.25.zip",
-  "sha256": "d9a6b04f8e9ff5effff93933cd865aeed9a2345c0e974d5a2c6affe8debfdcd4",
-  "size": 89803,
+  "requires_version": "1.0.25",
+  "package": "cms-1.0.26.zip",
+  "sha256": "0167478709f0e448dafcd701645fbfd9015b4259a86f87f43055a97fcef27a95",
+  "size": 196605,
   "migrations": []
 }
