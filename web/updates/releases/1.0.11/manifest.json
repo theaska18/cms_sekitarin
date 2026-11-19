@@ -1,0 +1,24 @@
+{
+  "version": "1.0.11",
+  "from_version": "1.0.10",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.10",
+  "changelog": "Optimalisasi Pengaturan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "05e855ec0ad289152482062237f3fa394a5a15294a5b1a98e9266bb45ba72314",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/setting.php",
+      "sha256": "6d947d103bba700a5b736ce1be69ec24e3d3fb59be98125d682632933ab55ca4",
+      "size": 9264
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
