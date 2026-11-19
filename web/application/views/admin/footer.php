@@ -648,6 +648,18 @@
     }
 }());
 </script>
+<script>
+(function () {
+    var fade = document.getElementById('admin-content-fade');
+    if (!fade) return;
+    function updateContentFade() {
+        fade.classList.toggle('is-visible', window.scrollY > 8);
+    }
+    window.addEventListener('scroll', updateContentFade, {passive: true});
+    window.addEventListener('resize', updateContentFade);
+    updateContentFade();
+}());
+</script>
 <script src="/assets/js/admin-action-menu.js?v=<?= is_file(FCPATH . 'assets/js/admin-action-menu.js') ? filemtime(FCPATH . 'assets/js/admin-action-menu.js') : '1' ?>"></script>
 <script src="/assets/js/finance-filters.js?v=<?= is_file(FCPATH . 'assets/js/finance-filters.js') ? filemtime(FCPATH . 'assets/js/finance-filters.js') : '1' ?>"></script>
 </body>

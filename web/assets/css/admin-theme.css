@@ -663,6 +663,34 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
     min-width: 0;
 }
 
+/* Fade content as it scrolls beneath the sticky admin topbar. */
+#admin-content-fade {
+    position: sticky;
+    top: 4rem;
+    z-index: 15;
+    height: 1.75rem;
+    margin: 0 0 -1.75rem;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(to bottom, rgba(248, 250, 252, .98) 0%, rgba(248, 250, 252, .72) 45%, rgba(248, 250, 252, 0) 100%);
+    transition: opacity .18s ease;
+}
+
+#admin-content-fade.is-visible {
+    opacity: 1;
+}
+
+html[data-theme="dark"] #admin-content-fade,
+body[data-theme="dark"] #admin-content-fade {
+    background: linear-gradient(to bottom, rgba(15, 23, 42, .98) 0%, rgba(15, 23, 42, .72) 45%, rgba(15, 23, 42, 0) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #admin-content-fade {
+        transition: none;
+    }
+}
+
 #admin-app-shell {
     overflow-x: clip;
 }

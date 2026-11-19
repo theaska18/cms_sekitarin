@@ -207,3 +207,4 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
         </div>
     </aside>
     <main id="admin-main" class="min-w-0 flex-1" tabindex="-1">
+        <div id="admin-content-fade" aria-hidden="true"></div>
