@@ -84,6 +84,8 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
         self.assertIn(".finance-table-fade.is-left", css)
         self.assertIn(".finance-table-fade.is-right", css)
         self.assertIn(".finance-table-fade.is-visible", css)
+        self.assertIn("width: 3rem", css)
+        self.assertIn("rgba(255, 255, 255, .62) 68%", css)
         self.assertIn("setupScrollFade", script)
         self.assertIn("scrollLeft", script)
         self.assertIn("bestOverflow", script)

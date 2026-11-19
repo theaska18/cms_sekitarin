@@ -592,7 +592,7 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
     top: 0;
     bottom: 0;
     z-index: 5;
-    width: 1.5rem;
+    width: 3rem;
     opacity: 0;
     pointer-events: none;
     transition: opacity .18s ease;
@@ -600,12 +600,12 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 
 .finance-table-fade.is-left {
     left: 0;
-    background: linear-gradient(to right, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(to right, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, .96) 32%, rgba(255, 255, 255, .62) 68%, rgba(255, 255, 255, 0) 100%);
 }
 
 .finance-table-fade.is-right {
     right: 0;
-    background: linear-gradient(to left, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, 0) 100%);
+    background: linear-gradient(to left, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, .96) 32%, rgba(255, 255, 255, .62) 68%, rgba(255, 255, 255, 0) 100%);
 }
 
 .finance-table-fade.is-visible {
@@ -614,12 +614,12 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 
 html[data-theme="dark"] #admin-app-shell .finance-table-fade.is-left,
 body[data-theme="dark"] #admin-app-shell .finance-table-fade.is-left {
-    background: linear-gradient(to right, rgba(17, 24, 39, .98) 0%, rgba(17, 24, 39, 0) 100%);
+    background: linear-gradient(to right, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, .96) 32%, rgba(17, 24, 39, .62) 68%, rgba(17, 24, 39, 0) 100%);
 }
 
 html[data-theme="dark"] #admin-app-shell .finance-table-fade.is-right,
 body[data-theme="dark"] #admin-app-shell .finance-table-fade.is-right {
-    background: linear-gradient(to left, rgba(17, 24, 39, .98) 0%, rgba(17, 24, 39, 0) 100%);
+    background: linear-gradient(to left, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, .96) 32%, rgba(17, 24, 39, .62) 68%, rgba(17, 24, 39, 0) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
