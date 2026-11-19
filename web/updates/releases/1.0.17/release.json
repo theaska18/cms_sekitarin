@@ -1,0 +1,191 @@
+{
+  "version": "1.0.17",
+  "from_version": "1.0.16",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.16",
+  "changelog": "Rilis 1.0.17: DataTable dan panel filter untuk Parameter, Role, User, Employee, dan Approval Flow; perbaikan label status; pagination DataTable memakai ikon.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "c05cc226942cbebee2c18c1d66df6fed4f862d9d815d684232ce420fd2081234",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_approvalFlow.php",
+      "sha256": "e750c487fbebd9881dc4bb57be8e7fcc82139bbb8f26beb1728d4b81d03d523f",
+      "size": 9141
+    },
+    {
+      "path": "application/controllers/Admin_employee.php",
+      "sha256": "4d6ab483e31e5d5f18e92d89acb47d39f28b1492d3d074d39cc8b51fa6d64929",
+      "size": 24489
+    },
+    {
+      "path": "application/controllers/Admin_parameter.php",
+      "sha256": "45a5811d5579d71e4a1dee32598744fdb91be6d1e497701a7657857b33fb22fd",
+      "size": 17794
+    },
+    {
+      "path": "application/controllers/Admin_role.php",
+      "sha256": "6ea459052481f4ca90f6da15956fb720b510d414d0afdbb182849e88a2a88a87",
+      "size": 35186
+    },
+    {
+      "path": "application/controllers/Admin_user.php",
+      "sha256": "4a7a637485bd220c334556aa8d866a4a8ca18163c0399309650468339891b314",
+      "size": 35012
+    },
+    {
+      "path": "application/libraries/Approval_workflow_store.php",
+      "sha256": "9b1fce2a931d05feef2afc24a730f84751871faf988ba011a04287f5cccee884",
+      "size": 73029
+    },
+    {
+      "path": "application/libraries/Employee_store.php",
+      "sha256": "1f77bdc23d7c3a41011b18984b6e30e51e47a2047a65a4ba0ab2a3c0bde1f125",
+      "size": 11271
+    },
+    {
+      "path": "application/libraries/Parameter_store.php",
+      "sha256": "a402ca2670c97bbf5a1d931c08a268e49a66eec6651bd109eae493f18196ac2c",
+      "size": 8983
+    },
+    {
+      "path": "application/libraries/User_store.php",
+      "sha256": "480e4eb93033ca63fa5a393d885f034589c28451f28b3e018043a1b5d77ae68c",
+      "size": 18869
+    },
+    {
+      "path": "application/views/admin/approval/errors.php",
+      "sha256": "832a9ce67c54cd379b61efa92fa06c52c9dbd8d42e1655f7609d99eb3d734db9",
+      "size": 9947
+    },
+    {
+      "path": "application/views/admin/approval/index.php",
+      "sha256": "8c82fe40dc7d4edbd3726165510b451acea6834a3cd494bad055e5e54880d5e5",
+      "size": 18649
+    },
+    {
+      "path": "application/views/admin/approval_flow/index.php",
+      "sha256": "0f20e5565c60ad646bb9569566ab0f56466e59c2506bb115232c83a99ba98dc8",
+      "size": 8951
+    },
+    {
+      "path": "application/views/admin/approval_flow_template/index.php",
+      "sha256": "702b4c733ffd52b510adb050b8c13e655d63cc8c939c867ea1c65527717295f4",
+      "size": 16234
+    },
+    {
+      "path": "application/views/admin/employee/index.php",
+      "sha256": "54c557060a5e6e80e9df068d9fbae864b48bf9ee7e10c0bdf1de346e85ca0705",
+      "size": 11463
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "df0e8228f1afa40275d8ad0e49cf0aeeb9069cd1375d5d695524fac9101e6b2b",
+      "size": 14603
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "c087c6b6c53c7983215cd4d3d870206dde7e1bd2398525ac1b8a5f837da2de2a",
+      "size": 10047
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "745563acf09340f15ec35d415b8a7c824dbefac037c093f726acccdc66f8c2da",
+      "size": 20010
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "dc23c45f609ae682c214f8422502991eec9d479f5aa72aefef2d9c7737c61637",
+      "size": 11577
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "6567b8783796d027ee90cae001eaa31451f0d43fb22b2b91543b2dfb180140f1",
+      "size": 10626
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "42b1694a97bf12833a54cbea2e0435aa7b4fd47cd5ff0a92a38147cf6ac67628",
+      "size": 19494
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "328dd9596f08810513a4d38ea784a11e2d95e9036f0f61a2fcd633beb60b0906",
+      "size": 20685
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "6bff708d03c555894bb0625c061d7706ddd26724244bb5b2725eeac878b89f8c",
+      "size": 21464
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "5cb54fd93fee35e5e7bd91f2ee262e0b2d02fc7c2ea56c2736fb9336767841b3",
+      "size": 15656
+    },
+    {
+      "path": "application/views/admin/parameter/index.php",
+      "sha256": "7f654d8d959d921234e21dc424d2dca93c8b6374fbe1a4f95e2d0e6ef8ea89d7",
+      "size": 11498
+    },
+    {
+      "path": "application/views/admin/property/index.php",
+      "sha256": "a0869da0d4c8038cad3d886993b97f71e92c510478081e21d70b9e8537938c93",
+      "size": 26162
+    },
+    {
+      "path": "application/views/admin/role/index.php",
+      "sha256": "1ceb08ae6701c84da083da6ab1f4b2121e935f48f0e4f4dfa32b9c390b0afd65",
+      "size": 15793
+    },
+    {
+      "path": "application/views/admin/role/menu.php",
+      "sha256": "e72cd3a1412dd73a81e25fa707439291d0447a7c5fe9c3937a0869c2e4ef998b",
+      "size": 7077
+    },
+    {
+      "path": "application/views/admin/sequence/application_index.php",
+      "sha256": "9cbc6fb76e8fa13d0f83644720e75845ca2c5413370e10aff53f9ee029d61302",
+      "size": 15892
+    },
+    {
+      "path": "application/views/admin/sequence/index.php",
+      "sha256": "9890b4ee3c45614452dd2b4baddcc42c0966085918f7d1d5e06ac0f524e4f517",
+      "size": 18783
+    },
+    {
+      "path": "application/views/admin/tenant/index.php",
+      "sha256": "f0108129934c288a43fcf9a78682c524f09a60e82eef3616863a64bf4c8348e7",
+      "size": 27910
+    },
+    {
+      "path": "application/views/admin/tenant/menu.php",
+      "sha256": "548e1b2d084063b799b7bba6305c03b4f6b72bb5a99c4aeae3aa0928e5d730f5",
+      "size": 6349
+    },
+    {
+      "path": "application/views/admin/user/index.php",
+      "sha256": "b7bcc211e4b365f12ed67f2f84eb4b1f2e8bc1f4fd909988b4306ba4505ffc41",
+      "size": 15414
+    },
+    {
+      "path": "assets/js/admin-datatables.js",
+      "sha256": "9a1b75e575bd723872b92b085402e2229571f2c09211bcd3186f47b20bae33b6",
+      "size": 2770
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.17.zip",
+    "sha256": "40a3c44345897764ae10507e1c403163d17e7cc1cc9072a1744ff33d5f7462a4",
+    "size": 142375
+  },
+  "from_ref": "v1.0.16",
+  "generated_at": "2026-11-19T13:22:21+00:00"
+}
