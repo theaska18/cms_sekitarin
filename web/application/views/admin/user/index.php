@@ -35,7 +35,7 @@ $status_messages = array(
     <?php if ($user_backend_available): ?>
         <?= $this->finance_list_table->open('user-data-table') ?>
             <thead><tr>
-                <th scope="col" aria-label="<?= html_escape($labels['user_actions']) ?>"><?= html_escape($labels['user_actions']) ?></th>
+                <?= $this->finance_list_table->action_header($labels['user_actions']) ?>
                 <th scope="col"><?= html_escape($labels['user_tenant']) ?></th>
                 <th scope="col"><?= html_escape($labels['user_code']) ?></th>
                 <th scope="col"><?= html_escape($labels['user_name']) ?></th>

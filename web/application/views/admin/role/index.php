@@ -38,7 +38,7 @@ $role_status_messages = array(
     <?php if ($role_backend_available): ?>
         <?= $this->finance_list_table->open('role-data-table') ?>
             <thead><tr>
-                <th scope="col" aria-label="<?= html_escape($labels['role_actions']) ?>"><?= html_escape($labels['role_actions']) ?></th>
+                <?= $this->finance_list_table->action_header($labels['role_actions']) ?>
                 <th scope="col"><?= html_escape($labels['role_tenant_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['role_code_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['role_name_label']) ?></th>

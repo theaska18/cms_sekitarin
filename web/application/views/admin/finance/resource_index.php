@@ -129,7 +129,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
     <?php else: ?>
         <?= $this->finance_list_table->open('finance-resource-table') ?>
                     <thead><tr>
-                        <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>
+                        <?php if ($can_edit): ?><?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?><?php endif; ?>
                         <?php foreach ($finance_resource['columns'] as $column): ?>
                             <?php
                                 $column_label_key = isset($column['label_key']) ? $column['label_key'] : '';

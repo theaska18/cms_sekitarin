@@ -53,6 +53,41 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
             with self.subTest(view=str(path.relative_to(ROOT))):
                 self.assertIn("assets/js/admin-datatables.js", path.read_text(encoding="utf-8"))
 
+    def test_action_columns_have_no_visible_header_and_skip_export(self):
+        library = (ROOT / "web" / "application" / "libraries" / "Finance_list_table.php").read_text(encoding="utf-8")
+        self.assertIn("function action_header", library)
+        self.assertIn("data-export-ignore=\"1\"", library)
+        self.assertIn("aria-label=", library)
+        views = [path for path in VIEWS.rglob("*.php") if "finance_list_table" in path.read_text(encoding="utf-8")]
+        self.assertTrue(views)
+        action_views = 0
+        for path in views:
+            source = path.read_text(encoding="utf-8")
+            with self.subTest(view=str(path.relative_to(ROOT))):
+                self.assertNotIn(">Tindakan</th>", source)
+                self.assertNotIn(">Actions</th>", source)
+                if "finance_list_table->action_header(" in source:
+                    action_views += 1
+        self.assertGreaterEqual(action_views, 15)
+        export = (ROOT / "web" / "assets" / "js" / "finance-filters.js").read_text(encoding="utf-8")
+        self.assertIn("ignoredColumns", export)
+        self.assertIn("data-export-ignore", export)
+        self.assertIn("clone.querySelectorAll('tr')", export)
+
+    def test_shared_table_scroll_fades_are_wired(self):
+        library = (ROOT / "web" / "application" / "libraries" / "Finance_list_table.php").read_text(encoding="utf-8")
+        css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text(encoding="utf-8")
+        script = (ROOT / "web" / "assets" / "js" / "admin-datatables.js").read_text(encoding="utf-8")
+        self.assertIn("data-table-scroll", library)
+        self.assertIn("data-table-fade=\"left\"", library)
+        self.assertIn("data-table-fade=\"right\"", library)
+        self.assertIn(".finance-table-fade.is-left", css)
+        self.assertIn(".finance-table-fade.is-right", css)
+        self.assertIn(".finance-table-fade.is-visible", css)
+        self.assertIn("setupScrollFade", script)
+        self.assertIn("scrollLeft", script)
+        self.assertIn("draw.dt", script)
+
     def test_datatable_cell_padding_and_row_controls_are_shared(self):
         css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text(encoding="utf-8")
         self.assertIn("--admin-table-cell-padding-block: .2rem", css)

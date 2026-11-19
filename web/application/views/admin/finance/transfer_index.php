@@ -41,7 +41,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 <?php if(!$finance_transfer_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_transfer_unavailable']) ? $labels['finance_transfer_unavailable'] : 'Transfer storage is unavailable.') ?></div><?php else: ?>
 <?= $this->finance_list_table->open('finance-transfer-table') ?>
 <thead><tr>
-<th><?= html_escape($t_labels['actions']) ?></th>
+<?= $this->finance_list_table->action_header($t_labels['actions']) ?>
 <th><?= html_escape(isset($labels['finance_transfer_column_number'])?$labels['finance_transfer_column_number']:'Transfer') ?></th>
 <th><?= html_escape($t_labels['transactionDate']) ?></th>
 <th><?= html_escape($t_labels['createdAt']) ?></th>

@@ -61,7 +61,7 @@
         <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
             <table class="w-full min-w-[48rem] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase text-slate-600">
-                    <tr><th class="px-5 py-3">Permintaan</th><th class="px-5 py-3">Pemohon</th><th class="px-5 py-3">Alur / tahap</th><th class="px-5 py-3">Tindakan</th></tr>
+                    <tr><th class="px-5 py-3">Permintaan</th><th class="px-5 py-3">Pemohon</th><th class="px-5 py-3">Alur / tahap</th><th class="px-5 py-3" aria-label="Tindakan" data-export-ignore="1"></th></tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                 <?php if (!$approval_can_update): ?>

@@ -55,7 +55,7 @@ $approval_flow_template_status_messages = array(
     <?= $this->finance_list_table->open('approval-flow-template-table') ?>
                 <thead>
                     <tr>
-                        <th scope="col" aria-label="<?= html_escape($labels['approval_flow_template_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
+                        <?= $this->finance_list_table->action_header($labels['approval_flow_template_actions'], 'w-12 px-1 py-3.5 sm:px-3') ?>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['approval_flow_template_code_label']) ?></th>
                         <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['approval_flow_template_name_label']) ?></th>
                         <th scope="col" class="min-w-[14rem] px-2 py-3.5 sm:min-w-64 sm:px-6"><?= html_escape($labels['approval_flow_template_description_label']) ?></th>

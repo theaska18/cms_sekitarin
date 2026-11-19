@@ -21,7 +21,7 @@ $status_messages = array('saved' => 'Tahapan alur berhasil disimpan.', 'error' =
     <?php if ($approval_flow_available): ?>
         <?= $this->finance_list_table->open('approval-flow-data-table') ?>
             <thead><tr>
-                <th scope="col" aria-label="Tindakan">Tindakan</th>
+                <?= $this->finance_list_table->action_header('Tindakan') ?>
                 <th scope="col">Kode alur</th>
                 <th scope="col">Nama alur</th>
                 <th scope="col">Menu</th>

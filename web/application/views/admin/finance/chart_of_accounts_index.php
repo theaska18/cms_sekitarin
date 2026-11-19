@@ -74,7 +74,7 @@ $balance_labels = array(
             <div class="overflow-x-auto">
                 <table id="finance-coa-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"><tr>
-                        <th scope="col" class="px-3 py-3"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
+                        <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions', 'px-3 py-3') ?>
                         <th scope="col" class="px-3 py-3"><?= html_escape(isset($labels['finance_resource_column_account_code']) ? $labels['finance_resource_column_account_code'] : 'Code') ?></th>
                         <th scope="col" class="px-3 py-3"><?= html_escape(isset($labels['finance_resource_column_account_name']) ? $labels['finance_resource_column_account_name'] : 'Account') ?></th>
                         <th scope="col" class="px-3 py-3"><?= html_escape(isset($labels['finance_resource_column_account_type']) ? $labels['finance_resource_column_account_type'] : 'Type') ?></th>

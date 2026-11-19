@@ -54,7 +54,7 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
     <?= $this->finance_list_table->open('tenant-data-table') ?>
                 <thead>
                     <tr>
-                        <th scope="col" aria-label="<?= html_escape($labels['tenant_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
+                        <?= $this->finance_list_table->action_header($labels['tenant_actions'], 'w-12 px-1 py-3.5 sm:px-3') ?>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['tenant_code_label']) ?></th>
                         <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['tenant_name_label']) ?></th>
                         <th scope="col" class="min-w-[10rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['tenant_email_label']) ?></th>

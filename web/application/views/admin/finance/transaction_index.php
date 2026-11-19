@@ -94,7 +94,7 @@ if ($can_add) {
     <?php else: ?>
         <?= $this->finance_list_table->open('finance-transaction-table') ?>
                     <thead><tr>
-                        <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
+                        <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_number']) ? $labels['finance_tx_column_number'] : 'Number') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_type']) ? $labels['finance_tx_column_type'] : 'Type') ?></th>
                         <th scope="col"><?= html_escape($label_transaction_date) ?></th>

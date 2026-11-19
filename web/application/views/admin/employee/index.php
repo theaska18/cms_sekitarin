@@ -33,7 +33,7 @@ $status_messages = array(
     <?php if ($employee_available): ?>
         <?= $this->finance_list_table->open('employee-data-table') ?>
             <thead><tr>
-                <th scope="col" aria-label="<?= html_escape($labels['employee_actions']) ?>"><?= html_escape($labels['employee_actions']) ?></th>
+                <?= $this->finance_list_table->action_header($labels['employee_actions']) ?>
                 <th scope="col"><?= html_escape($labels['employee_code_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['employee_name_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['employee_identity_label']) ?></th>

@@ -37,7 +37,7 @@ $status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error
         <?= $this->finance_list_table->open('parameter-data-table') ?>
             <thead>
                 <tr>
-                    <th scope="col" aria-label="<?= html_escape($labels['parameter_actions']) ?>"><?= html_escape($labels['parameter_actions']) ?></th>
+                    <?= $this->finance_list_table->action_header($labels['parameter_actions']) ?>
                     <th scope="col"><?= html_escape($labels['parameter_code_label']) ?></th>
                     <th scope="col"><?= html_escape($labels['parameter_name_label']) ?></th>
                     <th scope="col"><?= html_escape($labels['parameter_description_label']) ?></th>

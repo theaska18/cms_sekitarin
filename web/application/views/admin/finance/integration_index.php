@@ -27,7 +27,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     <?php else: ?>
         <?= $this->finance_list_table->open('finance-integration-table') ?>
                 <thead><tr>
-                    <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
+                    <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Diterima') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_document_date']) ? $labels['finance_integration_document_date'] : 'Tanggal') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_column_number']) ? $labels['finance_column_number'] : 'Nomor') ?></th>

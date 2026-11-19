@@ -46,7 +46,7 @@ $sequence_title = $labels['sequence_template_heading'];
     <?= $this->finance_list_table->open('sequence-data-table') ?>
                 <thead>
                     <tr>
-                        <th scope="col" aria-label="<?= html_escape($labels['sequence_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
+                        <?= $this->finance_list_table->action_header($labels['sequence_actions'], 'w-12 px-1 py-3.5 sm:px-3') ?>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_sequence_code']) ?></th>
                         <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:min-w-56 sm:px-6"><?= html_escape($labels['sequence_sequence_name']) ?></th>
                         <th scope="col" class="min-w-[14rem] px-2 py-3.5 sm:min-w-64 sm:px-6"><?= html_escape($labels['sequence_description']) ?></th>

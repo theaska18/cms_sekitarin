@@ -160,13 +160,24 @@
             if (!table) return null;
             return table;
         }
+        function ignoredColumns(table) {
+            var ignored = {};
+            var header = table.querySelector('thead tr');
+            if (!header) return ignored;
+            Array.prototype.forEach.call(header.querySelectorAll('th,td'), function (cell, index) {
+                if (cell.hasAttribute('data-export-ignore')) ignored[index] = true;
+            });
+            return ignored;
+        }
         function exportCsv() {
             var table = tableRows();
             if (!table) return;
+            var ignored = ignoredColumns(table);
             var rows = [];
             Array.prototype.forEach.call(table.querySelectorAll('tr'), function (row) {
                 var cells = [];
-                Array.prototype.forEach.call(row.querySelectorAll('th,td'), function (cell) {
+                Array.prototype.forEach.call(row.querySelectorAll('th,td'), function (cell, index) {
+                    if (ignored[index]) return;
                     cells.push('"' + String(cell.innerText || '').replace(/"/g, '""') + '"');
                 });
                 if (cells.length) rows.push(cells.join(','));
@@ -183,9 +194,17 @@
         function exportPdf() {
             var table = tableRows();
             if (!table) return;
+            var ignored = ignoredColumns(table);
+            var clone = table.cloneNode(true);
+            Array.prototype.forEach.call(clone.querySelectorAll('tr'), function (row) {
+                var cells = Array.prototype.slice.call(row.querySelectorAll('th,td'));
+                for (var index = cells.length - 1; index >= 0; index--) {
+                    if (ignored[index]) row.removeChild(cells[index]);
+                }
+            });
             var win = window.open('', '_blank');
             if (!win) return;
-            win.document.write('<!doctype html><html><head><title>Finance Export</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}thead{background:#f2f2f2}</style></head><body>' + table.outerHTML + '</body></html>');
+            win.document.write('<!doctype html><html><head><title>Finance Export</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}thead{background:#f2f2f2}</style></head><body>' + clone.outerHTML + '</body></html>');
             win.document.close();
             win.focus();
             win.print();

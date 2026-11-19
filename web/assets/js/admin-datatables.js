@@ -64,4 +64,58 @@
             }
         });
     }
+
+    /**
+     * Horizontal scroll fades for shared list tables. Left fade appears once
+     * content is hidden to the left; right fade disappears at the far right.
+     */
+    function setupScrollFade(wrapper) {
+        if (!wrapper || wrapper.getAttribute('data-scroll-fade-ready') === '1') {
+            return;
+        }
+        var candidates = wrapper.querySelectorAll('.dt-layout-row.dt-layout-table, .finance-table-scroll-viewport');
+        var scroller = candidates.length ? candidates[0] : null;
+        if (!scroller) {
+            return;
+        }
+        wrapper.setAttribute('data-scroll-fade-ready', '1');
+        var leftFade = wrapper.querySelector('[data-table-fade="left"]');
+        var rightFade = wrapper.querySelector('[data-table-fade="right"]');
+
+        function update() {
+            var max = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
+            var position = Math.abs(scroller.scrollLeft || 0);
+            var hasOverflow = max > 1;
+            var atStart = !hasOverflow || position <= 1;
+            var atEnd = !hasOverflow || position >= max - 1;
+            var rtl = window.getComputedStyle && window.getComputedStyle(scroller).direction === 'rtl';
+            if (leftFade) {
+                leftFade.classList.toggle('is-visible', hasOverflow && (rtl ? !atEnd : !atStart));
+            }
+            if (rightFade) {
+                rightFade.classList.toggle('is-visible', hasOverflow && (rtl ? !atStart : !atEnd));
+            }
+        }
+
+        scroller.addEventListener('scroll', update, {passive: true});
+        window.addEventListener('resize', update);
+        if (typeof window.ResizeObserver === 'function') {
+            new window.ResizeObserver(update).observe(scroller);
+        }
+        update();
+    }
+
+    function initScrollFades() {
+        var wrappers = document.querySelectorAll('[data-table-scroll]');
+        Array.prototype.forEach.call(wrappers, setupScrollFade);
+    }
+
+    if ($) {
+        $(document).on('init.dt draw.dt', initScrollFades);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initScrollFades);
+    } else {
+        initScrollFades();
+    }
 })(window, window.jQuery);
