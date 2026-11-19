@@ -622,9 +622,27 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 }
 
 /* DataTables: remove vertical spacing around the table layout row. */
+.dt-container {
+    max-width: 100%;
+    min-width: 0;
+}
+
 .dt-container div.dt-layout-row.dt-layout-table {
     margin-top: 0;
     margin-bottom: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+#admin-content-shell,
+#admin-main {
+    min-width: 0;
+}
+
+#admin-app-shell {
+    overflow-x: clip;
 }
 
 /* Keep the footer at the bottom when the page content is short. */
