@@ -70,14 +70,14 @@ html[data-theme="dark"] .admin-topbar .admin-demo-item-link:hover .admin-demo-co
 
 
 /* Topbar menu, profile, and logo controls on the solid emerald surface. */
-.admin-topbar #admin-menu-toggle{border-color:#172554;background:#1e3a8a;color:#dbeafe}
-.admin-topbar #admin-menu-toggle:hover{background:#172554;color:#ffffff}
+.admin-topbar #admin-menu-toggle{border-color:transparent;background:transparent;color:#eff6ff}
+.admin-topbar #admin-menu-toggle:hover{border-color:#172554;background:#1e3a8a;color:#ffffff}
 .admin-topbar #admin-profile-toggle{color:#eff6ff}
 .admin-topbar #admin-profile-toggle:hover,.admin-topbar #admin-profile-toggle[aria-expanded="true"]{background:#1e3a8a;color:#ffffff}
 .admin-topbar #admin-profile-toggle span{color:inherit}
 .admin-topbar #admin-profile-toggle img{border-color:#172554;background:#1e3a8a}
-html[data-theme="dark"] .admin-topbar #admin-menu-toggle,body[data-theme="dark"] .admin-topbar #admin-menu-toggle{border-color:#364154;background:#1b2433;color:#e2e8f0}
-html[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover,body[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover{background:#374151;color:#ffffff}
+html[data-theme="dark"] .admin-topbar #admin-menu-toggle,body[data-theme="dark"] .admin-topbar #admin-menu-toggle{border-color:transparent;background:transparent;color:#a3afc2}
+html[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover,body[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover{border-color:#364154;background:#1b2433;color:#e2e8f0}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle,body[data-theme="dark"] .admin-topbar #admin-profile-toggle{color:#e5e7eb}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle:hover,html[data-theme="dark"] .admin-topbar #admin-profile-toggle[aria-expanded="true"],body[data-theme="dark"] .admin-topbar #admin-profile-toggle:hover,body[data-theme="dark"] .admin-topbar #admin-profile-toggle[aria-expanded="true"]{background:#374151;color:#ffffff}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle img,body[data-theme="dark"] .admin-topbar #admin-profile-toggle img{border-color:#364154;background:#1b2433}
