@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = '변경 사항을 저장하지 못했습
 
 $lang['admin_finance_sales_invoice_inbox'] = '판매 인보이스 통합';
 $lang['admin_finance_purchase_bill_inbox'] = '구매 청구서 통합';
+
+$lang['admin_setting_intro'] = '관리 영역 표시 방법을 선택하세요.';
+$lang['admin_setting_language_heading'] = '언어';
+$lang['admin_setting_language_help'] = '관리 영역에서 사용할 언어를 선택하세요. 선택 사항은 이 브라우저에 저장됩니다.';
+$lang['admin_setting_current_language'] = '관리 언어';
+$lang['admin_setting_appearance_heading'] = '모양';
+$lang['admin_setting_appearance_help'] = '관리 영역에서 사용할 테마를 선택하세요.';
+$lang['admin_setting_theme'] = '색상 테마';
+$lang['admin_setting_theme_light'] = '라이트';
+$lang['admin_setting_theme_dark'] = '다크';
+$lang['admin_setting_theme_note'] = '테마 설정은 계정에 저장됩니다. 비어 있으면 라이트가 기본입니다.';
+$lang['admin_setting_account_heading'] = '로그인된 계정';
+$lang['admin_setting_account_help'] = '계정 정보와 프로필 이미지는 프로필 페이지에서 관리합니다.';
+$lang['admin_setting_save'] = '설정 저장';
+$lang['admin_setting_saved'] = '언어 설정이 저장되었습니다.';
+$lang['admin_setting_invalid'] = '해당 언어를 사용할 수 없습니다. 목록에서 선택하세요.';

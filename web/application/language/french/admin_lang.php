@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = "Impossible d'enregistrer la modificatio
 
 $lang['admin_finance_sales_invoice_inbox'] = 'Intégration des factures de vente';
 $lang['admin_finance_purchase_bill_inbox'] = 'Integration des factures achat';
+
+$lang['admin_setting_intro'] = 'Choisissez la présentation de l\'espace d\'administration pour votre compte.';
+$lang['admin_setting_language_heading'] = 'Langue';
+$lang['admin_setting_language_help'] = 'Sélectionnez la langue utilisée dans l’espace d’administration. Votre choix est enregistré dans ce navigateur.';
+$lang['admin_setting_current_language'] = 'Langue de l’administration';
+$lang['admin_setting_appearance_heading'] = 'Apparence';
+$lang['admin_setting_appearance_help'] = 'Choisissez le thème utilisé dans l’espace d’administration.';
+$lang['admin_setting_theme'] = 'Thème de couleur';
+$lang['admin_setting_theme_light'] = 'Clair';
+$lang['admin_setting_theme_dark'] = 'Sombre';
+$lang['admin_setting_theme_note'] = 'Votre préférence de thème est enregistrée dans votre compte. Une valeur vide utilise le thème clair.';
+$lang['admin_setting_account_heading'] = 'Compte connecté';
+$lang['admin_setting_account_help'] = 'Les détails du compte et l’image de profil sont gérés depuis votre page de profil.';
+$lang['admin_setting_save'] = 'Enregistrer les paramètres';
+$lang['admin_setting_saved'] = 'Votre préférence de langue a été enregistrée.';
+$lang['admin_setting_invalid'] = 'Cette langue n\'est pas disponible. Choisissez l\'une des langues proposées.';

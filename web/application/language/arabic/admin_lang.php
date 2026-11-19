@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = 'تعذر حفظ التغيير. حاو�
 
 $lang['admin_finance_sales_invoice_inbox'] = 'تكامل فواتير البيع';
 $lang['admin_finance_purchase_bill_inbox'] = 'تكامل فواتير الشراء';
+
+$lang['admin_setting_intro'] = 'اختر كيفية عرض منطقة الإدارة لحسابك.';
+$lang['admin_setting_language_heading'] = 'اللغة';
+$lang['admin_setting_language_help'] = 'اختر اللغة المستخدمة في منطقة الإدارة. يتم حفظ اختيارك في هذا المتصفح.';
+$lang['admin_setting_current_language'] = 'لغة الإدارة';
+$lang['admin_setting_appearance_heading'] = 'المظهر';
+$lang['admin_setting_appearance_help'] = 'اختر السمة المستخدمة في منطقة الإدارة.';
+$lang['admin_setting_theme'] = 'سمة اللون';
+$lang['admin_setting_theme_light'] = 'فاتح';
+$lang['admin_setting_theme_dark'] = 'داكن';
+$lang['admin_setting_theme_note'] = 'يتم حفظ تفضيل السمة في حسابك. القيمة الفارغة تعني الوضع الفاتح.';
+$lang['admin_setting_account_heading'] = 'الحساب المسجل';
+$lang['admin_setting_account_help'] = 'تُدار تفاصيل الحساب وصورة الملف الشخصي من صفحة ملفك الشخصي.';
+$lang['admin_setting_save'] = 'حفظ الإعدادات';
+$lang['admin_setting_saved'] = 'تم حفظ تفضيل اللغة.';
+$lang['admin_setting_invalid'] = 'تلك اللغة غير متاحة. اختر إحدى اللغات المدرجة.';

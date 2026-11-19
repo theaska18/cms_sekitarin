@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = '変更を保存できませんでした
 
 $lang['admin_finance_sales_invoice_inbox'] = '売上請求書統合';
 $lang['admin_finance_purchase_bill_inbox'] = '仕入請求書統合';
+
+$lang['admin_setting_intro'] = '管理エリアの表示方法を選択します。';
+$lang['admin_setting_language_heading'] = '言語';
+$lang['admin_setting_language_help'] = '管理エリアで使用する言語を選択します。選択内容はこのブラウザに保存されます。';
+$lang['admin_setting_current_language'] = '管理言語';
+$lang['admin_setting_appearance_heading'] = '外観';
+$lang['admin_setting_appearance_help'] = '管理エリアで使用するテーマを選択します。';
+$lang['admin_setting_theme'] = 'カラーテーマ';
+$lang['admin_setting_theme_light'] = 'ライト';
+$lang['admin_setting_theme_dark'] = 'ダーク';
+$lang['admin_setting_theme_note'] = 'テーマ設定はアカウントに保存されます。空の場合はライトになります。';
+$lang['admin_setting_account_heading'] = 'サインイン中のアカウント';
+$lang['admin_setting_account_help'] = 'アカウント情報とプロフィール画像はプロフィールページで管理します。';
+$lang['admin_setting_save'] = '設定を保存';
+$lang['admin_setting_saved'] = '言語設定を保存しました。';
+$lang['admin_setting_invalid'] = 'その言語は利用できません。一覧から選択してください。';

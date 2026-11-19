@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = '无法保存更改，请重试。';
 
 $lang['admin_finance_sales_invoice_inbox'] = '销售发票集成';
 $lang['admin_finance_purchase_bill_inbox'] = '采购账单集成';
+
+$lang['admin_setting_intro'] = '选择管理区域的显示方式。';
+$lang['admin_setting_language_heading'] = '语言';
+$lang['admin_setting_language_help'] = '选择管理区域使用的语言。您的选择会保存在此浏览器中。';
+$lang['admin_setting_current_language'] = '管理语言';
+$lang['admin_setting_appearance_heading'] = '外观';
+$lang['admin_setting_appearance_help'] = '选择管理区域使用的主题。';
+$lang['admin_setting_theme'] = '颜色主题';
+$lang['admin_setting_theme_light'] = '浅色';
+$lang['admin_setting_theme_dark'] = '深色';
+$lang['admin_setting_theme_note'] = '您的主题偏好保存在账户中。空值默认为浅色。';
+$lang['admin_setting_account_heading'] = '已登录账户';
+$lang['admin_setting_account_help'] = '账户详情和个人头像在个人资料页面管理。';
+$lang['admin_setting_save'] = '保存设置';
+$lang['admin_setting_saved'] = '语言偏好已保存。';
+$lang['admin_setting_invalid'] = '该语言不可用。请选择列表中的语言。';

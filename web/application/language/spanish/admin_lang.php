@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = 'No se pudo guardar el cambio. Inténtal
 
 $lang['admin_finance_sales_invoice_inbox'] = 'Integración de facturas de venta';
 $lang['admin_finance_purchase_bill_inbox'] = 'Integración de facturas de compra';
+
+$lang['admin_setting_intro'] = 'Elige cómo se presenta el área de administración para tu cuenta.';
+$lang['admin_setting_language_heading'] = 'Idioma';
+$lang['admin_setting_language_help'] = 'Selecciona el idioma que se usa en el área de administración. Tu elección se guarda en este navegador.';
+$lang['admin_setting_current_language'] = 'Idioma de administración';
+$lang['admin_setting_appearance_heading'] = 'Apariencia';
+$lang['admin_setting_appearance_help'] = 'Elige el tema que se usa en el área de administración.';
+$lang['admin_setting_theme'] = 'Tema de color';
+$lang['admin_setting_theme_light'] = 'Claro';
+$lang['admin_setting_theme_dark'] = 'Oscuro';
+$lang['admin_setting_theme_note'] = 'Tu preferencia de tema se guarda en tu cuenta. Un valor vacío usa el tema claro.';
+$lang['admin_setting_account_heading'] = 'Cuenta iniciada';
+$lang['admin_setting_account_help'] = 'Los datos de la cuenta y la imagen de perfil se gestionan desde tu página de perfil.';
+$lang['admin_setting_save'] = 'Guardar ajustes';
+$lang['admin_setting_saved'] = 'Tu preferencia de idioma se ha guardado.';
+$lang['admin_setting_invalid'] = 'Ese idioma no está disponible. Elige uno de los idiomas de la lista.';

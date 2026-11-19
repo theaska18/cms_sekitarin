@@ -190,3 +190,19 @@ $lang['admin_menu_access_save_error'] = 'Die Änderung konnte nicht gespeichert 
 
 $lang['admin_finance_sales_invoice_inbox'] = 'Verkaufsrechnungsintegration';
 $lang['admin_finance_purchase_bill_inbox'] = 'Einkaufsrechnungsintegration';
+
+$lang['admin_setting_intro'] = 'Wählen Sie, wie der Administrationsbereich für Ihr Konto dargestellt wird.';
+$lang['admin_setting_language_heading'] = 'Sprache';
+$lang['admin_setting_language_help'] = 'Wählen Sie die im Administrationsbereich verwendete Sprache. Ihre Auswahl wird in diesem Browser gespeichert.';
+$lang['admin_setting_current_language'] = 'Admin-Sprache';
+$lang['admin_setting_appearance_heading'] = 'Darstellung';
+$lang['admin_setting_appearance_help'] = 'Wählen Sie das im Administrationsbereich verwendete Design.';
+$lang['admin_setting_theme'] = 'Farbschema';
+$lang['admin_setting_theme_light'] = 'Hell';
+$lang['admin_setting_theme_dark'] = 'Dunkel';
+$lang['admin_setting_theme_note'] = 'Ihre Designeinstellung wird in Ihrem Konto gespeichert. Ein leerer Wert verwendet Hell.';
+$lang['admin_setting_account_heading'] = 'Angemeldetes Konto';
+$lang['admin_setting_account_help'] = 'Kontodetails und Profilbild werden auf Ihrer Profilseite verwaltet.';
+$lang['admin_setting_save'] = 'Einstellungen speichern';
+$lang['admin_setting_saved'] = 'Ihre Spracheinstellung wurde gespeichert.';
+$lang['admin_setting_invalid'] = 'Diese Sprache ist nicht verfügbar. Wählen Sie eine der aufgeführten Sprachen.';
