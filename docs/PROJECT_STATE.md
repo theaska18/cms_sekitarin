@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.25` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.26` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.25`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.26`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis ini.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
@@ -93,13 +93,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-140 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+147 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-553 tests
+560 tests
 43 failure
 6 error
 ```
