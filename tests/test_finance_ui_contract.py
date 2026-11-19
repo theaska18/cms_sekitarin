@@ -65,6 +65,17 @@ class FinanceUiContractTests(unittest.TestCase):
         self.assertIn("rounded-md border px-2 py-0.5", source)
         self.assertIn("border-indigo-300", source)
 
+    def test_all_finance_date_filters_use_browser_local_date(self):
+        partial = (FIN / "partials/filter_panel.php").read_text(encoding="utf-8")
+        filters_js = (ROOT / "web/assets/js/finance-filters.js").read_text(encoding="utf-8")
+        for marker in (
+            "data-local-date-adjusted", "formatDate(now)", "serverStart", "serverEnd",
+            "input.value = localStart", "input.value = localEnd",
+        ):
+            self.assertIn(marker, partial)
+        self.assertIn("data-local-date-adjusted", filters_js)
+        self.assertIn("api.ajax.reload(null, false)", filters_js)
+
     def test_report_default_end_date_uses_browser_local_date(self):
         source = (FIN / "report_index.php").read_text(encoding="utf-8")
         for marker in (

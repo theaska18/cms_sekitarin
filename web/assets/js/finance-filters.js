@@ -245,6 +245,12 @@
             });
         }
 
+        if (panel.getAttribute('data-local-date-adjusted') === '1') {
+            window.setTimeout(function () {
+                api.ajax.reload(null, false);
+            }, 0);
+        }
+
         var reset = panel.querySelector('[data-finance-filter-reset]');
         if (reset) {
             reset.addEventListener('click', function () {

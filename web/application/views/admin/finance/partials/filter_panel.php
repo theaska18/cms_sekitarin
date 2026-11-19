@@ -157,3 +157,40 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
         </div>
     </div>
 </section>
+<script>
+(function () {
+    var panel = document.querySelector('[data-finance-filter-panel]');
+    if (!panel) return;
+    var serverStart = panel.getAttribute('data-default-start') || '';
+    var serverEnd = panel.getAttribute('data-default-end') || '';
+    if (serverStart === '' || serverEnd === '') return;
+    var inputs = panel.querySelectorAll('input[type="date"][data-finance-filter]');
+    if (!inputs.length) return;
+    var url = new URL(window.location.href);
+    var explicit = false;
+    Array.prototype.forEach.call(inputs, function (input) {
+        var name = input.getAttribute('data-finance-filter');
+        if (name && url.searchParams.has(name)) explicit = true;
+    });
+    if (explicit) return;
+    function formatDate(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+    var now = new Date();
+    var localEnd = formatDate(now);
+    var span = Math.max(1, Math.round((Date.parse(serverEnd + 'T00:00:00Z') - Date.parse(serverStart + 'T00:00:00Z')) / 86400000) + 1);
+    var localStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (span - 1));
+    var localStart = formatDate(localStartDate);
+    var changed = false;
+    Array.prototype.forEach.call(inputs, function (input) {
+        if (input.value === serverStart) {
+            input.value = localStart;
+            changed = true;
+        } else if (input.value === serverEnd) {
+            input.value = localEnd;
+            changed = true;
+        }
+    });
+    if (changed) panel.setAttribute('data-local-date-adjusted', '1');
+}());
+</script>
