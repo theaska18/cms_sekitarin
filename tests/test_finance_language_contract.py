@@ -69,11 +69,8 @@ class FinanceLanguageContractTests(unittest.TestCase):
         used = used_localization_keys(read(FINANCE_CONTROLLER))
         expected = {
             "finance_column_base_currency",
-            "finance_column_tax_inclusive",
             "finance_field_base_currency",
             "finance_field_base_currency_hint",
-            "finance_field_tax_inclusive_default",
-            "finance_field_tax_inclusive_default_hint",
             "finance_field_receivable_account_id",
             "finance_field_receivable_account_id_hint",
             "finance_field_payable_account_id",
@@ -82,8 +79,6 @@ class FinanceLanguageContractTests(unittest.TestCase):
             "finance_field_fx_gain_account_id_hint",
             "finance_field_fx_loss_account_id",
             "finance_field_fx_loss_account_id_hint",
-            "finance_option_tax_exclusive",
-            "finance_option_tax_inclusive",
         }
         self.assertTrue(expected.issubset(used), expected - used)
         for locale in LOCALES:

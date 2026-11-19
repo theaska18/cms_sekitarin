@@ -4209,17 +4209,11 @@ class Admin_finance extends Admin
                 'search' => array('base_currency'),
                 'columns' => array(
                     array('name' => 'base_currency', 'label' => 'Base currency', 'label_key' => 'finance_column_base_currency'),
-                    array('name' => 'tax_inclusive_default', 'label' => 'Tax inclusive', 'label_key' => 'finance_column_tax_inclusive'),
                 ),
                 'fields' => array(
                     array('name' => 'base_currency', 'label' => 'Base currency (ISO code)', 'label_key' => 'finance_field_base_currency', 'type' => 'currency', 'required' => TRUE, 'maxlength' => 3, 'normalize' => 'currency',
                         'hint' => '3-letter ISO code of the accounting currency, e.g. IDR or USD. All journals and reports convert to this currency.',
                         'hint_key' => 'finance_field_base_currency_hint'),
-                    array('name' => 'tax_inclusive_default', 'label' => 'Tax inclusive by default', 'label_key' => 'finance_field_tax_inclusive_default', 'type' => 'select', 'default' => '0',
-                        'options' => array('0' => 'No — tax exclusive', '1' => 'Yes — tax inclusive'),
-                        'option_label_keys' => array('0' => 'finance_option_tax_exclusive', '1' => 'finance_option_tax_inclusive'),
-                        'hint' => 'Determines whether sales/purchase document totals include tax by default.',
-                        'hint_key' => 'finance_field_tax_inclusive_default_hint'),
                     array('name' => 'receivable_account_id', 'label' => 'Accounts receivable control account', 'label_key' => 'finance_field_receivable_account_id', 'type' => 'account_lookup',
                         'reference' => array('table' => 'fin_account', 'id' => 'account_id'),
                         'hint' => 'Asset account for customer receivable balances. Recommended: 1100 Piutang Usaha.',
