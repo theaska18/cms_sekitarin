@@ -25,8 +25,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     <?php if (!$available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_integration_unavailable']) ? $labels['finance_integration_unavailable'] : 'Tabel inbox integrasi belum tersedia. Jalankan migration database terlebih dahulu.') ?></div>
     <?php else: ?>
-        <section class="overflow-hidden border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto">
-            <table id="finance-integration-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
+        <?= $this->finance_list_table->open('finance-integration-table') ?>
                 <thead><tr>
                     <th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Diterima') ?></th>
@@ -39,8 +38,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
                     <th scope="col" class="text-right"><?= html_escape(isset($labels['finance_column_total']) ? $labels['finance_column_total'] : 'Total') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_column_status']) ? $labels['finance_column_status'] : 'Status') ?></th>
                 </tr></thead>
-            </table>
-        </div></section>
+            <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>

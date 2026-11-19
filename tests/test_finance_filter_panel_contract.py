@@ -10,6 +10,18 @@ STORES = ROOT / "web/application/libraries"
 
 
 class FinanceFilterPanelContractTests(unittest.TestCase):
+    def test_table_list_shell_is_implemented_as_a_library(self):
+        library = (ROOT / "web/application/libraries/Finance_list_table.php").read_text()
+        self.assertIn("class Finance_list_table", library)
+        self.assertIn("public function open(", library)
+        self.assertIn("public function close(", library)
+        controller = (ROOT / "web/application/controllers/Admin_finance.php").read_text()
+        self.assertIn("load->library('finance_list_table')", controller)
+        for name in ("transaction_index.php", "document_index.php", "integration_index.php"):
+            view = (FINANCE / name).read_text()
+            self.assertIn("finance_list_table->open", view)
+            self.assertIn("finance_list_table->close", view)
+
     def test_filter_panel_is_implemented_as_a_library(self):
         library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
         self.assertIn("class Finance_filter_panel", library)

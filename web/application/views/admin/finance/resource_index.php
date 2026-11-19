@@ -129,10 +129,7 @@ $can_edit = $finance_can_update && $finance_write_available;
             <?= html_escape(isset($labels['module_backend_unavailable']) ? $labels['module_backend_unavailable'] : 'Finance storage is unavailable.') ?>
         </div>
     <?php else: ?>
-        <section class="overflow-hidden border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
-            <h2 id="finance-resource-heading" class="sr-only"><?= html_escape($title) ?></h2>
-            <div class="overflow-x-auto">
-                <table id="finance-resource-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
+        <?= $this->finance_list_table->open('finance-resource-table') ?>
                     <thead><tr>
                         <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>
                         <?php foreach ($finance_resource['columns'] as $column): ?>
@@ -143,9 +140,7 @@ $can_edit = $finance_can_update && $finance_write_available;
                             <th scope="col"><?= html_escape($column_label) ?></th>
                         <?php endforeach; ?>
                     </tr></thead>
-                </table>
-            </div>
-        </section>
+                <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>

@@ -10,6 +10,7 @@ class Admin_finance_integration extends Admin
     {
         parent::__construct();
         $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
     }
 
     public function sales_invoice_index()
