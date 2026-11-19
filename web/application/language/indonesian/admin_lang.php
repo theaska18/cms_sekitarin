@@ -42,6 +42,7 @@ $lang['admin_finance_profit_loss'] = 'Laba Rugi';
 $lang['admin_finance_balance_sheet'] = 'Neraca';
 $lang['admin_finance_cash_flow'] = 'Arus Kas';
 $lang['admin_finance_trial_balance'] = 'Neraca Saldo';
+$lang['admin_finance_bank_balance'] = 'Saldo Bank';
 $lang['admin_finance_ar_report'] = 'Laporan Piutang Usaha';
 $lang['admin_finance_ap_report'] = 'Laporan Utang Usaha';
 $lang['admin_finance_customers'] = 'Pelanggan';

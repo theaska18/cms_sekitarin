@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = '회계 기간';
 $lang['admin_finance_profit_loss'] = '손익계산서';
 $lang['admin_finance_balance_sheet'] = '재무상태표';
 $lang['admin_finance_cash_flow'] = '현금흐름표';
+$lang['admin_finance_bank_balance'] = '은행 잔액';
 $lang['admin_finance_trial_balance'] = '시산표';
 $lang['admin_finance_ar_report'] = '매출채권 보고서';
 $lang['admin_finance_ap_report'] = '매입채무 보고서';

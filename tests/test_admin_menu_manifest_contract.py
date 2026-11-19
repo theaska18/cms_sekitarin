@@ -272,7 +272,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
                     update_only_menus = {"hr_approval_flow"}
                     export_only_menus = {
                         "fin_profit_loss", "fin_balance_sheet", "fin_cash_flow", "fin_trial_balance",
-                        "fin_ar_report", "fin_ap_report", "fin_general_ledger",
+                        "fin_ar_report", "fin_ap_report", "fin_bank_balance", "fin_general_ledger",
                     }
                     no_access_menus = {"fin_dashboard", "fin_all_transactions"}
                     run_only_menus = {"sys_update"}
@@ -318,13 +318,13 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             finance = parse_xml(MANIFEST_DIR / group.attrib["file"])
             items.extend(finance.findall("menu"))
             group_names.add(finance.attrib["name"])
-        self.assertEqual(32, len(items))
+        self.assertEqual(33, len(items))
         self.assertEqual(9, len(finance_groups))
         self.assertIn("Finance - Transaction", group_names)
         self.assertIn("Finance - Report", group_names)
         self.assertIn("Finance - Master", group_names)
-        self.assertEqual(32, len({item.attrib["code"] for item in items}))
-        self.assertEqual(32, len({item.attrib["route"] for item in items}))
+        self.assertEqual(33, len({item.attrib["code"] for item in items}))
+        self.assertEqual(33, len({item.attrib["route"] for item in items}))
         self.assertTrue(all(item.attrib["route"].startswith("/admin/finance/") for item in items))
         self.assertTrue(all(item.attrib.get("module_key") for item in items))
         self.assertIn("$this->module('finance', $slug)", (APP / "controllers/Admin_finance.php").read_text())

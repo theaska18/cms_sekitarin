@@ -35,8 +35,8 @@ class Finance_report_store
             $required['fin_supplier'] = array('tenant_id', 'supplier_id', 'supplier_name');
             $required['fin_supplier_payment_allocation'] = array('tenant_id', 'purchase_bill_id', 'base_amount');
             $required['fin_supplier_payment'] = array('tenant_id', 'supplier_payment_id', 'status');
-        } elseif (in_array($report, array('cash_flow', 'cash_flow_detail'), TRUE)) {
-            $required['fin_cash_account'] = array('tenant_id', 'cash_account_id', 'account_id', 'account_code', 'account_name');
+        } elseif (in_array($report, array('cash_flow', 'cash_flow_detail', 'bank_balance'), TRUE)) {
+            $required['fin_cash_account'] = array('tenant_id', 'cash_account_id', 'account_id', 'account_code', 'account_name', 'currency_code', 'active_flag');
         }
         foreach ($required as $table => $columns) {
             if (!$this->db->table_exists($table)) {
@@ -136,7 +136,7 @@ class Finance_report_store
         if ($rows === FALSE) {
             return FALSE;
         }
-        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding');
+        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance');
         $totals = array_fill_keys($numeric, 0.0);
         foreach ($rows as $row) {
             foreach ($numeric as $field) {
@@ -793,6 +793,30 @@ class Finance_report_store
             }
             $sql .= ' GROUP BY DATE_FORMAT(je.journal_date,"%Y-%m"),ca.cash_account_id,ca.account_code,ca.account_name';
             return array($sql, $binds, array('period' => 'period', 'account_code' => 'account_code', 'cash_in' => 'cash_in', 'cash_out' => 'cash_out'));
+        }
+
+        if ($report === 'bank_balance') {
+            $sql = 'SELECT ca.account_code,ca.account_name,ca.currency_code,'
+                . 'COALESCE(SUM(CASE WHEN je.journal_date < ? THEN jl.debit_base_amount-jl.credit_base_amount ELSE 0 END),0) AS opening_balance,'
+                . 'COALESCE(SUM(CASE WHEN je.journal_date >= ? AND je.journal_date <= ? THEN jl.debit_base_amount ELSE 0 END),0) AS cash_in,'
+                . 'COALESCE(SUM(CASE WHEN je.journal_date >= ? AND je.journal_date <= ? THEN jl.credit_base_amount ELSE 0 END),0) AS cash_out,'
+                . 'COALESCE(SUM(CASE WHEN je.journal_date <= ? THEN jl.debit_base_amount-jl.credit_base_amount ELSE 0 END),0) AS ending_balance '
+                . 'FROM fin_cash_account ca '
+                . 'INNER JOIN fin_account a ON a.account_id=ca.account_id AND a.tenant_id=ca.tenant_id '
+                . 'LEFT JOIN fin_journal_line jl ON jl.account_id=a.account_id AND jl.tenant_id=ca.tenant_id '
+                . 'LEFT JOIN fin_journal_entry je ON je.journal_entry_id=jl.journal_entry_id AND je.tenant_id=jl.tenant_id AND je.status="posted" '
+                . 'WHERE ca.tenant_id=? AND ca.active_flag=1';
+            $binds = array($start, $start, $end, $start, $end, $end, (int) $tenant_id);
+            if ($search !== '') {
+                $sql .= ' AND (ca.account_code LIKE ? OR ca.account_name LIKE ? OR ca.currency_code LIKE ?)';
+                array_push($binds, $like, $like, $like);
+            }
+            $sql .= ' GROUP BY ca.cash_account_id,ca.account_code,ca.account_name,ca.currency_code';
+            return array($sql, $binds, array(
+                'account_code' => 'account_code', 'account_name' => 'account_name',
+                'opening_balance' => 'opening_balance', 'cash_in' => 'cash_in',
+                'cash_out' => 'cash_out', 'ending_balance' => 'ending_balance',
+            ));
         }
 
         if ($report === 'ar_report') {

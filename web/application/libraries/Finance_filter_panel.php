@@ -219,6 +219,7 @@ class Finance_filter_panel
             'rejected' => isset($labels['finance_tx_state_rejected']) ? $labels['finance_tx_state_rejected'] : 'Rejected',
             'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
             'completed' => isset($labels['finance_status_completed']) ? $labels['finance_status_completed'] : 'Completed',
+            'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',
         );
     }
 

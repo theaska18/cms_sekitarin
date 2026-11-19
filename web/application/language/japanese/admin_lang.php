@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = '会計期間';
 $lang['admin_finance_profit_loss'] = '損益計算書';
 $lang['admin_finance_balance_sheet'] = '貸借対照表';
 $lang['admin_finance_cash_flow'] = 'キャッシュフロー';
+$lang['admin_finance_bank_balance'] = '銀行残高';
 $lang['admin_finance_trial_balance'] = '試算表';
 $lang['admin_finance_ar_report'] = '売掛金レポート';
 $lang['admin_finance_ap_report'] = '買掛金レポート';

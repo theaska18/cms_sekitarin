@@ -39,12 +39,22 @@ class Finance_payment_store
     {
         if (!$this->available($kind)) return FALSE;
         $spec = $this->spec($kind);
-        $this->db->from($spec['table'])->where('tenant_id', (int) $tenant);
-        if (!empty($filters['start_on'])) $this->db->where('payment_date >=', $filters['start_on']);
-        if (!empty($filters['end_on'])) $this->db->where('payment_date <=', $filters['end_on']);
-        if (!empty($filters['status'])) $this->db->where('status', $filters['status']);
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        $this->db->from($spec['table'] . ' p')
+            ->join($spec['allocation'] . ' al', 'al.' . $spec['id'] . '=p.' . $spec['id'] . ' AND al.tenant_id=p.tenant_id', 'left')
+            ->join($spec['document_table'] . ' doc', 'doc.' . $spec['document_id'] . '=al.' . $spec['document_id'] . ' AND doc.tenant_id=p.tenant_id', 'left')
+            ->join($spec['person_table'] . ' dp', 'dp.' . $spec['person_id'] . '=doc.' . $spec['person_id'] . ' AND dp.tenant_id=p.tenant_id', 'left')
+            ->where('p.tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('p.payment_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('p.payment_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('p.status', $filters['status']);
+        if (!empty($fields['document_number'])) $this->db->like('doc.' . $spec['document_number'], $fields['document_number']);
+        if (!empty($fields['document_integration'])) $this->db->like('doc.integration_number', $fields['document_integration']);
+        if (!empty($fields['person_name'])) $this->db->like('dp.' . $spec['person_name'], $fields['person_name']);
         if (trim((string) $search) !== '') {
-            $this->db->group_start()->like('payment_number', $search)->or_like('reference', $search)->group_end();
+            $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)
+                ->or_like('doc.' . $spec['document_number'], $search)->or_like('dp.' . $spec['person_name'], $search)
+                ->group_end();
         }
         $n = $this->db->count_all_results();
         return $n === FALSE ? FALSE : (int) $n;
@@ -54,13 +64,19 @@ class Finance_payment_store
     {
         if (!$this->available($kind)) return FALSE;
         $spec = $this->spec($kind);
-        $allowed = array('payment_number', 'payment_date', 'amount', 'currency_code', 'status');
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        $allowed = array('payment_number', 'payment_date', 'amount', 'currency_code', 'status', 'document_number', 'integration_number', 'person_name');
         $order = in_array($order, $allowed, TRUE) ? $order : 'payment_date';
         $this->db->select('p.' . $spec['id'] . ',p.payment_number,p.payment_date,p.amount,p.currency_code,p.status,p.reference,p.approval_request_id,'
+            . 'doc.' . $spec['document_number'] . ' AS document_number,doc.integration_number AS document_integration_number,'
+            . 'dp.' . $spec['person_name'] . ' AS person_name,'
             . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
             . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
             . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = p.tenant_id AND a.request_id = p.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
             ->from($spec['table'] . ' p')
+            ->join($spec['allocation'] . ' al', 'al.' . $spec['id'] . '=p.' . $spec['id'] . ' AND al.tenant_id=p.tenant_id', 'left')
+            ->join($spec['document_table'] . ' doc', 'doc.' . $spec['document_id'] . '=al.' . $spec['document_id'] . ' AND doc.tenant_id=p.tenant_id', 'left')
+            ->join($spec['person_table'] . ' dp', 'dp.' . $spec['person_id'] . '=doc.' . $spec['person_id'] . ' AND dp.tenant_id=p.tenant_id', 'left')
             ->join('app_user u', 'u.user_id = p.created_by AND u.tenant_id = p.tenant_id', 'left')
             ->join('app_approval_request ar', 'ar.request_id = p.approval_request_id AND ar.tenant_id = p.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
@@ -68,10 +84,18 @@ class Finance_payment_store
         if (!empty($filters['start_on'])) $this->db->where('p.payment_date >=', $filters['start_on']);
         if (!empty($filters['end_on'])) $this->db->where('p.payment_date <=', $filters['end_on']);
         if (!empty($filters['status'])) $this->db->where('p.status', $filters['status']);
+        if (!empty($fields['document_number'])) $this->db->like('doc.' . $spec['document_number'], $fields['document_number']);
+        if (!empty($fields['document_integration'])) $this->db->like('doc.integration_number', $fields['document_integration']);
+        if (!empty($fields['person_name'])) $this->db->like('dp.' . $spec['person_name'], $fields['person_name']);
         if (trim((string) $search) !== '') {
-            $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)->group_end();
+            $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)
+                ->or_like('doc.' . $spec['document_number'], $search)->or_like('dp.' . $spec['person_name'], $search)
+                ->group_end();
         }
-        $order_column = $order === 'created_by_name' ? 'created_by_name' : 'p.' . $order;
+        $order_column = in_array($order, array('created_by_name'), TRUE) ? $order
+            : ($order === 'document_number' ? 'doc.' . $spec['document_number']
+                : ($order === 'integration_number' ? 'doc.integration_number'
+                    : ($order === 'person_name' ? 'dp.' . $spec['person_name'] : 'p.' . $order)));
         $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
             ->order_by('p.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();
@@ -103,14 +127,27 @@ class Finance_payment_store
         $amount = round((float) $values['amount'], 6);
         $rate = (float) $values['exchange_rate'];
         if ($amount <= 0 || $rate <= 0) return 'amount_invalid';
-        $allocation = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
+        $posted = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
             ->from($spec['allocation'] . ' a')
             ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
             ->where('a.tenant_id', (int) $tenant)
             ->where('a.' . $spec['document_id'], (int) $values['document_id'])
             ->where('p.status', 'posted')->get();
-        if ($allocation === FALSE) return 'unavailable';
-        $outstanding = round((float) $doc['total_amount'] - (float) $allocation->row()->allocated, 6);
+        if ($posted === FALSE) return 'unavailable';
+        // Draft, revise, pending, and approved payments reserve the document balance
+        // so two unposted payments cannot be allocated to the same outstanding amount.
+        $reserved = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
+            ->from($spec['allocation'] . ' a')
+            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant)
+            ->where('a.' . $spec['document_id'], (int) $values['document_id'])
+            ->where_in('p.status', array('draft', 'revise', 'pending_approval', 'approved'));
+        if ($id !== NULL) {
+            $reserved->where('p.' . $spec['id'] . ' !=', (int) $id);
+        }
+        $reserved = $reserved->get();
+        if ($reserved === FALSE) return 'unavailable';
+        $outstanding = round((float) $doc['total_amount'] - (float) $posted->row()->allocated - (float) $reserved->row()->allocated, 6);
         if ($outstanding <= 0.000001) return 'overpayment';
         $settings = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
         if ($settings === FALSE || !$settings->num_rows()) return 'settings_missing';
@@ -222,8 +259,14 @@ class Finance_payment_store
             ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
             ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
             ->where('p.status', 'posted')->get();
-        if ($posted_allocations === FALSE
-            || (float) $alloc['amount'] > (float) $doc['total_amount'] - (float) $posted_allocations->row()->allocated + 0.000001) return 'overpayment';
+        $active_reserved = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
+            ->from($spec['allocation'] . ' a')
+            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
+            ->where_in('p.status', array('draft', 'revise', 'pending_approval', 'approved'))
+            ->where('p.' . $spec['id'] . ' !=', (int) $id)->get();
+        if ($posted_allocations === FALSE || $active_reserved === FALSE
+            || (float) $alloc['amount'] > (float) $doc['total_amount'] - (float) $posted_allocations->row()->allocated - (float) $active_reserved->row()->allocated + 0.000001) return 'overpayment';
         $settings_q = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
         if ($settings_q === FALSE || !$settings_q->num_rows()) return 'settings_missing';
         $settings = $settings_q->row_array();
@@ -518,8 +561,8 @@ class Finance_payment_store
 
     private function spec($kind)
     {
-        if ($kind === 'customer') return array('table'=>'fin_customer_payment','id'=>'customer_payment_id','allocation'=>'fin_customer_payment_allocation','document_table'=>'fin_sales_invoice','document_id'=>'sales_invoice_id','document_number'=>'invoice_number','person_id'=>'customer_id','control'=>'receivable_account_id','source_type'=>'customer_payment');
-        if ($kind === 'supplier') return array('table'=>'fin_supplier_payment','id'=>'supplier_payment_id','allocation'=>'fin_supplier_payment_allocation','document_table'=>'fin_purchase_bill','document_id'=>'purchase_bill_id','document_number'=>'bill_number','person_id'=>'supplier_id','control'=>'payable_account_id','source_type'=>'supplier_payment');
+        if ($kind === 'customer') return array('table'=>'fin_customer_payment','id'=>'customer_payment_id','allocation'=>'fin_customer_payment_allocation','document_table'=>'fin_sales_invoice','document_id'=>'sales_invoice_id','document_number'=>'invoice_number','person_id'=>'customer_id','person_table'=>'fin_customer','person_code'=>'customer_code','person_name'=>'customer_name','control'=>'receivable_account_id','source_type'=>'customer_payment');
+        if ($kind === 'supplier') return array('table'=>'fin_supplier_payment','id'=>'supplier_payment_id','allocation'=>'fin_supplier_payment_allocation','document_table'=>'fin_purchase_bill','document_id'=>'purchase_bill_id','document_number'=>'bill_number','person_id'=>'supplier_id','person_table'=>'fin_supplier','person_code'=>'supplier_code','person_name'=>'supplier_name','control'=>'payable_account_id','source_type'=>'supplier_payment');
         return NULL;
     }
 

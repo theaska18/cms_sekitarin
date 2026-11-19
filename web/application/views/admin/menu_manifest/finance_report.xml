@@ -12,6 +12,9 @@
     <menu code="fin_trial_balance" name="Trial Balance" label_key="admin_finance_trial_balance" icon="list-ordered" route="/admin/finance/trial_balance" module_key="finance_trial_balance" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="23" status="active">
         <access code="fin_trial_balance_export" name="Export" />
     </menu>
+    <menu code="fin_bank_balance" name="Bank Balance" label_key="admin_finance_bank_balance" icon="list-ordered" route="/admin/finance/bank_balance" module_key="finance_bank_balance" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="26" status="active">
+        <access code="fin_bank_balance_export" name="Export" />
+    </menu>
     <menu code="fin_ar_report" name="Accounts Receivable Report" label_key="admin_finance_ar_report" icon="list-ordered" route="/admin/finance/ar_report" module_key="finance_ar_report" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="24" status="active">
         <access code="fin_ar_report_export" name="Export" />
     </menu>

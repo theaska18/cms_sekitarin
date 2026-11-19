@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = 'Buchungsperioden';
 $lang['admin_finance_profit_loss'] = 'Gewinn und Verlust';
 $lang['admin_finance_balance_sheet'] = 'Bilanz';
 $lang['admin_finance_cash_flow'] = 'Kapitalflussrechnung';
+$lang['admin_finance_bank_balance'] = 'Banksaldo';
 $lang['admin_finance_trial_balance'] = 'Summen- und Saldenliste';
 $lang['admin_finance_ar_report'] = 'Forderungsbericht';
 $lang['admin_finance_ap_report'] = 'Verbindlichkeitsbericht';

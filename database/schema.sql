@@ -1554,7 +1554,7 @@ CREATE TABLE IF NOT EXISTS `fin_cancellation` (
     `decided_on` datetime DEFAULT NULL,
     `reversal_journal_id` bigint unsigned DEFAULT NULL,
     PRIMARY KEY (`cancellation_id`),
-    UNIQUE KEY `uk_fin_cancellation_source` (`tenant_id`, `source_type`, `source_id`),
+    KEY `idx_fin_cancellation_source` (`tenant_id`, `source_type`, `source_id`, `status`),
     KEY `idx_fin_cancellation_approval` (`approval_request_id`),
     KEY `idx_fin_cancellation_status` (`tenant_id`, `status`),
     CONSTRAINT `fk_fin_cancellation_approval` FOREIGN KEY (`approval_request_id`) REFERENCES `app_approval_request` (`request_id`) ON DELETE SET NULL ON UPDATE CASCADE,

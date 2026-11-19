@@ -113,8 +113,10 @@ class Admin_finance extends Admin
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
                 'finance_category_import_errors' => $slug === 'categories' ? $this->session->flashdata('category_import_errors') : NULL,
                 'finance_category_import_count' => $slug === 'categories' ? (int) $this->session->flashdata('category_import_count') : 0,
+                'finance_category_import_skipped' => $slug === 'categories' ? (int) $this->session->flashdata('category_import_skipped') : 0,
                 'finance_tax_import_errors' => $slug === 'tax_configuration' ? $this->session->flashdata('tax_import_errors') : NULL,
                 'finance_tax_import_count' => $slug === 'tax_configuration' ? (int) $this->session->flashdata('tax_import_count') : 0,
+                'finance_tax_import_skipped' => $slug === 'tax_configuration' ? (int) $this->session->flashdata('tax_import_skipped') : 0,
             )
         );
     }
@@ -142,6 +144,7 @@ class Admin_finance extends Admin
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
                 'finance_coa_import_errors' => $this->session->flashdata('coa_import_errors'),
                 'finance_coa_import_count' => (int) $this->session->flashdata('coa_import_count'),
+                'finance_coa_import_skipped' => (int) $this->session->flashdata('coa_import_skipped'),
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )
@@ -405,6 +408,7 @@ class Admin_finance extends Admin
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'tax_imported');
                 $this->session->set_flashdata('tax_import_count', count($import_rows));
+                $this->session->set_flashdata('tax_import_skipped', max(0, count($rows) - count($import_rows)));
                 redirect('/admin/finance/tax_configuration', 'location', 303);
                 return;
             }
@@ -571,6 +575,7 @@ class Admin_finance extends Admin
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'category_imported');
                 $this->session->set_flashdata('category_import_count', count($import_rows));
+                $this->session->set_flashdata('category_import_skipped', max(0, count($rows) - count($import_rows)));
                 redirect('/admin/finance/categories', 'location', 303);
                 return;
             }
@@ -807,6 +812,7 @@ class Admin_finance extends Admin
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'coa_imported');
                 $this->session->set_flashdata('coa_import_count', count($import_rows));
+                $this->session->set_flashdata('coa_import_skipped', max(0, count($rows) - count($import_rows)));
                 redirect('/admin/finance/chart_of_accounts', 'location', 303);
                 return;
             }
@@ -2609,9 +2615,9 @@ class Admin_finance extends Admin
             return;
         }
         $tenant = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE, 'payment');
+        $filters = $this->finance_list_filters(TRUE, 'payment', '', $this->finance_payment_filter_config());
         $this->datatable_server->respond(
-            array(1 => 'payment_number', 2 => 'payment_date', 3 => 'amount', 4 => 'currency_code', 5 => 'reference', 6 => 'status'),
+            array(1 => 'payment_number', 2 => 'document_number', 3 => 'document_integration_number', 4 => 'person_name', 5 => 'payment_date', 6 => 'amount', 7 => 'currency_code', 8 => 'reference', 9 => 'status'),
             function () use ($store, $tenant, $kind, $filters) { return $store->count($tenant, $kind, '', $filters); },
             function ($search) use ($store, $tenant, $kind, $filters) { return $store->count($tenant, $kind, $search, $filters); },
             function ($search, $length, $offset, $order, $direction) use ($store, $tenant, $kind, $filters) {
@@ -2983,7 +2989,7 @@ class Admin_finance extends Admin
             $label = $this->lang->line('finance_report_column_' . $column['name']);
             $column_labels[] = is_string($label) && $label !== '' ? $label : $column['label'];
         }
-        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding');
+        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance');
         $totals = array();
         foreach ($columns as $column) {
             if (in_array($column['name'], $numeric, TRUE)) {
@@ -3589,6 +3595,19 @@ class Admin_finance extends Admin
         )));
     }
 
+    private function finance_payment_filter_config()
+    {
+        $labels = isset($this->lang->language) && is_array($this->lang->language) ? $this->lang->language : array();
+        $text = function ($key, $fallback) use ($labels) {
+            return isset($labels[$key]) ? $labels[$key] : $fallback;
+        };
+        return array(
+            array('type' => 'text', 'name' => 'document_number', 'label' => $text('finance_filter_document_number', 'Document number')),
+            array('type' => 'text', 'name' => 'document_integration', 'label' => $text('finance_filter_document_integration', 'Integration number')),
+            array('type' => 'text', 'name' => 'person_name', 'label' => $text('finance_filter_person_name', 'Customer / supplier')),
+        );
+    }
+
     private function finance_document_payment_filter_config()
     {
         $labels = isset($this->lang->language) && is_array($this->lang->language) ? $this->lang->language : array();
@@ -3640,6 +3659,7 @@ class Admin_finance extends Admin
             'cash_flow' => 'fin_cash_flow',
             'cash_flow_detail' => 'fin_cash_flow',
             'trial_balance' => 'fin_trial_balance',
+            'bank_balance' => 'fin_bank_balance',
             'ar_report' => 'fin_ar_report',
             'ap_report' => 'fin_ap_report',
             'general_ledger' => 'fin_general_ledger',
@@ -3669,6 +3689,15 @@ class Admin_finance extends Admin
                 array('name' => 'account_name', 'label' => 'Cash/bank account'),
                 array('name' => 'cash_in', 'label' => 'Cash in (base)'),
                 array('name' => 'cash_out', 'label' => 'Cash out (base)'),
+            ),
+            'bank_balance' => array(
+                array('name' => 'account_code', 'label' => 'Cash/bank code'),
+                array('name' => 'account_name', 'label' => 'Cash/bank account'),
+                array('name' => 'currency_code', 'label' => 'Currency'),
+                array('name' => 'opening_balance', 'label' => 'Opening balance (base)'),
+                array('name' => 'cash_in', 'label' => 'Cash in (base)'),
+                array('name' => 'cash_out', 'label' => 'Cash out (base)'),
+                array('name' => 'ending_balance', 'label' => 'Ending balance (base)'),
             ),
             'ar_report' => array(
                 array('name' => 'invoice_number', 'label' => 'Invoice'),
@@ -3716,6 +3745,7 @@ class Admin_finance extends Admin
 
     private function finance_form($resource, $id)
     {
+        $resource = $this->finance_with_default_tax_fields($resource);
         $this->load->library('finance_store');
         $store = $this->finance_store;
         $available = $store->available($resource);
@@ -3863,6 +3893,46 @@ class Admin_finance extends Admin
         );
     }
 
+    /** Load default-tax choices only for the Financial Settings form, not every resource page. */
+    private function finance_with_default_tax_fields($resource)
+    {
+        if (!isset($resource['slug']) || $resource['slug'] !== 'financial_settings'
+            || !$this->db->table_exists('fin_tax')) {
+            return $resource;
+        }
+        $tax_options = array('' => '—');
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        $tax_rows = $this->db->select('tax_id,tax_code,tax_name')
+            ->from('fin_tax')->where('tenant_id', $tenant_id)
+            ->where('active_flag', 1)->order_by('tax_code', 'ASC')->get();
+        if ($tax_rows !== FALSE) {
+            foreach ($tax_rows->result_array() as $tax_row) {
+                $tax_options[(string) $tax_row['tax_id']] = $tax_row['tax_code'] . ' — ' . $tax_row['tax_name'];
+            }
+        }
+        $resource['fields'][] = array(
+            'name' => 'default_output_tax_id',
+            'label' => 'Default output tax',
+            'label_key' => 'finance_field_default_output_tax_id',
+            'type' => 'select',
+            'options' => $tax_options,
+            'nullable' => TRUE,
+            'hint' => 'Prefilled for new income and sales invoice forms. All active taxes remain selectable.',
+            'hint_key' => 'finance_field_default_output_tax_id_hint',
+        );
+        $resource['fields'][] = array(
+            'name' => 'default_input_tax_id',
+            'label' => 'Default input tax',
+            'label_key' => 'finance_field_default_input_tax_id',
+            'type' => 'select',
+            'options' => $tax_options,
+            'nullable' => TRUE,
+            'hint' => 'Prefilled for new expense and purchase bill forms. All active taxes remain selectable.',
+            'hint_key' => 'finance_field_default_input_tax_id_hint',
+        );
+        return $resource;
+    }
+
     private function finance_default_tax_id($field)
     {
         if (!in_array($field, array('default_output_tax_id', 'default_input_tax_id'), TRUE)
@@ -3966,6 +4036,60 @@ class Admin_finance extends Admin
             if ($value !== '' && isset($field['options'])
                 && !array_key_exists($value, $field['options'])) {
                 $errors[] = $name . '_invalid';
+            }
+        }
+        if ($resource['slug'] === 'accounting_periods') {
+            $start = isset($values['start_on']) ? (string) $values['start_on'] : '';
+            $end = isset($values['end_on']) ? (string) $values['end_on'] : '';
+            if ($start !== '' && $end !== '' && $start > $end) {
+                $errors[] = 'end_on_invalid';
+            }
+            $fiscal_id = isset($values['fiscal_year_id']) ? (int) $values['fiscal_year_id'] : 0;
+            $fiscal = $fiscal_id > 0
+                ? $this->db->select('start_on,end_on')->where('tenant_id', (int) $tenant_id)
+                    ->where('fiscal_year_id', $fiscal_id)->limit(1)->get('fin_fiscal_year')->row_array()
+                : NULL;
+            if ($fiscal && $start !== '' && $end !== ''
+                && ($start < $fiscal['start_on'] || $end > $fiscal['end_on'])) {
+                $errors[] = 'period_outside_fiscal_year';
+            }
+            if ($start !== '' && $end !== '') {
+                $this->db->from('fin_accounting_period')->where('tenant_id', (int) $tenant_id)
+                    ->where('start_on <=', $end)->where('end_on >=', $start);
+                if ($id !== NULL) {
+                    $this->db->where('period_id !=', (int) $id);
+                }
+                if ($this->db->count_all_results() > 0) {
+                    $errors[] = 'period_overlap';
+                }
+            }
+            if (isset($values['status']) && $values['status'] === 'closed'
+                && $start !== '' && $end !== '') {
+                $active_statuses = array('draft', 'revise', 'pending_approval', 'approved');
+                $sources = array(
+                    array('fin_transaction', 'transaction_on'),
+                    array('fin_journal_entry', 'journal_date'),
+                    array('fin_sales_invoice', 'invoice_date'),
+                    array('fin_purchase_bill', 'bill_date'),
+                    array('fin_customer_payment', 'payment_date'),
+                    array('fin_supplier_payment', 'payment_date'),
+                    array('fin_cash_transfer', 'transfer_date'),
+                    array('fin_bank_reconciliation', 'statement_date'),
+                );
+                foreach ($sources as $source) {
+                    if (!$this->db->table_exists($source[0])) {
+                        continue;
+                    }
+                    $blocking = $this->db->from($source[0])->where('tenant_id', (int) $tenant_id)
+                        ->where_in('status', $active_statuses)
+                        ->where($source[1] . ' >=', $start)
+                        ->where($source[1] . ' <=', $end)
+                        ->count_all_results();
+                    if ($blocking > 0) {
+                        $errors[] = 'period_has_active_records';
+                        break;
+                    }
+                }
             }
         }
         if ($resource['slug'] === 'chart_of_accounts' && $id !== NULL
@@ -4251,39 +4375,6 @@ class Admin_finance extends Admin
                 ),
             ),
         );
-
-        if (isset($resources['financial_settings']) && $this->db->table_exists('fin_tax')) {
-            $tax_options = array('' => '—');
-            $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
-            $tax_rows = $this->db->select('tax_id,tax_code,tax_name')
-                ->from('fin_tax')->where('tenant_id', $tenant_id)
-                ->where('active_flag', 1)->order_by('tax_code', 'ASC')->get();
-            if ($tax_rows !== FALSE) {
-                foreach ($tax_rows->result_array() as $tax_row) {
-                    $tax_options[(string) $tax_row['tax_id']] = $tax_row['tax_code'] . ' — ' . $tax_row['tax_name'];
-                }
-            }
-            $resources['financial_settings']['fields'][] = array(
-                'name' => 'default_output_tax_id',
-                'label' => 'Default output tax',
-                'label_key' => 'finance_field_default_output_tax_id',
-                'type' => 'select',
-                'options' => $tax_options,
-                'nullable' => TRUE,
-                'hint' => 'Prefilled for new income and sales invoice forms. All active taxes remain selectable.',
-                'hint_key' => 'finance_field_default_output_tax_id_hint',
-            );
-            $resources['financial_settings']['fields'][] = array(
-                'name' => 'default_input_tax_id',
-                'label' => 'Default input tax',
-                'label_key' => 'finance_field_default_input_tax_id',
-                'type' => 'select',
-                'options' => $tax_options,
-                'nullable' => TRUE,
-                'hint' => 'Prefilled for new expense and purchase bill forms. All active taxes remain selectable.',
-                'hint_key' => 'finance_field_default_input_tax_id_hint',
-            );
-        }
 
         $cash_fields = array();
         foreach ($resources['cash_accounts']['fields'] as $field) {

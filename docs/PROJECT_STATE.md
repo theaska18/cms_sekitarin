@@ -1,19 +1,23 @@
 # Project State
 
-Terakhir diperbarui: 2026-11-18
+Terakhir diperbarui: 2026-11-19
 
 Dokumen ini merangkum kondisi repository agar sesi baru tidak kehilangan konteks
 penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi: `1.0.0` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.22` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update masih `1.0.0`; belum ada rilis baru yang dipublikasikan.
+- Katalog update terakhir: `1.0.22`. Perbaikan Finance setelah tag tersebut
+  belum dirilis dan menjadi kandidat rilis berikutnya.
+- Migration terbaru: `20261119001400_allow_repeated_finance_cancellations.sql`
+  (menghapus unique key sumber pembatalan agar pengajuan ulang dapat disimpan
+  sebagai riwayat).
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -85,32 +89,32 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 
 ## Status tes
 
-Tes yang terkait update, generator, dan penghapusan migration sudah lulus:
+Seluruh kontrak Finance lulus:
 
 ```text
-124 tests OK
+128 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
-Suite penuh saat ini masih memiliki kegagalan lama yang tidak terkait update
-atau migration:
+Suite penuh saat ini:
 
 ```text
-492 tests
-439 lulus
-45 failure
-8 error
+541 tests
+43 failure
+6 error
 ```
 
-Kategori kegagalan lama:
+Kegagalan tersisa seluruhnya berada di kontrak UI/admin lama dan tidak terkait
+Finance:
 
-- path tes yang salah, misalnya membaca `assets/css/...` bukan `web/assets/css/...`;
-- kontrak routing lama yang mengharapkan route eksplisit;
-- kontrak UI/header/parameter/role yang sudah berbeda dari kode saat ini;
+- kontrak routing lama yang mengharapkan route eksplisit untuk halaman module
+  generik;
+- kontrak parameter/role/profile/tenant-menu yang sudah berbeda dari kode;
 - access code manifest lama seperti `app_sequence_add` dan `sys_approval_add/update`;
-- dialog konfirmasi sequence yang belum memakai dialog bersama.
+- ekspektasi desain sidebar/header/dialog yang belum diselaraskan.
 
-Kegagalan tersebut bukan error runtime aplikasi. Jangan menganggap suite penuh
-sudah hijau sampai kategori di atas diperbaiki.
+Kegagalan tersebut bukan error runtime aplikasi. Kontrak bahasa Finance,
+mobile Finance, import, pembayaran, pembatalan, integrasi, dan schema sudah
+hijau.
 
 ## Environment uji
 

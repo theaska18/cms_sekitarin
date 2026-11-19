@@ -13,6 +13,7 @@ $state_labels = array(
     'revise' => isset($labels['finance_tx_state_revise']) ? $labels['finance_tx_state_revise'] : 'Revise',
     'rejected' => isset($labels['finance_tx_state_rejected']) ? $labels['finance_tx_state_rejected'] : 'Rejected',
     'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
+    'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',
 );
 $status_labels = array(
     'draft_saved' => isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.',
@@ -96,7 +97,8 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
         approved: {badge: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500'},
         revise: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         rejected: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'},
-        posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'}
+        posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'},
+        cancelled: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'}
     };
     function postMenuItem(id, action, label, tone, icon) {
         return '<form method="post" action="' + escapeHtml(base + '/' + action + '/' + id) + '" role="none">'

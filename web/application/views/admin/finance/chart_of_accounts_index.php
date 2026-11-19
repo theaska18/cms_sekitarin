@@ -58,7 +58,7 @@ $balance_labels = array(
         </div>
     </section>
     <?php if ($finance_status === 'coa_imported'): ?>
-        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"><?= html_escape(sprintf(isset($labels['finance_coa_import_success']) ? $labels['finance_coa_import_success'] : 'COA imported: %d accounts.', (int) $finance_coa_import_count)) ?></div>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900"><?= html_escape($finance_coa_import_skipped > 0 ? sprintf(isset($labels['finance_coa_import_success_skipped']) ? $labels['finance_coa_import_success_skipped'] : 'COA imported: %d accounts, skipped: %d.', (int) $finance_coa_import_count, (int) $finance_coa_import_skipped) : sprintf(isset($labels['finance_coa_import_success']) ? $labels['finance_coa_import_success'] : 'COA imported: %d accounts.', (int) $finance_coa_import_count)) ?></div>
     <?php elseif ($finance_status === 'coa_import_error'): ?>
         <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p class="font-semibold"><?= html_escape(isset($labels['finance_coa_import_error']) ? $labels['finance_coa_import_error'] : 'COA import failed.') ?></p><ul class="mt-2 list-inside list-disc"><?php foreach ((array) $finance_coa_import_errors as $error): ?><li><?= html_escape($error) ?></li><?php endforeach; ?></ul></div>
     <?php endif; ?>

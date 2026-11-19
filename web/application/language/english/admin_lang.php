@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = 'Accounting Periods';
 $lang['admin_finance_profit_loss'] = 'Profit & Loss';
 $lang['admin_finance_balance_sheet'] = 'Balance Sheet';
 $lang['admin_finance_cash_flow'] = 'Cash Flow';
+$lang['admin_finance_bank_balance'] = 'Bank Balance';
 $lang['admin_finance_trial_balance'] = 'Trial Balance';
 $lang['admin_finance_ar_report'] = 'Accounts Receivable Report';
 $lang['admin_finance_ap_report'] = 'Accounts Payable Report';

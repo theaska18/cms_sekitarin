@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = 'Períodos contables';
 $lang['admin_finance_profit_loss'] = 'Pérdidas y ganancias';
 $lang['admin_finance_balance_sheet'] = 'Balance general';
 $lang['admin_finance_cash_flow'] = 'Flujo de caja';
+$lang['admin_finance_bank_balance'] = 'Saldo bancario';
 $lang['admin_finance_trial_balance'] = 'Balance de comprobación';
 $lang['admin_finance_ar_report'] = 'Informe de cuentas por cobrar';
 $lang['admin_finance_ap_report'] = 'Informe de cuentas por pagar';

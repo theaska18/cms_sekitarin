@@ -41,6 +41,7 @@ $lang['admin_finance_accounting_periods'] = 'Périodes comptables';
 $lang['admin_finance_profit_loss'] = 'Compte de résultat';
 $lang['admin_finance_balance_sheet'] = 'Bilan';
 $lang['admin_finance_cash_flow'] = 'Flux de trésorerie';
+$lang['admin_finance_bank_balance'] = 'Solde bancaire';
 $lang['admin_finance_trial_balance'] = 'Balance générale';
 $lang['admin_finance_ar_report'] = 'Rapport des comptes clients';
 $lang['admin_finance_ap_report'] = 'Rapport des comptes fournisseurs';

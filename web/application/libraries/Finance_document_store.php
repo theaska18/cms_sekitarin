@@ -77,14 +77,19 @@ class Finance_document_store
         $spec = $this->spec($kind);
         $allowed = array($spec['number'], 'integration_number', 'person_name', $spec['date'], 'due_date', 'total_amount', 'outstanding_amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : $spec['date'];
-        $paid_sql = $this->paid_sql($spec);
+        $paid_derived = '(SELECT a.tenant_id, a.' . $spec['id'] . ' AS document_id, COALESCE(SUM(a.amount),0) AS allocated'
+            . ' FROM `' . $spec['allocation'] . '` a'
+            . ' INNER JOIN `' . $spec['payment_table'] . '` pay'
+            . ' ON pay.' . $spec['payment_id'] . '=a.' . $spec['payment_id'] . ' AND pay.tenant_id=a.tenant_id'
+            . " WHERE pay.status='posted' GROUP BY a.tenant_id, a." . $spec['id'] . ') pd';
         $this->db->select('d.' . $spec['id'] . ',d.' . $spec['number'] . ',d.integration_number,d.' . $spec['date'] . ',d.due_date,d.total_amount,d.currency_code,d.status,d.memo,d.approval_request_id,'
             . 'p.' . $spec['person_code'] . ' AS person_code,p.' . $spec['person_name'] . ' AS person_name,'
-            . $paid_sql . ' AS paid_amount,(d.total_amount - ' . $paid_sql . ') AS outstanding_amount,'
+            . 'COALESCE(pd.allocated,0) AS paid_amount,(d.total_amount - COALESCE(pd.allocated,0)) AS outstanding_amount,'
             . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
             . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
             . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = d.tenant_id AND a.request_id = d.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
             ->from($spec['header'] . ' d')
+            ->join($paid_derived, 'pd.document_id = d.' . $spec['id'] . ' AND pd.tenant_id = d.tenant_id', 'left', FALSE)
             ->join($spec['person_table'] . ' p', 'p.' . $spec['person_id'] . ' = d.' . $spec['person_id'] . ' AND p.tenant_id = d.tenant_id', 'left')
             ->join('app_user u', 'u.user_id = d.created_by AND u.tenant_id = d.tenant_id', 'left')
             ->join('app_approval_request ar', 'ar.request_id = d.approval_request_id AND ar.tenant_id = d.tenant_id', 'left')

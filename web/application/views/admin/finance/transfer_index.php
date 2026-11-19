@@ -24,6 +24,7 @@ $t_labels = array(
     'amount' => isset($labels['finance_transfer_amount']) ? $labels['finance_transfer_amount'] : 'Jumlah',
     'transactionDate' => isset($labels['finance_transaction_date']) ? $labels['finance_transaction_date'] : 'Tanggal Transaksi',
     'createdAt' => isset($labels['finance_created_at']) ? $labels['finance_created_at'] : 'Tanggal Dibuat',
+    'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',
 );
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH.'assets/css/vendor/datatables.min.css')?filemtime(FCPATH.'assets/css/vendor/datatables.min.css'):'1' ?>">
@@ -70,7 +71,8 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
         approved: {badge: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500'},
         revise: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         rejected: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'},
-        posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'}
+        posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'},
+        cancelled: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'}
     };
     var csrf='<input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">';
     t.DataTable({
@@ -110,7 +112,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
             {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?e(v||''):v;}},
             {data:'status',name:'status',render:function(v,t,r){
                 if(t!=='display')return v;
-                var map={draft:labels.draft,pending_approval:labels.pending,approved:labels.approved,revise:labels.revise,rejected:labels.rejected,posted:labels.posted};
+                var map={draft:labels.draft,pending_approval:labels.pending,approved:labels.approved,revise:labels.revise,rejected:labels.rejected,posted:labels.posted,cancelled:labels.cancelled};
                 var style=stateStyles[v]||stateStyles.draft;
                 var html='<div class="flex flex-col items-start gap-1.5">'
                     +'<span class="inline-flex w-fit items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide '+style.badge+'">'
