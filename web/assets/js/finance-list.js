@@ -176,6 +176,7 @@
     'use strict';
     if (!window.jQuery) return;
     var $ = window.jQuery;
+    var L = window.financeActionLabels || {};
 
     function configFor(tableId) {
         var path = String(window.location.pathname || '').replace(/\/+$/, '');
@@ -216,7 +217,7 @@
         toggle.setAttribute('aria-haspopup', 'menu');
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-controls', toggleId);
-        toggle.setAttribute('aria-label', 'Tindakan');
+        toggle.setAttribute('aria-label', L.actionMenu || 'Actions');
         toggle.className = 'inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
         toggle.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>';
         menu = document.createElement('div');
@@ -236,6 +237,8 @@
         var cfg = configFor(id);
         if (!cfg || !$.fn.DataTable || !$.fn.DataTable.isDataTable(table[0])) return;
         var api = table.DataTable();
+        var canUpdate = table.attr('data-finance-can-update') !== '0';
+        if (!canUpdate) return;
         api.rows().every(function () {
             var row = this.data();
             var node = this.node();
@@ -256,7 +259,7 @@
                 del.setAttribute('data-finance-draft-delete', '1');
                 del.setAttribute('data-delete-url', '/admin/finance/' + cfg.slug + '/delete_draft/' + sourceId);
                 del.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none';
-                del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>Hapus draft';
+                del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>' + (L.deleteDraft || 'Delete draft') + '';
                 menu.appendChild(del);
             }
             if (cancellable && !menu.querySelector('[data-finance-cancel-open]')) {
@@ -269,7 +272,7 @@
                 button.setAttribute('data-menu-code', cfg.menu);
                 button.setAttribute('data-cancel-label', String(row.transaction_number || row.invoice_number || row.bill_number || row.payment_number || row.transfer_number || row.reconciliation_number || row.journal_number || ('#' + sourceId)));
                 button.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none';
-                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>Batalkan';
+                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>' + (L.cancelAction || 'Cancel record') + '';
                 menu.appendChild(button);
             }
         });
@@ -307,7 +310,9 @@
         dialog.querySelector('[name="source_id"]').value = opener.getAttribute('data-source-id') || '';
         dialog.querySelector('[name="menu_code"]').value = opener.getAttribute('data-menu-code') || '';
         dialog.querySelector('[name="return_url"]').value = window.location.pathname;
-        dialog.querySelector('[data-finance-cancel-label]').textContent = opener.getAttribute('data-cancel-label') || '';
+        var cancelLabel = opener.getAttribute('data-cancel-label') || '';
+        var body = dialog.querySelector('[data-finance-cancel-body]');
+        if (body) body.textContent = String(L.cancelDialogBody || 'Record %s will be sent to the cancellation approval flow.').replace('%s', cancelLabel);
         dialog.showModal();
         var reason = dialog.querySelector('[name="reason"]');
         if (reason) setTimeout(function () { reason.focus(); }, 30);
@@ -316,11 +321,15 @@
         var deleteButton = event.target.closest('[data-finance-draft-delete]');
         if (!deleteButton) return;
         event.preventDefault();
-        if (!window.confirm('Hapus draft ini? Tindakan ini tidak dapat dibatalkan.')) return;
         var form = document.getElementById('finance-draft-delete-form');
         if (!form) return;
         form.action = deleteButton.getAttribute('data-delete-url') || '';
-        form.submit();
+        form.setAttribute('data-web-confirm', '1');
+        form.setAttribute('data-web-confirm-title', L.deleteDraft || 'Delete draft');
+        form.setAttribute('data-web-confirm-message', L.deleteConfirm || 'Delete this draft? This action cannot be undone.');
+        form.setAttribute('data-web-confirm-accept', L.deleteDraft || 'Delete draft');
+        if (typeof form.requestSubmit === 'function') form.requestSubmit();
+        else form.submit();
     });
     document.addEventListener('click', function (event) {
         if (event.target.closest('[data-finance-cancel-close]')) {

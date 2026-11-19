@@ -660,6 +660,19 @@
     updateContentFade();
 }());
 </script>
+<script>
+window.financeActionLabels = {
+    actionMenu: <?= json_encode(isset($labels['finance_action_menu']) ? $labels['finance_action_menu'] : 'Actions') ?>,
+    deleteDraft: <?= json_encode(isset($labels['finance_draft_delete']) ? $labels['finance_draft_delete'] : 'Delete draft') ?>,
+    deleteConfirm: <?= json_encode(isset($labels['finance_draft_delete_confirm']) ? $labels['finance_draft_delete_confirm'] : 'Delete this draft? This action cannot be undone.') ?>,
+    cancelAction: <?= json_encode(isset($labels['finance_cancel_action']) ? $labels['finance_cancel_action'] : 'Cancel record') ?>,
+    cancelDialogTitle: <?= json_encode(isset($labels['finance_cancel_dialog_title']) ? $labels['finance_cancel_dialog_title'] : 'Submit cancellation') ?>,
+    cancelDialogBody: <?= json_encode(isset($labels['finance_cancel_dialog_body']) ? $labels['finance_cancel_dialog_body'] : 'Record %s will be sent to the cancellation approval flow.') ?>,
+    cancelReason: <?= json_encode(isset($labels['finance_cancel_reason']) ? $labels['finance_cancel_reason'] : 'Cancellation reason') ?>,
+    cancelClose: <?= json_encode(isset($labels['finance_cancel_close']) ? $labels['finance_cancel_close'] : 'Close') ?>,
+    cancelSubmit: <?= json_encode(isset($labels['finance_cancel_submit']) ? $labels['finance_cancel_submit'] : 'Submit cancellation') ?>
+};
+</script>
 <form id="finance-draft-delete-form" method="post" hidden>
     <input type="hidden" name="<?= html_escape(isset($csrf_token_name) ? $csrf_token_name : $this->security->get_csrf_token_name()) ?>" value="<?= html_escape(isset($csrf_hash) ? $csrf_hash : $this->security->get_csrf_hash()) ?>">
 </form>
@@ -670,14 +683,14 @@
         <input type="hidden" name="source_id" value="">
         <input type="hidden" name="menu_code" value="">
         <input type="hidden" name="return_url" value="">
-        <h2 id="finance-cancel-title" class="text-lg font-semibold">Ajukan pembatalan</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-600">Transaksi <strong data-finance-cancel-label></strong> akan diajukan ke alur persetujuan pembatalan.</p>
-        <label class="mt-4 block text-sm font-semibold text-slate-700">Alasan pembatalan
+        <h2 id="finance-cancel-title" class="text-lg font-semibold"><?= html_escape(isset($labels['finance_cancel_dialog_title']) ? $labels['finance_cancel_dialog_title'] : 'Submit cancellation') ?></h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600" data-finance-cancel-body></p>
+        <label class="mt-4 block text-sm font-semibold text-slate-700"><?= html_escape(isset($labels['finance_cancel_reason']) ? $labels['finance_cancel_reason'] : 'Cancellation reason') ?>
             <textarea name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"></textarea>
         </label>
         <div class="mt-6 flex justify-end gap-3">
-            <button type="button" data-finance-cancel-close class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
-            <button type="submit" class="min-h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700">Ajukan pembatalan</button>
+            <button type="button" data-finance-cancel-close class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><?= html_escape(isset($labels['finance_cancel_close']) ? $labels['finance_cancel_close'] : 'Close') ?></button>
+            <button type="submit" class="min-h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"><?= html_escape(isset($labels['finance_cancel_submit']) ? $labels['finance_cancel_submit'] : 'Submit cancellation') ?></button>
         </div>
     </form>
 </dialog>

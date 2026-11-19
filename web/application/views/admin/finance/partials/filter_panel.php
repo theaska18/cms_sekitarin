@@ -27,7 +27,7 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
          data-default-end="<?= html_escape($filter_default_end) ?>">
     <div class="flex items-center justify-between gap-2">
         <?php if (!empty($finance_filter_add_action['url'])): ?>
-            <a href="<?= html_escape($finance_filter_add_action['url']) ?>" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700">
+            <a href="<?= html_escape($finance_filter_add_action['url']) ?>" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M10 4v12M4 10h12"/></svg>
                 <span><?= html_escape(isset($finance_filter_add_action['label']) ? $finance_filter_add_action['label'] : 'Add') ?></span>
             </a>
@@ -97,8 +97,8 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                         <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-3 md:col-span-2">
                             <p class="mb-2 text-xs font-bold text-slate-700"><?= html_escape($field['label']) ?></p>
                             <div class="grid gap-2 sm:grid-cols-2">
-                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($min_name) ?>" placeholder="Min" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
-                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($max_name) ?>" placeholder="Max" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($min_name) ?>" placeholder="<?= html_escape(isset($labels['finance_filter_min']) ? $labels['finance_filter_min'] : 'Min') ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($max_name) ?>" placeholder="<?= html_escape(isset($labels['finance_filter_max']) ? $labels['finance_filter_max'] : 'Max') ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
                             </div>
                         </div>
                     <?php elseif ($field['type'] === 'select'): ?>
@@ -127,10 +127,11 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             </label>
         </div>
         <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <?php if (!empty($finance_filter_export_enabled)): ?>
                     <div class="relative shrink-0" data-finance-export>
             <button type="button" data-finance-export-toggle aria-expanded="false" class="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3-3m-3 3L7 9M4 14v2h12v-2"/></svg>
-                Export
+                <?= html_escape(isset($labels['finance_filter_export']) ? $labels['finance_filter_export'] : 'Export') ?>
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4"/></svg>
             </button>
             <div data-finance-export-menu hidden class="absolute end-0 z-[200] mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
@@ -143,6 +144,7 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                     Excel
                 </button>
             </div>
+            <?php endif; ?>
         </div>
             <div class="ms-auto flex flex-wrap gap-2">
             <button type="button" data-finance-filter-reset class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">

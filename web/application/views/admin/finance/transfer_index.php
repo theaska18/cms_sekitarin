@@ -41,7 +41,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $finance_status === 'insufficient_balance' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($labels['finance_status_' . $finance_status]) ? $labels['finance_status_' . $finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : $finance_status)) ?></div>
 <?php endif; ?>
 <?php if(!$finance_transfer_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_transfer_unavailable']) ? $labels['finance_transfer_unavailable'] : 'Transfer storage is unavailable.') ?></div><?php else: ?>
-<?= $this->finance_list_table->open('finance-transfer-table') ?>
+<?= $this->finance_list_table->open('finance-transfer-table', array('table_attrs' => 'data-finance-can-update="' . ($can_update ? '1' : '0') . '"')) ?>
 <thead><tr>
 <?= $this->finance_list_table->action_header($t_labels['actions']) ?>
 <th><?= html_escape(isset($labels['finance_transfer_column_number'])?$labels['finance_transfer_column_number']:'Transfer') ?></th>

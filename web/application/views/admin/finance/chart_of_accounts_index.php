@@ -20,7 +20,7 @@ $balance_labels = array(
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500"><span><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></span><span aria-hidden="true" class="mx-2">/</span><span aria-current="page"><?= html_escape($title) ?></span></nav>
     <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_chart_of_accounts_tree_intro']) ? $labels['finance_chart_of_accounts_tree_intro'] : 'Manage the account hierarchy. Parent accounts can be expanded or collapsed.') ?></p></div>
-        <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_add']) ? $labels['finance_add'] : 'Add') ?></a><?php endif; ?>
+        <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(isset($labels['finance_add']) ? $labels['finance_add'] : 'Add') ?></a><?php endif; ?>
     </header>
     <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -51,7 +51,7 @@ $balance_labels = array(
                         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
                         <span data-coa-file-label><?= html_escape(isset($labels['finance_coa_choose_file']) ? $labels['finance_coa_choose_file'] : 'Choose CSV') ?></span>
                     </label>
-                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><?= html_escape(isset($labels['finance_coa_import']) ? $labels['finance_coa_import'] : 'Import COA') ?></button>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><?= html_escape(isset($labels['finance_coa_import']) ? $labels['finance_coa_import'] : 'Import COA') ?></button>
                 </form>
                 <?php endif; ?>
             </div>

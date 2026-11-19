@@ -44,7 +44,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500"><span><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></span><span aria-hidden="true" class="mx-2">/</span><span aria-current="page"><?= html_escape($title) ?></span></nav>
     <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_journal_intro']) ? $labels['finance_journal_intro'] : 'Only posted entries affect reports. A journal can be posted only when base-currency debits and credits balance and exactly one accounting period is open for its date.') ?></p></div>
-        <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft') ?></a><?php endif; ?>
+        <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft') ?></a><?php endif; ?>
     </header>
 <?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-journal-table','status_preset'=>'journal','date_preset'=>'journal'), $labels) ?>
     <?php if ($finance_status !== ''): ?>
@@ -54,7 +54,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
     <?php if (!$finance_journal_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_journal_unavailable']) ? $labels['finance_journal_unavailable'] : 'Finance journal storage is unavailable.') ?></div>
     <?php else: ?>
-        <?= $this->finance_list_table->open('finance-journal-table') ?><thead><tr>
+        <?= $this->finance_list_table->open('finance-journal-table', array('table_attrs' => 'data-finance-can-update="' . ($can_update ? '1' : '0') . '"')) ?><thead><tr>
                  <?= $this->finance_list_table->action_header(isset($labels['finance_actions'])?$labels['finance_actions']:'Actions') ?><th scope="col"><?= html_escape(isset($labels['finance_dashboard_journal'])?$labels['finance_dashboard_journal']:'Journal') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_date'])?$labels['finance_column_date']:'Date') ?></th><th scope="col"><?= html_escape(isset($labels['finance_field_description'])?$labels['finance_field_description']:'Description') ?></th><th scope="col"><?= html_escape(isset($labels['finance_created_by'])?$labels['finance_created_by']:'Created by') ?></th><th scope="col"><?= html_escape(isset($labels['finance_dashboard_debit'])?$labels['finance_dashboard_debit']:'Debit') ?> (<?= html_escape(isset($labels['finance_column_base_currency'])?$labels['finance_column_base_currency']:'base') ?>)</th><th scope="col"><?= html_escape(isset($labels['finance_column_status'])?$labels['finance_column_status']:'Status') ?></th>
             </tr></thead><?= $this->finance_list_table->close() ?>
     <?php endif; ?>

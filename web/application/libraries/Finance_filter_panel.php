@@ -27,6 +27,7 @@ class Finance_filter_panel
             'date_fields' => array(),
             'field_filters' => array(),
             'add_action' => array(),
+            'export' => TRUE,
         );
         if (is_array($overrides)) {
             $config = array_merge($config, $overrides);
@@ -184,6 +185,7 @@ class Finance_filter_panel
             'finance_filter_date_fields' => $date_fields,
             'finance_filter_field_filters' => (array) $config['field_filters'],
             'finance_filter_add_action' => (array) $config['add_action'],
+            'finance_filter_export_enabled' => !empty($config['export']),
             'finance_filter_target' => (string) $config['target'],
             'finance_filter_default_start' => $defaults['start_on'],
             'finance_filter_default_end' => $defaults['end_on'],

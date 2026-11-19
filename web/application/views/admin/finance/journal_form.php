@@ -87,9 +87,9 @@ $title = isset($labels['finance_' . ($finance_journal_slug === 'opening_balances
                 </table>
             </div>
             <button type="button" id="finance-add-journal-line" class="inline-flex min-h-10 items-center rounded-lg border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"><?= html_escape(isset($labels['finance_add_line'])?$labels['finance_add_line']:'Add line') ?></button>
-            <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
+            <div class="sticky bottom-0 z-20 flex flex-col-reverse gap-3 border-t border-slate-100 bg-white pt-4 pb-1 sm:flex-row sm:justify-end">
                 <a href="/admin/finance/<?= html_escape($finance_journal_slug) ?>" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><?= html_escape(isset($labels['finance_cancel'])?$labels['finance_cancel']:'Cancel') ?></a>
-                <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_tx_save_draft'])?$labels['finance_tx_save_draft']:'Save draft') ?></button>
+                <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(isset($labels['finance_tx_save_draft'])?$labels['finance_tx_save_draft']:'Save draft') ?></button>
             </div>
         </form>
     <?php endif; ?>

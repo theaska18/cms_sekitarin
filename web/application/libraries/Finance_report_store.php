@@ -161,6 +161,11 @@ class Finance_report_store
         foreach ($fields as $field) {
             $select[] = 'COALESCE(SUM(`' . $field . '`),0) AS `' . $field . '`';
         }
+        if ($base === 'cancellation_history') {
+            foreach (array('pending', 'approved', 'rejected', 'revise', 'failed') as $status) {
+                $select[] = "COALESCE(SUM(CASE WHEN `status`='" . $status . "' THEN 1 ELSE 0 END),0) AS `" . $status . "_count`";
+            }
+        }
         $result = $this->db->query(
             'SELECT ' . implode(',', $select) . ' FROM (' . $sql . ') finance_summary',
             $binds
@@ -172,6 +177,11 @@ class Finance_report_store
         $totals = array_fill_keys($numeric, 0.0);
         foreach ($fields as $field) {
             $totals[$field] = (float) $row[$field];
+        }
+        if ($base === 'cancellation_history') {
+            foreach (array('pending', 'approved', 'rejected', 'revise', 'failed') as $status) {
+                $totals[$status . '_count'] = (int) $row[$status . '_count'];
+            }
         }
         $totals['row_count'] = (int) $row['row_count'];
         return $totals;

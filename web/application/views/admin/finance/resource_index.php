@@ -54,7 +54,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
                         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
                         <span data-category-file-label><?= html_escape(isset($labels['finance_category_choose_file']) ? $labels['finance_category_choose_file'] : 'Choose CSV') ?></span>
                     </label>
-                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_category_import']) ? $labels['finance_category_import'] : 'Import Categories') ?></button>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(isset($labels['finance_category_import']) ? $labels['finance_category_import'] : 'Import Categories') ?></button>
                 </form>
                 <?php endif; ?>
             </div>
@@ -92,7 +92,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
                         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
                         <span data-tax-file-label><?= html_escape(isset($labels['finance_tax_choose_file']) ? $labels['finance_tax_choose_file'] : 'Choose CSV') ?></span>
                     </label>
-                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_tax_import']) ? $labels['finance_tax_import'] : 'Import Taxes') ?></button>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(isset($labels['finance_tax_import']) ? $labels['finance_tax_import'] : 'Import Taxes') ?></button>
                 </form>
                 <?php endif; ?>
             </div>

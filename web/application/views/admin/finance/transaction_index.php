@@ -97,7 +97,7 @@ if ($can_add) {
     <?php if (!$finance_transaction_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_tx_unavailable']) ? $labels['finance_tx_unavailable'] : 'Finance transaction storage is unavailable.') ?></div>
     <?php else: ?>
-        <?= $this->finance_list_table->open('finance-transaction-table') ?>
+        <?= $this->finance_list_table->open('finance-transaction-table', array('table_attrs' => 'data-finance-can-update="' . ($can_update ? '1' : '0') . '"')) ?>
                     <thead><tr>
                         <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_number']) ? $labels['finance_tx_column_number'] : 'Number') ?></th>
