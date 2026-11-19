@@ -1,0 +1,31 @@
+{
+  "version": "1.0.21",
+  "from_version": "1.0.20",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.20",
+  "changelog": "Rilis 1.0.21: import COA melewati kode akun yang sudah ada dan tetap mengimpor kode baru.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "6ad1c73730550cd2e307915beca54f4df2dd4c13bc52aeebf09885cce89ea129",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "821e63620e5277c6168e22bef5dc8e10591f6f15513fb864911f0a0a75da4dff",
+      "size": 232682
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.21.zip",
+    "sha256": "660c36e426aee6cb50c2cbcd5c584f025b37704d28aa905bd44fe92cf438dd22",
+    "size": 29909
+  },
+  "from_ref": "v1.0.20",
+  "generated_at": "2026-11-19T19:00:25+00:00"
+}

@@ -1,18 +1,11 @@
 {
-  "version": "1.0.20",
+  "version": "1.0.21",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.20: perbaikan integrasi dan pembayaran Finance, pembulatan pembayaran, validasi pembatalan, auto-approve step pengaju, serta konfigurasi pajak default.",
+  "changelog": "Rilis 1.0.21: import COA melewati kode akun yang sudah ada dan tetap mengimpor kode baru.",
   "min_php": "8.1",
-  "requires_version": "1.0.19",
-  "package": "cms-1.0.20.zip",
-  "sha256": "07c60a79357f728ed6be34acf3ae336e4450a3c4371425e558b1f5649d568dbb",
-  "size": 239933,
-  "migrations": [
-    "20261119000700_add_finance_cancellation.sql",
-    "20261119000800_seed_finance_cancel_flow.sql",
-    "20261119000900_sync_finance_inbox_cancelled_status.sql",
-    "20261119001000_allow_finance_inbox_number_reuse.sql",
-    "20261119001100_add_payment_rounding_settings.sql",
-    "20261119001200_add_default_tax_settings.sql"
-  ]
+  "requires_version": "1.0.20",
+  "package": "cms-1.0.21.zip",
+  "sha256": "660c36e426aee6cb50c2cbcd5c584f025b37704d28aa905bd44fe92cf438dd22",
+  "size": 29909,
+  "migrations": []
 }
