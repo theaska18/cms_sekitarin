@@ -631,6 +631,7 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
     max-width: 100%;
     min-width: 0;
     padding-inline: 0.5rem;
+    padding-block-start: 0.75rem;
 }
 
 @media (min-width: 640px) {
