@@ -9,6 +9,7 @@ class Admin_finance extends Admin
     public function __construct()
     {
         parent::__construct();
+        $this->load->database();
         $this->load->library('finance_filter_panel');
         $this->load->library('finance_list_table');
     }
