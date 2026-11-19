@@ -35,6 +35,7 @@ $status_messages = array('saved' => 'Tahapan alur berhasil disimpan.', 'error' =
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/admin-datatables.js?v=<?= is_file(FCPATH . 'assets/js/admin-datatables.js') ? filemtime(FCPATH . 'assets/js/admin-datatables.js') : '1' ?>"></script>
 <script>
 (function () {
     var table = window.jQuery ? window.jQuery('#approval-flow-data-table') : null;
@@ -47,6 +48,8 @@ $status_messages = array('saved' => 'Tahapan alur berhasil disimpan.', 'error' =
     };
     function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
     var language = <?= json_encode(array('emptyTable' => $labels['admin_dt_empty'], 'info' => $labels['admin_dt_info'], 'infoEmpty' => $labels['admin_dt_info_empty'], 'infoFiltered' => $labels['admin_dt_info_filtered'], 'lengthMenu' => $labels['admin_dt_length'], 'loadingRecords' => $labels['admin_dt_loading'], 'processing' => $labels['admin_dt_processing'], 'search' => $labels['admin_dt_search'], 'zeroRecords' => $labels['admin_dt_zero'], 'paginate' => array('first' => $labels['admin_dt_first'], 'last' => $labels['admin_dt_last'], 'next' => $labels['admin_dt_next'], 'previous' => $labels['admin_dt_previous'])), $js_flags) ?>;
+    language = window.adminDataTableLanguage(language);
+
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
         pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'asc']], language: language,

@@ -70,4 +70,5 @@ $tenant_menu_errors = is_array($tenant_menu_errors) ? $tenant_menu_errors : arra
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/admin-datatables.js?v=<?= is_file(FCPATH . 'assets/js/admin-datatables.js') ? filemtime(FCPATH . 'assets/js/admin-datatables.js') : '1' ?>"></script>
 <script src="/assets/js/admin-menu-access.js?v=<?= is_file(FCPATH . 'assets/js/admin-menu-access.js') ? filemtime(FCPATH . 'assets/js/admin-menu-access.js') : '1' ?>"></script>

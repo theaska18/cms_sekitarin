@@ -50,6 +50,7 @@ $status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
+<script src="/assets/js/admin-datatables.js?v=<?= is_file(FCPATH . 'assets/js/admin-datatables.js') ? filemtime(FCPATH . 'assets/js/admin-datatables.js') : '1' ?>"></script>
 <script>
 (function () {
     var table = window.jQuery ? window.jQuery('#parameter-data-table') : null;
@@ -82,6 +83,8 @@ $status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error
         'zeroRecords' => $labels['admin_dt_zero'],
         'paginate' => array('first' => $labels['admin_dt_first'], 'last' => $labels['admin_dt_last'], 'next' => $labels['admin_dt_next'], 'previous' => $labels['admin_dt_previous']),
     ), $js_flags) ?>;
+    language = window.adminDataTableLanguage(language);
+
     table.DataTable({
         processing: true,
         serverSide: true,

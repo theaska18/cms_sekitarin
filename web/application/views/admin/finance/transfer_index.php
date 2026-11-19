@@ -54,6 +54,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 <?php endif; ?>
 </main>
 <script src="/assets/js/vendor/jquery.min.js"></script><script src="/assets/js/vendor/datatables.min.js"></script>
+<script src="/assets/js/admin-datatables.js?v=<?= is_file(FCPATH . 'assets/js/admin-datatables.js') ? filemtime(FCPATH . 'assets/js/admin-datatables.js') : '1' ?>"></script>
 <script src="/assets/js/finance-list.js?v=<?= is_file(FCPATH . 'assets/js/finance-list.js') ? filemtime(FCPATH . 'assets/js/finance-list.js') : '1' ?>"></script>
 <script>
 (function(){

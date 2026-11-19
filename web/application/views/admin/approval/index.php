@@ -112,6 +112,7 @@
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') ?>"></script>
+<script src="/assets/js/admin-datatables.js?v=<?= is_file(FCPATH . 'assets/js/admin-datatables.js') ? filemtime(FCPATH . 'assets/js/admin-datatables.js') : '1' ?>"></script>
 <script src="/assets/js/jquery-ui.min.js?v=<?= filemtime(FCPATH . 'assets/js/jquery-ui.min.js') ?>"></script>
 <script>
 (function(){

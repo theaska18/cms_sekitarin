@@ -60,6 +60,12 @@ admin-contract locale expectation that omits `hr` resources.
   Use System Property as the reference and reuse
   `web/application/libraries/Datatable_server.php` for request parsing, paging,
   ordering, and response envelopes.
+- DataTable pagination controls must use icon buttons, never visible
+  First/Previous/Next/Last text. Load
+  `web/assets/js/admin-datatables.js` after the DataTables vendor script; it
+  sets icon defaults and keeps text labels only in `language.aria.paginate`
+  for accessibility. Use `window.adminDataTableLanguage(language)` when a view
+  defines its own localized language object.
 - Every new data column in a tabular list must have a corresponding filter in the
   shared filter panel. Action, selection, and other non-data control columns are
   exempt. Map filters by column type:

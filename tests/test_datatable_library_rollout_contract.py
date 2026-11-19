@@ -40,6 +40,19 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
                 self.assertIn("load->library('finance_filter_panel')", source)
                 self.assertIn("load->library('finance_list_table')", source)
 
+    def test_datatable_pagination_uses_shared_icon_library(self):
+        helper = (ROOT / "web" / "assets" / "js" / "admin-datatables.js").read_text(encoding="utf-8")
+        self.assertIn("window.adminDataTableLanguage", helper)
+        self.assertIn("language.paginate = clone(icons)", helper)
+        self.assertIn("language.aria.paginate", helper)
+        self.assertIn("$.fn.dataTable.defaults", helper)
+        self.assertIn("aria-hidden=\"true\"", helper)
+        views = [path for path in VIEWS.rglob("*.php") if "vendor/datatables.min.js" in path.read_text(encoding="utf-8")]
+        self.assertTrue(views)
+        for path in views:
+            with self.subTest(view=str(path.relative_to(ROOT))):
+                self.assertIn("assets/js/admin-datatables.js", path.read_text(encoding="utf-8"))
+
     def test_non_finance_list_pages_use_the_shared_libraries(self):
         pages = (
             ("admin/parameter/index.php", "parameter-data-table", "Admin_parameter.php", "parameter_data"),
