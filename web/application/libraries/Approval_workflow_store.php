@@ -872,19 +872,110 @@ class Approval_workflow_store
         ));
         if (!$inserted) { $this->db->trans_rollback(); return FALSE; }
         $request_id=(int)$this->db->insert_id();
-        if (!$resolution['ok']
-            && !$this->insert_approval_error($request_id,$flow_id,1,$resolution['code'],$resolution['message'])) {
+
+        $next_number=1;
+        $next_step=$step;
+        $next_user=$resolution['ok'] ? (int)$resolution['user_id'] : NULL;
+        $new_status=$request_status;
+        $final_resolution=$resolution;
+        if ($resolution['ok']) {
+            $auto_count=$this->auto_approve_requester_steps(
+                $request_id,$flow_id,$flow_code,(int)$requester_user_id,(int)($requester_employee_id ?: 0),
+                1,$step,$resolution,$next_number,$next_step,$next_user,$new_status,$final_resolution
+            );
+            if ($auto_count === FALSE) { $this->db->trans_rollback(); return FALSE; }
+        }
+        if ($next_step && is_array($final_resolution) && !$final_resolution['ok']
+            && !$this->insert_approval_error($request_id,$flow_id,$next_number,$final_resolution['code'],$final_resolution['message'])) {
             $this->db->trans_rollback(); return FALSE;
+        }
+        $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>$request_id))
+            ->update('app_approval_request',array(
+                'status'=>$new_status,'current_step'=>$next_number,
+                'current_approver_user_id'=>$next_user,'update_on'=>date('Y-m-d H:i:s'),
+            ));
+        if ($new_status === 'approved') {
+            $finalized = $this->finalize_source(array(
+                'request_id'=>$request_id,'source_type'=>$source_type,'source_id'=>$source_id,
+                'status'=>'approved','request_action'=>$request_action,
+            ));
+            if ($finalized === FALSE) { $this->db->trans_rollback(); return FALSE; }
         }
         if ($this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
         $this->db->trans_commit();
         if ($this->db->trans_status()===FALSE) { return FALSE; }
-        if (!$resolution['ok']) { return array('status'=>'needs_assignment','request_id'=>$request_id); }
-        if ($this->deliver_approval($request_id,(int)$resolution['user_id'],$subject)) {
+        if ($new_status === 'approved') {
+            return array('status'=>'auto_approved','request_id'=>$request_id);
+        }
+        if ($new_status === 'needs_assignment') {
+            return array('status'=>'needs_assignment','request_id'=>$request_id);
+        }
+        if ($this->deliver_approval($request_id,(int)$next_user,$subject)) {
             return array('status'=>'submitted','request_id'=>$request_id);
         }
-        if (!$this->flag_request_error($request_id,$flow_id,1,'notification_failed','Approval notification could not be delivered.')) { return FALSE; }
+        if (!$this->flag_request_error($request_id,$flow_id,$next_number,'notification_failed','Approval notification could not be delivered.')) { return FALSE; }
         return array('status'=>'needs_assignment','request_id'=>$request_id);
+    }
+
+    /**
+     * Advance through consecutive steps whose resolved approver is the requester.
+     * Returns the number of auto-approved steps, or FALSE when an action cannot be saved.
+     */
+    private function auto_approve_requester_steps($request_id, $flow_id, $flow_code, $requester_user_id, $requester_employee_id, $step_number, $step, $resolution, &$next_number, &$next_step, &$next_user, &$new_status, &$final_resolution)
+    {
+        $next_number = $step_number;
+        $next_step = $step;
+        $next_user = $resolution['ok'] ? (int) $resolution['user_id'] : NULL;
+        $new_status = $resolution['ok'] ? 'pending' : 'needs_assignment';
+        $final_resolution = $resolution;
+        if (!$resolution['ok'] || (int) $resolution['user_id'] !== (int) $requester_user_id) {
+            return 0;
+        }
+        $auto_count = 0;
+        $current_number = $step_number;
+        $current_step = $step;
+        $current_resolution = $resolution;
+        while ($current_resolution['ok'] && (int) $current_resolution['user_id'] === (int) $requester_user_id) {
+            if (!$this->db->insert('app_approval_action', array(
+                'tenant_id' => $this->tenant,
+                'request_id' => (int) $request_id,
+                'step_number' => (int) $current_number,
+                'approver_user_id' => (int) $requester_user_id,
+                'decision' => 'approved',
+                'note' => 'Auto-approved: requester is the configured approver.',
+                'create_on' => date('Y-m-d H:i:s'),
+            ))) {
+                return FALSE;
+            }
+            $auto_count++;
+            $next_number = $current_number + 1;
+            $next_step = $this->effective_step($flow_code, $next_number);
+            if (!$next_step) {
+                $next_user = NULL;
+                $new_status = 'approved';
+                $final_resolution = NULL;
+                return $auto_count;
+            }
+            $previous_org_id = isset($current_step['approver_type']) && $current_step['approver_type'] === 'organization'
+                ? (int) $current_step['org_id'] : 0;
+            $current_resolution = $this->resolve_approver(
+                $next_step,
+                (int) $requester_employee_id,
+                (int) $requester_user_id,
+                $previous_org_id
+            );
+            $current_number = $next_number;
+            $current_step = $next_step;
+            $final_resolution = $current_resolution;
+            if (!$current_resolution['ok']) {
+                $next_user = NULL;
+                $new_status = 'needs_assignment';
+                return $auto_count;
+            }
+            $next_user = (int) $current_resolution['user_id'];
+            $new_status='pending';
+        }
+        return $auto_count;
     }
 
     private function create_approval_token($request_id,$approver,$decision)
@@ -990,12 +1081,26 @@ class Approval_workflow_store
                     $this->user,
                     isset($step['approver_type']) && $step['approver_type']==='organization' ? (int)$step['org_id'] : 0
                 );
-                if ($resolution['ok']) {
-                    $new_status='pending';
-                    $next_user=(int)$resolution['user_id'];
-                } else {
-                    $new_status='needs_assignment';
-                }
+                $final_resolution=$resolution;
+                $start_number=$next_number;
+                $start_step=$next_step;
+                $auto_count=$this->auto_approve_requester_steps(
+                    (int)$request_id,
+                    isset($request['flow_id']) ? (int)$request['flow_id'] : NULL,
+                    (string)$request['flow_code'],
+                    isset($request['requester_user_id']) ? (int)$request['requester_user_id'] : 0,
+                    isset($request['requester_employee_id']) ? (int)$request['requester_employee_id'] : 0,
+                    $start_number,
+                    $start_step,
+                    $resolution,
+                    $next_number,
+                    $next_step,
+                    $next_user,
+                    $new_status,
+                    $final_resolution
+                );
+                if ($auto_count === FALSE) { $this->db->trans_rollback(); return FALSE; }
+                $resolution=$final_resolution;
             }
         }
         $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'status'=>'pending','current_step'=>$current_step))
