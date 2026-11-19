@@ -440,35 +440,40 @@
 @media (min-width: 768px) {
     #admin-sidebar {
         position: fixed;
-        inset-block: 5rem 1rem;
-        inset-inline-start: max(1.5rem, calc((100vw - 96rem) / 2 + 2rem));
+        inset-block: calc(4rem + 1px) 0;
+        inset-inline-start: 0;
+        width: 15rem;
         height: auto;
-        max-height: calc(100vh - 6rem);
+        max-height: none;
         overflow: hidden;
         overscroll-behavior: contain;
+        border-width: 0;
+        border-inline-end-width: 1px;
+        border-radius: 0;
+        box-shadow: none;
     }
 
-    #admin-main {
-        margin-inline-start: calc(15rem + 1.5rem);
-    }
-}
-
-@media (min-width: 1024px) {
     #admin-content-shell {
         max-width: none;
         margin-inline: 0;
         gap: 0;
     }
 
+    #admin-main {
+        margin-inline-start: 15rem;
+    }
+
+    #admin-footer {
+        max-width: none;
+        margin-inline: 0;
+        padding-inline-start: calc(15rem + 1.5rem);
+        padding-inline-end: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
     #admin-sidebar {
-        inset-block: calc(4rem + 1px) 0;
-        inset-inline-start: 0;
         width: 16rem;
-        max-height: none;
-        border-width: 0;
-        border-inline-end-width: 1px;
-        border-radius: 0;
-        box-shadow: none;
     }
 
     #admin-main {
@@ -476,8 +481,6 @@
     }
 
     #admin-footer {
-        max-width: none;
-        margin-inline: 0;
         padding-inline-start: calc(16rem + 2rem);
         padding-inline-end: 2rem;
     }
