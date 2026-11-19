@@ -10,6 +10,15 @@ STORES = ROOT / "web/application/libraries"
 
 
 class FinanceFilterPanelContractTests(unittest.TestCase):
+    def test_finance_add_actions_live_in_the_filter_panel(self):
+        for name in ("document_index.php", "payment_index.php", "transfer_index.php", "reconciliation_index.php", "resource_index.php"):
+            with self.subTest(view=name):
+                view = (FINANCE / name).read_text()
+                self.assertIn("add_action", view)
+                self.assertIn("finance_filter_panel->render", view)
+        panel = PARTIAL.read_text()
+        self.assertIn("max-w-md", panel)
+
     def test_table_list_shell_is_implemented_as_a_library(self):
         library = (ROOT / "web/application/libraries/Finance_list_table.php").read_text()
         self.assertIn("class Finance_list_table", library)

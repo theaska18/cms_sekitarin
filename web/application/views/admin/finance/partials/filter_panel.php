@@ -33,7 +33,7 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             </a>
         <?php endif; ?>
         <div class="ms-auto flex min-w-0 items-center gap-2">
-        <div class="relative w-full min-w-0 max-w-xs">
+        <div class="relative w-full min-w-0 max-w-md">
             <input type="search" data-finance-filter="search" autocomplete="off"
                    aria-label="<?= html_escape(isset($labels['finance_filter_search']) ? $labels['finance_filter_search'] : 'Search') ?>"
                    placeholder="<?= html_escape(isset($labels['finance_filter_search']) ? $labels['finance_filter_search'] : 'Search') ?>"

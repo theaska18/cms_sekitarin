@@ -18,14 +18,12 @@ $can_edit = $finance_can_update && $finance_write_available;
             <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1>
             <p class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_setup_intro']) ? $labels['finance_setup_intro'] : 'Manage tenant-scoped Finance setup data.') ?></p>
         </div>
-        <?php if ($can_add): ?>
-            <a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                <?= html_escape(isset($labels['finance_add']) ? $labels['finance_add'] : 'Add') ?>
-            </a>
-        <?php endif; ?>
     </header>
-<?= $this->finance_filter_panel->render(array('date'=>FALSE,'target'=>'#finance-resource-table','status_preset'=>'none','flag'=>TRUE,'date_preset'=>'none'), $labels) ?>
+<?php
+$panel_config = array('date'=>FALSE,'target'=>'#finance-resource-table','status_preset'=>'none','flag'=>TRUE,'date_preset'=>'none');
+if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => isset($labels['finance_add']) ? $labels['finance_add'] : 'Tambah'); }
+?>
+<?= $this->finance_filter_panel->render($panel_config, $labels) ?>
     <?php if ($finance_resource['slug'] === 'categories'): ?>
     <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
