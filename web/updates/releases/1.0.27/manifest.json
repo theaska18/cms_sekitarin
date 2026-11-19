@@ -1,0 +1,29 @@
+{
+  "version": "1.0.27",
+  "from_version": "1.0.26",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.26",
+  "changelog": "Membatasi lebar tabel Riwayat Pembatalan: kolom alasan kini membungkus teks panjang dengan aturan CSS khusus yang mengalahkan nowrap tabel bersama, sehingga tabel tidak melebar berlebihan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "fec8ab7bdc432b343fa7327657ef5a7848d957e5b42789f5203f7840dcba8fa8",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "38c7fd1bf045259d4bee9439f84e762ff4fe09b5a06d390e4a6ac50d3b86282d",
+      "size": 25368
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "e9dc5c983305ec9baba4a2818fca819f580c5bc0f024cfee37deb69754b5067a",
+      "size": 54010
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
