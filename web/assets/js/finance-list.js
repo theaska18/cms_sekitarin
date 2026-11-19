@@ -214,8 +214,34 @@
             if (!row || !node || ['approved', 'posted', 'completed'].indexOf(String(row.status || '')) === -1) return;
             var sourceId = parseInt(row[cfg.id], 10) || 0;
             if (!sourceId) return;
-            var menu = node.querySelector('td [role="menu"]');
-            if (!menu || menu.querySelector('[data-finance-cancel-open]')) return;
+            var actionCell = node.querySelector('td');
+            if (!actionCell) return;
+            var menu = actionCell.querySelector('[role="menu"]');
+            if (menu && menu.querySelector('[data-finance-cancel-open]')) return;
+            if (!menu) {
+                actionCell.textContent = '';
+                var wrap = document.createElement('div');
+                wrap.className = 'relative inline-flex';
+                var toggleId = 'finance-cancel-menu-' + cfg.source + '-' + sourceId;
+                var toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.setAttribute('data-finance-cancel-toggle', '1');
+                toggle.setAttribute('aria-haspopup', 'menu');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-controls', toggleId);
+                toggle.setAttribute('aria-label', 'Tindakan');
+                toggle.className = 'inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
+                toggle.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>';
+                menu = document.createElement('div');
+                menu.id = toggleId;
+                menu.setAttribute('data-finance-menu', '1');
+                menu.setAttribute('role', 'menu');
+                menu.hidden = true;
+                menu.className = 'fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg';
+                wrap.appendChild(toggle);
+                wrap.appendChild(menu);
+                actionCell.appendChild(wrap);
+            }
             var button = document.createElement('button');
             button.type = 'button';
             button.setAttribute('role', 'menuitem');
@@ -243,6 +269,15 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
     document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-finance-cancel-toggle]');
+        if (toggle) {
+            var menu = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (menu) {
+                if (menu.hidden && window.financeOpenActionMenu) window.financeOpenActionMenu(toggle, menu);
+                else if (window.financeCloseActionMenus) window.financeCloseActionMenus();
+            }
+            return;
+        }
         var opener = event.target.closest('[data-finance-cancel-open]');
         if (!opener) return;
         var dialog = document.getElementById('finance-cancel-dialog');
