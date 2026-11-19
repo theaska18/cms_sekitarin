@@ -1,0 +1,19 @@
+{
+  "version": "1.0.15",
+  "from_version": "1.0.14",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.14",
+  "changelog": "Rilis 1.0.15 dengan shell DataTable dan panel filter admin yang seragam, filter per kolom, serta padding dashboard yang konsisten.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "a09ee66e7fdddcc2765f25bac0d6d7fc363e6ccdd5a689ce4b539d4073145147",
+      "size": 449
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
