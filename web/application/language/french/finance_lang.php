@@ -579,3 +579,4 @@ $lang['finance_payment_status_unpaid'] = 'Impayé';
 $lang['finance_payment_status_partial'] = 'Partiellement payé';
 $lang['finance_payment_status_paid'] = 'Payé';
 $lang['finance_status_document_has_payments'] = 'Cette facture/ce relevé comporte encore des paiements. Annulez d’abord les paiements avant d’annuler le document.';
+$lang['finance_payment_pay_all'] = 'Tout payer';

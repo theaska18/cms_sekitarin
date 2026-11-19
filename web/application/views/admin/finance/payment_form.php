@@ -17,14 +17,23 @@ $summary_amount = function ($value) use ($summary_currency) {
     <?php if(!$finance_payment_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_payment_unavailable']) ? $labels['finance_payment_unavailable'] : 'Finance payment storage is unavailable.') ?></div>
     <?php elseif(!$finance_payment_write_available): ?><div role="status" class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape(isset($labels['finance_writes_unavailable']) ? $labels['finance_writes_unavailable'] : 'Secure Finance writes are unavailable.') ?></div>
     <?php else: ?>
-        <?php if($finance_payment_errors): ?><div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p class="font-semibold"><?= html_escape(isset($labels['finance_payment_form_error']) ? $labels['finance_payment_form_error'] : 'The payment draft could not be saved.') ?></p><ul class="mt-2 list-inside list-disc"><?php foreach($finance_payment_errors as $error): $key='finance_payment_error_'.$error; ?><li><?= html_escape(isset($labels[$key]) ? $labels[$key] : (isset($labels['finance_error_' . (substr($error, -8) === '_invalid' ? 'invalid' : (substr($error, -9) === '_required' ? 'required' : 'generic'))]) ? $labels['finance_error_' . (substr($error, -8) === '_invalid' ? 'invalid' : (substr($error, -9) === '_required' ? 'required' : 'generic'))] : 'Please check this field.')) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+        <?php if($finance_payment_errors): ?><div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><p class="font-semibold"><?= html_escape(isset($labels['finance_payment_form_error']) ? $labels['finance_payment_form_error'] : 'The payment draft could not be saved.') ?></p><ul class="mt-2 list-inside list-disc"><?php foreach($finance_payment_errors as $error): $error_key = strpos($error, 'payment_') === 0 ? substr($error, 8) : $error; $key='finance_payment_error_'.$error_key; $fallback_suffix = substr($error, -8) === '_invalid' ? 'invalid' : (substr($error, -9) === '_required' ? 'required' : 'generic'); $fallback_key = 'finance_error_' . $fallback_suffix; ?><li><?= html_escape(isset($labels[$key]) ? $labels[$key] : (isset($labels['finance_payment_error_' . $error]) ? $labels['finance_payment_error_' . $error] : (isset($labels[$fallback_key]) ? $labels[$fallback_key] : 'Please check this field.'))) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
         <form method="post" action="<?= html_escape($current_path) ?>" class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
             <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
             <div class="grid gap-5 sm:grid-cols-2">
                 <div><label for="payment-date" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_payment_date']) ? $labels['finance_payment_date'] : 'Payment date') ?> *</label><input id="payment-date" name="payment_date" type="date" required value="<?= html_escape($finance_payment_record['payment_date']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></div>
                 <div><label for="document-search" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape($doc_label) ?> *</label><input type="hidden" name="document_id" id="document-id" value="<?= html_escape($finance_payment_record['document_id']) ?>"><div class="relative"><input type="text" id="document-search" data-payment-lookup="document" value="<?= html_escape($finance_payment_labels['document_id']) ?>" autocomplete="off" aria-autocomplete="list" required class="w-full rounded-lg border border-slate-300 pe-10 ps-3 py-2.5 text-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg></div><p class="mt-1 text-xs text-slate-500"><?= html_escape(isset($labels['finance_payment_lookup_hint']) ? $labels['finance_payment_lookup_hint'] : 'Search by document number; only posted documents are listed.') ?></p></div>
                 <div><label for="cash-search" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_cash_account']) ? $labels['finance_cash_account'] : 'Cash/bank account') ?> *</label><input type="hidden" name="cash_account_id" id="cash-account-id" value="<?= html_escape($finance_payment_record['cash_account_id']) ?>"><div class="relative"><input type="text" id="cash-search" data-payment-lookup="cash_account" value="<?= html_escape($finance_payment_labels['cash_account_id']) ?>" autocomplete="off" aria-autocomplete="list" required class="w-full rounded-lg border border-slate-300 pe-10 ps-3 py-2.5 text-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg></div></div>
-                <div><label for="amount" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_payment_amount']) ? $labels['finance_payment_amount'] : 'Payment amount') ?> *</label><input id="amount" name="amount" type="text" value="<?= html_escape($finance_payment_record['amount']) ?>" inputmode="decimal" required data-currency-input data-decimal="2" data-currency-default="0" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-end text-sm tabular-nums"></div>
+                <div>
+                    <div class="mb-1.5 flex items-center justify-between gap-3">
+                        <label for="amount" class="block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_payment_amount']) ? $labels['finance_payment_amount'] : 'Payment amount') ?> *</label>
+                        <label for="pay-all" class="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700">
+                            <input id="pay-all" name="pay_all" type="checkbox" value="1" <?= !empty($finance_payment_record['pay_all']) ? 'checked' : '' ?> class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <?= html_escape(isset($labels['finance_payment_pay_all']) ? $labels['finance_payment_pay_all'] : 'Pay all') ?>
+                        </label>
+                    </div>
+                    <input id="amount" name="amount" type="text" value="<?= html_escape($finance_payment_record['amount']) ?>" inputmode="decimal" required <?= !empty($finance_payment_record['pay_all']) ? 'disabled' : '' ?> data-currency-input data-decimal="2" data-currency-default="0" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-end text-sm tabular-nums disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500">
+                </div>
                 <div><label for="exchange-rate" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_exchange_rate_base']) ? $labels['finance_exchange_rate_base'] : 'Exchange rate to base') ?> *</label><input id="exchange-rate" name="exchange_rate" value="<?= html_escape($finance_payment_record['exchange_rate'] === '' ? '' : number_format((float) $finance_payment_record['exchange_rate'], 2, '.', '')) ?>" inputmode="decimal" data-decimal-limit="2" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"><p class="mt-1 text-xs text-slate-500"><?= html_escape(isset($labels['finance_payment_rate_hint']) ? $labels['finance_payment_rate_hint'] : 'Base currency units per payment currency unit.') ?></p></div>
                 <div><label for="reference" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_reference']) ? $labels['finance_reference'] : 'Reference') ?></label><input id="reference" name="reference" maxlength="80" value="<?= html_escape($finance_payment_record['reference']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></div>
             </div>
@@ -58,10 +67,25 @@ $summary_amount = function ($value) use ($summary_currency) {
 <script>
 (function(){
     var summary=document.querySelector('[data-payment-summary]');
+    var payAll=document.getElementById('pay-all');
+    var amountInput=document.getElementById('amount');
+    var currentOutstanding=<?= is_array($summary) ? json_encode((float) $summary['outstanding_amount']) : 'null' ?>;
     function money(value){var amount=Number(value);return isFinite(amount)?amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00';}
+    function setAmount(value){
+        if(!amountInput||value===null||value===undefined||!isFinite(Number(value)))return;
+        var raw=Number(value).toFixed(2);
+        if(window.jQuery&&window.jQuery(amountInput).data('currencyInputOptions'))window.jQuery(amountInput).currencyInput('set',raw);
+        else amountInput.value=raw;
+    }
+    function applyPayAll(){
+        if(!payAll||!amountInput)return;
+        var checked=!!payAll.checked;
+        amountInput.disabled=checked;
+        if(checked)setAmount(currentOutstanding);
+    }
     function updateSummary(item){
         if(!summary)return;
-        if(!item||!item.id){summary.hidden=true;return;}
+        if(!item||!item.id){summary.hidden=true;currentOutstanding=null;return;}
         var currency=String(item.currency_code||'');
         function text(value){return currency!==''?currency+' '+money(value):money(value);}
         summary.hidden=false;
@@ -70,7 +94,11 @@ $summary_amount = function ($value) use ($summary_currency) {
         var pending=summary.querySelector('[data-payment-pending]');if(pending)pending.textContent=text(item.pending_amount);
         var pendingRow=summary.querySelector('[data-payment-pending-row]');if(pendingRow)pendingRow.hidden=Number(item.pending_amount||0)<=0.000001;
         var outstanding=summary.querySelector('[data-payment-outstanding]');if(outstanding)outstanding.textContent=text(item.outstanding_amount);
+        currentOutstanding=Number(item.outstanding_amount||0);
+        if(payAll&&payAll.checked)setAmount(currentOutstanding);
     }
+    if(payAll)payAll.addEventListener('change',applyPayAll);
+    applyPayAll();
     $('[data-payment-lookup]').each(function(){
         var input=$(this),isDocument=input.attr('data-payment-lookup')==='document',hidden=isDocument?$('#document-id'):$('#cash-account-id');
         input.autocomplete({

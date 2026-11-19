@@ -48,6 +48,21 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
         self.assertIn("finance_document_financials", detail)
         self.assertIn("finance_payment_outstanding", detail)
 
+    def test_payment_form_has_pay_all_and_specific_errors(self):
+        view = (APP / "views/admin/finance/payment_form.php").read_text(encoding="utf-8")
+        for marker in (
+            'id="pay-all"', 'name="pay_all"', 'finance_payment_pay_all',
+            'amountInput.disabled=checked', 'setAmount(currentOutstanding)',
+            "strpos($error, 'payment_') === 0", 'finance_payment_error_',
+        ):
+            self.assertIn(marker, view)
+        controller = CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("$values['pay_all'] = $this->input->post('pay_all', TRUE) ? 1 : 0;", controller)
+        self.assertIn("$store->document_financials($tenant, $kind, $values['document_id'])", controller)
+        store = STORE.read_text(encoding="utf-8")
+        self.assertIn("if ($outstanding <= 0.000001)", store)
+        self.assertIn("continue;", store)
+
     def test_payment_list_maps_draft_saved_status(self):
         view = (APP / "views/admin/finance/payment_index.php").read_text(encoding="utf-8")
         self.assertIn("'draft_saved' =>", view)

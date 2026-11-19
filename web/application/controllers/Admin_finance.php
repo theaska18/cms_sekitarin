@@ -2620,7 +2620,7 @@ class Admin_finance extends Admin
         $this->load->library('finance_payment_store');
         $store = $this->finance_payment_store;
         $available = $store->available($kind);
-        $record = array('payment_date' => date('Y-m-d'), 'document_id' => '', 'cash_account_id' => '', 'amount' => '', 'exchange_rate' => '1', 'reference' => '', 'status' => 'draft');
+        $record = array('payment_date' => date('Y-m-d'), 'document_id' => '', 'cash_account_id' => '', 'amount' => '', 'exchange_rate' => '1', 'reference' => '', 'status' => 'draft', 'pay_all' => 0);
         $labels = array('document_id' => '', 'cash_account_id' => '');
         $was_revise = FALSE;
         $tenant = (int) $this->current_user['tenant_id'];
@@ -2657,6 +2657,17 @@ class Admin_finance extends Admin
             }
             $values['document_id'] = (int) $values['document_id'];
             $values['cash_account_id'] = (int) $values['cash_account_id'];
+            $values['pay_all'] = $this->input->post('pay_all', TRUE) ? 1 : 0;
+            if ($values['pay_all'] && $values['document_id'] > 0) {
+                $pay_summary = $store->document_financials($tenant, $kind, $values['document_id']);
+                if (is_array($pay_summary)) {
+                    $pay_amount = round((float) $pay_summary['outstanding_amount'], 2);
+                    if ($pay_amount <= 0 && (float) $pay_summary['outstanding_amount'] > 0) {
+                        $pay_amount = 0.01;
+                    }
+                    $values['amount'] = number_format($pay_amount, 2, '.', '');
+                }
+            }
             $errors = $this->finance_payment_validate($values);
             if (!$errors) {
                 $previous = $this->db->db_debug;

@@ -579,3 +579,4 @@ $lang['finance_payment_status_unpaid'] = 'غير مدفوع';
 $lang['finance_payment_status_partial'] = 'مدفوع جزئياً';
 $lang['finance_payment_status_paid'] = 'مدفوع';
 $lang['finance_status_document_has_payments'] = 'لا تزال هذه الفاتورة/المطالبة تحتوي على مدفوعات. ألغِ المدفوعات أولاً قبل إلغاء المستند.';
+$lang['finance_payment_pay_all'] = 'دفع الكل';

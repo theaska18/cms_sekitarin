@@ -579,3 +579,4 @@ $lang['finance_payment_status_unpaid'] = 'Sin pagar';
 $lang['finance_payment_status_partial'] = 'Pagado parcialmente';
 $lang['finance_payment_status_paid'] = 'Pagado';
 $lang['finance_status_document_has_payments'] = 'Esta factura/factura de compra todavía tiene pagos. Cancele primero los pagos antes de cancelar el documento.';
+$lang['finance_payment_pay_all'] = 'Pagar todo';

@@ -459,6 +459,10 @@ class Finance_payment_store
                     $pending += (float) $amount;
                 }
             }
+            $outstanding = round((float) $row['total_amount'] - $paid, 6);
+            if ($outstanding <= 0.000001) {
+                continue;
+            }
             $results[] = array(
                 'id' => (int) $row[$spec['document_id']],
                 'label' => $label,
@@ -467,7 +471,7 @@ class Finance_payment_store
                 'total_amount' => (float) $row['total_amount'],
                 'paid_amount' => round($paid, 6),
                 'pending_amount' => round($pending, 6),
-                'outstanding_amount' => round((float) $row['total_amount'] - $paid, 6),
+                'outstanding_amount' => $outstanding,
             );
         }
         return $results;

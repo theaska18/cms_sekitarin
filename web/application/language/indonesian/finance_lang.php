@@ -602,3 +602,4 @@ $lang['finance_payment_status_unpaid'] = 'Belum dibayar';
 $lang['finance_payment_status_partial'] = 'Sebagian';
 $lang['finance_payment_status_paid'] = 'Lunas';
 $lang['finance_status_document_has_payments'] = 'Faktur/tagihan masih memiliki pembayaran. Batalkan pembayaran terlebih dahulu sebelum membatalkan dokumen.';
+$lang['finance_payment_pay_all'] = 'Bayar semua';

@@ -579,3 +579,4 @@ $lang['finance_payment_status_unpaid'] = '未付款';
 $lang['finance_payment_status_partial'] = '部分付款';
 $lang['finance_payment_status_paid'] = '已付清';
 $lang['finance_status_document_has_payments'] = '该发票/账单仍有付款记录。请先取消付款，再取消单据。';
+$lang['finance_payment_pay_all'] = '全额支付';
