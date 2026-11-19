@@ -10,6 +10,22 @@ STORES = ROOT / "web/application/libraries"
 
 
 class FinanceFilterPanelContractTests(unittest.TestCase):
+    def test_filter_panel_is_implemented_as_a_library(self):
+        library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
+        self.assertIn("class Finance_filter_panel", library)
+        self.assertIn("public function config(", library)
+        self.assertIn("public function filters(", library)
+        self.assertIn("public function render(", library)
+        self.assertIn("public function apply(", library)
+        controller = (ROOT / "web/application/controllers/Admin_finance.php").read_text()
+        integration = (ROOT / "web/application/controllers/Admin_finance_integration.php").read_text()
+        self.assertIn("load->library('finance_filter_panel')", controller)
+        self.assertIn("load->library('finance_filter_panel')", integration)
+        for name in ("transaction_index.php", "document_index.php", "integration_index.php"):
+            view = (FINANCE / name).read_text()
+            self.assertIn("finance_filter_panel->render", view)
+            self.assertNotIn("load->view('admin/finance/partials/filter_panel'", view)
+
     def test_shared_panel_has_date_range_status_and_search(self):
         panel = PARTIAL.read_text()
         self.assertIn("data-finance-filter-panel", panel)
@@ -47,7 +63,9 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
             "integration_index.php",
         ):
             with self.subTest(view=name):
-                self.assertIn("partials/filter_panel", (FINANCE / name).read_text())
+                view = (FINANCE / name).read_text()
+                self.assertIn("finance_filter_panel->render", view)
+                self.assertNotIn("load->view('admin/finance/partials/filter_panel'", view)
 
     def test_stores_accept_date_status_and_flag_filters(self):
         expected = {

@@ -6,6 +6,12 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Finance setup/master-data pages; accounting workflows are implemented separately. */
 class Admin_finance extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+    }
+
     public function index($slug = '')
     {
         if ($slug === 'dashboard') {
@@ -3359,34 +3365,11 @@ class Admin_finance extends Admin
 
     private function finance_list_filters($with_date = TRUE)
     {
-        $today = date('Y-m-d');
-        $default_start = date('Y-m-d', strtotime('-6 days'));
-        $start = trim((string) $this->input->get('start_on', TRUE));
-        $end = trim((string) $this->input->get('end_on', TRUE));
-        if (!$with_date) {
-            $start = '';
-            $end = '';
-        } else {
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
-                $start = $default_start;
-            }
-            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end = $today;
-            }
-            if ($start > $end) {
-                $start = $default_start;
-                $end = $today;
-            }
-        }
-        $status = trim((string) $this->input->get('status', TRUE));
-        if (strlen($status) > 32) {
-            $status = '';
-        }
-        $flag = trim((string) $this->input->get('flag', TRUE));
-        if (!in_array($flag, array('', '0', '1'), TRUE)) {
-            $flag = '';
-        }
-        return array('start_on' => $start, 'end_on' => $end, 'status' => $status, 'flag' => $flag);
+        return $this->finance_filter_panel->filters($this->finance_filter_panel->config(array(
+            'date' => $with_date,
+            'status_preset' => $with_date ? 'transaction' : 'active_flag',
+            'flag' => !$with_date,
+        )));
     }
 
     private function finance_report_dates()

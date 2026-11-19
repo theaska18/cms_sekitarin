@@ -22,7 +22,7 @@ $statuses = array(
         <div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_doc_intro']) ? $labels['finance_doc_intro'] : 'Single-line draft documents. Posting creates the related receivable/payable, income/expense, and tax journal lines. Posted documents are immutable.') ?></p></div>
         <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft') ?></a><?php endif; ?>
     </header>
-<?php $this->load->view('admin/finance/partials/filter_panel', array('finance_filter_date'=>TRUE,'finance_filter_target'=>'#finance-document-table')); ?>
+<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-document-table','status_preset'=>'document'), $labels) ?>
     <?php if ($finance_status !== ''): ?>
         <?php $ok = $finance_status === 'draft_saved' || $finance_status === 'posted'; ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($statuses[$finance_status]) ? $statuses[$finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : 'Action could not be completed (' . $finance_status . ').')) ?></div>

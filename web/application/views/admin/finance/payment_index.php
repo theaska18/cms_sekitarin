@@ -11,7 +11,7 @@ $id_field = $finance_payment_kind === 'customer' ? 'customer_payment_id' : 'supp
     <header class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_payment_intro']) ? $labels['finance_payment_intro'] : 'Draft payments are allocated to one posted document. Posting updates cash, receivables/payables, and any realized exchange difference.') ?></p></div>
         <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft') ?></a><?php endif; ?>
     </header>
-<?php $this->load->view('admin/finance/partials/filter_panel', array('finance_filter_date'=>TRUE,'finance_filter_target'=>'#finance-payment-table')); ?>
+<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-payment-table','status_preset'=>'payment'), $labels) ?>
     <?php if (!empty($finance_status)): ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $finance_status === 'insufficient_balance' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($labels['finance_status_' . $finance_status]) ? $labels['finance_status_' . $finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : $finance_status)) ?></div>
     <?php endif; ?>

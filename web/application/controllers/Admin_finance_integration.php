@@ -6,6 +6,12 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Finance integration inbox: review external invoices and convert them to drafts. */
 class Admin_finance_integration extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+    }
+
     public function sales_invoice_index()
     {
         $this->render_inbox('sales');
@@ -227,16 +233,10 @@ class Admin_finance_integration extends Admin
 
     private function inbox_filters()
     {
-        $today = date('Y-m-d');
-        $default_start = date('Y-m-d', strtotime('-6 days'));
-        $start = trim((string) $this->input->get('start_on', TRUE));
-        $end = trim((string) $this->input->get('end_on', TRUE));
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) $start = $default_start;
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) $end = $today;
-        if ($start > $end) { $start = $default_start; $end = $today; }
-        $status = trim((string) $this->input->get('status', TRUE));
-        if (!in_array($status, array('', 'received', 'processed', 'cancelled'), TRUE)) $status = '';
-        return array('start_on' => $start, 'end_on' => $end, 'status' => $status, 'flag' => '');
+        return $this->finance_filter_panel->filters($this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'status_preset' => 'integration',
+        )));
     }
 
     private function format_amount($value)
