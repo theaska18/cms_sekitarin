@@ -48,19 +48,20 @@ class Finance_store
             && (bool) $columns[$resource['id']]->primary_key;
     }
 
-    public function count($resource, $tenant_id, $search = '')
+    public function count($resource, $tenant_id, $search = '', $filters = array())
     {
         if (!$this->available($resource)) {
             return FALSE;
         }
         $this->db->from($resource['table'])->where('tenant_id', (int) $tenant_id);
         $this->apply_scope($resource);
+        if (isset($filters['flag']) && $filters['flag'] !== '' && in_array('active_flag', $resource['columns'] ? array_column($resource['columns'], 'name') : array(), TRUE)) $this->db->where('active_flag', (int) $filters['flag']);
         $this->apply_search($resource, $search);
         $count = $this->db->count_all_results();
         return $count === FALSE ? FALSE : (int) $count;
     }
 
-    public function page($resource, $tenant_id, $search, $limit, $offset, $order, $direction)
+    public function page($resource, $tenant_id, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available($resource)) {
             return FALSE;
@@ -72,6 +73,7 @@ class Finance_store
         $this->db->select(implode(',', $select))->from($resource['table'])
             ->where('tenant_id', (int) $tenant_id);
         $this->apply_scope($resource);
+        if (isset($filters['flag']) && $filters['flag'] !== '' && in_array('active_flag', $resource['columns'] ? array_column($resource['columns'], 'name') : array(), TRUE)) $this->db->where('active_flag', (int) $filters['flag']);
         $this->apply_search($resource, $search);
         $allowed_order = array_column($resource['columns'], 'name');
         $order = in_array($order, $allowed_order, TRUE) ? $order : $allowed_order[0];

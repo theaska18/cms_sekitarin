@@ -34,11 +34,14 @@ class Finance_payment_store
         return TRUE;
     }
 
-    public function count($tenant, $kind, $search = '')
+    public function count($tenant, $kind, $search = '', $filters = array())
     {
         if (!$this->available($kind)) return FALSE;
         $spec = $this->spec($kind);
         $this->db->from($spec['table'])->where('tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('payment_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('payment_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('status', $filters['status']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('payment_number', $search)->or_like('reference', $search)->group_end();
         }
@@ -46,7 +49,7 @@ class Finance_payment_store
         return $n === FALSE ? FALSE : (int) $n;
     }
 
-    public function page($tenant, $kind, $search, $limit, $offset, $order, $direction)
+    public function page($tenant, $kind, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available($kind)) return FALSE;
         $spec = $this->spec($kind);
@@ -61,6 +64,9 @@ class Finance_payment_store
             ->join('app_approval_request ar', 'ar.request_id = p.approval_request_id AND ar.tenant_id = p.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('p.tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('p.payment_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('p.payment_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('p.status', $filters['status']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)->group_end();
         }

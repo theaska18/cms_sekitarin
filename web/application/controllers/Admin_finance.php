@@ -858,16 +858,17 @@ class Admin_finance extends Admin
             $columns[$index + $column_offset] = $column['name'];
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
+        $filters = $this->finance_list_filters(FALSE);
         $this->datatable_server->respond(
             $columns,
-            function () use ($store, $resource, $tenant_id) {
-                return $store->count($resource, $tenant_id);
+            function () use ($store, $resource, $tenant_id, $filters) {
+                return $store->count($resource, $tenant_id, '', $filters);
             },
-            function ($search) use ($store, $resource, $tenant_id) {
-                return $store->count($resource, $tenant_id, $search);
+            function ($search) use ($store, $resource, $tenant_id, $filters) {
+                return $store->count($resource, $tenant_id, $search, $filters);
             },
-            function ($search, $length, $start, $order, $direction) use ($store, $resource, $tenant_id) {
-                return $store->page($resource, $tenant_id, $search, $length, $start, $order, $direction);
+            function ($search, $length, $start, $order, $direction) use ($store, $resource, $tenant_id, $filters) {
+                return $store->page($resource, $tenant_id, $search, $length, $start, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => $resource['columns'][0]['name'])
         );
@@ -1596,6 +1597,7 @@ class Admin_finance extends Admin
         }
         $type = $slug === 'income' ? 'income' : ($slug === 'expenses' ? 'expense' : 'all');
         $tenant_id = (int) $this->current_user['tenant_id'];
+        $filters = $this->finance_list_filters(TRUE);
         $columns = array(
             1 => 'transaction_number',
             2 => 'transaction_type',
@@ -1608,14 +1610,14 @@ class Admin_finance extends Admin
         );
         $this->datatable_server->respond(
             $columns,
-            function () use ($store, $tenant_id, $type) {
-                return $store->count($tenant_id, $type);
+            function () use ($store, $tenant_id, $type, $filters) {
+                return $store->count($tenant_id, $type, '', $filters);
             },
-            function ($search) use ($store, $tenant_id, $type) {
-                return $store->count($tenant_id, $type, $search);
+            function ($search) use ($store, $tenant_id, $type, $filters) {
+                return $store->count($tenant_id, $type, $search, $filters);
             },
-            function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $type) {
-                return $store->page($tenant_id, $type, $search, $length, $start, $order, $direction);
+            function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $type, $filters) {
+                return $store->page($tenant_id, $type, $search, $length, $start, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'create_on')
         );
@@ -1842,16 +1844,17 @@ class Admin_finance extends Admin
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
         $source_type = $slug === 'opening_balances' ? 'opening_balance' : 'manual';
+        $filters = $this->finance_list_filters(TRUE);
         $this->datatable_server->respond(
             array(1 => 'journal_number', 2 => 'journal_date', 3 => 'description', 4 => 'created_by_name', 5 => 'debit_total', 6 => 'status'),
-            function () use ($store, $tenant_id, $source_type) {
-                return $store->count($tenant_id, $source_type);
+            function () use ($store, $tenant_id, $source_type, $filters) {
+                return $store->count($tenant_id, $source_type, '', $filters);
             },
-            function ($search) use ($store, $tenant_id, $source_type) {
-                return $store->count($tenant_id, $source_type, $search);
+            function ($search) use ($store, $tenant_id, $source_type, $filters) {
+                return $store->count($tenant_id, $source_type, $search, $filters);
             },
-            function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $source_type) {
-                return $store->page($tenant_id, $source_type, $search, $length, $offset, $order, $direction);
+            function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $source_type, $filters) {
+                return $store->page($tenant_id, $source_type, $search, $length, $offset, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'journal_date')
         );
@@ -2135,12 +2138,13 @@ class Admin_finance extends Admin
         $date_column = $spec[1];
         $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'currency_code', 8 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
+        $filters = $this->finance_list_filters(TRUE);
         $this->datatable_server->respond(
             $columns,
-            function () use ($store, $tenant_id, $kind) { return $store->count($tenant_id, $kind); },
-            function ($search) use ($store, $tenant_id, $kind) { return $store->count($tenant_id, $kind, $search); },
-            function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $kind) {
-                return $store->page($tenant_id, $kind, $search, $length, $offset, $order, $direction);
+            function () use ($store, $tenant_id, $kind, $filters) { return $store->count($tenant_id, $kind, '', $filters); },
+            function ($search) use ($store, $tenant_id, $kind, $filters) { return $store->count($tenant_id, $kind, $search, $filters); },
+            function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $kind, $filters) {
+                return $store->page($tenant_id, $kind, $search, $length, $offset, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => $date_column)
         );
@@ -2400,12 +2404,13 @@ class Admin_finance extends Admin
             return;
         }
         $tenant = (int) $this->current_user['tenant_id'];
+        $filters = $this->finance_list_filters(TRUE);
         $this->datatable_server->respond(
             array(1 => 'payment_number', 2 => 'payment_date', 3 => 'amount', 4 => 'currency_code', 5 => 'reference', 6 => 'status'),
-            function () use ($store, $tenant, $kind) { return $store->count($tenant, $kind); },
-            function ($search) use ($store, $tenant, $kind) { return $store->count($tenant, $kind, $search); },
-            function ($search, $length, $offset, $order, $direction) use ($store, $tenant, $kind) {
-                return $store->page($tenant, $kind, $search, $length, $offset, $order, $direction);
+            function () use ($store, $tenant, $kind, $filters) { return $store->count($tenant, $kind, '', $filters); },
+            function ($search) use ($store, $tenant, $kind, $filters) { return $store->count($tenant, $kind, $search, $filters); },
+            function ($search, $length, $offset, $order, $direction) use ($store, $tenant, $kind, $filters) {
+                return $store->page($tenant, $kind, $search, $length, $offset, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'payment_date')
         );
@@ -2562,12 +2567,12 @@ class Admin_finance extends Admin
         if(!$this->has_admin_menu_code('fin_cash_bank_transfer')){$this->datatable_server->error(403);return;}
         $this->load->library('finance_transfer_store');$store=$this->finance_transfer_store;
         if(!$store->available()){$this->datatable_server->error(503);return;}
-        $tenant=(int)$this->current_user['tenant_id'];
+        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE);
         $this->datatable_server->respond(
             array(1=>'transfer_number',2=>'transfer_date',3=>'create_on',4=>'from_account_name',5=>'to_account_name',6=>'from_amount',7=>'created_by_name',8=>'status'),
-            function()use($store,$tenant){return $store->count($tenant);},
-            function($search)use($store,$tenant){return $store->count($tenant,$search);},
-            function($search,$length,$offset,$order,$direction)use($store,$tenant){return $store->page($tenant,$search,$length,$offset,$order,$direction);},
+            function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
+            function($search)use($store,$tenant,$filters){return $store->count($tenant,$search,$filters);},
+            function($search,$length,$offset,$order,$direction)use($store,$tenant,$filters){return $store->page($tenant,$search,$length,$offset,$order,$direction,$filters);},
             array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
         );
     }
@@ -2635,12 +2640,12 @@ class Admin_finance extends Admin
         if(!$this->has_admin_menu_code('fin_bank_reconciliation')){$this->datatable_server->error(403);return;}
         $this->load->library('finance_reconciliation_store');$store=$this->finance_reconciliation_store;
         if(!$store->available()){$this->datatable_server->error(503);return;}
-        $tenant=(int)$this->current_user['tenant_id'];
+        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE);
         $this->datatable_server->respond(
             array(1=>'reconciliation_number',2=>'statement_date',3=>'statement_reference',4=>'closing_balance',5=>'status'),
-            function()use($store,$tenant){return $store->count($tenant);},
-            function($search)use($store,$tenant){return $store->count($tenant,$search);},
-            function($search,$length,$offset,$order,$direction)use($store,$tenant){return $store->page($tenant,$search,$length,$offset,$order,$direction);},
+            function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
+            function($search)use($store,$tenant,$filters){return $store->count($tenant,$search,$filters);},
+            function($search,$length,$offset,$order,$direction)use($store,$tenant,$filters){return $store->page($tenant,$search,$length,$offset,$order,$direction,$filters);},
             array('max_length'=>50,'max_search_length'=>120,'default_order'=>'statement_date')
         );
     }
@@ -3352,10 +3357,42 @@ class Admin_finance extends Admin
         );
     }
 
+    private function finance_list_filters($with_date = TRUE)
+    {
+        $today = date('Y-m-d');
+        $default_start = date('Y-m-d', strtotime('-6 days'));
+        $start = trim((string) $this->input->get('start_on', TRUE));
+        $end = trim((string) $this->input->get('end_on', TRUE));
+        if (!$with_date) {
+            $start = '';
+            $end = '';
+        } else {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
+                $start = $default_start;
+            }
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+                $end = $today;
+            }
+            if ($start > $end) {
+                $start = $default_start;
+                $end = $today;
+            }
+        }
+        $status = trim((string) $this->input->get('status', TRUE));
+        if (strlen($status) > 32) {
+            $status = '';
+        }
+        $flag = trim((string) $this->input->get('flag', TRUE));
+        if (!in_array($flag, array('', '0', '1'), TRUE)) {
+            $flag = '';
+        }
+        return array('start_on' => $start, 'end_on' => $end, 'status' => $status, 'flag' => $flag);
+    }
+
     private function finance_report_dates()
     {
         $today = date('Y-m-d');
-        $default_start = date('Y-01-01');
+        $default_start = date('Y-m-d', strtotime('-6 days'));
         $start = $this->input->get('start_on', TRUE);
         $end = $this->input->get('end_on', TRUE);
         $start = is_string($start) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) ? $start : $default_start;

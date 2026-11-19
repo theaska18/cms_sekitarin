@@ -76,6 +76,7 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
             <a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"><?= html_escape(isset($labels['finance_tx_add_draft']) ? $labels['finance_tx_add_draft'] : 'Add draft') ?></a>
         <?php endif; ?>
     </header>
+<?php $this->load->view('admin/finance/partials/filter_panel', array('finance_filter_date'=>TRUE,'finance_filter_target'=>'#finance-transaction-table')); ?>
     <?php if ($status_message !== ''): ?>
         <?php $ok = in_array($finance_status, array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved'), TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>">

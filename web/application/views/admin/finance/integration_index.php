@@ -21,6 +21,14 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
         <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1>
         <p class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_integration_intro']) ? $labels['finance_integration_intro'] : 'Data dari API eksternal. Pilih Jadikan Draft untuk membuat draft dan memilih pelanggan/pemasok, akun, dan pajak.') ?></p>
     </header>
+<?php $this->load->view('admin/finance/partials/filter_panel', array(
+    'finance_filter_date' => TRUE,
+    'finance_filter_target' => '#finance-integration-table',
+    'finance_filter_status_options' => array(
+        'received' => isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Received',
+        'processed' => isset($labels['finance_integration_processed']) ? $labels['finance_integration_processed'] : 'Processed'
+    )
+)); ?>
     <?php if (!$available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_integration_unavailable']) ? $labels['finance_integration_unavailable'] : 'Tabel inbox integrasi belum tersedia. Jalankan migration database terlebih dahulu.') ?></div>
     <?php else: ?>

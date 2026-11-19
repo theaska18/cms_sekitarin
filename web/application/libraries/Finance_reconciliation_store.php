@@ -24,10 +24,13 @@ class Finance_reconciliation_store
             && $this->db->table_exists('fin_journal_line');
     }
 
-    public function count($tenant, $search = '')
+    public function count($tenant, $search = '', $filters = array())
     {
         if (!$this->available()) return FALSE;
         $this->db->from('fin_bank_reconciliation')->where('tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('statement_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('statement_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('status', $filters['status']);
         if ($search !== '') $this->db->like('statement_reference', $search);
         $n = $this->db->count_all_results();
         return $n === FALSE ? FALSE : (int) $n;
@@ -39,7 +42,7 @@ class Finance_reconciliation_store
             ->where('reconciliation_number', (string) $number)->count_all_results() > 0;
     }
 
-    public function page($tenant, $search, $limit, $offset, $order, $direction)
+    public function page($tenant, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available()) return FALSE;
         $allowed = array('reconciliation_number','statement_date','statement_reference','closing_balance','status','created_by_name');
@@ -53,6 +56,9 @@ class Finance_reconciliation_store
             ->join('app_approval_request ar', 'ar.request_id = r.approval_request_id AND ar.tenant_id = r.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('r.tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('r.statement_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('r.statement_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('r.status', $filters['status']);
         if ($search !== '') $this->db->like('r.statement_reference', $search);
         $order_column = $order === 'created_by_name' || $order === 'reconciliation_number' ? $order : 'r.' . $order;
         $q = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')

@@ -52,20 +52,23 @@ class Finance_transaction_store
         return TRUE;
     }
 
-    public function count($tenant_id, $type = NULL, $search = '')
+    public function count($tenant_id, $type = NULL, $search = '', $filters = array())
     {
         if (!$this->available()) {
             return FALSE;
         }
         if ($type === 'all') {
             list($sql, $binds) = $this->all_transactions_sql($tenant_id);
+            $where = array();
             if (trim((string) $search) !== '') {
-                $sql = 'SELECT * FROM (' . $sql . ') all_finance WHERE transaction_number LIKE ? OR description LIKE ? OR transaction_type LIKE ?';
+                $where[] = '(transaction_number LIKE ? OR description LIKE ? OR transaction_type LIKE ?)';
                 $needle = '%' . $search . '%';
                 array_push($binds, $needle, $needle, $needle);
-            } else {
-                $sql = 'SELECT * FROM (' . $sql . ') all_finance';
             }
+            if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
+            if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
+            $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
             $result = $this->db->query('SELECT COUNT(*) AS row_count FROM (' . $sql . ') finance_count', $binds);
             return $result === FALSE ? FALSE : (int) $result->row()->row_count;
         }
@@ -79,11 +82,12 @@ class Finance_transaction_store
                 ->or_like('description', $search)
                 ->group_end();
         }
+        $this->apply_filters('', $filters);
         $count = $this->db->count_all_results();
         return $count === FALSE ? FALSE : (int) $count;
     }
 
-    public function page($tenant_id, $type, $search, $limit, $offset, $order, $direction)
+    public function page($tenant_id, $type, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available()) {
             return FALSE;
@@ -99,13 +103,17 @@ class Finance_transaction_store
                 . ' LEFT JOIN app_user u ON u.user_id = a.created_by AND u.tenant_id = a.tenant_id'
                 . ' LEFT JOIN app_approval_request ar ON ar.request_id = a.approval_request_id AND ar.tenant_id = a.tenant_id'
                 . ' LEFT JOIN app_user au ON au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id';
+            $where = array();
             if (trim((string) $search) !== '') {
-                $sql = 'SELECT * FROM (' . $sql . ') all_finance WHERE transaction_number LIKE ? OR description LIKE ? OR transaction_type LIKE ?';
+                $where[] = '(transaction_number LIKE ? OR description LIKE ? OR transaction_type LIKE ?)';
                 $needle = '%' . $search . '%';
                 array_push($binds, $needle, $needle, $needle);
             }
-            $order_column = $order;
-            $sql .= ' ORDER BY ' . $order_column . ' ' . $direction . ', transaction_id DESC LIMIT '
+            if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
+            if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
+            $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
+            $sql .= ' ORDER BY ' . $order . ' ' . $direction . ', transaction_id DESC LIMIT '
                 . min(50, max(1, (int) $limit)) . ' OFFSET ' . max(0, (int) $offset);
             $result = $this->db->query($sql, $binds);
             return $result === FALSE ? FALSE : $result->result_array();
@@ -128,6 +136,7 @@ class Finance_transaction_store
         if ($type !== NULL) {
             $this->db->where('t.transaction_type', $type);
         }
+        $this->apply_filters('t.', $filters);
         if (trim((string) $search) !== '') {
             $this->db->group_start()
                 ->like('t.transaction_number', $search)
@@ -619,6 +628,19 @@ class Finance_transaction_store
             'department' => array('table' => 'fin_department', 'id' => 'department_id', 'code' => 'department_code', 'name' => 'department_name'),
         );
         return isset($maps[$kind]) ? $maps[$kind] : NULL;
+    }
+
+    private function apply_filters($alias, $filters)
+    {
+        if (!empty($filters['start_on'])) {
+            $this->db->where($alias . 'transaction_on >=', $filters['start_on']);
+        }
+        if (!empty($filters['end_on'])) {
+            $this->db->where($alias . 'transaction_on <=', $filters['end_on']);
+        }
+        if (!empty($filters['status'])) {
+            $this->db->where($alias . 'status', $filters['status']);
+        }
     }
 
     private function all_transactions_sql($tenant_id)

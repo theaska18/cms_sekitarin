@@ -23,16 +23,19 @@ class Finance_transfer_store
             && $this->db->table_exists('fin_settings');
     }
 
-    public function count($tenant, $search = '')
+    public function count($tenant, $search = '', $filters = array())
     {
         if (!$this->available()) return FALSE;
         $this->db->from('fin_cash_transfer')->where('tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('transfer_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('transfer_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('status', $filters['status']);
         if ($search !== '') $this->db->group_start()->like('transfer_number', $search)->or_like('memo', $search)->group_end();
         $n = $this->db->count_all_results();
         return $n === FALSE ? FALSE : (int) $n;
     }
 
-    public function page($tenant, $search, $limit, $offset, $order, $direction)
+    public function page($tenant, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available()) return FALSE;
         $allowed = array('transfer_number','transfer_date','create_on','from_amount','to_amount','status','created_by_name','from_account_name','to_account_name');
@@ -53,6 +56,9 @@ class Finance_transfer_store
             ->join('app_approval_request ar', 'ar.request_id = t.approval_request_id AND ar.tenant_id = t.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('t.tenant_id', (int) $tenant);
+        if (!empty($filters['start_on'])) $this->db->where('t.transfer_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('t.transfer_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('t.status', $filters['status']);
         if ($search !== '') $this->db->group_start()->like('t.transfer_number', $search)->or_like('t.memo', $search)->group_end();
         $order_column = in_array($order, array('created_by_name', 'from_account_name', 'to_account_name'), TRUE) ? $order : 't.' . $order;
         $q=$this->db->order_by($order_column,strtoupper($direction)==='ASC'?'ASC':'DESC')

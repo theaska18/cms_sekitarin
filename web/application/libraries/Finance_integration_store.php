@@ -41,13 +41,14 @@ class Finance_integration_store
         return $this->available[$kind] = is_array($fields) && !array_diff($required, $fields);
     }
 
-    public function count($kind, $tenant_id, $search = '')
+    public function count($kind, $tenant_id, $search = '', $filters = array())
     {
         $spec = $this->spec($kind);
         if ($spec === NULL || !$this->available($kind)) {
             return 0;
         }
         $this->apply_search($spec, $search);
+        $this->apply_filters($spec, $filters);
         $count = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
             ->where('status !=', 'cancelled')
@@ -55,7 +56,7 @@ class Finance_integration_store
         return $count === FALSE ? 0 : (int) $count;
     }
 
-    public function page($kind, $tenant_id, $search, $limit, $offset, $order, $direction)
+    public function page($kind, $tenant_id, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         $spec = $this->spec($kind);
         if ($spec === NULL || !$this->available($kind)) {
@@ -78,6 +79,7 @@ class Finance_integration_store
         $direction = strtoupper((string) $direction) === 'ASC' ? 'ASC' : 'DESC';
 
         $this->apply_search($spec, $search);
+        $this->apply_filters($spec, $filters);
         $query = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
             ->where('status !=', 'cancelled')
@@ -235,6 +237,19 @@ class Finance_integration_store
             );
         }
         return NULL;
+    }
+
+    private function apply_filters($spec, $filters)
+    {
+        if (!empty($filters['start_on'])) {
+            $this->db->where($spec['date'] . ' >=', $filters['start_on']);
+        }
+        if (!empty($filters['end_on'])) {
+            $this->db->where($spec['date'] . ' <=', $filters['end_on']);
+        }
+        if (!empty($filters['status'])) {
+            $this->db->where('status', $filters['status']);
+        }
     }
 
     private function apply_search($spec, $search)

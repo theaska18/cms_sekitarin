@@ -36,19 +36,22 @@ class Finance_journal_store
         return TRUE;
     }
 
-    public function count($tenant_id, $source_type, $search = '')
+    public function count($tenant_id, $source_type, $search = '', $filters = array())
     {
         if (!$this->available()) {
             return FALSE;
         }
         $this->db->from('fin_journal_entry')->where('tenant_id', (int) $tenant_id)
             ->where('source_type', $source_type);
+        if (!empty($filters['start_on'])) $this->db->where('journal_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('journal_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('status', $filters['status']);
         $this->apply_search($search);
         $count = $this->db->count_all_results();
         return $count === FALSE ? FALSE : (int) $count;
     }
 
-    public function page($tenant_id, $source_type, $search, $limit, $offset, $order, $direction)
+    public function page($tenant_id, $source_type, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available()) {
             return FALSE;
@@ -68,6 +71,9 @@ class Finance_journal_store
             ->join('app_approval_request ar', 'ar.request_id = je.approval_request_id AND ar.tenant_id = je.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('je.tenant_id', (int) $tenant_id)->where('je.source_type', $source_type);
+        if (!empty($filters['start_on'])) $this->db->where('je.journal_date >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('je.journal_date <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('je.status', $filters['status']);
         $this->apply_search($search);
         $order_column = $order === 'created_by_name' ? 'created_by_name' : 'je.' . $order;
         $query = $this->db->order_by($order_column, $direction)->order_by('je.journal_entry_id', 'DESC')

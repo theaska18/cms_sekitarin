@@ -1,0 +1,72 @@
+from pathlib import Path
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+PARTIAL = ROOT / "web/application/views/admin/finance/partials/filter_panel.php"
+JS = ROOT / "web/assets/js/finance-filters.js"
+FOOTER = ROOT / "web/application/views/admin/footer.php"
+FINANCE = ROOT / "web/application/views/admin/finance"
+STORES = ROOT / "web/application/libraries"
+
+
+class FinanceFilterPanelContractTests(unittest.TestCase):
+    def test_shared_panel_has_date_range_status_and_search(self):
+        panel = PARTIAL.read_text()
+        self.assertIn("data-finance-filter-panel", panel)
+        self.assertIn("data-finance-filter=\"start_on\"", panel)
+        self.assertIn("data-finance-filter=\"end_on\"", panel)
+        self.assertIn("data-finance-filter=\"status\"", panel)
+        self.assertIn("data-finance-filter=\"flag\"", panel)
+        self.assertIn("data-finance-filter=\"search\"", panel)
+        self.assertIn("data-finance-filter=\"page_size\"", panel)
+        self.assertIn("strtotime('-6 days')", panel)
+
+    def test_shared_javascript_sends_filters_and_hides_default_toolbar(self):
+        script = JS.read_text()
+        footer = FOOTER.read_text()
+        self.assertIn("finance-filters.js", footer)
+        self.assertIn("table.on('preXhr.dt'", script)
+        self.assertIn("data.start_on = current.start_on", script)
+        self.assertIn("data.end_on = current.end_on", script)
+        self.assertIn("data.status = current.status", script)
+        self.assertIn("data.flag = current.flag", script)
+        self.assertIn(".has('.dt-search, .dt-length').hide()", script)
+        self.assertIn("api.search(search.value).draw()", script)
+        self.assertIn("api.ajax.reload()", script)
+
+    def test_finance_list_pages_use_the_filter_panel(self):
+        for name in (
+            "transaction_index.php",
+            "journal_index.php",
+            "document_index.php",
+            "payment_index.php",
+            "transfer_index.php",
+            "reconciliation_index.php",
+            "resource_index.php",
+            "report_index.php",
+            "integration_index.php",
+        ):
+            with self.subTest(view=name):
+                self.assertIn("partials/filter_panel", (FINANCE / name).read_text())
+
+    def test_stores_accept_date_status_and_flag_filters(self):
+        expected = {
+            "Finance_transaction_store.php": ("transaction_on", "status"),
+            "Finance_journal_store.php": ("journal_date", "status"),
+            "Finance_document_store.php": ("$spec['date']", "status"),
+            "Finance_payment_store.php": ("payment_date", "status"),
+            "Finance_transfer_store.php": ("transfer_date", "status"),
+            "Finance_reconciliation_store.php": ("statement_date", "status"),
+            "Finance_integration_store.php": ("$spec['date']", "status"),
+        }
+        for name, columns in expected.items():
+            with self.subTest(store=name):
+                content = (STORES / name).read_text()
+                self.assertIn("$filters = array()", content)
+                for column in columns:
+                    self.assertIn(column, content)
+        self.assertIn("active_flag", (STORES / "Finance_store.php").read_text())
+
+
+if __name__ == "__main__":
+    unittest.main()

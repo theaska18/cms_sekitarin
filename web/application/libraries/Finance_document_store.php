@@ -44,7 +44,7 @@ class Finance_document_store
         return TRUE;
     }
 
-    public function count($tenant_id, $kind, $search = '')
+    public function count($tenant_id, $kind, $search = '', $filters = array())
     {
         if (!$this->available($kind)) {
             return FALSE;
@@ -53,6 +53,9 @@ class Finance_document_store
         $this->db->from($spec['header'] . ' d')
             ->join($spec['person_table'] . ' p', 'p.' . $spec['person_id'] . ' = d.' . $spec['person_id'] . ' AND p.tenant_id = d.tenant_id', 'left')
             ->where('d.tenant_id', (int) $tenant_id);
+        if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
                 ->or_like('d.integration_number', $search)
@@ -65,7 +68,7 @@ class Finance_document_store
         return $count === FALSE ? FALSE : (int) $count;
     }
 
-    public function page($tenant_id, $kind, $search, $limit, $offset, $order, $direction)
+    public function page($tenant_id, $kind, $search, $limit, $offset, $order, $direction, $filters = array())
     {
         if (!$this->available($kind)) {
             return FALSE;
@@ -84,6 +87,9 @@ class Finance_document_store
             ->join('app_approval_request ar', 'ar.request_id = d.approval_request_id AND ar.tenant_id = d.tenant_id', 'left')
             ->join('app_user au', 'au.user_id = ar.current_approver_user_id AND au.tenant_id = ar.tenant_id', 'left')
             ->where('d.tenant_id', (int) $tenant_id);
+        if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
+        if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
+        if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
                 ->or_like('d.integration_number', $search)

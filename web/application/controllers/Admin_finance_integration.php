@@ -75,6 +75,7 @@ class Admin_finance_integration extends Admin
             return;
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
+        $filters = $this->inbox_filters();
         $columns = array(
             1 => 'received_at',
             2 => $spec['date'],
@@ -88,10 +89,10 @@ class Admin_finance_integration extends Admin
         );
         $this->datatable_server->respond(
             $columns,
-            function () use ($store, $kind, $tenant_id) { return $store->count($kind, $tenant_id); },
-            function ($search) use ($store, $kind, $tenant_id) { return $store->count($kind, $tenant_id, $search); },
-            function ($search, $length, $offset, $order, $direction) use ($store, $kind, $tenant_id) {
-                return $store->page($kind, $tenant_id, $search, $length, $offset, $order, $direction);
+            function () use ($store, $kind, $tenant_id, $filters) { return $store->count($kind, $tenant_id, '', $filters); },
+            function ($search) use ($store, $kind, $tenant_id, $filters) { return $store->count($kind, $tenant_id, $search, $filters); },
+            function ($search, $length, $offset, $order, $direction) use ($store, $kind, $tenant_id, $filters) {
+                return $store->page($kind, $tenant_id, $search, $length, $offset, $order, $direction, $filters);
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'received_at')
         );
@@ -222,6 +223,20 @@ class Admin_finance_integration extends Admin
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )
         );
+    }
+
+    private function inbox_filters()
+    {
+        $today = date('Y-m-d');
+        $default_start = date('Y-m-d', strtotime('-6 days'));
+        $start = trim((string) $this->input->get('start_on', TRUE));
+        $end = trim((string) $this->input->get('end_on', TRUE));
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) $start = $default_start;
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) $end = $today;
+        if ($start > $end) { $start = $default_start; $end = $today; }
+        $status = trim((string) $this->input->get('status', TRUE));
+        if (!in_array($status, array('', 'received', 'processed', 'cancelled'), TRUE)) $status = '';
+        return array('start_on' => $start, 'end_on' => $end, 'status' => $status, 'flag' => '');
     }
 
     private function format_amount($value)
