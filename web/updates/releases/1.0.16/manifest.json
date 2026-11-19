@@ -11,6 +11,11 @@
       "path": "application/config/version.php",
       "sha256": "6e82ab0286d5d5a60dc6fb904990be58f4bdc51cd9e6a1a6eedc02ddf2410575",
       "size": 449
+    },
+    {
+      "path": "application/controllers/Update_api.php",
+      "sha256": "c78145c5e6d608dd3786f03f8346912197e84cb59f8506458ed357474d708d6c",
+      "size": 10617
     }
   ],
   "delete": [],
