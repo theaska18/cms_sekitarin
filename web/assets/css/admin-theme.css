@@ -669,3 +669,12 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
     max-height: calc(100vh - 16px);
     overflow-y: auto;
 }
+
+/* Global portal for admin three-dot action menus. */
+.admin-action-menu-portal {
+    position: fixed !important;
+    z-index: 130 !important;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+}
