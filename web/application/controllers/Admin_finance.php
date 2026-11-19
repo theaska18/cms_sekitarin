@@ -731,12 +731,14 @@ class Admin_finance extends Admin
             foreach ($existing_rows as $row) {
                 $existing[(string) $row['account_code']] = $row;
             }
-            $conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)));
-            if ($conflicts) {
-                $errors[] = 'Import dibatalkan. Kode akun sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            $import_rows = array();
+            foreach ($rows as $row) {
+                if (!isset($existing[$row['account_code']])) {
+                    $import_rows[] = $row;
+                }
             }
             $parent_map = array();
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 if ($row['parent_code'] !== '') {
                     if (!isset($file_codes[$row['parent_code']]) && !isset($existing[$row['parent_code']])) {
                         $errors[] = 'Parent ' . $row['parent_code'] . ' untuk akun ' . $row['account_code'] . ' tidak ditemukan.';
@@ -744,7 +746,7 @@ class Admin_finance extends Admin
                 }
                 $parent_map[$row['account_code']] = $row['parent_code'];
             }
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 $seen = array();
                 $current = $row['account_code'];
                 while ($current !== '' && isset($parent_map[$current])) {
@@ -761,7 +763,7 @@ class Admin_finance extends Admin
             $tenant_id = (int) $this->current_user['tenant_id'];
             $user_id = (int) $this->current_user['user_id'];
             $this->db->trans_begin();
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 $this->db->insert('fin_account', array(
                     'tenant_id' => $tenant_id,
                     'parent_account_id' => NULL,
@@ -787,7 +789,7 @@ class Admin_finance extends Admin
                 foreach ($all as $row) {
                     $ids[(string) $row['account_code']] = (int) $row['account_id'];
                 }
-                foreach ($rows as $row) {
+                foreach ($import_rows as $row) {
                     if ($row['parent_code'] !== '' && isset($ids[$row['parent_code']])) {
                         $this->db->where('tenant_id', $tenant_id)->where('account_code', $row['account_code'])
                             ->update('fin_account', array('parent_account_id' => $ids[$row['parent_code']]));
@@ -799,7 +801,7 @@ class Admin_finance extends Admin
             } else {
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'coa_imported');
-                $this->session->set_flashdata('coa_import_count', count($rows));
+                $this->session->set_flashdata('coa_import_count', count($import_rows));
                 redirect('/admin/finance/chart_of_accounts', 'location', 303);
                 return;
             }
