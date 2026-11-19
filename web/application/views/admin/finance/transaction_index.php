@@ -78,7 +78,7 @@ $transaction_filter_panel_config = array_merge($finance_filter_config, array('ta
 if ($can_add) {
     $transaction_filter_panel_config['add_action'] = array(
         'url' => $current_path . '/new',
-        'label' => isset($labels['finance_tx_add_draft']) ? $labels['finance_tx_add_draft'] : 'Add draft',
+        'label' => isset($labels['finance_add']) ? $labels['finance_add'] : 'Tambah',
     );
 }
 ?>
