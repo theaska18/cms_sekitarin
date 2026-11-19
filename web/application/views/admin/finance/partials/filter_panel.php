@@ -20,7 +20,7 @@ $filter_default_end = isset($finance_filter_default_end) ? (string) $finance_fil
 $filter_target = isset($finance_filter_target) ? (string) $finance_filter_target : '';
 $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_default_start), 0, 8);
 ?>
-<section class="finance-filter-panel mb-5 border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+<section class="finance-filter-panel relative z-30 mb-5 border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
          data-finance-filter-panel
          data-target="<?= html_escape($filter_target) ?>"
          data-default-start="<?= html_escape($filter_default_start) ?>"
@@ -40,23 +40,6 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h14M6 10h8m-5 5h2"/></svg>
             <span data-finance-filter-indicator hidden class="absolute end-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true"></span>
         </button>
-        <div class="relative shrink-0" data-finance-export>
-            <button type="button" data-finance-export-toggle aria-expanded="false" class="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3-3m-3 3L7 9M4 14v2h12v-2"/></svg>
-                Export
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4"/></svg>
-            </button>
-            <div data-finance-export-menu hidden class="absolute end-0 z-[140] mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
-                <button type="button" data-finance-export-pdf class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 8h6M7 14h4"/></svg>
-                    PDF
-                </button>
-                <button type="button" data-finance-export-excel class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 7 2 3m0 0 2-3m-2 3 2 3m-2-3-2 3"/></svg>
-                    Excel
-                </button>
-            </div>
-        </div>
     </div>
     <div id="<?= html_escape($filter_id) ?>" data-finance-filter-details hidden class="mt-4 border-t border-slate-100 pt-4">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -135,13 +118,32 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                 </select>
             </label>
         </div>
-        <div class="mt-4 flex flex-wrap justify-end gap-2">
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+                    <div class="relative shrink-0" data-finance-export>
+            <button type="button" data-finance-export-toggle aria-expanded="false" class="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3-3m-3 3L7 9M4 14v2h12v-2"/></svg>
+                Export
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4"/></svg>
+            </button>
+            <div data-finance-export-menu hidden class="absolute end-0 z-[200] mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                <button type="button" data-finance-export-pdf class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 8h6M7 14h4"/></svg>
+                    PDF
+                </button>
+                <button type="button" data-finance-export-excel class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 7 2 3m0 0 2-3m-2 3 2 3m-2-3-2 3"/></svg>
+                    Excel
+                </button>
+            </div>
+        </div>
+            <div class="ms-auto flex flex-wrap gap-2">
             <button type="button" data-finance-filter-reset class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <?= html_escape(isset($labels['finance_filter_reset']) ? $labels['finance_filter_reset'] : 'Reset') ?>
             </button>
             <button type="button" data-finance-filter-apply class="min-h-10 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">
                 <?= html_escape(isset($labels['finance_filter_apply']) ? $labels['finance_filter_apply'] : 'Apply') ?>
             </button>
+            </div>
         </div>
     </div>
 </section>
