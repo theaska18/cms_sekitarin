@@ -1,0 +1,66 @@
+{
+  "version": "1.0.19",
+  "from_version": "1.0.18",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.18",
+  "changelog": "Rilis 1.0.19: melengkapi terjemahan halaman Setting untuk semua bahasa admin dan menambahkan fallback label.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "8b12cd7860194e7c56a0ad6f8668cdef289bec4f0ad84d6a046b5e6c557fe8de",
+      "size": 449
+    },
+    {
+      "path": "application/language/arabic/admin_lang.php",
+      "sha256": "45b5d5b1f19cd6e2e9d3a8d008c77d40201f73566e3d980ab9b5ef8c7ce9d953",
+      "size": 16625
+    },
+    {
+      "path": "application/language/chinese/admin_lang.php",
+      "sha256": "5077a7faf549adbfbb69c8bff67da0f7d20cfac15f128379621dae3afe4d87aa",
+      "size": 12272
+    },
+    {
+      "path": "application/language/french/admin_lang.php",
+      "sha256": "f54459fcda72efb7a59ef49dba0e2fdd9ef2bb14ad4db9ab518fe6534ae2db37",
+      "size": 14523
+    },
+    {
+      "path": "application/language/german/admin_lang.php",
+      "sha256": "2891950c60e791f3917710a8538434c999896821e02209f5fcab6ab46768b88c",
+      "size": 13866
+    },
+    {
+      "path": "application/language/japanese/admin_lang.php",
+      "sha256": "fb97b05dc3ab1a918d698de88c748657ef3eacd6c511e5ac316c6f0bca82f6f8",
+      "size": 14608
+    },
+    {
+      "path": "application/language/korean/admin_lang.php",
+      "sha256": "5c50f4aecfbdd7b5de7c29192ed5123eef2e418a1d1ab058af1f07170f0e4b21",
+      "size": 13965
+    },
+    {
+      "path": "application/language/spanish/admin_lang.php",
+      "sha256": "5c1e474c3775c0151d854b082c278089b0e3641b57c8897a9a94795018a8b877",
+      "size": 14036
+    },
+    {
+      "path": "application/views/admin/setting.php",
+      "sha256": "cc8132cff9b3b086dbdf60f7e044e86e54977003fbf15818539b0875a396cafd",
+      "size": 9685
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.19.zip",
+    "sha256": "de94e40208508620cc32a93fc2be257919086a42fa27f4ba63ffd9c0774b4631",
+    "size": 33101
+  },
+  "from_ref": "v1.0.18",
+  "generated_at": "2026-11-19T15:34:46+00:00"
+}

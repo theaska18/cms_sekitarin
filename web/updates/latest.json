@@ -1,11 +1,11 @@
 {
-  "version": "1.0.18",
+  "version": "1.0.19",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.18: header aksi tanpa label, export tanpa kolom aksi, fade scroll tabel kiri/kanan, padding sel dan kepadatan baris seragam.",
+  "changelog": "Rilis 1.0.19: melengkapi terjemahan halaman Setting untuk semua bahasa admin dan menambahkan fallback label.",
   "min_php": "8.1",
-  "requires_version": "1.0.17",
-  "package": "cms-1.0.18.zip",
-  "sha256": "648f598f4bc6bdd8a329016a141fbaaa80e7bae906a6b0f339fff5e8b13cc7eb",
-  "size": 117540,
+  "requires_version": "1.0.18",
+  "package": "cms-1.0.19.zip",
+  "sha256": "de94e40208508620cc32a93fc2be257919086a42fa27f4ba63ffd9c0774b4631",
+  "size": 33101,
   "migrations": []
 }
