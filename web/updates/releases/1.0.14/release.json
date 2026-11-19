@@ -1,0 +1,216 @@
+{
+  "version": "1.0.14",
+  "from_version": "1.0.13",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.13",
+  "changelog": "Penyatuan shell DataTable dan panel filter di seluruh halaman admin; filter per kolom untuk Property, Tenant, Sequence, Approval, Approval Flow Template, dan Menu Access.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "b84ca5a2ce2ee324fa933742e2c050af41c5a21ea4a89cd62d7bf811c42b441e",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_approval.php",
+      "sha256": "31986851a9500c67e225112a0f35587119998cf63f259f02811495bd50693474",
+      "size": 13883
+    },
+    {
+      "path": "application/controllers/Admin_approval_flow_template.php",
+      "sha256": "04f645b893a97c457e32484080e503d83c42fa6917220473b9b1b8ec43e6d4ed",
+      "size": 20139
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "deae05355ba8d39b78798f2d7426f3b2dc476cc00e43db766c3fe4dcc8470c4b",
+      "size": 219580
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "f232c289c62f7820a003b1127ad3c746667377ae422f4c2b88edced50850e19c",
+      "size": 13602
+    },
+    {
+      "path": "application/controllers/Admin_property.php",
+      "sha256": "adcb44a38e6896d738302052a7e89f3ce697a773451e46b741abf6d73e92743a",
+      "size": 15170
+    },
+    {
+      "path": "application/controllers/Admin_role.php",
+      "sha256": "f150fd6dc42b135ab7d1910ea0e6e0eec3ae9d5df70672993228a7d6444af06a",
+      "size": 30427
+    },
+    {
+      "path": "application/controllers/Admin_sequence.php",
+      "sha256": "db0905db97bc9c5f5f835e3a625fbedebe50ffc78dcb6844e7a3ddadd55e86ce",
+      "size": 41618
+    },
+    {
+      "path": "application/controllers/Admin_tenant.php",
+      "sha256": "79ea553123155f9c0aae7890eb0593b5e72bcc720050fda0b7b9f902b5eb22ff",
+      "size": 30583
+    },
+    {
+      "path": "application/libraries/Application_sequence_store.php",
+      "sha256": "033856a1de7f077763dbc78c2068b8aaf1fa8e38f9b8fe2e73b0232b4780e921",
+      "size": 19945
+    },
+    {
+      "path": "application/libraries/Approval_flow_template_store.php",
+      "sha256": "2496ccd760cbc44b7f078c8fd020f7eacdba6a996d409bf86591238f3c4451cf",
+      "size": 20722
+    },
+    {
+      "path": "application/libraries/Approval_workflow_store.php",
+      "sha256": "5d05991b43604b1a817b5e74be0ac6305361e8531ef57ee4d59d14eab4478fac",
+      "size": 71572
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "0a7cbf73ad9d276fe11cface07bce8cc5b569d096327b3db343f752720ce9e66",
+      "size": 12940
+    },
+    {
+      "path": "application/libraries/Finance_list_table.php",
+      "sha256": "a7a2932a6b4b2f9dfc2a4fca34694a6add03a02aa6d08da66b8a2398b806e97d",
+      "size": 987
+    },
+    {
+      "path": "application/libraries/Finance_transaction_store.php",
+      "sha256": "c81a2c4c6307e3180614a6bd0d6e03a8f488f4b08ec7124bc22b2d33e86fef59",
+      "size": 37389
+    },
+    {
+      "path": "application/libraries/Menu_access_catalog.php",
+      "sha256": "2305fdf9f2885b76b6d3bfb628493f5c5be627e30d78fc66bb7a9ab0a86d5815",
+      "size": 7857
+    },
+    {
+      "path": "application/libraries/Property_store.php",
+      "sha256": "9ba440012ff71fb873b22878d90925386d51638666fb9d299cc1245ba9aff9eb",
+      "size": 8607
+    },
+    {
+      "path": "application/libraries/Sequence_store.php",
+      "sha256": "7319c9d0d3393b1ba74d509c8df304e274fbb5b5033beb473f8dde8bf589db35",
+      "size": 15408
+    },
+    {
+      "path": "application/libraries/Tenant_store.php",
+      "sha256": "829373bac28061e9a359187fc906cdca888b99d7585493c384b5b442727e940a",
+      "size": 7180
+    },
+    {
+      "path": "application/views/admin/approval/errors.php",
+      "sha256": "689d47f5f43e248e8010d7ef683a2dd42cd0d09792c4e6d508760ea6198f463b",
+      "size": 9773
+    },
+    {
+      "path": "application/views/admin/approval/index.php",
+      "sha256": "02937d60ab181b625b016cdbcf21f16ff8570c0784c434ba6812a29cbf37b465",
+      "size": 18475
+    },
+    {
+      "path": "application/views/admin/approval_flow_template/index.php",
+      "sha256": "4a88cf46cac31c52bc26f3a563e7df47b1297c217f92818a075238460a509f74",
+      "size": 16060
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "8be06442df70b7be397b9a8392bd804606269a98390450a843bc1930b3587d5d",
+      "size": 14429
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "da68eb27e68dbc5787b2bcf90a2504e885dc96286a715fb5fdc1baeb5ebff883",
+      "size": 9873
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "03485752302367434fac7d025bfd1ade618f0d02fda742b03e5a84b567e8639b",
+      "size": 19836
+    },
+    {
+      "path": "application/views/admin/finance/partials/filter_panel.php",
+      "sha256": "2b34f73d9ebb4e456329349832790555ff7ca381e9097e6490392bcf65f75451",
+      "size": 14392
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "39713d41a7c3fe18f1b62c071afa4315a50d606fd93eb70132d8585cbde4a39e",
+      "size": 11403
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "8e49e91096c3fee658b7f91c0ca290c5c99b237346493f815024543be27c4278",
+      "size": 10452
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "fa95d9ca3790f4f2ef0c58c263724ea95d33c89c8fd2529ffe5de11be53a02c4",
+      "size": 19320
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "1e14b6c2eeaf700cf2ddb93bf4448c6fd6f06e4218b0047d6d4b5ab0a7ea6ec1",
+      "size": 20511
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "9fd145713393d130d40ac307229f1e8ade054f609a59d6cd3f0ff014f6065bf5",
+      "size": 21290
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "32badaab11ca8588ee6ffaac5c6d4a235dc8f42059c27a25ffff6ea0291a8504",
+      "size": 15482
+    },
+    {
+      "path": "application/views/admin/menu_access/table.php",
+      "sha256": "d1c2f2ec0b059fee69e3ae98b7dfd51dd56bcc20fb8be06153cdab51454057bb",
+      "size": 5628
+    },
+    {
+      "path": "application/views/admin/property/index.php",
+      "sha256": "072107c66dc4d21e0d88f7cee723a649c07d57ab9bbb6050968f9cdd907103d5",
+      "size": 25988
+    },
+    {
+      "path": "application/views/admin/sequence/application_index.php",
+      "sha256": "cf8cd236b8e5af1500ee0dc973aeab18c753094a8cb659b045aaa3f51989c3b0",
+      "size": 15718
+    },
+    {
+      "path": "application/views/admin/sequence/index.php",
+      "sha256": "d521b8ce2891a71ac42ef56c825d059e11cb14f5d497b192b6d3b294799f9a64",
+      "size": 18609
+    },
+    {
+      "path": "application/views/admin/tenant/index.php",
+      "sha256": "1b2e87d494e2073c16c03e6bd9ce75c8c7cc74845dc5975bf8abfd6bd4818e40",
+      "size": 27736
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "fa0ee4bf73bfbfacb657becbe4873e4174e187f9aee5f323bc990e90065c1f81",
+      "size": 50502
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "4d793fd09ac8aa0c0e07d2e8aae485a57cc0da3d1fac3a0eec3cd3cc03f97bdb",
+      "size": 9986
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.14.zip",
+    "sha256": "850caa7416cfa6b045c56ac3ed849bc8c0cf383d9fcc9f341fab354b183e8598",
+    "size": 183293
+  },
+  "from_ref": "v1.0.13",
+  "generated_at": "2026-11-19T12:28:27+00:00"
+}
