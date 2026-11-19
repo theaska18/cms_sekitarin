@@ -20,12 +20,14 @@ class FinanceUiContractTests(unittest.TestCase):
         for marker in (
             "finance_cancellation_history_intro", "finance_cancellation_history_empty",
             "pending_count", "approved_count", "rejected_count",
-            "cancellationStatuses", "whitespace-normal break-words",
+            "cancellationStatuses", "finance-cell-wrap",
             "financeLocalTimeHtml",
         ):
             self.assertIn(marker, source)
         store = (APP / "libraries" / "Finance_report_store.php").read_text(encoding="utf-8")
         self.assertIn("_count", store)
+        theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
+        self.assertIn("td.finance-cell-wrap", theme)
 
     def test_action_menu_and_cancel_dialog_are_localized_and_use_shared_confirm(self):
         script = (ROOT / "web/assets/js/finance-list.js").read_text(encoding="utf-8")

@@ -583,6 +583,16 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 .finance-list-table th,
 .finance-list-table td { white-space: nowrap; }
 
+/* Opt-in wrapping for long report cells such as cancellation reasons. */
+#admin-app-shell .finance-list-table > tbody > tr > td.finance-cell-wrap,
+#admin-app-shell .finance-list-table > thead > tr > th.finance-cell-wrap {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 26rem;
+    min-width: 14rem;
+}
+
 .finance-table-scroll {
     position: relative;
 }

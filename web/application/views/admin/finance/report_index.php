@@ -172,7 +172,7 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
     }
     var columns = definitions.map(function (column) {
         var className = numeric.indexOf(column.name) >= 0 ? 'text-right tabular-nums' : '';
-        if (isCancellationHistory && column.name === 'reason') className += ' whitespace-normal break-words max-w-md';
+        if (isCancellationHistory && column.name === 'reason') className += ' finance-cell-wrap';
         return {
             data: column.name,
             name: column.name,
