@@ -74,7 +74,15 @@
             return;
         }
         var candidates = wrapper.querySelectorAll('.dt-layout-row.dt-layout-table, .finance-table-scroll-viewport');
-        var scroller = candidates.length ? candidates[0] : null;
+        var scroller = null;
+        var bestOverflow = 0;
+        Array.prototype.forEach.call(candidates, function (candidate) {
+            var overflow = candidate.scrollWidth - candidate.clientWidth;
+            if (scroller === null || overflow > bestOverflow) {
+                scroller = candidate;
+                bestOverflow = overflow;
+            }
+        });
         if (!scroller) {
             return;
         }
