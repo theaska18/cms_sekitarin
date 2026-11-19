@@ -28,6 +28,16 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, controller)
 
+    def test_payment_list_maps_draft_saved_status(self):
+        view = (APP / "views/admin/finance/payment_index.php").read_text(encoding="utf-8")
+        self.assertIn("'draft_saved' =>", view)
+        self.assertIn("finance_doc_status_draft_saved", view)
+        self.assertIn("$ok_statuses", view)
+        self.assertIn("$statuses[$finance_status]", view)
+        controller = CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("set_flashdata('finance_status', $status)", controller)
+        self.assertIn("'draft_saved'", controller)
+
     def test_rounding_tolerance_input_is_limited_to_two_decimals(self):
         controller = CONTROLLER.read_text(encoding="utf-8")
         self.assertIn("$field['type'] !== 'decimal'", controller)

@@ -4,6 +4,36 @@ $title = isset($labels['finance_' . $finance_payment_slug]) ? $labels['finance_'
 $can_add = $finance_payment_can_add && $finance_payment_write_available;
 $can_update = $finance_payment_can_update && $finance_payment_write_available;
 $id_field = $finance_payment_kind === 'customer' ? 'customer_payment_id' : 'supplier_payment_id';
+$statuses = array(
+    'draft_saved' => isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.',
+    'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
+    'approval_submitted' => isset($labels['finance_status_approval_submitted']) ? $labels['finance_status_approval_submitted'] : 'Submitted for approval.',
+    'approval_auto_approved' => isset($labels['finance_status_approval_auto_approved']) ? $labels['finance_status_approval_auto_approved'] : 'Approved automatically.',
+    'approval_steps_missing' => isset($labels['finance_status_approval_steps_missing']) ? $labels['finance_status_approval_steps_missing'] : 'The approval flow has no approver steps.',
+    'approval_unavailable' => isset($labels['finance_status_approval_unavailable']) ? $labels['finance_status_approval_unavailable'] : 'Approval is unavailable.',
+    'approval_error' => isset($labels['finance_status_approval_error']) ? $labels['finance_status_approval_error'] : 'Approval could not be submitted.',
+    'not_submittable' => isset($labels['finance_status_not_submittable']) ? $labels['finance_status_not_submittable'] : 'This record cannot be submitted for approval.',
+    'not_postable' => isset($labels['finance_status_not_postable']) ? $labels['finance_status_not_postable'] : 'Only approved records can be posted.',
+    'not_editable' => isset($labels['finance_status_not_editable']) ? $labels['finance_status_not_editable'] : 'This record can no longer be edited.',
+    'sequence_unavailable' => isset($labels['finance_status_sequence_unavailable']) ? $labels['finance_status_sequence_unavailable'] : 'The document number sequence is unavailable.',
+    'insufficient_balance' => isset($labels['finance_status_insufficient_balance']) ? $labels['finance_status_insufficient_balance'] : 'Cash/bank balance is insufficient for this transaction.',
+    'overpayment' => isset($labels['finance_payment_error_overpayment']) ? $labels['finance_payment_error_overpayment'] : 'The payment amount exceeds the outstanding balance.',
+    'rounding_account_missing' => isset($labels['finance_payment_error_rounding_account_missing']) ? $labels['finance_payment_error_rounding_account_missing'] : 'The rounding gain/loss account is not configured in Financial Settings.',
+    'fx_account_missing' => 'The FX gain/loss account is not configured in Financial Settings.',
+    'period_closed' => isset($labels['finance_doc_status_period_closed']) ? $labels['finance_doc_status_period_closed'] : 'No open accounting period includes the payment date.',
+    'period_ambiguous' => isset($labels['finance_doc_status_period_ambiguous']) ? $labels['finance_doc_status_period_ambiguous'] : 'More than one open accounting period includes the payment date.',
+    'already_posted' => 'This payment has already been posted.',
+    'allocation_invalid' => 'The payment allocation is missing or invalid.',
+    'document_invalid' => 'The selected document is not valid for this payment.',
+    'cash_account_invalid' => 'The selected cash/bank account is not valid for this payment.',
+    'account_invalid' => 'A required Finance account is not configured correctly.',
+    'settings_missing' => 'Financial Settings are not configured.',
+    'balance_unavailable' => 'The cash/bank balance could not be checked.',
+    'unavailable' => 'Finance payment storage is unavailable.',
+    'post_error' => 'The payment could not be posted.',
+);
+$ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved');
+$error_statuses = array('insufficient_balance', 'overpayment', 'rounding_account_missing', 'fx_account_missing', 'period_closed', 'period_ambiguous', 'already_posted', 'document_invalid', 'cash_account_invalid', 'account_invalid', 'settings_missing', 'post_error');
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -16,7 +46,19 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 ?>
 <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
     <?php if (!empty($finance_status)): ?>
-        <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $finance_status === 'insufficient_balance' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($labels['finance_status_' . $finance_status]) ? $labels['finance_status_' . $finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : $finance_status)) ?></div>
+        <?php
+            $status_is_ok = in_array($finance_status, $ok_statuses, TRUE);
+            $status_is_error = in_array($finance_status, $error_statuses, TRUE);
+            $status_style = $status_is_ok
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                : ($status_is_error ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-950');
+            $status_message = isset($statuses[$finance_status])
+                ? $statuses[$finance_status]
+                : (isset($labels['finance_status_' . $finance_status])
+                    ? $labels['finance_status_' . $finance_status]
+                    : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : $finance_status));
+        ?>
+        <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $status_style ?>"><?= html_escape($status_message) ?></div>
     <?php endif; ?>
     <?php if (!$finance_payment_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_payment_unavailable']) ? $labels['finance_payment_unavailable'] : 'Finance payment storage is unavailable.') ?></div>
     <?php else: ?><?= $this->finance_list_table->open('finance-payment-table') ?><thead><tr><?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?><th scope="col"><?= html_escape(isset($labels['finance_payment_column_number']) ? $labels['finance_payment_column_number'] : 'Payment') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date') ?></th><th scope="col"><?= html_escape(isset($labels['finance_payment_amount']) ? $labels['finance_payment_amount'] : 'Amount') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_currency']) ? $labels['finance_column_currency'] : 'Currency') ?></th><th scope="col"><?= html_escape(isset($labels['finance_reference']) ? $labels['finance_reference'] : 'Reference') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_status']) ? $labels['finance_column_status'] : 'Status') ?></th></tr></thead><?= $this->finance_list_table->close() ?><?php endif; ?>
