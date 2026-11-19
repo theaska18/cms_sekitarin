@@ -1,11 +1,18 @@
 {
-  "version": "1.0.19",
+  "version": "1.0.20",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.19: melengkapi terjemahan halaman Setting untuk semua bahasa admin dan menambahkan fallback label.",
+  "changelog": "Rilis 1.0.20: perbaikan integrasi dan pembayaran Finance, pembulatan pembayaran, validasi pembatalan, auto-approve step pengaju, serta konfigurasi pajak default.",
   "min_php": "8.1",
-  "requires_version": "1.0.18",
-  "package": "cms-1.0.19.zip",
-  "sha256": "de94e40208508620cc32a93fc2be257919086a42fa27f4ba63ffd9c0774b4631",
-  "size": 33101,
-  "migrations": []
+  "requires_version": "1.0.19",
+  "package": "cms-1.0.20.zip",
+  "sha256": "07c60a79357f728ed6be34acf3ae336e4450a3c4371425e558b1f5649d568dbb",
+  "size": 239933,
+  "migrations": [
+    "20261119000700_add_finance_cancellation.sql",
+    "20261119000800_seed_finance_cancel_flow.sql",
+    "20261119000900_sync_finance_inbox_cancelled_status.sql",
+    "20261119001000_allow_finance_inbox_number_reuse.sql",
+    "20261119001100_add_payment_rounding_settings.sql",
+    "20261119001200_add_default_tax_settings.sql"
+  ]
 }

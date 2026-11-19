@@ -1,0 +1,225 @@
+{
+  "version": "1.0.20",
+  "from_version": "1.0.19",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.19",
+  "changelog": "Rilis 1.0.20: perbaikan integrasi dan pembayaran Finance, pembulatan pembayaran, validasi pembatalan, auto-approve step pengaju, serta konfigurasi pajak default.",
+  "files": [
+    {
+      "path": "application/config/routes.php",
+      "sha256": "2140c76d224d19f87910e32497dd9ae08d97687405cb7bd9c3bf9253a7142f47",
+      "size": 4778
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "6dfff36ae22cce6c24df5fe34973312c6b6bf6b12dd89f5bbcbc6bd4bcc1c71e",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "a1358c8979e37f351b71ebdf111d943d3bd76484df6613d769f74b30dbcd549d",
+      "size": 232699
+    },
+    {
+      "path": "application/controllers/Finance_api.php",
+      "sha256": "36f8950eaf231de742a653466738acff8f903ef38f8cc0cb6a12e0dd6d85f74a",
+      "size": 16725
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "be555d0a0f9048393c9f8224ba5a7890eaf2bef43ef0d205faa4e4deacb248ee",
+      "size": 48774
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "84a3a054eb4090711d14b43d6ece346e505e65153c2ded9af0ee31c895497aef",
+      "size": 38453
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "e21ce6103f24c583f1828d4cb60a8c4ee8b0b9474fa09760102a8319029d12e1",
+      "size": 41762
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "5eebcfc15029b4ece92e229ecc4892ab053c3ab7c94a4003ce7e2cdb935cc824",
+      "size": 43963
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "4b3b59a60350d07836af1657fc90c7e058c319b81e15e293873751a53da9e501",
+      "size": 42787
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "6a4eabb3fbb7aa83b8e5c8d4a81495d266fd3dc28af522700b07804ea880ff1b",
+      "size": 42416
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "0c5acb3f1eab79cf5f84aee680e56d31ecf9f56d72fb8b8d20b7b9d5a0468b85",
+      "size": 43472
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "fb043f2247d937cd59219b0fc18ed41a71b1207028a3c1fa00c4bee4768e4ac3",
+      "size": 42248
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "bb8df58528fda3a10b17368c8dc36ccd9c0f6e9937db395cd6b9adb7f3c1b60d",
+      "size": 43296
+    },
+    {
+      "path": "application/libraries/Approval_workflow_store.php",
+      "sha256": "27f16099c2e2c33bd31c3efaa80a1875e2fab402314c59d6c572752dd26553ac",
+      "size": 79050
+    },
+    {
+      "path": "application/libraries/Finance_cancellation_store.php",
+      "sha256": "9036a64d8c066d5cd36ff651616dd0a8f985283eb0dcd3d7c830691fe05c363c",
+      "size": 19761
+    },
+    {
+      "path": "application/libraries/Finance_document_store.php",
+      "sha256": "751109b42843ab73008d173b0cf2c7ec85889fefbcde31bff5955af16fd1b653",
+      "size": 27194
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "449f564235a2dc9598c7941e833a3c05223d7d4937ea891b8d3041b4545d1bce",
+      "size": 12940
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "f0466c6bd362fca7c208fcfdc4543649f0567088c744c7b5b4f69ffd1b9640dd",
+      "size": 11857
+    },
+    {
+      "path": "application/libraries/Finance_payment_store.php",
+      "sha256": "84e323bcfb1348946e23e704be04d54443d284358d56949631d9e17613d20a61",
+      "size": 31287
+    },
+    {
+      "path": "application/libraries/Finance_transaction_store.php",
+      "sha256": "8299ca8909d3416188dddf0b9d020db36ec84118f6b53f4f5af5ba0ce83c03d0",
+      "size": 37513
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "a8ab440b05b3c2e166f8b1e820d48533b74ab63092845c32498a2dfd16cd5f71",
+      "size": 18258
+    },
+    {
+      "path": "application/views/admin/finance/document_view.php",
+      "sha256": "8733b5d7775612860ee2254d4b16f307611ea9ba748c290156ad11f7436026c2",
+      "size": 10869
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "7f075f9d56ad2d6660c36e21507c4b4509b1388765202365012d38a34c585f34",
+      "size": 11463
+    },
+    {
+      "path": "application/views/admin/finance/journal_form.php",
+      "sha256": "3e688c4b92fca76b93654d678abe302f9224249c8967618acc15e3056cc61593",
+      "size": 18690
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "efdff959a72542ec95fdaf2e9620e64366a17cee3f31f76b8a7d734cbb82767d",
+      "size": 20363
+    },
+    {
+      "path": "application/views/admin/finance/partials/filter_panel.php",
+      "sha256": "e16d1aacd083ec2a261076d44cc19411da502c3c408579623d5e67617e479d5c",
+      "size": 14438
+    },
+    {
+      "path": "application/views/admin/finance/payment_form.php",
+      "sha256": "aab809567494a6fea92ed8cc00aad8b5f475728a5a33f23a22e5298360384541",
+      "size": 18211
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "6995eee1512f9743079e55d6825029f3a68f04e3438b2f33f01bbcebbb1dabc4",
+      "size": 15917
+    },
+    {
+      "path": "application/views/admin/finance/resource_form.php",
+      "sha256": "9ad84ab742c74d33b313a65c693d8a05cd63baf8eaa30ee489d324f7c180a907",
+      "size": 14485
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "d8a752c011a6c0b911ece8e8425a57cb0b524c32a6a7b5768792acf8b4dbf844",
+      "size": 20911
+    },
+    {
+      "path": "application/views/admin/finance/transaction_form.php",
+      "sha256": "d52418e30f96585444071c2800c573ee550594eb40b3dd66f4aa3c6d4721977c",
+      "size": 11598
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "d1af158740b80d3a152bf102dc9e153fd5febf8e84ba0a79bfedd6d2730ca56e",
+      "size": 22490
+    },
+    {
+      "path": "application/views/admin/finance/transfer_form.php",
+      "sha256": "0d068eb9157b0ad789ba36c5a828f22d1e67434f79e12cbbcf54ecb519998186",
+      "size": 8332
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "3c26fede58971fb86dcccca4a7d439a45bee8903bf57178a172dd6e7da6460ea",
+      "size": 36651
+    },
+    {
+      "path": "assets/css/tailwind.css",
+      "sha256": "89b07cb11f9033e214a2487b752a604972b8c2067aae5c0810e321bb2db76dac",
+      "size": 65545
+    },
+    {
+      "path": "assets/js/currency-input.js",
+      "sha256": "a4ff876ffe24d7f832366df272e9095cb7b667bf0eeb6b554e3887318f0b8838",
+      "size": 12698
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "1ca886c72c826671d6c8aa2ee285c974f033be5fe7234c9227e592474e026858",
+      "size": 11839
+    },
+    {
+      "path": "assets/js/finance-list.js",
+      "sha256": "2f0e51d3eaff9874a1c7ad2a1d2be68aa936047afca4a95488ffce931d4f60ca",
+      "size": 14646
+    }
+  ],
+  "delete": [],
+  "migrations": [
+    "20261119000700_add_finance_cancellation.sql",
+    "20261119000800_seed_finance_cancel_flow.sql",
+    "20261119000900_sync_finance_inbox_cancelled_status.sql",
+    "20261119001000_allow_finance_inbox_number_reuse.sql",
+    "20261119001100_add_payment_rounding_settings.sql",
+    "20261119001200_add_default_tax_settings.sql"
+  ],
+  "migration_checksums": {
+    "20261119000700_add_finance_cancellation.sql": "1948733227e767cdaf51e9e8104785c435fe34ffa505b689c7ae7e0bcab519ba",
+    "20261119000800_seed_finance_cancel_flow.sql": "f5d6c4e183f986d986c129c92142ab6278e0642f995cd4106acd14ae195280fe",
+    "20261119000900_sync_finance_inbox_cancelled_status.sql": "02166ca169d00e79e3ced7c0887b5026f89b29145ec8b0060d5afa8c7df8640e",
+    "20261119001000_allow_finance_inbox_number_reuse.sql": "8809ec72b3777994f00bac420ecd661008b5ff2423865929deea05d276aee75c",
+    "20261119001100_add_payment_rounding_settings.sql": "a8d4bf3a154955010c83e6f35752728a44d5e2dad8750bdd5456f9a6a2646eea",
+    "20261119001200_add_default_tax_settings.sql": "97412e0b994e4b8afaecd993d9c3e57b82e5faf51f82f142955ee8e21efd9031"
+  },
+  "package": {
+    "name": "cms-1.0.20.zip",
+    "sha256": "07c60a79357f728ed6be34acf3ae336e4450a3c4371425e558b1f5649d568dbb",
+    "size": 239933
+  },
+  "from_ref": "v1.0.19",
+  "generated_at": "2026-11-19T18:54:50+00:00"
+}
