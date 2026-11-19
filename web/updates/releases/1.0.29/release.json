@@ -1,0 +1,196 @@
+{
+  "version": "1.0.29",
+  "from_version": "1.0.28",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.28",
+  "changelog": "Standarisasi waktu: penyimpanan mengikuti TIME_ZONE server, semua timestamp ditampilkan dalam timezone browser, form mengirim client_timezone, timestamp server memakai helper terpusat, export laporan memakai waktu lokal browser, dan tanggal kalender tidak digeser timezone. Aturan mutlak dicatat di AGENTS.md.",
+  "files": [
+    {
+      "path": "application/config/autoload.php",
+      "sha256": "38f6ddd2d1759ac05579cb8b5da6c4a3b72cfdf37c3388e117d0bee060aa4ef4",
+      "size": 4065
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "fde3b478808c94edfbffcc0bb09785b9d5f9c3a722a87fba242eff8cbee4f258",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin.php",
+      "sha256": "b12d71be1862eed1e8cb7a3d37b272c81eb8501c0e2ce1b992b99b72ace7a961",
+      "size": 38605
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "cdba032b746e9a0e113e12a2f768781ad00f2241ca51c03e190edc35a765678e",
+      "size": 251248
+    },
+    {
+      "path": "application/controllers/Finance_api.php",
+      "sha256": "1f1471d7523f21c4cd6e9959be68d0412ab15015ead842f90d0fb07d185004cc",
+      "size": 16965
+    },
+    {
+      "path": "application/helpers/app_time_helper.php",
+      "sha256": "c4cb03ad9d52ef4d828bf6351a995f10392e5466825ab2359cd10bef852350bd",
+      "size": 635
+    },
+    {
+      "path": "application/libraries/Admin_menu_analytics.php",
+      "sha256": "15b928e89b96987dfd503e7c09ab478b0702a099bac69f8c9087c10b95413021",
+      "size": 2502
+    },
+    {
+      "path": "application/libraries/App_time.php",
+      "sha256": "e505387a070f7a8a67497e0813e345d89b2bc6ff04b1be1dd5fcd71dcecee76a",
+      "size": 2851
+    },
+    {
+      "path": "application/libraries/Approval_flow_template_store.php",
+      "sha256": "1abb4997b7ec483413765b8208bd2074358ed89ec4cb0dbb74c353d53622e763",
+      "size": 20712
+    },
+    {
+      "path": "application/libraries/Approval_workflow_store.php",
+      "sha256": "6c7ed3ff6ddd0dabc4b64d2385a9a5d6f2068aed06a3c32104a25fa7a520de4b",
+      "size": 78870
+    },
+    {
+      "path": "application/libraries/Employee_store.php",
+      "sha256": "7e2beeaec0862b6767cf69bf64dbd22b59e2e8a132e80190dfdca6863e954270",
+      "size": 11251
+    },
+    {
+      "path": "application/libraries/Finance_cancellation_store.php",
+      "sha256": "97e99af0fa829eeec15942a963b0a3791dfc862bdfe305d940e89bf91b965dea",
+      "size": 22569
+    },
+    {
+      "path": "application/libraries/Finance_document_store.php",
+      "sha256": "90f7162e2dd4f918a9448e65dc975ac4948d6ce68e4b9ad2474e663aeef0694e",
+      "size": 30752
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "582beac8db63e671b5b8a01f8bda29243114a1ec4e98e6d6812ced1225c1cbfd",
+      "size": 12337
+    },
+    {
+      "path": "application/libraries/Finance_journal_store.php",
+      "sha256": "f23f770dec75e67b339227a233a1ff97e259faf390898ee08667e89c195f695e",
+      "size": 16209
+    },
+    {
+      "path": "application/libraries/Finance_payment_store.php",
+      "sha256": "9ab461896f995460b40fa5c20d338ca436df5f872e64992f15d225b8c741aa3c",
+      "size": 39067
+    },
+    {
+      "path": "application/libraries/Finance_reconciliation_store.php",
+      "sha256": "8a9bb29b53999b4e0a83b6efe30834b8fee7f73c9d02ee2b99c05edbd0f4552a",
+      "size": 13199
+    },
+    {
+      "path": "application/libraries/Finance_store.php",
+      "sha256": "e10d9a9ddd7564ca48a7648e5b4dba168f4507d77b2eafdecea2995157d4939d",
+      "size": 7496
+    },
+    {
+      "path": "application/libraries/Finance_transaction_store.php",
+      "sha256": "201e986f5122af6157e694cbfdc4361cbebc00d104532a4846d153f415710cf9",
+      "size": 38549
+    },
+    {
+      "path": "application/libraries/Finance_transfer_store.php",
+      "sha256": "f1815bb7c947a0c7aa67a0c7884083d22fce58a662930411203bba6a199cdc2e",
+      "size": 16434
+    },
+    {
+      "path": "application/libraries/Role_store.php",
+      "sha256": "1760a71e9e0c4378bacd8ddf5ffad4ac2cad55848e3f036b22c2999f650f4870",
+      "size": 9128
+    },
+    {
+      "path": "application/libraries/Update_store.php",
+      "sha256": "bd9f3115228831a25db3b6af142a06e3f09fe31a16b8f74a344f8a505a041ba6",
+      "size": 55085
+    },
+    {
+      "path": "application/libraries/User_store.php",
+      "sha256": "1978685898f86bb183e91fe44785bc02861acd3d63bcfa6e5be6e5c2fae78630",
+      "size": 18829
+    },
+    {
+      "path": "application/views/admin/approval/confirm.php",
+      "sha256": "993193b301369ef4b12080d4e42d85b5354eaa360ded085eeeb2bdfbcc723dd0",
+      "size": 9273
+    },
+    {
+      "path": "application/views/admin/approval/errors.php",
+      "sha256": "4d23502a7617b9d2ea9a1186a412f9c907a3c8361a56e6d84edc523319f6c9a8",
+      "size": 10000
+    },
+    {
+      "path": "application/views/admin/approval/index.php",
+      "sha256": "d847786a6f08217a748191086652a1018833e28cc9f484604485c24a2f71fce1",
+      "size": 18936
+    },
+    {
+      "path": "application/views/admin/finance/partials/filter_panel.php",
+      "sha256": "b16654cb94a69835cb368b30a9b5f2565f66e813534fe286b4e71e8e3639e0ee",
+      "size": 16471
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "6112bc952c55ba83515f5a6a33c3ebbe48c8e27d2e9ad711545a579ed7f38393",
+      "size": 27927
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "769647287fc11b21436c2a1842809cdd4b4f1dd9597701de7fe96468812780e7",
+      "size": 35156
+    },
+    {
+      "path": "application/views/admin/notifications/index.php",
+      "sha256": "61317bb1c9f9363daac71e831a30300535794b4898e7ea3ac12feef98c7621a3",
+      "size": 33644
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "33265edcb856daaa2a7cc3fd3aa00e671220392c9dd79c4bc9a10af4a09dc9a1",
+      "size": 30252
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "5facf1bdb1ab9f3802826b1e1916b100071fadcbfda4734d1ed44e07ffede339",
+      "size": 56915
+    },
+    {
+      "path": "assets/js/app-time.js",
+      "sha256": "7610599cc9cf438f2725fcc4e4c405400eeedfa21713a88fcb44ebcfe3fb561b",
+      "size": 5476
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "2cfd181c162d180e9236a88d34fd21088e5ee15a1d8d0b95ecd4170e2d5c4b7b",
+      "size": 12029
+    },
+    {
+      "path": "assets/js/finance-list.js",
+      "sha256": "61ee2a92dc5330b59366fc1ee7d8628b2438c0be5fd4260a68df9ff67c457f60",
+      "size": 16118
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.29.zip",
+    "sha256": "95be0bddbad66262a4838efb2f47e35c12b60c18b36f45532b426335c6313d93",
+    "size": 183117
+  },
+  "from_ref": "v1.0.28",
+  "generated_at": "2026-11-19T20:39:01+00:00"
+}
