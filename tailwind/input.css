@@ -461,6 +461,29 @@
     }
 }
 
+@media (min-width: 1024px) {
+    #admin-content-shell {
+        max-width: none;
+        margin-inline: 0;
+        gap: 0;
+    }
+
+    #admin-sidebar {
+        inset-block: 4rem 0;
+        inset-inline-start: 0;
+        width: 16rem;
+        max-height: none;
+        border-width: 0;
+        border-inline-end-width: 1px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    #admin-main {
+        margin-inline-start: 16rem;
+    }
+}
+
 #admin-sidebar-scroll-shell {
     position: relative;
     min-height: 0;

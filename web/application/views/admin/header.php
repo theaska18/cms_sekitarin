@@ -160,7 +160,7 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
     </div>
 </header>
 <button id="admin-sidebar-backdrop" type="button" class="fixed inset-0 z-40 hidden bg-slate-950/40 md:hidden" aria-label="<?php echo html_escape($labels['close_navigation']); ?>"></button>
-<div class="mx-auto flex max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 lg:gap-8 lg:px-8">
+<div id="admin-content-shell" class="mx-auto flex max-w-screen-2xl gap-6 px-4 py-5 sm:px-6 lg:gap-8 lg:px-8">
     <aside id="admin-sidebar" class="fixed inset-y-0 <?php echo $is_rtl ? 'right-0 border-l' : 'left-0 border-r'; ?> z-50 hidden flex w-72 flex-col overflow-hidden border-slate-200 bg-white shadow-xl md:fixed md:inset-y-auto md:z-40 md:flex md:w-60 md:shrink-0 md:rounded-2xl md:border md:shadow-sm lg:w-64" aria-label="<?php echo html_escape($labels['admin_area']); ?>">
         <div role="search" class="shrink-0 bg-white px-3 pb-3 pt-4">
             <div class="admin-sidebar-filter-wrap relative min-w-0">
