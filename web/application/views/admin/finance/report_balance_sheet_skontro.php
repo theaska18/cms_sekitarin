@@ -41,7 +41,7 @@ $section_totals = array(
     <form method="get" action="<?= html_escape($current_path) ?>" class="mb-5 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end">
         <div>
             <label for="finance-sheet-end-on" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"><?= html_escape($label('finance_report_as_of', 'As of')) ?></label>
-            <input id="finance-sheet-end-on" name="end_on" type="date" value="<?= html_escape($finance_report_filters['end_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
+            <input id="finance-sheet-end-on" name="end_on" type="date" data-local-date="end" value="<?= html_escape($finance_report_filters['end_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
         </div>
         <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape($label('finance_report_run', 'Run report')) ?></button>
         <?php if (!empty($finance_skontro_can_export)): ?>

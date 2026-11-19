@@ -56,7 +56,7 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
     var span = Math.max(1, Math.round((Date.parse(serverEnd + 'T00:00:00Z') - Date.parse(serverStart + 'T00:00:00Z')) / 86400000) + 1);
     var localStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (span - 1));
     var localStart = formatDate(localStartDate);
-    if (startInput.value === localStart && endInput.value === localEnd) return;
+    if (serverStart === localStart && serverEnd === localEnd) return;
     url.searchParams.set('start_on', localStart);
     url.searchParams.set('end_on', localEnd);
     window.location.replace(url.toString());

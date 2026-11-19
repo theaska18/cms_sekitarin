@@ -47,6 +47,18 @@ class TimeZoneContractTests(unittest.TestCase):
         self.assertIn("->localize(", controller)
         self.assertIn("client_timezone", report)
 
+    def test_special_reports_mark_default_dates_for_local_sync(self):
+        helper = (ROOT / "web/assets/js/app-time.js").read_text(encoding="utf-8")
+        self.assertIn('localizeMarkedDateDefaults', helper)
+        for name in ("report_cash_flow.php", "report_profit_loss.php", "report_balance_sheet_skontro.php"):
+            source = (APP / "views/admin/finance" / name).read_text(encoding="utf-8")
+            self.assertIn('data-local-date="end"', source, name)
+
+    def test_invalid_time_zone_falls_back_to_utc(self):
+        config = (APP / "config" / "config.php").read_text(encoding="utf-8")
+        self.assertIn("date_default_timezone_set('UTC')", config)
+        self.assertIn("date_default_timezone_set($time_zone)", config)
+
     def test_new_timestamps_use_server_time_helper(self):
         sample = (APP / "controllers/Admin_finance.php").read_text(encoding="utf-8")
         self.assertNotIn("date('Y-m-d H:i:s')", sample)

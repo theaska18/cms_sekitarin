@@ -87,11 +87,11 @@ $toggle_base = $current_path . '?' . http_build_query(array('start_on' => $finan
         <input type="hidden" name="method" value="<?= html_escape($method) ?>">
         <div>
             <label for="finance-cf-start-on" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"><?= html_escape($label('finance_report_from', 'From')) ?></label>
-            <input id="finance-cf-start-on" name="start_on" type="date" value="<?= html_escape($finance_report_filters['start_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
+            <input id="finance-cf-start-on" name="start_on" type="date" data-local-date="start" value="<?= html_escape($finance_report_filters['start_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
         </div>
         <div>
             <label for="finance-cf-end-on" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"><?= html_escape($label('finance_report_to', 'To')) ?></label>
-            <input id="finance-cf-end-on" name="end_on" type="date" value="<?= html_escape($finance_report_filters['end_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
+            <input id="finance-cf-end-on" name="end_on" type="date" data-local-date="end" value="<?= html_escape($finance_report_filters['end_on']) ?>" class="min-h-10 rounded-lg border border-slate-300 px-3 text-sm">
         </div>
         <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape($label('finance_report_run', 'Run report')) ?></button>
         <?php if (!empty($finance_cf_can_export)): ?>

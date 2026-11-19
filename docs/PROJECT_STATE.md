@@ -66,6 +66,9 @@ Dokumentasi lengkap: [`web/updates/README.md`](../web/updates/README.md).
 - Tanggal kalender tidak digeser timezone.
 - Export waktu memakai `client_timezone` browser.
 - Detail aturan ada di `AGENTS.md` bagian **Time zone rule (absolute)**.
+- Mengubah `TIME_ZONE` bukan sekadar ubah `.env`: data `DATETIME` lama harus
+  dimigrasikan dari zona lama ke zona baru agar tidak bergeser.
+- Nilai `TIME_ZONE` wajib IANA (`UTC`, `Asia/Jakarta`), bukan `WIB`.
 
 ## Database
 

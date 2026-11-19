@@ -3182,6 +3182,7 @@ class Admin_finance extends Admin
     private function finance_cash_flow_export()
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
+        $client_timezone = $this->input->get('client_timezone', TRUE);
         $filters = $this->finance_report_dates();
         $method = strtolower((string) $this->input->get('method', TRUE)) === 'indirect' ? 'indirect' : 'direct';
         if (!empty($filters['errors'])) {
@@ -3359,6 +3360,7 @@ class Admin_finance extends Admin
     private function finance_profit_loss_export()
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
+        $client_timezone = $this->input->get('client_timezone', TRUE);
         $filters = $this->finance_report_dates();
         if (!empty($filters['errors'])) {
             $this->session->set_flashdata('finance_status', 'invalid_range');
@@ -3480,6 +3482,7 @@ class Admin_finance extends Admin
     private function finance_balance_sheet_skontro_export()
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
+        $client_timezone = $this->input->get('client_timezone', TRUE);
         $filters = $this->finance_report_dates();
         if (!empty($filters['errors'])) {
             $this->session->set_flashdata('finance_status', 'invalid_range');

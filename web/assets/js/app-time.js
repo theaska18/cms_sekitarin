@@ -107,9 +107,53 @@
         input.value = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
     }
 
+    function attachTimezoneToExportLinks(root) {
+        var scope = root || document;
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        if (!tz) return;
+        Array.prototype.forEach.call(scope.querySelectorAll('a[href*="/export?"]'), function (link) {
+            try {
+                var url = new URL(link.href, window.location.origin);
+                url.searchParams.set('client_timezone', tz);
+                link.href = url.toString();
+            } catch (error) {
+                // Keep the original link if URL parsing is unavailable.
+            }
+        });
+    }
+
     function attachTimezones(root) {
         var scope = root || document;
         Array.prototype.forEach.call(scope.querySelectorAll('form'), ensureTimezoneField);
+        attachTimezoneToExportLinks(scope);
+    }
+
+    function localizeMarkedDateDefaults() {
+        var start = document.querySelector('[data-local-date="start"]');
+        var end = document.querySelector('[data-local-date="end"]');
+        if (!end) return;
+        var url = new URL(window.location.href);
+        if (url.searchParams.has(end.name || 'end_on') || (start && url.searchParams.has(start.name || 'start_on'))) return;
+        function format(date) {
+            return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate());
+        }
+        var now = new Date();
+        var localEnd = format(now);
+        var serverEnd = end.value || '';
+        if (serverEnd === localEnd) return;
+        var localStart = '';
+        if (start) {
+            var serverStart = start.value || '';
+            var span = 7;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(serverStart) && /^\d{4}-\d{2}-\d{2}$/.test(serverEnd)) {
+                span = Math.max(1, Math.round((Date.parse(serverEnd + 'T00:00:00Z') - Date.parse(serverStart + 'T00:00:00Z')) / 86400000) + 1);
+            }
+            var startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (span - 1));
+            localStart = format(startDate);
+        }
+        if (start) url.searchParams.set(start.name || 'start_on', localStart);
+        url.searchParams.set(end.name || 'end_on', localEnd);
+        window.location.replace(url.toString());
     }
 
     document.addEventListener('submit', function (event) {
@@ -120,10 +164,12 @@
         document.addEventListener('DOMContentLoaded', function () {
             attachTimezones(document);
             formatLocalTimes(document);
+            localizeMarkedDateDefaults();
         });
     } else {
         attachTimezones(document);
         formatLocalTimes(document);
+        localizeMarkedDateDefaults();
     }
 
     window.AppTime = {

@@ -511,9 +511,10 @@ $config['compress_output'] = FALSE;
 |
 */
 $time_zone = getenv('TIME_ZONE');
-if ($time_zone !== FALSE && $time_zone !== '')
+if ($time_zone === FALSE || $time_zone === '' || !@date_default_timezone_set($time_zone))
 {
-	date_default_timezone_set($time_zone);
+	// Keep storage deterministic when TIME_ZONE is missing or not an IANA zone.
+	date_default_timezone_set('UTC');
 }
 
 $config['time_reference'] = 'local';
