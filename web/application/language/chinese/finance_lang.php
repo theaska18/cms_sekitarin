@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = '单据总额';
 $lang['finance_payment_paid'] = '已支付';
 $lang['finance_payment_pending'] = '处理中';
 $lang['finance_payment_outstanding'] = '未付余额';
+$lang['finance_filter_payment_status'] = '付款状态';
+$lang['finance_payment_status_unpaid'] = '未付款';
+$lang['finance_payment_status_partial'] = '部分付款';
+$lang['finance_payment_status_paid'] = '已付清';

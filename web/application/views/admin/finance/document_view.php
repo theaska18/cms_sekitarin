@@ -23,6 +23,21 @@ $status_styles = array(
     'cancelled' => 'border-rose-200 bg-rose-50 text-rose-800',
 );
 $status_style = isset($status_styles[$status]) ? $status_styles[$status] : $status_styles['draft'];
+$financials = isset($finance_document_financials) && is_array($finance_document_financials) ? $finance_document_financials : NULL;
+$payment_status = '';
+$payment_style = '';
+if ($status === 'posted' && is_array($financials)) {
+    if ((float) $financials['outstanding_amount'] <= 0.000001) {
+        $payment_status = isset($labels['finance_payment_status_paid']) ? $labels['finance_payment_status_paid'] : 'Paid';
+        $payment_style = 'border-emerald-200 bg-emerald-50 text-emerald-800';
+    } elseif ((float) $financials['paid_amount'] > 0.000001) {
+        $payment_status = isset($labels['finance_payment_status_partial']) ? $labels['finance_payment_status_partial'] : 'Partially paid';
+        $payment_style = 'border-amber-200 bg-amber-50 text-amber-900';
+    } else {
+        $payment_status = isset($labels['finance_payment_status_unpaid']) ? $labels['finance_payment_status_unpaid'] : 'Unpaid';
+        $payment_style = 'border-slate-200 bg-slate-50 text-slate-700';
+    }
+}
 $amount = static function ($value) {
     return number_format((float) $value, 2, '.', ',');
 };
@@ -41,7 +56,10 @@ $document_label = $finance_document_kind === 'sales'
             <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($finance_document_number) ?></h1>
             <p class="mt-2 text-sm text-slate-600"><?= html_escape($title) ?></p>
         </div>
-        <span class="inline-flex w-fit items-center rounded-md border px-2.5 py-1 text-xs font-semibold <?= html_escape($status_style) ?>"><?= html_escape(isset($status_labels[$status]) ? $status_labels[$status] : $status) ?></span>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex w-fit items-center rounded-md border px-2.5 py-1 text-xs font-semibold <?= html_escape($status_style) ?>"><?= html_escape(isset($status_labels[$status]) ? $status_labels[$status] : $status) ?></span>
+            <?php if ($payment_status !== ''): ?><span class="inline-flex w-fit items-center rounded-md border px-2.5 py-1 text-xs font-semibold <?= html_escape($payment_style) ?>"><?= html_escape($payment_status) ?></span><?php endif; ?>
+        </div>
     </header>
 
     <?php if ($finance_document_integration_reference !== ''): ?>
@@ -64,6 +82,10 @@ $document_label = $finance_document_kind === 'sales'
             <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_doc_line_amount']) ? $labels['finance_doc_line_amount'] : 'Amount before tax') ?></dt><dd class="mt-1 text-sm font-medium text-slate-900"><?= html_escape($amount($finance_document_record['amount'])) ?></dd></div>
             <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_tax_amount']) ? $labels['finance_tax_amount'] : 'Tax') ?></dt><dd class="mt-1 text-sm font-medium text-slate-900"><?= html_escape($amount($finance_document_record['tax_total'])) ?></dd></div>
             <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_column_total']) ? $labels['finance_column_total'] : 'Total') ?></dt><dd class="mt-1 text-sm font-semibold text-slate-950"><?= html_escape($finance_document_record['currency_code'] . ' ' . $amount($finance_document_record['total_amount'])) ?></dd></div>
+            <?php if (is_array($financials)): ?>
+            <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_paid']) ? $labels['finance_payment_paid'] : 'Paid') ?></dt><dd class="mt-1 text-sm font-medium text-emerald-800"><?= html_escape($financials['currency_code'] . ' ' . $amount($financials['paid_amount'])) ?></dd></div>
+            <div><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_outstanding']) ? $labels['finance_payment_outstanding'] : 'Outstanding') ?></dt><dd class="mt-1 text-sm font-bold text-slate-950"><?= html_escape($financials['currency_code'] . ' ' . $amount($financials['outstanding_amount'])) ?></dd></div>
+            <?php endif; ?>
             <div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_doc_line_description']) ? $labels['finance_doc_line_description'] : 'Description') ?></dt><dd class="mt-1 text-sm text-slate-900"><?= html_escape($finance_document_record['description']) ?></dd></div>
             <?php if (!empty($finance_document_record['memo'])): ?><div class="sm:col-span-2"><dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_memo']) ? $labels['finance_memo'] : 'Memo') ?></dt><dd class="mt-1 whitespace-pre-line text-sm text-slate-900"><?= html_escape($finance_document_record['memo']) ?></dd></div><?php endif; ?>
         </dl>

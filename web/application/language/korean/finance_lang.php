@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = '문서 합계';
 $lang['finance_payment_paid'] = '지급됨';
 $lang['finance_payment_pending'] = '처리 중';
 $lang['finance_payment_outstanding'] = '미결제 잔액';
+$lang['finance_filter_payment_status'] = '지급 상태';
+$lang['finance_payment_status_unpaid'] = '미지급';
+$lang['finance_payment_status_partial'] = '부분 지급';
+$lang['finance_payment_status_paid'] = '지급 완료';

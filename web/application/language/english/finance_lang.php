@@ -597,3 +597,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = 'Rounding gain accoun
 $lang['finance_resource_column_rounding_gain_account_id'] = 'Rounding gain account';
 $lang['finance_resource_field_rounding_loss_account_id'] = 'Rounding loss account';
 $lang['finance_resource_column_rounding_loss_account_id'] = 'Rounding loss account';
+$lang['finance_filter_payment_status'] = 'Payment status';
+$lang['finance_payment_status_unpaid'] = 'Unpaid';
+$lang['finance_payment_status_partial'] = 'Partially paid';
+$lang['finance_payment_status_paid'] = 'Paid';

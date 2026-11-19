@@ -28,6 +28,26 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, controller)
 
+    def test_invoice_lists_show_paid_and_outstanding_status(self):
+        store = (APP / "libraries/Finance_document_store.php").read_text(encoding="utf-8")
+        for marker in (
+            "function paid_sql", "apply_payment_status_filter",
+            "paid_amount", "outstanding_amount", "payment_status",
+        ):
+            self.assertIn(marker, store)
+        controller = CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("finance_document_payment_filter_config", controller)
+        self.assertIn("finance_payment_status_paid", controller)
+        view = (APP / "views/admin/finance/document_index.php").read_text(encoding="utf-8")
+        for marker in (
+            "payment_status", "outstanding_amount", "finance_payment_status_paid",
+            "finance_payment_status_partial", "finance_payment_status_unpaid",
+        ):
+            self.assertIn(marker, view)
+        detail = (APP / "views/admin/finance/document_view.php").read_text(encoding="utf-8")
+        self.assertIn("finance_document_financials", detail)
+        self.assertIn("finance_payment_outstanding", detail)
+
     def test_payment_list_maps_draft_saved_status(self):
         view = (APP / "views/admin/finance/payment_index.php").read_text(encoding="utf-8")
         self.assertIn("'draft_saved' =>", view)

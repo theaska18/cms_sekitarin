@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = '伝票合計';
 $lang['finance_payment_paid'] = '支払済み';
 $lang['finance_payment_pending'] = '処理中';
 $lang['finance_payment_outstanding'] = '未払残高';
+$lang['finance_filter_payment_status'] = '支払状況';
+$lang['finance_payment_status_unpaid'] = '未払い';
+$lang['finance_payment_status_partial'] = '一部支払い';
+$lang['finance_payment_status_paid'] = '支払済み';

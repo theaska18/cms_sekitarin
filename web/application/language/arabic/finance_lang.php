@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = 'إجمالي المستند';
 $lang['finance_payment_paid'] = 'المدفوع';
 $lang['finance_payment_pending'] = 'قيد المعالجة';
 $lang['finance_payment_outstanding'] = 'المتبقي';
+$lang['finance_filter_payment_status'] = 'حالة الدفع';
+$lang['finance_payment_status_unpaid'] = 'غير مدفوع';
+$lang['finance_payment_status_partial'] = 'مدفوع جزئياً';
+$lang['finance_payment_status_paid'] = 'مدفوع';

@@ -56,6 +56,7 @@ class Finance_document_store
         if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
         if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
         if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
+        $this->apply_payment_status_filter($spec, isset($filters['payment_status']) ? (string) $filters['payment_status'] : '');
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
                 ->or_like('d.integration_number', $search)
@@ -74,10 +75,12 @@ class Finance_document_store
             return FALSE;
         }
         $spec = $this->spec($kind);
-        $allowed = array($spec['number'], 'integration_number', 'person_name', $spec['date'], 'due_date', 'total_amount', 'currency_code', 'status');
+        $allowed = array($spec['number'], 'integration_number', 'person_name', $spec['date'], 'due_date', 'total_amount', 'outstanding_amount', 'currency_code', 'status');
         $order = in_array($order, $allowed, TRUE) ? $order : $spec['date'];
+        $paid_sql = $this->paid_sql($spec);
         $this->db->select('d.' . $spec['id'] . ',d.' . $spec['number'] . ',d.integration_number,d.' . $spec['date'] . ',d.due_date,d.total_amount,d.currency_code,d.status,d.memo,d.approval_request_id,'
             . 'p.' . $spec['person_code'] . ' AS person_code,p.' . $spec['person_name'] . ' AS person_name,'
+            . $paid_sql . ' AS paid_amount,(d.total_amount - ' . $paid_sql . ') AS outstanding_amount,'
             . "COALESCE(NULLIF(u.full_name, ''), u.username) AS created_by_name,"
             . "COALESCE(NULLIF(au.full_name, ''), au.username) AS current_approver_name,"
             . "(SELECT a.note FROM app_approval_action a WHERE a.tenant_id = d.tenant_id AND a.request_id = d.approval_request_id AND a.decision = 'revise' ORDER BY a.action_id DESC LIMIT 1) AS revise_note", FALSE)
@@ -90,6 +93,7 @@ class Finance_document_store
         if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
         if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
         if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
+        $this->apply_payment_status_filter($spec, isset($filters['payment_status']) ? (string) $filters['payment_status'] : '');
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
                 ->or_like('d.integration_number', $search)
@@ -98,7 +102,7 @@ class Finance_document_store
                 ->or_like('d.memo', $search)
                 ->group_end();
         }
-        $order_column = in_array($order, array('created_by_name', 'person_name'), TRUE) ? $order : 'd.' . $order;
+        $order_column = in_array($order, array('created_by_name', 'person_name'), TRUE) ? $order : ($order === 'outstanding_amount' ? 'outstanding_amount' : 'd.' . $order);
         $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
             ->order_by('d.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
         return $query === FALSE ? FALSE : $query->result_array();
@@ -464,6 +468,33 @@ class Finance_document_store
         return $header;
     }
 
+    /** Correlated sum of posted payment allocations for a document. */
+    private function paid_sql($spec)
+    {
+        return '(SELECT COALESCE(SUM(a.amount),0) FROM `' . $spec['allocation'] . '` a'
+            . ' INNER JOIN `' . $spec['payment_table'] . '` pay'
+            . ' ON pay.' . $spec['payment_id'] . '=a.' . $spec['payment_id'] . ' AND pay.tenant_id=a.tenant_id'
+            . ' WHERE a.tenant_id=d.tenant_id AND a.' . $spec['id'] . '=d.' . $spec['id']
+            . " AND pay.status='posted')";
+    }
+
+    private function apply_payment_status_filter($spec, $status)
+    {
+        if (!in_array($status, array('unpaid', 'partial', 'paid'), TRUE)) {
+            return;
+        }
+        $paid = $this->paid_sql($spec);
+        $this->db->where('d.status', 'posted');
+        if ($status === 'paid') {
+            $this->db->where('d.total_amount - ' . $paid . ' <= 0.000001', NULL, FALSE);
+        } elseif ($status === 'unpaid') {
+            $this->db->where($paid . ' <= 0.000001', NULL, FALSE);
+        } else {
+            $this->db->where($paid . ' > 0.000001', NULL, FALSE)
+                ->where('d.total_amount - ' . $paid . ' > 0.000001', NULL, FALSE);
+        }
+    }
+
     private function spec($kind)
     {
         if ($kind === 'sales') {
@@ -473,6 +504,8 @@ class Finance_document_store
                 'person_id' => 'customer_id', 'person_table' => 'fin_customer', 'person_code' => 'customer_code',
                 'person_name' => 'customer_name', 'control_account' => 'receivable_account_id',
                 'account_type' => 'revenue', 'source_type' => 'sales_invoice',
+                'payment_table' => 'fin_customer_payment', 'payment_id' => 'customer_payment_id',
+                'allocation' => 'fin_customer_payment_allocation',
             );
         }
         if ($kind === 'purchase') {
@@ -482,6 +515,8 @@ class Finance_document_store
                 'person_id' => 'supplier_id', 'person_table' => 'fin_supplier', 'person_code' => 'supplier_code',
                 'person_name' => 'supplier_name', 'control_account' => 'payable_account_id',
                 'account_type' => 'expense', 'source_type' => 'purchase_bill',
+                'payment_table' => 'fin_supplier_payment', 'payment_id' => 'supplier_payment_id',
+                'allocation' => 'fin_supplier_payment_allocation',
             );
         }
         return NULL;

@@ -2252,7 +2252,7 @@ class Admin_finance extends Admin
         $date_column = $spec[1];
         $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'currency_code', 8 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE, 'document', $date_column);
+        $filters = $this->finance_list_filters(TRUE, 'document', $date_column, $this->finance_document_payment_filter_config());
         $this->datatable_server->respond(
             $columns,
             function () use ($store, $tenant_id, $kind, $filters) { return $store->count($tenant_id, $kind, '', $filters); },
@@ -2341,6 +2341,10 @@ class Admin_finance extends Admin
                 $integration_party .= ' (' . (string) $record['integration_party_code'] . ')';
             }
         }
+        $this->load->library('finance_payment_store');
+        $financials = $this->finance_payment_store->available($kind)
+            ? $this->finance_payment_store->document_financials((int) $this->current_user['tenant_id'], $kind, (int) $id)
+            : NULL;
         $this->render_admin(
             'admin/finance/document_view',
             'finance_' . $slug,
@@ -2353,6 +2357,7 @@ class Admin_finance extends Admin
                 'finance_document_integration_reference' => $integration_reference,
                 'finance_document_integration_party' => $integration_party,
                 'finance_document_number' => (string) $saved[$spec['number']],
+                'finance_document_financials' => $financials,
             )
         );
     }
@@ -3543,7 +3548,7 @@ class Admin_finance extends Admin
         );
     }
 
-    private function finance_list_filters($with_date = TRUE, $date_preset = 'transaction', $primary_date = '')
+    private function finance_list_filters($with_date = TRUE, $date_preset = 'transaction', $primary_date = '', $field_filters = array())
     {
         return $this->finance_filter_panel->filters($this->finance_filter_panel->config(array(
             'date' => $with_date,
@@ -3551,7 +3556,28 @@ class Admin_finance extends Admin
             'primary_date' => $primary_date,
             'status_preset' => $with_date ? 'transaction' : 'active_flag',
             'flag' => !$with_date,
+            'field_filters' => $field_filters,
         )));
+    }
+
+    private function finance_document_payment_filter_config()
+    {
+        $labels = isset($this->lang->language) && is_array($this->lang->language) ? $this->lang->language : array();
+        $text = function ($key, $fallback) use ($labels) {
+            return isset($labels[$key]) ? $labels[$key] : $fallback;
+        };
+        return array(
+            array(
+                'type' => 'select',
+                'name' => 'payment_status',
+                'label' => $text('finance_filter_payment_status', 'Payment status'),
+                'options' => array(
+                    'unpaid' => $text('finance_payment_status_unpaid', 'Unpaid'),
+                    'partial' => $text('finance_payment_status_partial', 'Partially paid'),
+                    'paid' => $text('finance_payment_status_paid', 'Paid'),
+                ),
+            ),
+        );
     }
 
     private function finance_report_dates()

@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = 'Total du document';
 $lang['finance_payment_paid'] = 'Payé';
 $lang['finance_payment_pending'] = 'En cours';
 $lang['finance_payment_outstanding'] = 'Solde restant';
+$lang['finance_filter_payment_status'] = 'Statut du paiement';
+$lang['finance_payment_status_unpaid'] = 'Impayé';
+$lang['finance_payment_status_partial'] = 'Partiellement payé';
+$lang['finance_payment_status_paid'] = 'Payé';

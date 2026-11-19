@@ -574,3 +574,7 @@ $lang['finance_payment_total_document'] = 'Dokumentgesamtbetrag';
 $lang['finance_payment_paid'] = 'Bezahlt';
 $lang['finance_payment_pending'] = 'In Bearbeitung';
 $lang['finance_payment_outstanding'] = 'Offener Betrag';
+$lang['finance_filter_payment_status'] = 'Zahlungsstatus';
+$lang['finance_payment_status_unpaid'] = 'Unbezahlt';
+$lang['finance_payment_status_partial'] = 'Teilweise bezahlt';
+$lang['finance_payment_status_paid'] = 'Bezahlt';

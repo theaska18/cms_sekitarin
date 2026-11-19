@@ -597,3 +597,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = 'Akun keuntungan pemb
 $lang['finance_resource_column_rounding_gain_account_id'] = 'Akun keuntungan pembulatan';
 $lang['finance_resource_field_rounding_loss_account_id'] = 'Akun kerugian pembulatan';
 $lang['finance_resource_column_rounding_loss_account_id'] = 'Akun kerugian pembulatan';
+$lang['finance_filter_payment_status'] = 'Status pembayaran';
+$lang['finance_payment_status_unpaid'] = 'Belum dibayar';
+$lang['finance_payment_status_partial'] = 'Sebagian';
+$lang['finance_payment_status_paid'] = 'Lunas';
