@@ -390,6 +390,7 @@ $lang['finance_created'] = '记录已创建。';
 $lang['finance_saved'] = '更改已保存。';
 $lang['finance_status_approval_submitted'] = '已提交审批。';
 $lang['finance_status_approval_auto_approved'] = '已自动批准。';
+$lang['finance_status_cancel_auto_approved'] = '未配置审批步骤，取消已自动批准。';
 $lang['finance_status_approval_steps_missing'] = '审批流程没有审批步骤。请在“人力资源 → 审批流程”中添加步骤。';
 $lang['finance_status_approval_unavailable'] = '当前无法使用审批。';
 $lang['finance_status_approval_error'] = '无法提交审批，请重试。';

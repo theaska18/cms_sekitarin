@@ -390,6 +390,7 @@ $lang['finance_created'] = 'Data berhasil dibuat.';
 $lang['finance_saved'] = 'Perubahan tersimpan.';
 $lang['finance_status_approval_submitted'] = 'Diajukan untuk persetujuan.';
 $lang['finance_status_approval_auto_approved'] = 'Disetujui otomatis.';
+$lang['finance_status_cancel_auto_approved'] = 'Tidak ada langkah persetujuan; pembatalan otomatis disetujui.';
 $lang['finance_status_approval_steps_missing'] = 'Alur persetujuan belum memiliki langkah approver. Tambahkan langkah pada menu HR → Alur Persetujuan.';
 $lang['finance_status_approval_unavailable'] = 'Persetujuan tidak tersedia saat ini.';
 $lang['finance_status_approval_error'] = 'Persetujuan tidak dapat diajukan. Coba lagi.';

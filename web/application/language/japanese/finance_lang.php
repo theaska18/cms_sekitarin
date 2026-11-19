@@ -390,6 +390,7 @@ $lang['finance_created'] = 'レコードを作成しました。';
 $lang['finance_saved'] = '変更を保存しました。';
 $lang['finance_status_approval_submitted'] = '承認申請を送信しました。';
 $lang['finance_status_approval_auto_approved'] = '自動承認されました。';
+$lang['finance_status_cancel_auto_approved'] = '承認ステップが設定されていないため、キャンセルは自動承認されました。';
 $lang['finance_status_approval_steps_missing'] = '承認フローに承認ステップがありません。「HR → 承認フロー」でステップを追加してください。';
 $lang['finance_status_approval_unavailable'] = '現在承認を利用できません。';
 $lang['finance_status_approval_error'] = '承認申請を送信できませんでした。もう一度お試しください。';

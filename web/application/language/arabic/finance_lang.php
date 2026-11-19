@@ -390,6 +390,7 @@ $lang['finance_created'] = 'تم إنشاء السجل.';
 $lang['finance_saved'] = 'تم حفظ التغييرات.';
 $lang['finance_status_approval_submitted'] = 'تم الإرسال للموافقة.';
 $lang['finance_status_approval_auto_approved'] = 'تمت الموافقة تلقائياً.';
+$lang['finance_status_cancel_auto_approved'] = 'لا توجد خطوات موافقة؛ تمت الموافقة على الإلغاء تلقائيًا.';
 $lang['finance_status_approval_steps_missing'] = 'تدفق الموافقة لا يحتوي على خطوات معتمدين. أضف خطوات من الموارد البشرية ← تدفق الموافقة.';
 $lang['finance_status_approval_unavailable'] = 'الموافقة غير متاحة حالياً.';
 $lang['finance_status_approval_error'] = 'تعذر إرسال طلب الموافقة. حاول مرة أخرى.';

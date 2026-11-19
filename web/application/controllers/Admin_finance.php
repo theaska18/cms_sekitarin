@@ -858,7 +858,7 @@ class Admin_finance extends Admin
             $reason
         );
         if (!empty($result['ok'])) {
-            $status = 'approval_submitted';
+            $status = !empty($result['auto_approved']) ? 'cancel_auto_approved' : 'approval_submitted';
         } else {
             $error = isset($result['error']) ? (string) $result['error'] : 'error';
             $status = in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error');
@@ -1227,10 +1227,6 @@ class Admin_finance extends Admin
         if (!$approval->available()) {
             return 'approval_unavailable';
         }
-        $steps = $approval->effective_steps('finance_begining_balance');
-        if (!is_array($steps) || !$steps) {
-            return 'approval_steps_missing';
-        }
         $previous_status = $record['status'];
         $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
             ->where('source_type', 'opening_balance')
@@ -1268,8 +1264,6 @@ class Admin_finance extends Admin
         $this->load->library('approval_workflow_store');
         $approval = $this->approval_workflow_store;
         if (!$approval->available()) return 'approval_unavailable';
-        $steps = $approval->effective_steps('finance_manual_journal');
-        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
         $previous_status = $record['status'];
         $this->db->where('tenant_id', $tenant_id)->where('journal_entry_id', (int) $id)
             ->where('source_type', 'manual')->update('fin_journal_entry', array('status' => 'pending_approval'));
@@ -1309,8 +1303,6 @@ class Admin_finance extends Admin
         $this->load->library('approval_workflow_store');
         $approval = $this->approval_workflow_store;
         if (!$approval->available()) return 'approval_unavailable';
-        $steps = $approval->effective_steps($flow_code);
-        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
         $spec = $kind === 'sales'
             ? array('number' => 'invoice_number', 'date' => 'invoice_date', 'table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id')
             : array('number' => 'bill_number', 'date' => 'bill_date', 'table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id');
@@ -1352,8 +1344,6 @@ class Admin_finance extends Admin
         $this->load->library('approval_workflow_store');
         $approval = $this->approval_workflow_store;
         if (!$approval->available()) return 'approval_unavailable';
-        $steps = $approval->effective_steps($flow_code);
-        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
         $table = $kind === 'customer' ? 'fin_customer_payment' : 'fin_supplier_payment';
         $id_column = $kind === 'customer' ? 'customer_payment_id' : 'supplier_payment_id';
         $previous_status = $record['status'];
@@ -1390,8 +1380,6 @@ class Admin_finance extends Admin
         $this->load->library('approval_workflow_store');
         $approval = $this->approval_workflow_store;
         if (!$approval->available()) return 'approval_unavailable';
-        $steps = $approval->effective_steps('finance_bank_reconciliation');
-        if (!is_array($steps) || !$steps) return 'approval_steps_missing';
         $previous_status = $record['status'];
         $this->db->where('tenant_id', $tenant)->where('reconciliation_id', (int) $id)
             ->update('fin_bank_reconciliation', array('status' => 'pending_approval'));

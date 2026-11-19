@@ -41,8 +41,8 @@ class FinanceOpeningBalanceApprovalContractTests(unittest.TestCase):
         self.assertIn("'opening_balances'", submit)
         self.assertIn("finance_opening_balance_start_approval", submit)
         self.assertIn("finance_begining_balance", method)
-        self.assertIn("effective_steps", method)
-        self.assertIn("approval_steps_missing", method)
+        self.assertIn("auto_approved", method)
+        self.assertNotIn("approval_steps_missing", method)
         self.assertIn("'fin_journal_entry'", method)
 
     def test_revise_save_resubmits_the_opening_balance(self):

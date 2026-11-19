@@ -16,6 +16,7 @@ $statuses = array(
     'approval_submitted' => isset($labels['finance_status_approval_submitted']) ? $labels['finance_status_approval_submitted'] : 'Submitted for approval.',
     'approval_auto_approved' => isset($labels['finance_status_approval_auto_approved']) ? $labels['finance_status_approval_auto_approved'] : 'Approved automatically.',
     'approval_steps_missing' => isset($labels['finance_status_approval_steps_missing']) ? $labels['finance_status_approval_steps_missing'] : 'The approval flow has no approver steps.',
+    'cancel_auto_approved' => isset($labels['finance_status_cancel_auto_approved']) ? $labels['finance_status_cancel_auto_approved'] : 'The cancellation was approved automatically.',
     'approval_unavailable' => isset($labels['finance_status_approval_unavailable']) ? $labels['finance_status_approval_unavailable'] : 'Approval is unavailable.',
     'approval_error' => isset($labels['finance_status_approval_error']) ? $labels['finance_status_approval_error'] : 'Approval could not be submitted.',
     'not_submittable' => isset($labels['finance_status_not_submittable']) ? $labels['finance_status_not_submittable'] : 'This record cannot be submitted for approval.',

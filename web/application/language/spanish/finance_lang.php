@@ -390,6 +390,7 @@ $lang['finance_created'] = 'Registro creado.';
 $lang['finance_saved'] = 'Cambios guardados.';
 $lang['finance_status_approval_submitted'] = 'Enviado para aprobación.';
 $lang['finance_status_approval_auto_approved'] = 'Aprobado automáticamente.';
+$lang['finance_status_cancel_auto_approved'] = 'No hay pasos de aprobación configurados; la cancelación se aprobó automáticamente.';
 $lang['finance_status_approval_steps_missing'] = 'El flujo de aprobación no tiene pasos de aprobador. Agregue pasos en HR → Flujo de aprobación.';
 $lang['finance_status_approval_unavailable'] = 'La aprobación no está disponible en este momento.';
 $lang['finance_status_approval_error'] = 'No se pudo enviar la aprobación. Inténtalo de nuevo.';

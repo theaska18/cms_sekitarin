@@ -390,6 +390,7 @@ $lang['finance_created'] = 'Enregistrement créé.';
 $lang['finance_saved'] = 'Modifications enregistrées.';
 $lang['finance_status_approval_submitted'] = 'Soumis pour approbation.';
 $lang['finance_status_approval_auto_approved'] = 'Approuvé automatiquement.';
+$lang['finance_status_cancel_auto_approved'] = 'Aucune étape d’approbation n’est configurée ; l’annulation a été approuvée automatiquement.';
 $lang['finance_status_approval_steps_missing'] = 'Le flux d’approbation n’a aucune étape d’approbateur. Ajoutez des étapes dans RH → Flux d’approbation.';
 $lang['finance_status_approval_unavailable'] = 'L’approbation n’est pas disponible pour le moment.';
 $lang['finance_status_approval_error'] = 'Impossible de soumettre l’approbation. Réessayez.';

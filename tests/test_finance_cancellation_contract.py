@@ -10,7 +10,8 @@ class FinanceCancellationContractTests(unittest.TestCase):
         source = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
         for marker in (
             "function request(", "function finalize_for_request(", "function create_reversal(",
-            "request_action", "fin_cancellation", "approval_workflow_store->submit(", "no_steps", "effective_steps(",
+            "request_action", "fin_cancellation", "approval_workflow_store->submit(",
+            "finalize_for_request($request_id, 'approved')", "auto_approved",
             "source_type' => 'reversal'", "debit_amount' => $line['credit_amount']",
             "credit_amount' => $line['debit_amount']", "status' => 'cancelled'",
         ):
@@ -40,6 +41,35 @@ class FinanceCancellationContractTests(unittest.TestCase):
         controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
         submit = controller.split("public function submit_approval", 1)[1].split("private function", 1)[0]
         self.assertIn("$slug === 'income' || $slug === 'expenses' ? 'fin_' . $slug", submit)
+
+    def test_flows_without_steps_are_auto_approved(self):
+        store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        self.assertNotIn("'error' => 'no_steps'", store)
+        self.assertNotIn("effective_steps(", store)
+        self.assertIn("$result['status'] === 'auto_approved'", store)
+        self.assertIn("$this->finalize_for_request($request_id, 'approved')", store)
+        self.assertIn("'cancel_auto_approved'", controller)
+        for locale in sorted(p.name for p in (APP / "language").iterdir() if p.is_dir()):
+            path = APP / "language" / locale / "finance_lang.php"
+            if not path.is_file():
+                continue
+            with self.subTest(locale=locale):
+                self.assertIn("$lang['finance_status_cancel_auto_approved']", path.read_text(encoding="utf-8"))
+        for method in (
+            "finance_opening_balance_start_approval",
+            "finance_manual_journal_start_approval",
+            "finance_document_start_approval",
+            "finance_payment_start_approval",
+            "finance_reconciliation_start_approval",
+            "finance_transaction_start_approval",
+            "finance_transfer_start_approval",
+        ):
+            with self.subTest(method=method):
+                body = controller.split("private function " + method + "(", 1)[1]
+                body = body.split("private function ", 1)[0].split("public function ", 1)[0]
+                self.assertNotIn("approval_steps_missing", body)
+                self.assertIn("auto_approved", body)
 
     def test_missing_steps_message_is_generic_and_shown_on_all_finance_lists(self):
         locales = sorted(p.name for p in (APP / "language").iterdir() if p.is_dir())

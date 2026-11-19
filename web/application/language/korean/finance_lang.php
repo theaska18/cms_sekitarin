@@ -390,6 +390,7 @@ $lang['finance_created'] = '기록이 생성되었습니다.';
 $lang['finance_saved'] = '변경 사항이 저장되었습니다.';
 $lang['finance_status_approval_submitted'] = '승인 요청이 제출되었습니다.';
 $lang['finance_status_approval_auto_approved'] = '자동으로 승인되었습니다.';
+$lang['finance_status_cancel_auto_approved'] = '승인 단계가 없어 취소가 자동으로 승인되었습니다.';
 $lang['finance_status_approval_steps_missing'] = '승인 흐름에 승인 단계가 없습니다. HR → 승인 흐름에서 단계를 추가하세요.';
 $lang['finance_status_approval_unavailable'] = '현재 승인을 사용할 수 없습니다.';
 $lang['finance_status_approval_error'] = '승인 요청을 제출할 수 없습니다. 다시 시도하세요.';

@@ -65,9 +65,6 @@ class Finance_cancellation_store
         }
         $CI =& get_instance();
         $CI->load->library('approval_workflow_store');
-        if (!$CI->approval_workflow_store->effective_steps($flow_code)) {
-            return array('ok' => FALSE, 'error' => 'no_steps');
-        }
         $inserted = $this->db->insert('fin_cancellation', array(
             'tenant_id' => (int) $tenant_id,
             'source_type' => $source_type,
@@ -96,12 +93,21 @@ class Finance_cancellation_store
             $this->db->where('cancellation_id', $cancellation_id)->delete('fin_cancellation');
             return array('ok' => FALSE, 'error' => 'approval');
         }
+        $request_id = (int) $result['request_id'];
         $this->db->where('cancellation_id', $cancellation_id)->update('fin_cancellation', array(
-            'approval_request_id' => (int) $result['request_id'],
+            'approval_request_id' => $request_id,
         ));
+        // A flow without approver steps is approved automatically. Finalize it here
+        // because the cancellation row is linked to the request only after submit().
+        if (isset($result['status']) && $result['status'] === 'auto_approved') {
+            if ($this->finalize_for_request($request_id, 'approved') === FALSE) {
+                return array('ok' => FALSE, 'error' => 'approval');
+            }
+            return array('ok' => TRUE, 'error' => '', 'request_id' => $request_id, 'auto_approved' => TRUE);
+        }
         $this->db->where(array('tenant_id' => (int) $tenant_id, $spec['id'] => (int) $source_id))
             ->update($spec['table'], array('status' => 'cancel_pending'));
-        return array('ok' => TRUE, 'error' => '', 'request_id' => (int) $result['request_id']);
+        return array('ok' => TRUE, 'error' => '', 'request_id' => $request_id);
     }
 
     /** Called from the approval workflow when a cancellation request is decided. */

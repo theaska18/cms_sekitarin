@@ -13,6 +13,7 @@ $status_message = '';
 $extra_status_messages = array(
     'approval_submitted' => 'Transaksi diajukan untuk persetujuan.',
     'approval_auto_approved' => 'Alur tidak memiliki tahapan; transaksi otomatis disetujui dan siap diposting.',
+    'cancel_auto_approved' => isset($labels['finance_status_cancel_auto_approved']) ? $labels['finance_status_cancel_auto_approved'] : 'The cancellation was approved automatically.',
     'approval_error' => 'Pengajuan persetujuan gagal diproses.',
     'approval_steps_missing' => isset($labels['finance_status_approval_steps_missing']) ? $labels['finance_status_approval_steps_missing'] : 'The approval flow has no approver steps.',
     'approval_unavailable' => 'Penyimpanan persetujuan belum tersedia.',

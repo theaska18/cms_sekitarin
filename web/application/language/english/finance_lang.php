@@ -390,6 +390,7 @@ $lang['finance_created'] = 'Record created.';
 $lang['finance_saved'] = 'Changes saved.';
 $lang['finance_status_approval_submitted'] = 'Submitted for approval.';
 $lang['finance_status_approval_auto_approved'] = 'Approved automatically.';
+$lang['finance_status_cancel_auto_approved'] = 'No approval steps are configured, so the cancellation was approved automatically.';
 $lang['finance_status_approval_steps_missing'] = 'The approval flow has no approver steps. Add steps in HR → Approval Flow.';
 $lang['finance_status_approval_unavailable'] = 'Approval is unavailable right now.';
 $lang['finance_status_approval_error'] = 'Approval could not be submitted. Try again.';
