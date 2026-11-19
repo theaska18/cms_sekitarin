@@ -77,16 +77,17 @@ class AdminHeaderContractTests(unittest.TestCase):
         self.assertNotIn("admin-topbar--scrolled", self.footer)
         self.assertNotIn(".admin-topbar.admin-topbar--scrolled", self.css)
 
-    def test_admin_topbar_is_translucent_without_shadow(self):
+    def test_admin_topbar_is_solid_without_shadow_or_transparency(self):
         base_start = self.css.index("    .admin-topbar {")
         base_end = self.css.index("    .admin-language-options {", base_start)
         base = self.css[base_start:base_end]
-        self.assertIn("background-color: #ffffff;", base)  # unsupported browser fallback
+        self.assertIn("background-color: #d1fae5;", base)
+        self.assertIn("color: #064e3b;", base)
         self.assertNotIn("box-shadow", base)
-        blur_rules = self.css[self.css.index("    @supports ((backdrop-filter:"):]
-        self.assertIn(".admin-topbar {\n            background-color: rgba(255, 255, 255, 0.58);", blur_rules)
-        self.assertNotIn("admin-topbar--scrolled", blur_rules)
-        self.assertIn("backdrop-filter: blur(18px) saturate(150%)", blur_rules)
+        self.assertNotIn("backdrop-filter", base)
+        self.assertNotIn("rgba(255, 255, 255, 0.58)", self.css)
+        self.assertNotIn("@supports ((backdrop-filter:", self.css)
+        self.assertNotIn("admin-topbar--scrolled", self.css)
 
     def test_sidebar_labels_use_single_line_ellipsis_with_tooltips(self):
         theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
