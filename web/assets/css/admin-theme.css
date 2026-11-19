@@ -25,13 +25,13 @@ html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dashboard"
 html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Dasbor"] img,
 html[data-theme="dark"] #admin-app-shell .admin-topbar a[aria-label*="Home"] img { filter: brightness(0) invert(1) drop-shadow(0 0 1px rgba(255,255,255,.45)); }
 
-html[data-theme="dark"] #admin-app-shell .admin-topbar { background-color: #064e3b !important; color: #d1fae5 !important; border-color: #047857 !important; }
+html[data-theme="dark"] #admin-app-shell .admin-topbar { background-color: #1e3a8a !important; color: #dbeafe !important; border-color: #1d4ed8 !important; }
 html[data-theme="dark"] #admin-app-shell .admin-topbar button,
-html[data-theme="dark"] #admin-app-shell .admin-topbar a { color: #d1fae5 !important; }
+html[data-theme="dark"] #admin-app-shell .admin-topbar a { color: #dbeafe !important; }
 html[data-theme="dark"] #admin-app-shell .admin-topbar button:hover,
 html[data-theme="dark"] #admin-app-shell .admin-topbar a:hover,
 html[data-theme="dark"] #admin-app-shell .admin-topbar button:focus-visible,
-html[data-theme="dark"] #admin-app-shell .admin-topbar a:focus-visible { color: #ffffff !important; background-color: #065f46 !important; }
+html[data-theme="dark"] #admin-app-shell .admin-topbar a:focus-visible { color: #ffffff !important; background-color: #1e40af !important; }
 html[data-theme="dark"] #admin-app-shell #admin-language-options,
 html[data-theme="dark"] #admin-app-shell #admin-profile-menu { background-color: #111827 !important; color: #e5e7eb !important; border-color: #374151 !important; }
 html[data-theme="dark"] #admin-app-shell #admin-language-options [role="option"],

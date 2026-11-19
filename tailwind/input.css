@@ -148,9 +148,9 @@
     /* Admin-only light sticky header. Solid surface in both themes. */
     .admin-topbar {
         isolation: isolate;
-        background-color: #6ee7b7;
-        border-color: #34d399;
-        color: #022c22;
+        background-color: #bfdbfe;
+        border-color: #93c5fd;
+        color: #172554;
         transition: background-color 180ms ease;
     }
 
