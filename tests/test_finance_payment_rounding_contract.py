@@ -28,6 +28,15 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, controller)
 
+    def test_rounding_tolerance_input_is_limited_to_two_decimals(self):
+        controller = CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("$field['type'] !== 'decimal'", controller)
+        self.assertIn("number_format((float) $record[$name], 2, '.', '')", controller)
+        self.assertIn("/^\\d{1,14}(?:\\.\\d{1,2})?$/", controller)
+        form = (APP / "views/admin/finance/resource_form.php").read_text(encoding="utf-8")
+        self.assertIn('data-decimal-limit="2"', form)
+        self.assertIn("currency-input.js", form)
+
     def test_payment_store_caps_allocation_and_writes_off_rounding(self):
         source = STORE.read_text(encoding="utf-8")
         for marker in (

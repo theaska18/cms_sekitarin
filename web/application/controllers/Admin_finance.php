@@ -3729,6 +3729,18 @@ class Admin_finance extends Admin
             }
         }
 
+        if ($this->input->method(TRUE) !== 'POST') {
+            foreach ($resource['fields'] as $field) {
+                $name = $field['name'];
+                if ($field['type'] !== 'decimal' || !isset($record[$name])
+                    || $record[$name] === '' || $record[$name] === NULL
+                    || !is_numeric($record[$name])) {
+                    continue;
+                }
+                $record[$name] = number_format((float) $record[$name], 2, '.', '');
+            }
+        }
+
         $errors = array();
         $write_available = $this->finance_write_available() && $available;
         if ($this->input->method(TRUE) === 'POST') {

@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = '舍入收益科目';
 $lang['finance_resource_column_rounding_gain_account_id'] = '舍入收益科目';
 $lang['finance_resource_field_rounding_loss_account_id'] = '舍入损失科目';
 $lang['finance_resource_column_rounding_loss_account_id'] = '舍入损失科目';
+$lang['finance_payment_total_document'] = '单据总额';
+$lang['finance_payment_paid'] = '已支付';
+$lang['finance_payment_pending'] = '处理中';
+$lang['finance_payment_outstanding'] = '未付余额';

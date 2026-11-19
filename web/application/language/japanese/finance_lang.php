@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = '端数差益勘定';
 $lang['finance_resource_column_rounding_gain_account_id'] = '端数差益勘定';
 $lang['finance_resource_field_rounding_loss_account_id'] = '端数差損勘定';
 $lang['finance_resource_column_rounding_loss_account_id'] = '端数差損勘定';
+$lang['finance_payment_total_document'] = '伝票合計';
+$lang['finance_payment_paid'] = '支払済み';
+$lang['finance_payment_pending'] = '処理中';
+$lang['finance_payment_outstanding'] = '未払残高';

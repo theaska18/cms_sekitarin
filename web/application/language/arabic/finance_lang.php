@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = 'حساب أرباح 
 $lang['finance_resource_column_rounding_gain_account_id'] = 'حساب أرباح التقريب';
 $lang['finance_resource_field_rounding_loss_account_id'] = 'حساب خسائر التقريب';
 $lang['finance_resource_column_rounding_loss_account_id'] = 'حساب خسائر التقريب';
+$lang['finance_payment_total_document'] = 'إجمالي المستند';
+$lang['finance_payment_paid'] = 'المدفوع';
+$lang['finance_payment_pending'] = 'قيد المعالجة';
+$lang['finance_payment_outstanding'] = 'المتبقي';

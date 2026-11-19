@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = 'Rundungsgewinnkonto'
 $lang['finance_resource_column_rounding_gain_account_id'] = 'Rundungsgewinnkonto';
 $lang['finance_resource_field_rounding_loss_account_id'] = 'Rundungsverlustkonto';
 $lang['finance_resource_column_rounding_loss_account_id'] = 'Rundungsverlustkonto';
+$lang['finance_payment_total_document'] = 'Dokumentgesamtbetrag';
+$lang['finance_payment_paid'] = 'Bezahlt';
+$lang['finance_payment_pending'] = 'In Bearbeitung';
+$lang['finance_payment_outstanding'] = 'Offener Betrag';

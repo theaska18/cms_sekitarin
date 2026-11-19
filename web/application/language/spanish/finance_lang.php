@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = 'Cuenta de ganancia p
 $lang['finance_resource_column_rounding_gain_account_id'] = 'Cuenta de ganancia por redondeo';
 $lang['finance_resource_field_rounding_loss_account_id'] = 'Cuenta de pérdida por redondeo';
 $lang['finance_resource_column_rounding_loss_account_id'] = 'Cuenta de pérdida por redondeo';
+$lang['finance_payment_total_document'] = 'Total del documento';
+$lang['finance_payment_paid'] = 'Pagado';
+$lang['finance_payment_pending'] = 'En proceso';
+$lang['finance_payment_outstanding'] = 'Saldo pendiente';

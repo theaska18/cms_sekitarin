@@ -570,3 +570,7 @@ $lang['finance_resource_field_rounding_gain_account_id'] = '반올림 이익 계
 $lang['finance_resource_column_rounding_gain_account_id'] = '반올림 이익 계정';
 $lang['finance_resource_field_rounding_loss_account_id'] = '반올림 손실 계정';
 $lang['finance_resource_column_rounding_loss_account_id'] = '반올림 손실 계정';
+$lang['finance_payment_total_document'] = '문서 합계';
+$lang['finance_payment_paid'] = '지급됨';
+$lang['finance_payment_pending'] = '처리 중';
+$lang['finance_payment_outstanding'] = '미결제 잔액';
