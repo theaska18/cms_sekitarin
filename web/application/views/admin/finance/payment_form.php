@@ -37,7 +37,14 @@ $summary_amount = function ($value) use ($summary_currency) {
                 <div><label for="exchange-rate" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_exchange_rate_base']) ? $labels['finance_exchange_rate_base'] : 'Exchange rate to base') ?> *</label><input id="exchange-rate" name="exchange_rate" value="<?= html_escape($finance_payment_record['exchange_rate'] === '' ? '' : number_format((float) $finance_payment_record['exchange_rate'], 2, '.', '')) ?>" inputmode="decimal" data-decimal-limit="2" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"><p class="mt-1 text-xs text-slate-500"><?= html_escape(isset($labels['finance_payment_rate_hint']) ? $labels['finance_payment_rate_hint'] : 'Base currency units per payment currency unit.') ?></p></div>
                 <div><label for="reference" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_reference']) ? $labels['finance_reference'] : 'Reference') ?></label><input id="reference" name="reference" maxlength="80" value="<?= html_escape($finance_payment_record['reference']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></div>
             </div>
-            <div data-payment-summary <?= is_array($summary) ? '' : 'hidden' ?> class="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
+            <div data-payment-summary <?= is_array($summary) ? '' : 'hidden' ?>
+                data-payment-summary-id="<?= is_array($summary) ? (int) $summary['document_id'] : '' ?>"
+                data-payment-summary-currency="<?= is_array($summary) ? html_escape($summary['currency_code']) : '' ?>"
+                data-payment-summary-total="<?= is_array($summary) ? html_escape((string) $summary['total_amount']) : '' ?>"
+                data-payment-summary-paid="<?= is_array($summary) ? html_escape((string) $summary['paid_amount']) : '' ?>"
+                data-payment-summary-pending="<?= is_array($summary) ? html_escape((string) $summary['pending_amount']) : '' ?>"
+                data-payment-summary-outstanding="<?= is_array($summary) ? html_escape((string) $summary['outstanding_amount']) : '' ?>"
+                class="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
                 <dl class="grid gap-4 sm:grid-cols-4">
                     <div>
                         <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_total_document']) ? $labels['finance_payment_total_document'] : 'Document total') ?></dt>
@@ -70,7 +77,16 @@ $summary_amount = function ($value) use ($summary_currency) {
     var payAll=document.getElementById('pay-all');
     var amountInput=document.getElementById('amount');
     var currentOutstanding=<?= is_array($summary) ? json_encode((float) $summary['outstanding_amount']) : 'null' ?>;
-    function money(value){var amount=Number(value);return isFinite(amount)?amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00';}
+    var isNewPayment=<?= $is_edit ? 'false' : 'true' ?>;
+    var amountFormatter=null;
+    try{amountFormatter=new Intl.NumberFormat((document.documentElement.getAttribute('lang')||'id-ID').trim()||'id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});}catch(error){amountFormatter=null;}
+    function money(value){var amount=Number(value);if(!isFinite(amount))return '0.00';return amountFormatter?amountFormatter.format(amount):amount.toFixed(2);}
+    function amountRaw(){
+        if(!amountInput)return '';
+        if(window.jQuery){var options=window.jQuery(amountInput).data('currencyInputOptions');if(options){var raw=window.jQuery(amountInput).data('currencyRaw');return raw==null?'':String(raw);}}
+        return String(amountInput.value||'');
+    }
+    function shouldAutoFill(){return !!payAll&&payAll.checked||(isNewPayment&&(amountRaw()===''||Number(amountRaw())===0));}
     function setAmount(value){
         if(!amountInput||value===null||value===undefined||!isFinite(Number(value)))return;
         var raw=Number(value).toFixed(2);
@@ -95,10 +111,23 @@ $summary_amount = function ($value) use ($summary_currency) {
         var pendingRow=summary.querySelector('[data-payment-pending-row]');if(pendingRow)pendingRow.hidden=Number(item.pending_amount||0)<=0.000001;
         var outstanding=summary.querySelector('[data-payment-outstanding]');if(outstanding)outstanding.textContent=text(item.outstanding_amount);
         currentOutstanding=Number(item.outstanding_amount||0);
-        if(payAll&&payAll.checked)setAmount(currentOutstanding);
+        if(shouldAutoFill())setAmount(currentOutstanding);
     }
     if(payAll)payAll.addEventListener('change',applyPayAll);
     applyPayAll();
+    (function(){
+        if(!summary)return;
+        var summaryId=summary.getAttribute('data-payment-summary-id');
+        if(!summaryId)return;
+        updateSummary({
+            id:summaryId,
+            currency_code:summary.getAttribute('data-payment-summary-currency')||'',
+            total_amount:summary.getAttribute('data-payment-summary-total')||0,
+            paid_amount:summary.getAttribute('data-payment-summary-paid')||0,
+            pending_amount:summary.getAttribute('data-payment-summary-pending')||0,
+            outstanding_amount:summary.getAttribute('data-payment-summary-outstanding')||0
+        });
+    })();
     $('[data-payment-lookup]').each(function(){
         var input=$(this),isDocument=input.attr('data-payment-lookup')==='document',hidden=isDocument?$('#document-id'):$('#cash-account-id');
         input.autocomplete({

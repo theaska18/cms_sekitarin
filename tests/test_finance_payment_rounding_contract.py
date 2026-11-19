@@ -56,6 +56,11 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
             "strpos($error, 'payment_') === 0", 'finance_payment_error_',
         ):
             self.assertIn(marker, view)
+        for marker in (
+            "data-payment-summary-outstanding", "Intl.NumberFormat", "function shouldAutoFill",
+            "isNewPayment", "setAmount(currentOutstanding)",
+        ):
+            self.assertIn(marker, view)
         controller = CONTROLLER.read_text(encoding="utf-8")
         self.assertIn("$values['pay_all'] = $this->input->post('pay_all', TRUE) ? 1 : 0;", controller)
         self.assertIn("$store->document_financials($tenant, $kind, $values['document_id'])", controller)
