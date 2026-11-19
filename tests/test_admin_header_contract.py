@@ -81,7 +81,7 @@ class AdminHeaderContractTests(unittest.TestCase):
         base_start = self.css.index("    .admin-topbar {")
         base_end = self.css.index("    .admin-language-options {", base_start)
         base = self.css[base_start:base_end]
-        self.assertIn("background-color: #93c5fd;", base)
+        self.assertIn("background-color: #60a5fa;", base)
         self.assertIn("color: #172554;", base)
         self.assertNotIn("box-shadow", base)
         self.assertNotIn("backdrop-filter", base)

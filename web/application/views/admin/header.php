@@ -115,7 +115,7 @@ html[data-theme="dark"] .profile-page,body[data-theme="dark"] .profile-page{--pr
 <script type="application/json" id="admin-finance-menu-help"><?php echo json_encode($finance_help, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?></script>
 <?php endif; ?>
 <div id="admin-app-shell">
-<header class="admin-topbar sticky top-0 z-30 border-b border-blue-400 text-blue-950">
+<header class="admin-topbar sticky top-0 z-30 border-b border-blue-500 text-blue-950">
     <div class="mx-auto flex min-h-16 max-w-screen-2xl items-center justify-between gap-1 px-4 sm:gap-3 sm:px-6 lg:px-8">
         <div class="flex min-w-0 items-center gap-2">
             <button id="admin-menu-toggle" type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 shadow-sm hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white md:hidden" aria-label="<?php echo html_escape($labels['open_navigation']); ?>" aria-controls="admin-sidebar" aria-expanded="false">
