@@ -1770,6 +1770,12 @@ class Admin_finance extends Admin
             'status' => 'draft',
         );
         $lookup_labels = array();
+        if ($is_new) {
+            $record['tax_id'] = $this->finance_default_tax_id($type === 'income' ? 'default_output_tax_id' : 'default_input_tax_id');
+            if ($record['tax_id'] !== '') {
+                $lookup_labels['tax_id'] = $store->lookup_label((int) $this->current_user['tenant_id'], 'tax', (int) $record['tax_id']);
+            }
+        }
         if (!$is_new && $available) {
             $saved = $store->find((int) $this->current_user['tenant_id'], (int) $id);
             if ($saved === NULL) {
@@ -2391,8 +2397,12 @@ class Admin_finance extends Admin
             if ($base_settings !== FALSE && $base_settings->num_rows()) {
                 $record['currency_code'] = strtoupper((string) $base_settings->row()->base_currency);
             }
+            $record['tax_id'] = $this->finance_default_tax_id($kind === 'sales' ? 'default_output_tax_id' : 'default_input_tax_id');
         }
         $labels = array();
+        if ($is_new && $record['tax_id'] !== '') {
+            $labels['tax_id'] = $store->lookup_label((int) $this->current_user['tenant_id'], $kind, 'tax', (int) $record['tax_id']);
+        }
         if (!$is_new && $available) {
             $saved = $store->find((int) $this->current_user['tenant_id'], $kind, (int) $id);
             if ($saved === NULL) {
@@ -3845,6 +3855,23 @@ class Admin_finance extends Admin
         );
     }
 
+    private function finance_default_tax_id($field)
+    {
+        if (!in_array($field, array('default_output_tax_id', 'default_input_tax_id'), TRUE)
+            || !$this->db->field_exists($field, 'fin_settings')) {
+            return '';
+        }
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        if ($tenant_id < 1) {
+            return '';
+        }
+        $row = $this->db->select('t.tax_id')
+            ->from('fin_settings s')
+            ->join('fin_tax t', 't.tax_id=s.' . $field . ' AND t.tenant_id=s.tenant_id AND t.active_flag=1', 'inner')
+            ->where('s.tenant_id', $tenant_id)->limit(1)->get()->row_array();
+        return $row ? (string) $row['tax_id'] : '';
+    }
+
     private function finance_form_values($resource, $include_code)
     {
         $values = array();
@@ -3855,7 +3882,7 @@ class Admin_finance extends Admin
             $name = $field['name'];
             $raw = $this->input->post($name, TRUE);
             $value = is_scalar($raw) ? trim((string) $raw) : '';
-            if ($value === '' && in_array($field['type'], array('number', 'account_lookup'), TRUE) && empty($field['required'])) {
+            if ($value === '' && (!empty($field['nullable']) || (in_array($field['type'], array('number', 'account_lookup'), TRUE) && empty($field['required'])))) {
                 $values[$name] = NULL;
                 continue;
             }
@@ -4222,6 +4249,39 @@ class Admin_finance extends Admin
                 ),
             ),
         );
+
+        if (isset($resources['financial_settings']) && $this->db->table_exists('fin_tax')) {
+            $tax_options = array('' => '—');
+            $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+            $tax_rows = $this->db->select('tax_id,tax_code,tax_name')
+                ->from('fin_tax')->where('tenant_id', $tenant_id)
+                ->where('active_flag', 1)->order_by('tax_code', 'ASC')->get();
+            if ($tax_rows !== FALSE) {
+                foreach ($tax_rows->result_array() as $tax_row) {
+                    $tax_options[(string) $tax_row['tax_id']] = $tax_row['tax_code'] . ' — ' . $tax_row['tax_name'];
+                }
+            }
+            $resources['financial_settings']['fields'][] = array(
+                'name' => 'default_output_tax_id',
+                'label' => 'Default output tax',
+                'label_key' => 'finance_field_default_output_tax_id',
+                'type' => 'select',
+                'options' => $tax_options,
+                'nullable' => TRUE,
+                'hint' => 'Prefilled for new income and sales invoice forms. All active taxes remain selectable.',
+                'hint_key' => 'finance_field_default_output_tax_id_hint',
+            );
+            $resources['financial_settings']['fields'][] = array(
+                'name' => 'default_input_tax_id',
+                'label' => 'Default input tax',
+                'label_key' => 'finance_field_default_input_tax_id',
+                'type' => 'select',
+                'options' => $tax_options,
+                'nullable' => TRUE,
+                'hint' => 'Prefilled for new expense and purchase bill forms. All active taxes remain selectable.',
+                'hint_key' => 'finance_field_default_input_tax_id_hint',
+            );
+        }
 
         $cash_fields = array();
         foreach ($resources['cash_accounts']['fields'] as $field) {
