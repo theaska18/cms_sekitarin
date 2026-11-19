@@ -177,14 +177,17 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
             data: column.name,
             name: column.name,
             className: className,
-            render: function (value, type) {
+            render: function (value, type, row) {
                 if (type !== 'display') return value;
                 if (numeric.indexOf(column.name) >= 0 && value !== null && value !== '') {
                     var amount = Number(value);
                     return Number.isFinite(amount) ? escapeHtml(window.financeFormatAmount(amount)) : '';
                 }
                 if (isCancellationHistory) {
-                    if (column.name === 'source_type') return escapeHtml(cancellationSources[value] || value);
+                    if (column.name === 'source_id') {
+                        var sourceType = String(row && row.source_type ? row.source_type : '');
+                        return escapeHtml((cancellationSources[sourceType] || sourceType) + ' #' + value);
+                    }
                     if (column.name === 'status') {
                         var statusKey = String(value || '');
                         var statusStyle = statusKey === 'approved' ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
@@ -201,7 +204,11 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
                     }
                     if (column.name === 'reason') {
                         value = String(value == null ? '' : value);
-                        return value === '' ? '<span class="text-slate-400">—</span>' : escapeHtml(value);
+                        return value === '' ? '<span class="text-slate-400">—</span>' : '<div class="finance-cell-wrap-content">' + escapeHtml(value) + '</div>';
+                    }
+                    if (column.name === 'requested_by_name') {
+                        value = String(value == null ? '' : value);
+                        return value === '' ? '<span class="text-slate-400">—</span>' : '<span class="finance-cell-truncate" title="' + escapeHtml(value) + '">' + escapeHtml(value) + '</span>';
                     }
                 }
                 return escapeHtml(value);

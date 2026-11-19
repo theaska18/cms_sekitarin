@@ -3790,9 +3790,7 @@ class Admin_finance extends Admin
             ),
             'cancellation_history' => array(
                 array('name' => 'requested_on', 'label' => 'Requested at'),
-                array('name' => 'source_type', 'label' => 'Source'),
-                array('name' => 'source_id', 'label' => 'Source ID'),
-                array('name' => 'previous_status', 'label' => 'Previous status'),
+                array('name' => 'source_id', 'label' => 'Source'),
                 array('name' => 'status', 'label' => 'Cancellation status'),
                 array('name' => 'reason', 'label' => 'Reason'),
                 array('name' => 'requested_by_name', 'label' => 'Requested by'),

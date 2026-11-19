@@ -602,6 +602,14 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
     vertical-align: middle;
 }
 
+#admin-app-shell .finance-list-table .finance-cell-wrap-content {
+    display: block;
+    max-width: 16rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 .finance-table-scroll {
     position: relative;
 }
