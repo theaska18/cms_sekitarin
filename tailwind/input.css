@@ -461,7 +461,7 @@
     }
 
     #admin-sidebar {
-        inset-block: 4rem 0;
+        inset-block: calc(4rem + 1px) 0;
         inset-inline-start: 0;
         width: 16rem;
         max-height: none;

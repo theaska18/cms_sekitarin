@@ -110,7 +110,7 @@ class AdminSidebarContractTests(unittest.TestCase):
         self.assertIn('id="admin-content-shell"', markup)
         self.assertIn("@media (min-width: 1024px)", css)
         self.assertIn("#admin-content-shell", css)
-        self.assertIn("inset-block: 4rem 0;", css)
+        self.assertIn("inset-block: calc(4rem + 1px) 0;", css)
         self.assertIn("border-inline-end-width: 1px;", css)
         self.assertIn("margin-inline-start: 16rem;", css)
         self.assertIn("scrollbar-width: thin;", css)
