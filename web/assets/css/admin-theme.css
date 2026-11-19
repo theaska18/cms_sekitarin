@@ -620,3 +620,9 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
     border-color: #818cf8 !important;
     color: #e0e7ff !important;
 }
+
+/* DataTables: remove vertical spacing around the table layout row. */
+div.dt-layout-row.dt-layout-table {
+    margin-top: 0;
+    margin-bottom: 0;
+}
