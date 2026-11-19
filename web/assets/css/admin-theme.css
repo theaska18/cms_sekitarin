@@ -653,15 +653,3 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 #admin-app-shell {
     overflow-x: clip;
 }
-
-/* Keep the footer at the bottom when the page content is short. */
-#admin-app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    min-height: 100dvh;
-}
-
-#admin-content-shell {
-    flex: 1 0 auto;
-}
