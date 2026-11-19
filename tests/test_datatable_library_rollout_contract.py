@@ -53,14 +53,14 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
             with self.subTest(view=str(path.relative_to(ROOT))):
                 self.assertIn("assets/js/admin-datatables.js", path.read_text(encoding="utf-8"))
 
-    def test_mobile_datatables_fit_the_content_width_without_inner_scroll(self):
+    def test_mobile_datatables_keep_readable_columns_and_bottom_scroll(self):
         css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text(encoding="utf-8")
         self.assertIn("max-height: none", css)
-        self.assertIn("overflow: visible", css)
-        self.assertIn("width: 100% !important", css)
-        self.assertIn("min-width: 0 !important", css)
-        self.assertIn("white-space: normal !important", css)
+        self.assertIn("overflow-x: auto", css)
+        self.assertIn("overflow-y: visible", css)
         self.assertNotIn("max-height: 60dvh", css)
+        self.assertNotIn("width: 100% !important", css)
+        self.assertNotIn("white-space: normal !important", css)
 
     def test_non_finance_list_pages_use_the_shared_libraries(self):
         pages = (

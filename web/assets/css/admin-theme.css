@@ -650,31 +650,13 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 }
 
 @media (max-width: 767px) {
-    /* Let the page scroll; the table must not create its own scroll area. */
+    /* Keep columns readable; the page scrolls vertically, the table bottom scrolls horizontally. */
     .dt-container div.dt-layout-row.dt-layout-table {
         max-height: none;
-        overflow: visible;
-        overscroll-behavior: auto;
-    }
-
-    /* Fit every DataTable list to the phone width and wrap long cells. */
-    #admin-app-shell .finance-list-table {
-        width: 100% !important;
-        min-width: 0 !important;
-        table-layout: auto;
-    }
-
-    #admin-app-shell .finance-list-table th,
-    #admin-app-shell .finance-list-table td,
-    #admin-app-shell .finance-list-table th.whitespace-nowrap,
-    #admin-app-shell .finance-list-table td.whitespace-nowrap {
-        white-space: normal !important;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-    }
-
-    #admin-app-shell .finance-list-table .whitespace-nowrap {
-        white-space: normal !important;
+        overflow-x: auto;
+        overflow-y: visible;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
     }
 }
 

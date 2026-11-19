@@ -15,7 +15,8 @@ class DataTableLayoutContractTests(unittest.TestCase):
         self.assertIn("overflow-x: auto;", rule)
         self.assertIn("@media (max-width: 767px)", css)
         self.assertIn("max-height: none;", css)
-        self.assertIn("overflow: visible;", css)
+        self.assertIn("overflow-x: auto;", css)
+        self.assertIn("overflow-y: visible;", css)
         self.assertNotIn("max-height: 60dvh;", css)
 
     def test_datatable_headers_and_cells_do_not_wrap(self):
