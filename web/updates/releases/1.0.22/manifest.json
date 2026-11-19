@@ -1,0 +1,24 @@
+{
+  "version": "1.0.22",
+  "from_version": "1.0.21",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.21",
+  "changelog": "Rilis 1.0.22: import kategori melewati kode yang sudah ada dan tetap mengimpor kategori baru.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "cbf8689b394a31debdd3104b4ed1e27947b8a00c3785109e5a01b37d92e93950",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "024999ab1961b7b21904fc813f0ce598be434efcc44c80f955607acf5dfd3652",
+      "size": 232706
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

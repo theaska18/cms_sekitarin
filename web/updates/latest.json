@@ -1,11 +1,11 @@
 {
-  "version": "1.0.21",
+  "version": "1.0.22",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.21: import COA melewati kode akun yang sudah ada dan tetap mengimpor kode baru.",
+  "changelog": "Rilis 1.0.22: import kategori melewati kode yang sudah ada dan tetap mengimpor kategori baru.",
   "min_php": "8.1",
-  "requires_version": "1.0.20",
-  "package": "cms-1.0.21.zip",
-  "sha256": "660c36e426aee6cb50c2cbcd5c584f025b37704d28aa905bd44fe92cf438dd22",
-  "size": 29909,
+  "requires_version": "1.0.21",
+  "package": "cms-1.0.22.zip",
+  "sha256": "8829782a3fafab6ac8388c801103bfe29987e995ca4ed723f2c330eb33ae98d0",
+  "size": 29912,
   "migrations": []
 }
