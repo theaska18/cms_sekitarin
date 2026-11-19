@@ -25,13 +25,14 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
          data-target="<?= html_escape($filter_target) ?>"
          data-default-start="<?= html_escape($filter_default_start) ?>"
          data-default-end="<?= html_escape($filter_default_end) ?>">
-    <div class="flex items-center justify-end gap-2">
+    <div class="flex items-center justify-between gap-2">
         <?php if (!empty($finance_filter_add_action['url'])): ?>
             <a href="<?= html_escape($finance_filter_add_action['url']) ?>" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M10 4v12M4 10h12"/></svg>
                 <span><?= html_escape(isset($finance_filter_add_action['label']) ? $finance_filter_add_action['label'] : 'Add') ?></span>
             </a>
         <?php endif; ?>
+        <div class="ms-auto flex min-w-0 items-center gap-2">
         <div class="relative w-full min-w-0 max-w-xs">
             <input type="search" data-finance-filter="search" autocomplete="off"
                    aria-label="<?= html_escape(isset($labels['finance_filter_search']) ? $labels['finance_filter_search'] : 'Search') ?>"
@@ -46,6 +47,7 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h14M6 10h8m-5 5h2"/></svg>
             <span data-finance-filter-indicator hidden class="absolute end-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true"></span>
         </button>
+        </div>
     </div>
     <div id="<?= html_escape($filter_id) ?>" data-finance-filter-details hidden class="mt-4 border-t border-slate-100 pt-4">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
