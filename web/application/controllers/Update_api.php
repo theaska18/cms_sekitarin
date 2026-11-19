@@ -85,7 +85,7 @@ class Update_api extends CI_Controller
             return NULL;
         }
         usort($candidates, function ($left, $right) {
-            return version_compare($left['version'], $right['version']);
+            return version_compare($right['version'], $left['version']);
         });
         return $candidates[0];
     }
