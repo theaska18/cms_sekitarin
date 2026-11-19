@@ -87,6 +87,7 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
         self.assertIn("width: 2.25rem", css)
         self.assertIn("bottom: auto", css)
         self.assertIn("rgba(255, 255, 255, .45) 70%", css)
+        self.assertIn("rgba(30, 41, 59, .92) 30%", css)
         self.assertIn("setupScrollFade", script)
         self.assertIn("scrollLeft", script)
         self.assertIn("bestOverflow", script)

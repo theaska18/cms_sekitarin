@@ -615,12 +615,12 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 
 html[data-theme="dark"] #admin-app-shell .finance-table-fade.is-left,
 body[data-theme="dark"] #admin-app-shell .finance-table-fade.is-left {
-    background: linear-gradient(to right, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, .92) 30%, rgba(17, 24, 39, .45) 70%, rgba(17, 24, 39, 0) 100%);
+    background: linear-gradient(to right, rgba(30, 41, 59, 1) 0%, rgba(30, 41, 59, .92) 30%, rgba(30, 41, 59, .45) 70%, rgba(30, 41, 59, 0) 100%);
 }
 
 html[data-theme="dark"] #admin-app-shell .finance-table-fade.is-right,
 body[data-theme="dark"] #admin-app-shell .finance-table-fade.is-right {
-    background: linear-gradient(to left, rgba(17, 24, 39, 1) 0%, rgba(17, 24, 39, .92) 30%, rgba(17, 24, 39, .45) 70%, rgba(17, 24, 39, 0) 100%);
+    background: linear-gradient(to left, rgba(30, 41, 59, 1) 0%, rgba(30, 41, 59, .92) 30%, rgba(30, 41, 59, .45) 70%, rgba(30, 41, 59, 0) 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
