@@ -31,6 +31,8 @@ class DataTableLayoutContractTests(unittest.TestCase):
         css = THEME.read_text(encoding="utf-8")
         self.assertIn(".dt-container {", css)
         self.assertIn("max-width: 100%;", css)
+        self.assertIn("padding-inline: 0.5rem;", css)
+        self.assertIn("padding-inline: 1.25rem;", css)
         self.assertIn("overflow-x: clip;", css)
         self.assertIn("#admin-content-shell,", css)
         self.assertIn("#admin-main {", css)

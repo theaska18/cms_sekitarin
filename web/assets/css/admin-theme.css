@@ -625,6 +625,13 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 .dt-container {
     max-width: 100%;
     min-width: 0;
+    padding-inline: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .dt-container {
+        padding-inline: 1.25rem;
+    }
 }
 
 .dt-container div.dt-layout-row.dt-layout-table {
