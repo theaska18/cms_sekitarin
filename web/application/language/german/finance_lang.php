@@ -578,3 +578,4 @@ $lang['finance_filter_payment_status'] = 'Zahlungsstatus';
 $lang['finance_payment_status_unpaid'] = 'Unbezahlt';
 $lang['finance_payment_status_partial'] = 'Teilweise bezahlt';
 $lang['finance_payment_status_paid'] = 'Bezahlt';
+$lang['finance_status_document_has_payments'] = 'Diese Rechnung/dieser Beleg hat noch Zahlungen. Stornieren Sie zuerst die Zahlungen, bevor Sie das Dokument stornieren.';

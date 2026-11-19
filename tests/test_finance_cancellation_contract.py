@@ -31,6 +31,23 @@ class FinanceCancellationContractTests(unittest.TestCase):
         document_view = (APP / "views" / "admin" / "finance" / "document_index.php").read_text(encoding="utf-8")
         self.assertIn("'insufficient_balance' =>", document_view)
 
+    def test_invoices_with_active_payments_cannot_be_cancelled(self):
+        store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
+        for marker in (
+            "linked_payments_exist", "payment_allocation", "payment_table",
+            "'draft', 'pending_approval', 'approved', 'revise', 'posted'",
+            "'error' => 'has_payments'",
+        ):
+            self.assertIn(marker, store)
+        self.assertGreaterEqual(store.count("linked_payments_exist("), 3)
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        self.assertIn("$error === 'has_payments' ? 'document_has_payments'", controller)
+        document_view = (APP / "views" / "admin" / "finance" / "document_index.php").read_text(encoding="utf-8")
+        self.assertIn("'document_has_payments' =>", document_view)
+        self.assertIn("finance_status_document_has_payments", document_view)
+        transaction_view = (APP / "views" / "admin" / "finance" / "transaction_index.php").read_text(encoding="utf-8")
+        self.assertIn("'document_has_payments' =>", transaction_view)
+
     def test_approval_flow_supports_cancel_requests(self):
         source = (APP / "libraries" / "Approval_workflow_store.php").read_text(encoding="utf-8")
         self.assertIn("$request_action = 'submit'", source)

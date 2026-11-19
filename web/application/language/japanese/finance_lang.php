@@ -578,3 +578,4 @@ $lang['finance_filter_payment_status'] = '支払状況';
 $lang['finance_payment_status_unpaid'] = '未払い';
 $lang['finance_payment_status_partial'] = '一部支払い';
 $lang['finance_payment_status_paid'] = '支払済み';
+$lang['finance_status_document_has_payments'] = 'この請求書/請求には支払が残っています。文書をキャンセルする前に支払をキャンセルしてください。';

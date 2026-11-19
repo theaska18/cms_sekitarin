@@ -578,3 +578,4 @@ $lang['finance_filter_payment_status'] = '지급 상태';
 $lang['finance_payment_status_unpaid'] = '미지급';
 $lang['finance_payment_status_partial'] = '부분 지급';
 $lang['finance_payment_status_paid'] = '지급 완료';
+$lang['finance_status_document_has_payments'] = '이 송장/청구서에 아직 지급이 있습니다. 문서를 취소하기 전에 지급을 먼저 취소하세요.';

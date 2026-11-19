@@ -601,3 +601,4 @@ $lang['finance_filter_payment_status'] = 'Payment status';
 $lang['finance_payment_status_unpaid'] = 'Unpaid';
 $lang['finance_payment_status_partial'] = 'Partially paid';
 $lang['finance_payment_status_paid'] = 'Paid';
+$lang['finance_status_document_has_payments'] = 'This invoice/bill still has payments. Cancel the payments first before cancelling the document.';

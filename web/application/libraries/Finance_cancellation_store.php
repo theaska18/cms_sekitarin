@@ -7,8 +7,10 @@ class Finance_cancellation_store
     private $db;
     private $sources = array(
         'fin_transaction' => array('table' => 'fin_transaction', 'id' => 'transaction_id', 'journal_source' => 'transaction'),
-        'fin_sales_invoice' => array('table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id', 'journal_source' => 'sales_invoice'),
-        'fin_purchase_bill' => array('table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id', 'journal_source' => 'purchase_bill'),
+        'fin_sales_invoice' => array('table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id', 'journal_source' => 'sales_invoice',
+            'payment_table' => 'fin_customer_payment', 'payment_id' => 'customer_payment_id', 'payment_allocation' => 'fin_customer_payment_allocation'),
+        'fin_purchase_bill' => array('table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id', 'journal_source' => 'purchase_bill',
+            'payment_table' => 'fin_supplier_payment', 'payment_id' => 'supplier_payment_id', 'payment_allocation' => 'fin_supplier_payment_allocation'),
         'fin_customer_payment' => array('table' => 'fin_customer_payment', 'id' => 'customer_payment_id', 'journal_source' => 'customer_payment'),
         'fin_supplier_payment' => array('table' => 'fin_supplier_payment', 'id' => 'supplier_payment_id', 'journal_source' => 'supplier_payment'),
         'fin_cash_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id', 'journal_source' => 'cash_transfer'),
@@ -58,6 +60,9 @@ class Finance_cancellation_store
         ))->count_all_results('fin_cancellation');
         if ($pending > 0) {
             return array('ok' => FALSE, 'error' => 'pending');
+        }
+        if ($this->linked_payments_exist($tenant_id, $source_type, (int) $source_id)) {
+            return array('ok' => FALSE, 'error' => 'has_payments');
         }
         $balance_check = $this->validate_reversal_balance($tenant_id, $source_type, (int) $source_id, $status);
         if ($balance_check !== 'ok') {
@@ -137,6 +142,10 @@ class Finance_cancellation_store
         $decision = (string) $decision;
         if ($decision === 'approved') {
             $this->db->trans_begin();
+            if ($this->linked_payments_exist($tenant_id, (string) $cancellation['source_type'], $source_id)) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
             $balance_check = $this->validate_reversal_balance(
                 $tenant_id,
                 (string) $cancellation['source_type'],
@@ -229,6 +238,25 @@ class Finance_cancellation_store
                 'status' => 'cancelled',
                 'cancelled_at' => date('Y-m-d H:i:s'),
             ));
+    }
+
+    /** Invoices and bills cannot be cancelled while active payments are still allocated. */
+    private function linked_payments_exist($tenant_id, $source_type, $source_id)
+    {
+        if (!isset($this->sources[$source_type])) {
+            return FALSE;
+        }
+        $spec = $this->sources[$source_type];
+        if (empty($spec['payment_table']) || empty($spec['payment_id']) || empty($spec['payment_allocation'])) {
+            return FALSE;
+        }
+        $count = $this->db->from($spec['payment_allocation'] . ' a')
+            ->join($spec['payment_table'] . ' p', 'p.' . $spec['payment_id'] . '=a.' . $spec['payment_id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant_id)
+            ->where('a.' . $spec['id'], (int) $source_id)
+            ->where_in('p.status', array('draft', 'pending_approval', 'approved', 'revise', 'posted'))
+            ->count_all_results();
+        return $count === FALSE ? TRUE : $count > 0;
     }
 
     /** Validate that posting the reversal would not take a cash/bank account below zero. */
