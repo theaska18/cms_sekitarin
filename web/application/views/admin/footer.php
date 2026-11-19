@@ -1,6 +1,6 @@
         </main>
 </div>
-<footer class="mx-auto max-w-screen-2xl px-4 pb-6 sm:px-6 lg:px-8">
+<footer id="admin-footer" class="mx-auto max-w-screen-2xl px-4 pb-6 sm:px-6 lg:px-8">
     <div class="pt-4 text-center text-xs text-slate-500">
         © <?php echo date('Y'); ?> Asep Kamaludin. All rights reserved.
     </div>
