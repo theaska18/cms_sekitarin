@@ -132,8 +132,8 @@ $t_labels = array(
     });
     t.on('draw.dt', function(){window.financeFormatLocalTimes(document);});
     window.financeFormatLocalTimes(document);
-    function closeMenus(){document.querySelectorAll('[data-transfer-actions-menu]').forEach(function(m){m.hidden=true;var b=document.querySelector('[aria-controls="'+m.id+'"][data-transfer-actions-toggle]');if(b)b.setAttribute('aria-expanded','false');});}
-    function openMenu(b,m){closeMenus();m.hidden=false;b.setAttribute('aria-expanded','true');var r=b.getBoundingClientRect(),s=m.getBoundingClientRect(),top=r.bottom+4;if(top+s.height>window.innerHeight-8&&r.top-s.height-4>=8)top=r.top-s.height-4;var left=Math.max(8,Math.min(r.right-s.width,window.innerWidth-s.width-8));m.style.top=Math.max(8,top)+'px';m.style.left=left+'px';var first=m.querySelector('[role="menuitem"]');if(first)first.focus();}
+    function closeMenus(){if(window.financeCloseActionMenus)window.financeCloseActionMenus();}
+    function openMenu(b,m){if(window.financeOpenActionMenu)window.financeOpenActionMenu(b,m);}
     document.addEventListener('click',function(ev){var b=ev.target.closest('[data-transfer-actions-toggle]');if(b){var m=document.getElementById(b.getAttribute('aria-controls'));if(m&&m.hidden)openMenu(b,m);else closeMenus();return;}if(ev.target.closest('[data-transfer-actions-menu] [role="menuitem"]')){closeMenus();return;}if(!ev.target.closest('[data-transfer-actions-menu]'))closeMenus();});
     document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeMenus();});
 })();

@@ -660,3 +660,12 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 #admin-app-shell {
     overflow-x: clip;
 }
+
+/* Finance three-dot menus escape table scroll containers. */
+.finance-action-menu-portal {
+    position: fixed !important;
+    z-index: 120 !important;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow-y: auto;
+}

@@ -99,17 +99,38 @@
 (function (window, document) {
     'use strict';
 
+    var MENU_SELECTOR = '[data-finance-menu], [data-finance-actions-menu], [data-journal-actions-menu], [data-transfer-actions-menu]';
+
     function closeMenus() {
-        document.querySelectorAll('[data-finance-menu]').forEach(function (menu) {
+        document.querySelectorAll(MENU_SELECTOR).forEach(function (menu) {
             menu.hidden = true;
-            var toggle = document.querySelector('[aria-controls="' + menu.id + '"][data-finance-menu-toggle]');
+            var toggle = document.querySelector('[aria-controls="' + menu.id + '"]');
             if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            if (menu.__financePortalHome) {
+                var home = menu.__financePortalHome;
+                if (home.parent && document.contains(home.parent)) {
+                    home.parent.insertBefore(menu, home.next);
+                } else if (menu.parentNode === document.body) {
+                    menu.remove();
+                }
+                menu.__financePortalHome = null;
+            }
         });
     }
 
     function openMenu(toggle, menu) {
         closeMenus();
+        if (!menu.__financePortalHome) {
+            menu.__financePortalHome = {
+                parent: menu.parentNode,
+                next: menu.nextSibling
+            };
+        }
+        if (menu.parentNode !== document.body) {
+            document.body.appendChild(menu);
+        }
         menu.hidden = false;
+        menu.classList.add('finance-action-menu-portal');
         toggle.setAttribute('aria-expanded', 'true');
         var rect = toggle.getBoundingClientRect();
         var size = menu.getBoundingClientRect();
@@ -121,7 +142,9 @@
         menu.style.top = Math.max(8, top) + 'px';
         menu.style.left = left + 'px';
         var first = menu.querySelector('[role="menuitem"]');
-        if (first) first.focus();
+        if (first) {
+            try { first.focus({ preventScroll: true }); } catch (error) { first.focus(); }
+        }
     }
 
     document.addEventListener('click', function (event) {
@@ -141,6 +164,9 @@
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') closeMenus();
     });
+    window.addEventListener('scroll', closeMenus, true);
+    window.addEventListener('resize', closeMenus);
 
+    window.financeOpenActionMenu = openMenu;
     window.financeCloseActionMenus = closeMenus;
 })(window, document);

@@ -163,27 +163,10 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
     });
 
     function closeActionMenus() {
-        document.querySelectorAll('[data-journal-actions-menu]').forEach(function (menu) {
-            menu.hidden = true;
-            var toggle = document.querySelector('[aria-controls="' + menu.id + '"][data-journal-actions-toggle]');
-            if (toggle) toggle.setAttribute('aria-expanded', 'false');
-        });
+        if (window.financeCloseActionMenus) window.financeCloseActionMenus();
     }
     function openActionMenu(toggle, menu) {
-        closeActionMenus();
-        menu.hidden = false;
-        toggle.setAttribute('aria-expanded', 'true');
-        var rect = toggle.getBoundingClientRect();
-        var size = menu.getBoundingClientRect();
-        var top = rect.bottom + 4;
-        if (top + size.height > window.innerHeight - 8 && rect.top - size.height - 4 >= 8) {
-            top = rect.top - size.height - 4;
-        }
-        var left = Math.max(8, Math.min(rect.right - size.width, window.innerWidth - size.width - 8));
-        menu.style.top = Math.max(8, top) + 'px';
-        menu.style.left = left + 'px';
-        var first = menu.querySelector('[role="menuitem"]');
-        if (first) first.focus();
+        if (window.financeOpenActionMenu) window.financeOpenActionMenu(toggle, menu);
     }
     document.addEventListener('click', function (event) {
         var toggle = event.target.closest('[data-journal-actions-toggle]');
