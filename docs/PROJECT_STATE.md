@@ -7,14 +7,14 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.22` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.23` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.22`. Perbaikan Finance setelah tag tersebut
-  belum dirilis dan menjadi kandidat rilis berikutnya.
+- Katalog update terakhir: `1.0.23` (tag `v1.0.23`, commit `c0b0c65`).
+  Seluruh perbaikan Finance pada audit 2026-11-19 sudah termasuk dalam rilis ini.
 - Migration terbaru: `20261119001400_allow_repeated_finance_cancellations.sql`
   (menghapus unique key sumber pembatalan agar pengajuan ulang dapat disimpan
   sebagai riwayat).
