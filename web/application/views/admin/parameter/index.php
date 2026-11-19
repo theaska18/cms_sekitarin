@@ -2,83 +2,143 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 $parameter_title = $labels['parameter_heading'];
-$page_params = array('search' => $search, 'per_page' => $per_page, 'sort' => $sort, 'direction' => $direction);
-$page_url = function ($target_page) use ($page_params) {
-    $params = $page_params;
-    $params['page'] = (int) $target_page;
-    return '/admin/system/parameter?' . http_build_query($params);
-};
-$sort_url = function ($field) use ($search, $per_page, $sort, $direction) {
-    $next_direction = $sort === $field && $direction === 'ASC' ? 'DESC' : 'ASC';
-    return '/admin/system/parameter?' . http_build_query(array('search' => $search, 'per_page' => $per_page, 'sort' => $field, 'direction' => $next_direction));
-};
+$js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+$status_messages = array('created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error', 'invalid');
 ?>
 <?php if (!$menu_access): ?>
 <main class="mx-auto min-w-0 w-full max-w-7xl px-0 py-6 sm:px-6 sm:py-8 lg:px-8"><div role="status" class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900"><?= html_escape($labels['parameter_no_access']) ?></div></main>
 <?php return; endif; ?>
+<link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto min-w-0 w-full max-w-7xl px-0 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500"><ol class="flex flex-wrap items-center gap-2"><li><?= html_escape($labels['system']) ?></li><li aria-hidden="true">/</li><li aria-current="page" class="font-medium text-slate-800"><?= html_escape($parameter_title) ?></li></ol></nav>
-    <header class="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div class="max-w-2xl"><h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($parameter_title) ?></h1><p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['parameter_intro']) ?></p></div><?php if ($add_allowed && $write_available): ?><a href="/admin/system/parameter/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg><?= html_escape($labels['parameter_add']) ?></a><?php endif; ?></header>
-    <?php if (in_array($status_key, array('created', 'saved', 'deleted', 'not_found', 'save_error', 'delete_error', 'invalid'), TRUE)): ?>
-        <?php $status_is_success = in_array($status_key, array('created', 'saved', 'deleted'), TRUE); $status_label_key = 'parameter_' . $status_key; ?>
+    <header class="mb-8 max-w-2xl">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($parameter_title) ?></h1>
+        <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['parameter_intro']) ?></p>
+    </header>
+
+    <?php if (in_array($status_key, $status_messages, TRUE)): ?>
+        <?php $status_is_success = in_array($status_key, array('created', 'saved', 'deleted'), TRUE); ?>
         <div role="status" class="mb-5 flex items-start gap-3 rounded-xl border p-4 text-sm <?= $status_is_success ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-rose-200 bg-rose-50 text-rose-900' ?>">
-            <span aria-hidden="true" class="mt-0.5"><?= $status_is_success ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m6.5 10 2.3 2.3 4.7-4.7"/></svg>' : '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M10 6v4.5m0 3h.01"/></svg>' ?></span>
-            <p><?= html_escape($labels[$status_label_key]) ?></p>
+            <span aria-hidden="true" class="mt-0.5"><?= $status_is_success ? '✓' : '!' ?></span>
+            <p><?= html_escape($labels['parameter_' . $status_key]) ?></p>
         </div>
     <?php endif; ?>
-    <?php if (!$backend_available): ?><div role="status" class="mb-5 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><span aria-hidden="true" class="mt-0.5"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M10 6v4.5m0 3h.01"/></svg></span><p><?= html_escape($labels['parameter_unavailable']) ?></p></div><?php endif; ?>
-    <section class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm" aria-label="<?= html_escape($labels['parameter_heading']) ?>">
-        <div class="sticky top-16 z-20 flex flex-col gap-4 rounded-none border-b border-slate-200 bg-white/10 px-3 py-4 shadow-none backdrop-blur-sm sm:flex-row sm:items-start sm:justify-end sm:px-6">
-            <?php if ($backend_available): ?><form id="parameter-filter-form" action="/admin/system/parameter" method="get" role="search" data-parameter-live-filter class="w-full sm:w-64 sm:shrink-0"><label for="parameter-search" class="sr-only"><?= html_escape($labels['parameter_search_label']) ?></label><div class="relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"><circle cx="10.8" cy="10.8" r="6.8"/><path stroke-linecap="round" d="m16 16 4.2 4.2"/></svg><input id="parameter-search" type="search" name="search" value="<?= html_escape($search) ?>" <?= trim((string) $search) !== '' ? 'autofocus' : '' ?> maxlength="120" autocomplete="off" placeholder="<?= html_escape($labels['parameter_search_hint']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-base text-slate-900 placeholder:text-slate-400 sm:text-sm focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"></div><input type="hidden" name="sort" value="<?= html_escape($sort) ?>"><input type="hidden" name="direction" value="<?= html_escape($direction) ?>"></form><?php endif; ?>
-        </div>
-        <div class="overflow-x-auto rounded-b-2xl"><table class="min-w-full divide-y divide-slate-200 text-left text-sm"><thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500"><tr><th scope="col" aria-label="<?= html_escape($labels['parameter_actions']) ?>" class="w-12 min-w-[3.5rem] px-1 py-3.5 sm:px-3"></th><?php foreach (array('parameter_code' => $labels['parameter_code_label'], 'parameter_name' => $labels['parameter_name_label']) as $sort_field => $column_label): ?><?php $sort_active = $sort === $sort_field; $sort_aria = !$sort_active ? 'none' : ($direction === 'ASC' ? 'ascending' : 'descending'); ?><th scope="col" aria-sort="<?= html_escape($sort_aria) ?>" class="min-w-[8rem] px-2 py-3.5 sm:px-6"><a href="<?= html_escape($sort_url($sort_field)) ?>" class="inline-flex min-h-8 items-center gap-1.5 rounded-md hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><?= html_escape($column_label) ?><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-3.5 w-3.5 <?= $sort_active && $direction === 'DESC' ? 'rotate-180' : '' ?> <?= $sort_active ? 'text-indigo-600' : 'text-slate-400' ?>"><path stroke-linecap="round" stroke-linejoin="round" d="M8 3v10m0 0 3.5-3.5M8 13l-3.5-3.5"/></svg></a></th><?php endforeach; ?><th scope="col" class="min-w-[14rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['parameter_description_label']) ?></th><th scope="col" class="min-w-[16rem] px-2 py-3.5 sm:px-6"><?= html_escape($labels['parameter_summary_label']) ?></th></tr></thead>
-        <tbody class="divide-y divide-slate-100"><?php if ($backend_available && count($parameter_records) > 0): ?><?php $parameter_index = 0; foreach ($parameter_records as $parameter): ?><?php $parameter_code = (string) $parameter['parameter_code']; $action_menu_id = 'parameter-actions-menu-' . (int) $parameter_index++; ?><tr class="transition hover:bg-slate-50/80"><td class="whitespace-nowrap px-1 py-3 text-left sm:px-3 sm:py-4"><?php if ($actions_available): ?><div class="relative inline-flex"><button type="button" data-parameter-actions-toggle aria-label="<?= html_escape($labels['parameter_actions']) ?>" aria-haspopup="menu" aria-expanded="false" aria-controls="<?= html_escape($action_menu_id) ?>" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="<?= html_escape($action_menu_id) ?>" data-parameter-actions-menu hidden role="menu" class="fixed z-30 mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg"><?php if ($update_allowed): ?><a href="/admin/system/parameter/change/<?= rawurlencode($parameter_code) ?>" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="m13.5 4.5 2 2m-9.5 9.5 3.8-.8L17 8l-3-3-7.2 7.2L6 16Z"/><path stroke-linecap="round" d="M5 17h10"/></svg><?= html_escape($labels['parameter_edit']) ?></a><?php endif; ?><?php if ($delete_allowed): ?><form action="/admin/system/parameter/delete" method="post" data-parameter-delete-form data-web-confirm data-web-confirm-title="<?= html_escape($labels['parameter_delete']) ?>" data-web-confirm-message="<?= html_escape($labels['parameter_confirm_title'] . ' ' . $labels['parameter_confirm_body']) ?>" data-web-confirm-accept="<?= html_escape($labels['parameter_delete']) ?>"><input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>"><input type="hidden" name="parameter_code" value="<?= html_escape($parameter_code) ?>"><button type="submit" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4 shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12m-10 0 .7 10h6.6L14 6m-6-2h4l1 2H7l1-2Zm1 5v4m2-4v4"/></svg><?= html_escape($labels['parameter_delete']) ?></button></form><?php endif; ?></div></div><?php else: ?><span class="text-slate-400">—</span><?php endif; ?></td><td class="min-w-[8rem] whitespace-nowrap px-2 py-4 font-mono text-xs font-semibold text-slate-800 sm:px-6"><?= html_escape($parameter_code) ?></td><td class="min-w-[12rem] px-2 py-4 font-medium text-slate-900 sm:px-6"><?= html_escape($parameter['parameter_name']) ?></td><td class="min-w-[12rem] max-w-sm whitespace-pre-wrap px-2 py-4 text-slate-600 sm:px-6"><?= html_escape($parameter['description'] === NULL ? '' : $parameter['description']) ?></td><td class="min-w-[16rem] max-w-2xl whitespace-pre-wrap px-2 py-4 leading-6 text-slate-600 sm:px-6"><?= html_escape($parameter['summary']) ?></td></tr><?php endforeach; ?><?php elseif ($backend_available): ?><tr><td colspan="5" class="px-6 py-12 text-center"><p class="font-medium text-slate-800"><?= html_escape($search !== '' ? $labels['parameter_no_results'] : $labels['parameter_empty']) ?></p><p class="mt-1 text-sm text-slate-500"><?= html_escape($labels['parameter_empty_hint']) ?></p></td></tr><?php else: ?><tr><td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500"><?= html_escape($labels['parameter_unavailable']) ?></td></tr><?php endif; ?></tbody></table></div>
-        <?php if ($backend_available && $total_records > 0): ?>
-            <div class="flex flex-col gap-3 border-t border-slate-200 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <form action="/admin/system/parameter" method="get" class="flex items-center gap-2 self-center sm:flex-1 sm:self-auto">
-                    <input type="hidden" name="search" value="<?= html_escape($search) ?>">
-                    <input type="hidden" name="sort" value="<?= html_escape($sort) ?>">
-                    <input type="hidden" name="direction" value="<?= html_escape($direction) ?>">
-                    <label for="parameter-page-size" class="whitespace-nowrap text-sm font-medium text-slate-600"><?= html_escape($labels['parameter_per_page']) ?></label>
-                    <select id="parameter-page-size" name="per_page" onchange="this.form.submit()" class="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100">
-                        <?php foreach ($per_page_choices as $choice): ?>
-                            <option value="<?= (int) $choice ?>"<?= $choice === $per_page ? ' selected' : '' ?>><?= (int) $choice ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </form>
-                <div class="flex flex-col gap-3 sm:flex-[2] sm:flex-row sm:items-center sm:justify-end">
-                    <nav aria-label="<?= html_escape($labels['parameter_heading']) ?> — <?= html_escape($labels['parameter_page']) ?>" class="flex w-full items-center justify-end gap-1 sm:flex-1" role="navigation">
-                    <?php if ($current_page > 1): ?>
-                        <a rel="prev" href="<?= html_escape($page_url($current_page - 1)) ?>" aria-label="<?= html_escape($labels['parameter_previous']) ?>" title="<?= html_escape($labels['parameter_previous']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['parameter_previous']) ?>" title="<?= html_escape($labels['parameter_previous']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12.5 4.5 7 10l5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                    <p class="whitespace-nowrap text-center text-xs text-slate-600 sm:text-sm" aria-live="polite"><?= html_escape($labels['parameter_page']) ?> <?= (int) $current_page ?> <?= html_escape($labels['parameter_page_of']) ?> <?= (int) $page_count ?> <?= html_escape(sprintf($labels['parameter_from_data'], number_format((int) $total_records, 0, ',', '.'))) ?></p>
-                    <?php if ($current_page < $page_count): ?>
-                        <a rel="next" href="<?= html_escape($page_url($current_page + 1)) ?>" aria-label="<?= html_escape($labels['parameter_next']) ?>" title="<?= html_escape($labels['parameter_next']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </a>
-                    <?php else: ?>
-                        <span aria-disabled="true" aria-label="<?= html_escape($labels['parameter_next']) ?>" title="<?= html_escape($labels['parameter_next']) ?>" class="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg border border-slate-200 text-slate-400">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 4.5 5.5 5.5-5.5 5.5"/></svg>
-                        </span>
-                    <?php endif; ?>
-                    </nav>
-                </div>
-            </div>
-        <?php endif; ?>
-    </section>
+    <?php if (!$backend_available): ?><div role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape($labels['parameter_unavailable']) ?></div><?php endif; ?>
+
+    <?php
+    $panel_config = $finance_filter_config;
+    if ($add_allowed && $write_available) {
+        $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => $labels['parameter_add']);
+    }
+    ?>
+    <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
+
+    <?php if ($backend_available): ?>
+        <?= $this->finance_list_table->open('parameter-data-table') ?>
+            <thead>
+                <tr>
+                    <th scope="col" aria-label="<?= html_escape($labels['parameter_actions']) ?>"><?= html_escape($labels['parameter_actions']) ?></th>
+                    <th scope="col"><?= html_escape($labels['parameter_code_label']) ?></th>
+                    <th scope="col"><?= html_escape($labels['parameter_name_label']) ?></th>
+                    <th scope="col"><?= html_escape($labels['parameter_description_label']) ?></th>
+                    <th scope="col"><?= html_escape($labels['parameter_summary_label']) ?></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        <?= $this->finance_list_table->close() ?>
+    <?php endif; ?>
 </main>
+<script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
+<script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js') ? filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') : '1' ?>"></script>
 <script>
 (function () {
-    var filterForm = document.querySelector('[data-parameter-live-filter]');
-    if (filterForm) { var search = filterForm.querySelector('input[name="search"]'); var timer; if (search) { if (search.value.trim() !== '') { search.focus(); search.setSelectionRange(search.value.length, search.value.length); } search.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { filterForm.submit(); }, 350); }); } }
-    document.querySelectorAll('[data-parameter-actions-toggle]').forEach(function (button) { var menu = document.getElementById(button.getAttribute('aria-controls')); if (!menu) { return; } button.addEventListener('click', function () { var opening = menu.hidden; document.querySelectorAll('[data-parameter-actions-menu]').forEach(function (other) { other.hidden = true; }); document.querySelectorAll('[data-parameter-actions-toggle]').forEach(function (other) { other.setAttribute('aria-expanded', 'false'); }); if (opening) { menu.hidden = false; button.setAttribute('aria-expanded', 'true'); var rect = button.getBoundingClientRect(); menu.style.top = Math.min(window.innerHeight - menu.offsetHeight - 8, rect.bottom + 4) + 'px'; menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - menu.offsetWidth - 8)) + 'px'; menu.querySelector('[role="menuitem"]').focus(); } }); });
-    document.addEventListener('click', function (event) { if (!event.target.closest('[data-parameter-actions-toggle]') && !event.target.closest('[data-parameter-actions-menu]')) { document.querySelectorAll('[data-parameter-actions-menu]').forEach(function (menu) { menu.hidden = true; }); document.querySelectorAll('[data-parameter-actions-toggle]').forEach(function (button) { button.setAttribute('aria-expanded', 'false'); }); } });
+    var table = window.jQuery ? window.jQuery('#parameter-data-table') : null;
+    if (!table || !table.length || !window.jQuery.fn.DataTable) return;
+    var canUpdate = <?= $update_allowed ? 'true' : 'false' ?>;
+    var canDelete = <?= $delete_allowed ? 'true' : 'false' ?>;
+    var csrfName = <?= json_encode($csrf_token_name, $js_flags) ?>;
+    var csrfHash = <?= json_encode($csrf_hash, $js_flags) ?>;
+    var labels = {
+        actions: <?= json_encode($labels['parameter_actions'], $js_flags) ?>,
+        edit: <?= json_encode($labels['parameter_edit'], $js_flags) ?>,
+        delete: <?= json_encode($labels['parameter_delete'], $js_flags) ?>,
+        confirmTitle: <?= json_encode($labels['parameter_delete'], $js_flags) ?>,
+        confirmMessage: <?= json_encode($labels['parameter_confirm_title'] . ' ' . $labels['parameter_confirm_body'], $js_flags) ?>
+    };
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character];
+        });
+    }
+    var language = <?= json_encode(array(
+        'emptyTable' => $labels['admin_dt_empty'],
+        'info' => $labels['admin_dt_info'],
+        'infoEmpty' => $labels['admin_dt_info_empty'],
+        'infoFiltered' => $labels['admin_dt_info_filtered'],
+        'lengthMenu' => $labels['admin_dt_length'],
+        'loadingRecords' => $labels['admin_dt_loading'],
+        'processing' => $labels['admin_dt_processing'],
+        'search' => $labels['admin_dt_search'],
+        'zeroRecords' => $labels['admin_dt_zero'],
+        'paginate' => array('first' => $labels['admin_dt_first'], 'last' => $labels['admin_dt_last'], 'next' => $labels['admin_dt_next'], 'previous' => $labels['admin_dt_previous']),
+    ), $js_flags) ?>;
+    table.DataTable({
+        processing: true,
+        serverSide: true,
+        deferRender: true,
+        autoWidth: false,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+        order: [[1, 'asc']],
+        language: language,
+        ajax: {url: <?= json_encode($current_path . '/data', $js_flags) ?>, type: 'GET', dataSrc: 'data'},
+        columns: [
+            {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
+                if (type !== 'display' || (!canUpdate && !canDelete)) return type === 'display' ? '<span class="text-xs text-slate-400">—</span>' : '';
+                var code = String(row.parameter_code || '');
+                var codeAttr = escapeHtml(code);
+                var menuId = 'parameter-actions-' + meta.row;
+                var items = '';
+                if (canUpdate) {
+                    items += '<a href="' + escapeHtml(<?= json_encode($current_path, $js_flags) ?> + '/change/' + encodeURIComponent(code)) + '" role="menuitem" class="flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="m12.8 3.2 4 4M3.5 16.5l3.6-.7L16.3 6.6a1.4 1.4 0 0 0-2-2L5.1 13.8l-1.6 2.7Z"/></svg>' + escapeHtml(labels.edit) + '</a>';
+                }
+                if (canDelete) {
+                    items += '<form action="' + escapeHtml(<?= json_encode($current_path, $js_flags) ?> + '/delete') + '" method="post" data-web-confirm data-web-confirm-title="' + escapeHtml(labels.confirmTitle) + '" data-web-confirm-message="' + escapeHtml(labels.confirmMessage) + '" data-web-confirm-accept="' + escapeHtml(labels.delete) + '" role="none"><input type="hidden" name="' + escapeHtml(csrfName) + '" value="' + escapeHtml(csrfHash) + '"><input type="hidden" name="parameter_code" value="' + codeAttr + '"><button type="submit" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>' + escapeHtml(labels.delete) + '</button></form>';
+                }
+                return '<div class="relative inline-flex"><button type="button" data-parameter-actions-toggle aria-label="' + escapeHtml(labels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-parameter-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + items + '</div></div>';
+            }},
+            {data: 'parameter_code', name: 'parameter_code', className: 'font-mono text-xs font-semibold', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
+            {data: 'parameter_name', name: 'parameter_name', className: 'font-medium', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
+            {data: 'description', name: 'description', className: 'text-slate-600', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
+            {data: 'summary', name: 'summary', className: 'text-slate-600', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }}
+        ]
+    });
 
+    function closeMenus() {
+        document.querySelectorAll('[data-parameter-actions-menu]').forEach(function (menu) { menu.hidden = true; });
+        document.querySelectorAll('[data-parameter-actions-toggle]').forEach(function (toggle) { toggle.setAttribute('aria-expanded', 'false'); });
+    }
+    function openMenu(toggle, menu) {
+        closeMenus();
+        menu.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        var rect = toggle.getBoundingClientRect();
+        menu.style.top = Math.min(window.innerHeight - menu.offsetHeight - 8, rect.bottom + 4) + 'px';
+        menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+        var first = menu.querySelector('[role="menuitem"]');
+        if (first) first.focus();
+    }
+    document.addEventListener('click', function (event) {
+        var toggle = event.target.closest('[data-parameter-actions-toggle]');
+        if (toggle) {
+            var menu = document.getElementById(toggle.getAttribute('aria-controls'));
+            if (menu && menu.hidden) openMenu(toggle, menu); else { closeMenus(); toggle.focus(); }
+            return;
+        }
+        if (event.target.closest('[data-parameter-actions-menu] [role="menuitem"]') || !event.target.closest('[data-parameter-actions-menu]')) closeMenus();
+    });
+    document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeMenus(); });
+    document.addEventListener('scroll', closeMenus, true);
+    window.addEventListener('resize', closeMenus);
 })();
 </script>

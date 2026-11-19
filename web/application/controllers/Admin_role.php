@@ -117,7 +117,101 @@ class Admin_role extends Admin
             ),
             'role_tenant_access' => $tenant_access,
             'role_status_key' => is_string($status) ? $status : '',
+            'finance_filter_config' => $this->role_filter_config($store, $tenant_access),
         ));
+    }
+
+    public function role_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('app_role')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $store = $this->role_store();
+        if ($store === NULL || !$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $state = $this->role_list_state('');
+        $this->datatable_server->respond(
+            array(1 => 'tenant_id', 2 => 'role_code', 3 => 'role_name', 4 => 'description', 5 => 'active_flag'),
+            function () use ($store, $state) {
+                return $store->count($state['search'], $state['tenant'], $state['filters']);
+            },
+            function ($search) use ($store) {
+                $state = $this->role_list_state($search);
+                return $store->count($state['search'], $state['tenant'], $state['filters']);
+            },
+            function ($search, $length, $start, $order, $direction) use ($store) {
+                $state = $this->role_list_state($search);
+                return $store->page(
+                    $state['search'],
+                    $length,
+                    $start,
+                    in_array($order, array('role_code', 'role_name', 'active_flag'), TRUE) ? $order : 'role_code',
+                    $direction,
+                    $state['tenant'],
+                    $state['filters']
+                );
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'role_code')
+        );
+    }
+
+    private function role_filter_config($store = NULL, $tenant_access = FALSE)
+    {
+        $labels = $this->lang->language;
+        $tenant_options = array();
+        if ($tenant_access && $store !== NULL) {
+            $rows = $store->tenant_options();
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    $tenant_options[(string) $row['tenant_id']] = $row['tenant_code'] . ' — ' . $row['tenant_name'];
+                }
+            }
+        }
+        $field_filters = array();
+        if ($tenant_access) {
+            $field_filters[] = array('type' => 'select', 'name' => 'tenant_id', 'label' => isset($labels['role_tenant_label']) ? $labels['role_tenant_label'] : 'Tenant', 'options' => $tenant_options);
+        }
+        $field_filters[] = array('type' => 'text', 'name' => 'role_code', 'label' => isset($labels['role_code_label']) ? $labels['role_code_label'] : 'Code');
+        $field_filters[] = array('type' => 'text', 'name' => 'role_name', 'label' => isset($labels['role_name_label']) ? $labels['role_name_label'] : 'Name');
+        $field_filters[] = array('type' => 'text', 'name' => 'description', 'label' => isset($labels['role_description_label']) ? $labels['role_description_label'] : 'Description');
+        $field_filters[] = array('type' => 'select', 'name' => 'active_flag', 'label' => isset($labels['role_active_label']) ? $labels['role_active_label'] : 'Active', 'options' => array(
+            '1' => isset($labels['role_active_yes']) ? $labels['role_active_yes'] : 'Active',
+            '0' => isset($labels['role_active_no']) ? $labels['role_active_no'] : 'Inactive',
+        ));
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#role-data-table',
+            'field_filters' => $field_filters,
+        ));
+    }
+
+    private function role_list_state($search = '')
+    {
+        $store = $this->role_store();
+        $tenant_access = $this->has_admin_access_code('app_role_tenant');
+        $panel = $this->finance_filter_panel->filters($this->role_filter_config($store, $tenant_access));
+        $fields = $panel['fields'];
+        $tenant = $store ? $store->tenant_id() : FALSE;
+        if ($tenant_access && isset($fields['tenant_id']) && $fields['tenant_id'] !== ''
+            && $store && $store->tenant_exists($fields['tenant_id'])) {
+            $tenant = (int) $fields['tenant_id'];
+        }
+        return array(
+            'search' => $this->role_search($search),
+            'tenant' => $tenant,
+            'filters' => array(
+                'role_code' => isset($fields['role_code']) ? $fields['role_code'] : '',
+                'role_name' => isset($fields['role_name']) ? $fields['role_name'] : '',
+                'description' => isset($fields['description']) ? $fields['description'] : '',
+                'active_flag' => isset($fields['active_flag']) ? $fields['active_flag'] : '',
+            ),
+        );
     }
 
     public function role_new()

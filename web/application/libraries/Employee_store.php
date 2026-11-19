@@ -115,7 +115,7 @@ class Employee_store
         return $query === FALSE ? array() : $query->result_array();
     }
 
-    public function count($search, $tenant_id, $filter_code = '', $filter_name = '')
+    public function count($search, $tenant_id, $filter_code = '', $filter_name = '', $fields = array())
     {
         if (!$this->schema_available() || (int) $tenant_id !== $this->tenant_id()) { return FALSE; }
         $this->db->from('hr_employee')->where('tenant_id', (int) $tenant_id);
@@ -125,11 +125,12 @@ class Employee_store
         }
         if ($filter_code !== '') { $this->db->like('employee_code', $filter_code); }
         if ($filter_name !== '') { $this->db->like('employee_name', $filter_name); }
+        $this->apply_field_filters($fields);
         $query = $this->db->get();
         return $query === FALSE ? FALSE : (int) $query->num_rows();
     }
 
-    public function page($search, $limit, $offset, $sort, $direction, $tenant_id, $filter_code = '', $filter_name = '')
+    public function page($search, $limit, $offset, $sort, $direction, $tenant_id, $filter_code = '', $filter_name = '', $fields = array())
     {
         if (!$this->schema_available() || (int) $tenant_id !== $this->tenant_id()) { return FALSE; }
         $sort_fields = array('employee_code', 'employee_name');
@@ -145,8 +146,30 @@ class Employee_store
         }
         if ($filter_code !== '') { $this->db->like('hr_employee.employee_code', $filter_code); }
         if ($filter_name !== '') { $this->db->like('hr_employee.employee_name', $filter_name); }
+        $this->apply_field_filters($fields, 'hr_employee.');
         $query = $this->db->order_by('hr_employee.' . $sort, $direction)->limit((int) $limit, (int) $offset)->get();
         return $query === FALSE ? FALSE : $query->result_array();
+    }
+
+    private function apply_field_filters($fields, $prefix = '')
+    {
+        $fields = is_array($fields) ? $fields : array();
+        foreach (array('employee_code', 'employee_name', 'identity_id', 'birth_place') as $name) {
+            if (isset($fields[$name]) && is_string($fields[$name]) && trim($fields[$name]) !== '') {
+                $this->db->like($prefix . $name, trim($fields[$name]));
+            }
+        }
+        if (isset($fields['gender']) && $fields['gender'] !== '') {
+            $this->db->where($prefix . 'gender', $fields['gender']);
+        }
+        if (isset($fields['age']) && is_array($fields['age'])) {
+            if (isset($fields['age']['min']) && $fields['age']['min'] !== '') {
+                $this->db->where('TIMESTAMPDIFF(YEAR, ' . $prefix . 'birth_date, CURDATE()) >=', (int) $fields['age']['min'], FALSE);
+            }
+            if (isset($fields['age']['max']) && $fields['age']['max'] !== '') {
+                $this->db->where('TIMESTAMPDIFF(YEAR, ' . $prefix . 'birth_date, CURDATE()) <=', (int) $fields['age']['max'], FALSE);
+            }
+        }
     }
 
     public function find($employee_id, $tenant_id)

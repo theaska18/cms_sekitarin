@@ -8,6 +8,13 @@ class Admin_employee extends Admin
 {
     private $employee_store_instance;
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function employee_index()
     {
         if (!$this->has_admin_menu_code('hr_employee')) { $this->employee_access_denied(); return; }
@@ -56,7 +63,85 @@ class Admin_employee extends Admin
             'employee_can_update' => $this->has_admin_access_code('hr_employee_update'),
             'employee_can_delete' => $this->has_admin_access_code('hr_employee_delete'),
             'employee_status' => (string) $this->session->flashdata('admin_employee_status'),
+            'finance_filter_config' => $this->employee_filter_config($store),
         ));
+    }
+
+    public function employee_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('hr_employee')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $store = $this->employee_store();
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        if ($store === NULL || !$store->schema_available() || $tenant_id < 1) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $state = $this->employee_list_state('');
+        $this->datatable_server->respond(
+            array(1 => 'employee_code', 2 => 'employee_name'),
+            function () use ($store, $tenant_id, $state) {
+                return $store->count($state['search'], $tenant_id, '', '', $state['filters']);
+            },
+            function ($search) use ($store, $tenant_id) {
+                $state = $this->employee_list_state($search);
+                return $store->count($state['search'], $tenant_id, '', '', $state['filters']);
+            },
+            function ($search, $length, $start, $order, $direction) use ($store, $tenant_id) {
+                $state = $this->employee_list_state($search);
+                return $store->page($state['search'], $length, $start, $order, $direction, $tenant_id, '', '', $state['filters']);
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'employee_name')
+        );
+    }
+
+    private function employee_filter_config($store = NULL)
+    {
+        $labels = $this->lang->language;
+        $genders = array();
+        if ($store !== NULL) {
+            $rows = $store->gender_options();
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    $genders[(string) $row['option_code']] = (string) $row['option_name'];
+                }
+            }
+        }
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#employee-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'employee_code', 'label' => isset($labels['employee_code_label']) ? $labels['employee_code_label'] : 'Code'),
+                array('type' => 'text', 'name' => 'employee_name', 'label' => isset($labels['employee_name_label']) ? $labels['employee_name_label'] : 'Name'),
+                array('type' => 'text', 'name' => 'identity_id', 'label' => isset($labels['employee_identity_label']) ? $labels['employee_identity_label'] : 'Identity'),
+                array('type' => 'select', 'name' => 'gender', 'label' => isset($labels['employee_gender_label']) ? $labels['employee_gender_label'] : 'Gender', 'options' => $genders),
+                array('type' => 'text', 'name' => 'birth_place', 'label' => isset($labels['employee_birth_place_label']) ? $labels['employee_birth_place_label'] : 'Birth place'),
+                array('type' => 'range', 'name' => 'age', 'label' => isset($labels['employee_age_label']) ? $labels['employee_age_label'] : 'Age', 'min_name' => 'age_min', 'max_name' => 'age_max'),
+            ),
+        ));
+    }
+
+    private function employee_list_state($search = '')
+    {
+        $store = $this->employee_store();
+        $panel = $this->finance_filter_panel->filters($this->employee_filter_config($store));
+        $fields = $panel['fields'];
+        return array(
+            'search' => substr(trim((string) $search), 0, 120),
+            'filters' => array(
+                'employee_code' => isset($fields['employee_code']) ? $fields['employee_code'] : '',
+                'employee_name' => isset($fields['employee_name']) ? $fields['employee_name'] : '',
+                'identity_id' => isset($fields['identity_id']) ? $fields['identity_id'] : '',
+                'gender' => isset($fields['gender']) ? $fields['gender'] : '',
+                'birth_place' => isset($fields['birth_place']) ? $fields['birth_place'] : '',
+                'age' => isset($fields['age']) && is_array($fields['age']) ? $fields['age'] : array('min' => '', 'max' => ''),
+            ),
+        );
     }
 
     public function employee_new()

@@ -109,7 +109,7 @@ class User_store
         return $specs;
     }
 
-    public function count($search = '', $tenant_id = NULL, $role_id = '', $block_flag = '')
+    public function count($search = '', $tenant_id = NULL, $role_id = '', $block_flag = '', $fields = array())
     {
         $tenant_id = $tenant_id === NULL ? $this->tenant_id() : $tenant_id;
         if (!$this->tenant_exists($tenant_id)) {
@@ -120,12 +120,12 @@ class User_store
             ->join('hr_employee e', 'e.employee_id = u.employee_id AND e.tenant_id = u.tenant_id', 'left')
             ->where('u.tenant_id', (int) $tenant_id);
         $this->apply_search($search);
-        $this->apply_filters($role_id, $block_flag);
+        $this->apply_filters($role_id, $block_flag, $fields);
         $query = $this->db->get();
         return $query ? (int) $query->num_rows() : FALSE;
     }
 
-    public function page($search, $limit, $offset, $sort, $direction, $tenant_id = NULL, $role_id = '', $block_flag = '')
+    public function page($search, $limit, $offset, $sort, $direction, $tenant_id = NULL, $role_id = '', $block_flag = '', $fields = array())
     {
         $tenant_id = $tenant_id === NULL ? $this->tenant_id() : $tenant_id;
         if (!$this->tenant_exists($tenant_id)) {
@@ -145,7 +145,7 @@ class User_store
             ->join('sys_tenant t', 't.tenant_id = u.tenant_id', 'inner')
             ->where('u.tenant_id', (int) $tenant_id);
         $this->apply_search($search);
-        $this->apply_filters($role_id, $block_flag);
+        $this->apply_filters($role_id, $block_flag, $fields);
         $query = $this->db->order_by($sort_fields[$sort], $direction)
             ->limit((int) $limit, (int) $offset)->get();
         return $query ? $query->result_array() : FALSE;
@@ -361,13 +361,43 @@ class User_store
             ->update('app_user', array('block_flag' => $blocked ? 1 : 0, 'update_on' => date('Y-m-d H:i:s')));
     }
 
-    private function apply_filters($role_id, $block_flag)
+    private function apply_filters($role_id, $block_flag, $fields = array())
     {
         if (is_numeric($role_id) && (int) $role_id > 0) {
             $this->db->where('u.role_id', (int) $role_id);
         }
         if ($block_flag === '0' || $block_flag === '1') {
             $this->db->where('u.block_flag', (int) $block_flag);
+        }
+        $fields = is_array($fields) ? $fields : array();
+        foreach (array(
+            'user_code' => 'u.user_code',
+            'username' => 'u.username',
+            'full_name' => 'u.full_name',
+            'employee_name' => 'e.employee_name',
+        ) as $name => $column) {
+            if (isset($fields[$name]) && is_string($fields[$name]) && trim($fields[$name]) !== '') {
+                $this->db->like($column, trim($fields[$name]));
+            }
+        }
+        if (isset($fields['role_id']) && is_numeric($fields['role_id']) && (int) $fields['role_id'] > 0) {
+            $this->db->where('u.role_id', (int) $fields['role_id']);
+        }
+        if (isset($fields['block_flag']) && in_array((string) $fields['block_flag'], array('0', '1'), TRUE)) {
+            $this->db->where('u.block_flag', (int) $fields['block_flag']);
+        }
+        if (isset($fields['api_secret']) && in_array((string) $fields['api_secret'], array('0', '1'), TRUE)) {
+            if ((string) $fields['api_secret'] === '1') {
+                $this->db->where('u.access_api_flag', 1);
+                $this->db->where('u.api_secret IS NOT NULL', NULL, FALSE);
+                $this->db->where('u.api_secret <>', '');
+            } else {
+                $this->db->group_start()
+                    ->where('u.access_api_flag', 0)
+                    ->or_where('u.api_secret IS NULL', NULL, FALSE)
+                    ->or_where('u.api_secret', '')
+                    ->group_end();
+            }
         }
     }
 

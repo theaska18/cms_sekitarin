@@ -264,7 +264,7 @@ class Approval_workflow_store
         return $this->db->affected_rows() === 1 || $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org,'parent_org'=>$parent ?: NULL))->count_all_results('hr_org') === 1;
     }
 
-    public function flows($search = '', $limit = NULL, $offset = 0, $sort = 'flow_name', $direction = 'ASC')
+    public function flows($search = '', $limit = NULL, $offset = 0, $sort = 'flow_name', $direction = 'ASC', $filters = array())
     {
         if (!$this->available()) { return array(); }
         $codes = $this->accessible_flow_codes();
@@ -289,7 +289,6 @@ class Approval_workflow_store
         $sort = in_array($sort, array('flow_code','flow_name','active_flag'), TRUE) ? $sort : 'flow_name';
         $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $this->db->order_by('f.'.$sort,$direction);
-        if ($limit !== NULL) { $this->db->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset)); }
         $rows = $this->db->get()->result_array();
         foreach ($rows as &$row) {
             $row['flow_code'] = (string)$row['flow_code'];
@@ -302,21 +301,45 @@ class Approval_workflow_store
             $row['override'] = $row['override_flow_id'] > 0;
         }
         unset($row);
+        $rows = $this->filter_flow_rows($rows, $filters);
+        if ($limit !== NULL) {
+            $rows = array_slice($rows, max(0, (int) $offset), min(50, max(1, (int) $limit)));
+        }
         return $rows;
     }
 
-    public function count_flows($search = '')
+    public function count_flows($search = '', $filters = array())
     {
         if (!$this->available()) { return FALSE; }
-        $codes = $this->accessible_flow_codes();
-        if (!$codes) { return 0; }
-        $this->db->from('sys_approval_flow f')->where_in('f.flow_code', $codes);
-        $search = substr(trim((string)$search), 0, 120);
-        if ($search !== '') {
-            $this->db->group_start()->like('f.flow_code',$search)->or_like('f.flow_name',$search)
-                ->or_like('f.description',$search)->group_end();
+        return count($this->flows($search, NULL, 0, 'flow_name', 'ASC', $filters));
+    }
+
+    private function filter_flow_rows($rows, $filters)
+    {
+        $fields = is_array($filters) ? $filters : array();
+        $text = array();
+        foreach (array('flow_code', 'flow_name', 'menu_codes') as $name) {
+            if (isset($fields[$name]) && is_string($fields[$name]) && trim($fields[$name]) !== '') {
+                $text[$name] = strtolower(trim($fields[$name]));
+            }
         }
-        return (int)$this->db->count_all_results();
+        $step_source = isset($fields['step_source']) ? (string) $fields['step_source'] : '';
+        $active = isset($fields['active_flag']) ? (string) $fields['active_flag'] : '';
+        $step_count = isset($fields['step_count']) && is_array($fields['step_count']) ? $fields['step_count'] : array();
+        $filtered = array();
+        foreach ($rows as $row) {
+            $matches = TRUE;
+            foreach ($text as $name => $needle) {
+                $haystack = strtolower((string) (isset($row[$name]) ? $row[$name] : ''));
+                if (strpos($haystack, $needle) === FALSE) { $matches = FALSE; break; }
+            }
+            if ($matches && $step_source !== '' && (string) $row['step_source'] !== $step_source) { $matches = FALSE; }
+            if ($matches && in_array($active, array('0', '1'), TRUE) && (string) $row['active_flag'] !== $active) { $matches = FALSE; }
+            if ($matches && isset($step_count['min']) && $step_count['min'] !== '' && (int) $row['step_count'] < (int) $step_count['min']) { $matches = FALSE; }
+            if ($matches && isset($step_count['max']) && $step_count['max'] !== '' && (int) $row['step_count'] > (int) $step_count['max']) { $matches = FALSE; }
+            if ($matches) { $filtered[] = $row; }
+        }
+        return $filtered;
     }
 
     /** One system template with effective (tenant override or system) steps. */

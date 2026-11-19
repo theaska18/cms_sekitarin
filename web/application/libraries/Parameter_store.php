@@ -223,5 +223,11 @@ class Parameter_store
                 ->or_like('summary', $search)
                 ->group_end();
         }
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array('parameter_code', 'parameter_name', 'description', 'summary') as $name) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($name, $fields[$name]);
+            }
+        }
     }
 }

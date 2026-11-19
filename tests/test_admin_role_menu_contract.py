@@ -78,13 +78,11 @@ class AdminRoleMenuContractTest(unittest.TestCase):
         index = (APP / "views/admin/role/index.php").read_text()
         form = (APP / "views/admin/role/form.php").read_text()
         menu = (APP / "views/admin/role/menu.php").read_text()
-        self.assertIn('data-role-filter-header', index)
-        self.assertIn('bg-white/10', index)
-        self.assertIn('bg-slate-50/10', index)
-        self.assertIn('data-role-form-actions class="sticky bottom-0', form)
-        self.assertIn('bg-white/10', form)
-        self.assertIn('data-role-menu-actions class="sticky bottom-0', menu)
-        self.assertIn('bg-white/10', menu)
+        self.assertIn("finance_filter_panel->render", index)
+        self.assertIn("data-role-form-actions class=\"sticky bottom-0", form)
+        self.assertIn("bg-white/10", form)
+        self.assertIn("data-role-menu-actions class=\"sticky bottom-0", menu)
+        self.assertIn("bg-white/10", menu)
 
     def test_role_menu_view_uses_the_shared_menu_access_table(self):
         tenant_view = (APP / "views/admin/tenant/menu.php").read_text()

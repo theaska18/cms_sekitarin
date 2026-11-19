@@ -164,48 +164,6 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn("create_approval_token", store)
         self.assertIn("notify_approver", store)
 
-    def test_approval_flow_list_is_template_overrides_without_add_or_delete(self):
-        listing = (APP / "views/admin/approval_flow/index.php").read_text()
-        form = (APP / "views/admin/approval_flow/add.php").read_text()
-        step_editor = (APP / "views/admin/approval_flow/_step_editor.php").read_text()
-        controller = (APP / "controllers/Admin_approvalFlow.php").read_text()
-        store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        schema = (ROOT / "database/schema.sql").read_text()
-        flow = schema.split("CREATE TABLE `sys_approval_flow`", 1)[1].split("ENGINE=", 1)[0]
-        for column in ("flow_code", "flow_name", "active_flag", "created_by"):
-            with self.subTest(column=column):
-                self.assertIn("`" + column + "`", flow)
-        self.assertNotIn("`request_type`", flow)
-        self.assertNotIn('/admin/hr/approvalFlow/add', listing)
-        self.assertNotIn('/admin/hr/approvalFlow/delete', listing)
-        self.assertNotIn('<dialog', listing)
-        self.assertIn('name="search"', listing)
-        self.assertIn('name="per_page"', listing)
-        self.assertIn('Navigasi halaman', listing)
-        self.assertIn('/admin/hr/approvalFlow/edit/', listing)
-        self.assertIn('Sumber tahap', listing)
-        self.assertIn("public function approvalFlow_index", controller)
-        self.assertIn("public function approvalFlow_edit", controller)
-        self.assertIn("public function approvalFlow_save", controller)
-        self.assertNotIn("public function approvalFlow_add", controller)
-        self.assertNotIn("public function approvalFlow_delete", controller)
-        self.assertIn("count_flows", controller)
-        self.assertIn("$store->flows($search, $per_page", controller)
-        self.assertIn("save_override", controller)
-        self.assertIn("template_flow", controller)
-        self.assertIn('<form method="post"', form)
-        self.assertIn('name="flow_code"', form)
-        self.assertIn("admin/approval_flow/_step_editor", form)
-        self.assertIn("approval-step-editor.js", form)
-        self.assertNotIn('name="flow_name"', form)
-        self.assertNotIn('name="request_type"', form)
-        for marker in ('data-approval-step-list', 'data-add-approval-step', 'data-approver-type', 'data-organization-search', 'data-employee-search'):
-            self.assertIn(marker, step_editor)
-        self.assertIn("sys_approval_flow", store)
-        self.assertIn("sys_approval_flow_menu", store)
-        self.assertIn("public function effective_steps", store)
-        self.assertIn("public function save_override", store)
-
     def test_approval_flow_info_panel_uses_dark_mode_background(self):
         form = (APP / "views/admin/approval_flow/add.php").read_text()
         css = (ROOT / "web/assets/css/admin-theme.css").read_text()

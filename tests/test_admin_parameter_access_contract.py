@@ -42,8 +42,8 @@ class AdminParameterAccessContractTests(unittest.TestCase):
         self.assertIn("$add_allowed", LIST_VIEW)
         self.assertIn("$update_allowed", LIST_VIEW)
         self.assertIn("$delete_allowed", LIST_VIEW)
-        self.assertIn("$actions_available", LIST_VIEW)
         self.assertIn("$labels['parameter_no_access']", LIST_VIEW)
+        self.assertIn("finance_filter_panel->render", LIST_VIEW)
 
     def test_form_view_shows_route_and_delete_permission_messages(self):
         self.assertIn("$form_access_denied", FORM_VIEW)

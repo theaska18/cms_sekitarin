@@ -6,6 +6,13 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Tenant-scoped administration for application users. */
 class Admin_user extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     private function user_access_denied()
     {
         $this->output->set_status_header(403);
@@ -68,7 +75,108 @@ class Admin_user extends Admin
             'user_filter_role' => $role_filter, 'user_filter_block' => $block_filter, 'user_filter_mode' => $filter_mode,
             'user_backend_available' => $available, 'user_write_available' => $can_write,
             'user_status_key' => is_string($status) ? $status : '',
+            'finance_filter_config' => $this->user_filter_config($store, $tenant_id, !empty($access['user_can_tenant'])),
         ), $access));
+    }
+
+    public function user_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('app_user')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $store = $this->user_store();
+        if ($store === NULL || !$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $state = $this->user_list_state('');
+        $this->datatable_server->respond(
+            array(1 => 'tenant_id', 2 => 'user_code', 3 => 'user_name', 4 => 'full_name', 5 => 'role_name', 6 => 'employee_name', 7 => 'block_flag'),
+            function () use ($store, $state) {
+                return $store->count($state['search'], $state['tenant'], '', '', $state['filters']);
+            },
+            function ($search) use ($store) {
+                $state = $this->user_list_state($search);
+                return $store->count($state['search'], $state['tenant'], '', '', $state['filters']);
+            },
+            function ($search, $length, $start, $order, $direction) use ($store) {
+                $state = $this->user_list_state($search);
+                return $store->page($state['search'], $length, $start, $order, $direction, $state['tenant'], '', '', $state['filters']);
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'user_code')
+        );
+    }
+
+    private function user_filter_config($store = NULL, $tenant_id = FALSE, $tenant_access = FALSE)
+    {
+        $labels = $this->lang->language;
+        $tenants = array();
+        $roles = array();
+        $tenant_options = $tenant_access && $store ? $store->tenant_options() : FALSE;
+        if (is_array($tenant_options)) {
+            foreach ($tenant_options as $tenant) {
+                $tenants[(string) $tenant['tenant_id']] = $tenant['tenant_code'] . ' — ' . $tenant['tenant_name'];
+            }
+        }
+        $role_options = $store && $tenant_id !== FALSE ? $store->role_options($tenant_id) : FALSE;
+        if (is_array($role_options)) {
+            foreach ($role_options as $role) {
+                $roles[(string) $role['role_id']] = $role['role_name'];
+            }
+        }
+        $field_filters = array();
+        if ($tenant_access) {
+            $field_filters[] = array('type' => 'select', 'name' => 'tenant_id', 'label' => isset($labels['user_tenant']) ? $labels['user_tenant'] : 'Tenant', 'options' => $tenants);
+        }
+        $field_filters[] = array('type' => 'text', 'name' => 'user_code', 'label' => isset($labels['user_code']) ? $labels['user_code'] : 'User code');
+        $field_filters[] = array('type' => 'text', 'name' => 'username', 'label' => isset($labels['user_name']) ? $labels['user_name'] : 'Username');
+        $field_filters[] = array('type' => 'text', 'name' => 'full_name', 'label' => isset($labels['user_full_name']) ? $labels['user_full_name'] : 'Full name');
+        $field_filters[] = array('type' => 'select', 'name' => 'role_id', 'label' => isset($labels['user_role']) ? $labels['user_role'] : 'Role', 'options' => $roles);
+        $field_filters[] = array('type' => 'text', 'name' => 'employee_name', 'label' => isset($labels['user_employee']) ? $labels['user_employee'] : 'Employee');
+        $field_filters[] = array('type' => 'select', 'name' => 'block_flag', 'label' => isset($labels['user_block_status']) ? $labels['user_block_status'] : 'Blocked', 'options' => array(
+            '0' => isset($labels['user_no']) ? $labels['user_no'] : 'No',
+            '1' => isset($labels['user_yes']) ? $labels['user_yes'] : 'Yes',
+        ));
+        $field_filters[] = array('type' => 'select', 'name' => 'api_secret', 'label' => isset($labels['user_api_secret']) ? $labels['user_api_secret'] : 'API secret', 'options' => array(
+            '1' => isset($labels['user_yes']) ? $labels['user_yes'] : 'Yes',
+            '0' => isset($labels['user_no']) ? $labels['user_no'] : 'No',
+        ));
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#user-data-table',
+            'field_filters' => $field_filters,
+        ));
+    }
+
+    private function user_list_state($search = '')
+    {
+        $store = $this->user_store();
+        $tenant = $store ? $this->selected_tenant($store) : FALSE;
+        $tenant_access = $this->has_admin_access_code('app_user_tenant');
+        $panel = $this->finance_filter_panel->filters($this->user_filter_config($store, $tenant, $tenant_access));
+        $fields = $panel['fields'];
+        if ($tenant_access && isset($fields['tenant_id']) && $fields['tenant_id'] !== ''
+            && $store && $store->tenant_exists($fields['tenant_id'])) {
+            $tenant = (int) $fields['tenant_id'];
+        }
+        $role_id = isset($fields['role_id']) ? (string) $fields['role_id'] : '';
+        if ($role_id !== '' && (!$store || $tenant === FALSE || !$store->role_belongs_to_tenant($role_id, $tenant))) {
+            $role_id = '';
+        }
+        $filters = array(
+            'user_code' => isset($fields['user_code']) ? $fields['user_code'] : '',
+            'username' => isset($fields['username']) ? $fields['username'] : '',
+            'full_name' => isset($fields['full_name']) ? $fields['full_name'] : '',
+            'role_id' => $role_id,
+            'employee_name' => isset($fields['employee_name']) ? $fields['employee_name'] : '',
+            'block_flag' => isset($fields['block_flag']) ? $fields['block_flag'] : '',
+            'api_secret' => isset($fields['api_secret']) ? $fields['api_secret'] : '',
+        );
+        return array('search' => $this->search_value($search), 'tenant' => $tenant, 'filters' => $filters);
     }
 
     public function user_new()

@@ -6,6 +6,13 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Authenticated CRUD controller for system Parameters. */
 class Admin_parameter extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function parameter_index()
     {
         $menu_access = $this->has_admin_menu_code('sys_parameter');
@@ -57,7 +64,67 @@ class Admin_parameter extends Admin
             'backend_available' => $backend_available,
             'write_available' => $this->parameter_write_available($store),
             'status_key' => (string) $this->session->flashdata('admin_parameter_status'),
+            'finance_filter_config' => $this->parameter_filter_config(),
         ));
+    }
+
+    public function parameter_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('sys_parameter')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $store = $this->parameter_store();
+        if ($store === NULL || !$store->schema_available()) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $this->datatable_server->respond(
+            array(1 => 'parameter_code', 2 => 'parameter_name', 3 => 'description', 4 => 'summary'),
+            function () use ($store) {
+                return $store->count($this->parameter_list_filters(''));
+            },
+            function ($search) use ($store) {
+                return $store->count($this->parameter_list_filters($search));
+            },
+            function ($search, $length, $start, $order, $direction) use ($store) {
+                return $store->page(
+                    $this->parameter_list_filters($search),
+                    $length,
+                    $start,
+                    in_array($order, array('parameter_code', 'parameter_name'), TRUE) ? $order : 'parameter_code',
+                    strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC'
+                );
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'parameter_code')
+        );
+    }
+
+    private function parameter_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#parameter-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'parameter_code', 'label' => isset($labels['parameter_code_label']) ? $labels['parameter_code_label'] : 'Code'),
+                array('type' => 'text', 'name' => 'parameter_name', 'label' => isset($labels['parameter_name_label']) ? $labels['parameter_name_label'] : 'Name'),
+                array('type' => 'text', 'name' => 'description', 'label' => isset($labels['parameter_description_label']) ? $labels['parameter_description_label'] : 'Description'),
+                array('type' => 'text', 'name' => 'summary', 'label' => isset($labels['parameter_summary_label']) ? $labels['parameter_summary_label'] : 'Summary'),
+            ),
+        ));
+    }
+
+    private function parameter_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->parameter_filter_config());
+        return array(
+            'search' => $this->parameter_filter($search),
+            'fields' => $panel['fields'],
+        );
     }
 
     public function parameter_new()

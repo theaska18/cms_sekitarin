@@ -24,8 +24,12 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
             "Admin_finance.php",
             "Admin_finance_integration.php",
             "Admin_property.php",
+            "Admin_parameter.php",
             "Admin_tenant.php",
             "Admin_sequence.php",
+            "Admin_user.php",
+            "Admin_employee.php",
+            "Admin_approvalFlow.php",
             "Admin_approval.php",
             "Admin_approval_flow_template.php",
             "Admin_role.php",
@@ -35,6 +39,54 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
             with self.subTest(controller=name):
                 self.assertIn("load->library('finance_filter_panel')", source)
                 self.assertIn("load->library('finance_list_table')", source)
+
+    def test_non_finance_list_pages_use_the_shared_libraries(self):
+        pages = (
+            ("admin/parameter/index.php", "parameter-data-table", "Admin_parameter.php", "parameter_data"),
+            ("admin/role/index.php", "role-data-table", "Admin_role.php", "role_data"),
+            ("admin/user/index.php", "user-data-table", "Admin_user.php", "user_data"),
+            ("admin/employee/index.php", "employee-data-table", "Admin_employee.php", "employee_data"),
+            ("admin/approval_flow/index.php", "approval-flow-data-table", "Admin_approvalFlow.php", "approvalFlow_data"),
+        )
+        for view, table_id, controller_name, endpoint in pages:
+            with self.subTest(view=view):
+                source = (VIEWS / view).read_text(encoding="utf-8")
+                self.assertIn("finance_filter_panel->render(", source)
+                self.assertIn(f"finance_list_table->open('{table_id}')", source)
+                self.assertIn("serverSide: true", source)
+                controller = (ROOT / "web" / "application" / "controllers" / controller_name).read_text(encoding="utf-8")
+                self.assertIn("load->library('finance_filter_panel')", controller)
+                self.assertIn("load->library('finance_list_table')", controller)
+                self.assertIn(f"public function {endpoint}()", controller)
+                self.assertIn("datatable_server->respond(", controller)
+
+    def test_non_finance_add_actions_live_in_the_filter_panel(self):
+        for view in (
+            "admin/parameter/index.php",
+            "admin/role/index.php",
+            "admin/user/index.php",
+            "admin/employee/index.php",
+        ):
+            source = (VIEWS / view).read_text(encoding="utf-8")
+            with self.subTest(view=view):
+                self.assertIn("add_action", source)
+                self.assertIn("finance_filter_panel->render(", source)
+                header = source.split("</header>", 1)[0] if "</header>" in source else source
+                self.assertNotIn("add_action", header)
+
+    def test_non_finance_list_filters_cover_every_data_column(self):
+        expected = {
+            "Admin_parameter.php": ("parameter_code", "parameter_name", "description", "summary"),
+            "Admin_role.php": ("role_code", "role_name", "description", "active_flag"),
+            "Admin_user.php": ("user_code", "username", "full_name", "role_id", "employee_name", "block_flag", "api_secret"),
+            "Admin_employee.php": ("employee_code", "employee_name", "identity_id", "gender", "birth_place", "age"),
+            "Admin_approvalFlow.php": ("flow_code", "flow_name", "menu_codes", "step_source", "step_count", "active_flag"),
+        }
+        for controller_name, fields in expected.items():
+            source = (ROOT / "web" / "application" / "controllers" / controller_name).read_text(encoding="utf-8")
+            for field in fields:
+                with self.subTest(controller=controller_name, field=field):
+                    self.assertIn("'" + field + "'", source)
 
     def test_menu_access_datatable_uses_the_shared_libraries(self):
         partial = (VIEWS / "admin" / "menu_access" / "table.php").read_text(encoding="utf-8")

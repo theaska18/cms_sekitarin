@@ -52,16 +52,12 @@ class AppUserAuthorizationContractTests(unittest.TestCase):
     def test_user_view_hides_unavailable_actions_and_tenant_controls(self):
         index = (APP / "views/admin/user/index.php").read_text()
         form = (APP / "views/admin/user/form.php").read_text()
-        self.assertIn("user_menu_access", index)
-        self.assertIn("user_can_add", index)
-        self.assertIn("user_actions_available", index)
-        self.assertIn("user_can_update", index)
-        self.assertIn("user_can_delete", index)
-        self.assertIn("user_can_change_password", index)
-        self.assertIn("user_can_block", index)
-        self.assertIn("user_can_tenant", index)
+        controller = (APP / "controllers/Admin_user.php").read_text()
+        for marker in ("user_can_add", "user_can_update", "user_can_delete", "user_can_change_password", "user_can_block", "user_can_tenant"):
+            self.assertIn(marker, controller)
+        for marker in ("user_can_add", "user_can_update", "user_can_delete", "user_can_change_password", "user_can_block"):
+            self.assertIn(marker, index)
         self.assertIn("user_can_tenant", form)
-        self.assertIn("user_no_access", index)
 
     def test_user_access_denial_is_localized_in_both_supported_languages(self):
         for locale in ("indonesian", "english"):

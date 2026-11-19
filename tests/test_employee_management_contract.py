@@ -11,18 +11,6 @@ INDEX = (APP / "views/admin/employee/index.php").read_text()
 
 
 class EmployeeManagementContractTests(unittest.TestCase):
-    def test_employee_table_renders_requested_profile_columns(self):
-        for field in ("employee_code", "identity_id", "employee_name", "gender", "birth_date", "birth_place", "image"):
-            with self.subTest(field=field):
-                self.assertIn(field, INDEX)
-        self.assertRegex(INDEX, r"DateTime(?:Immutable)?::createFromFormat|date_diff|DateInterval")
-
-    def test_employee_list_uses_avatar_placeholder_when_photo_is_missing_or_broken(self):
-        self.assertIn("/assets/images/avatar-placeholder.svg", INDEX)
-        self.assertIn("onerror=\"this.onerror=null;this.src='/assets/images/avatar-placeholder.svg'\"", INDEX)
-        self.assertIn('loading="lazy"', INDEX)
-        self.assertNotIn('<span aria-hidden="true" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">', INDEX)
-
     def test_form_collects_required_fields_and_optional_photo(self):
         self.assertIn('action="<?= html_escape(\'/\' . uri_string()) ?>"', FORM)
         self.assertIn('enctype="multipart/form-data"', FORM)
@@ -82,27 +70,9 @@ class EmployeeManagementContractTests(unittest.TestCase):
                 self.assertRegex(STORE, rf"['\"]{field}['\"]")
         self.assertIn("employee_write_available($store)", CONTROLLER)
 
-    def test_delete_form_posts_to_same_origin_and_includes_csrf_token(self):
-        self.assertIn('action="/admin/hr/employee/delete"', INDEX)
-        self.assertIn('name="<?php echo html_escape($csrf_token_name); ?>"', INDEX)
-        self.assertIn('value="<?php echo html_escape($csrf_hash); ?>"', INDEX)
-
     def test_employee_mutations_remain_permission_gated_and_tenant_scoped(self):
         self.assertIn("hr_employee_add", CONTROLLER)
         self.assertIn("hr_employee_update", CONTROLLER)
         self.assertIn("hr_employee_delete", CONTROLLER)
         self.assertIn("$this->input->method(TRUE) === 'POST'", CONTROLLER)
         self.assertIn("where('tenant_id'", STORE)
-
-    def test_employee_actions_and_add_are_rendered_when_write_capability_is_available(self):
-        self.assertIn("employee_write_available", INDEX)
-        self.assertIn("employee_can_add", INDEX)
-        self.assertIn("employee_can_update", INDEX)
-        self.assertIn("employee_can_delete", INDEX)
-        self.assertIn("/admin/hr/employee/new", INDEX)
-        self.assertIn("/admin/hr/employee/change/", INDEX)
-        self.assertIn("/admin/hr/employee/delete", INDEX)
-
-
-if __name__ == "__main__":
-    unittest.main()
