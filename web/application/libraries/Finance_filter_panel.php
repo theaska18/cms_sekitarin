@@ -32,6 +32,7 @@ class Finance_filter_panel
 
     public function defaults($config)
     {
+        $config = $this->config($config);
         $today = date('Y-m-d');
         $start = !empty($config['default_start']) ? (string) $config['default_start'] : date('Y-m-d', strtotime('-' . ($config['default_days'] - 1) . ' days'));
         $end = !empty($config['default_end']) ? (string) $config['default_end'] : $today;
@@ -40,6 +41,7 @@ class Finance_filter_panel
 
     public function filters($config)
     {
+        $config = $this->config($config);
         $defaults = $this->defaults($config);
         $start = '';
         $end = '';
@@ -74,6 +76,7 @@ class Finance_filter_panel
 
     public function render($config, $labels = array())
     {
+        $config = $this->config($config);
         $defaults = $this->defaults($config);
         $data = array(
             'finance_filter_date' => !empty($config['date']),
