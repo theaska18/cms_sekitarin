@@ -17,6 +17,13 @@ class DataTableLayoutContractTests(unittest.TestCase):
         self.assertIn("max-height: 60dvh;", css)
         self.assertIn("overflow-y: auto;", css)
 
+    def test_datatable_headers_and_cells_do_not_wrap(self):
+        css = THEME.read_text(encoding="utf-8")
+        self.assertIn(".dt-container table.dataTable th,", css)
+        self.assertIn(".dt-container table.dataTable td {", css)
+        rule = css.split(".dt-container table.dataTable td {", 1)[1].split("}", 1)[0]
+        self.assertIn("white-space: nowrap;", rule)
+
     def test_datatable_panels_have_no_padding(self):
         views = ROOT / "web/application/views/admin"
         for path in views.rglob("*.php"):

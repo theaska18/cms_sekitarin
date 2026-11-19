@@ -622,6 +622,11 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 }
 
 /* DataTables: remove vertical spacing around the table layout row. */
+.dt-container table.dataTable th,
+.dt-container table.dataTable td {
+    white-space: nowrap;
+}
+
 .dt-container {
     max-width: 100%;
     min-width: 0;
