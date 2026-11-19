@@ -58,7 +58,7 @@
     <?php endif; ?>
     <section>
         <h2 class="mb-4 text-lg font-semibold">Menunggu persetujuan saya</h2>
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
             <table class="w-full min-w-[48rem] text-left text-sm">
                 <thead class="bg-slate-50 text-xs uppercase text-slate-600">
                     <tr><th class="px-5 py-3">Permintaan</th><th class="px-5 py-3">Pemohon</th><th class="px-5 py-3">Alur / tahap</th><th class="px-5 py-3">Tindakan</th></tr>
@@ -100,7 +100,7 @@
             <h2 id="my-approval-requests-heading" class="text-lg font-semibold">Pengajuan persetujuan saya</h2>
             <p class="mt-1 text-sm text-slate-600">Riwayat pengajuan beserta checklist setiap tahap flow.</p>
         </header>
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
             <table id="my-approval-history-table" class="w-full min-w-[68rem] text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr><th scope="col" class="px-4 py-3">Permintaan</th><th scope="col" class="px-4 py-3">Alur</th><th scope="col" class="px-4 py-3">Status</th><th scope="col" class="px-4 py-3">Checklist persetujuan</th><th scope="col" class="px-4 py-3">Aktivitas terakhir</th></tr>

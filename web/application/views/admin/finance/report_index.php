@@ -112,7 +112,7 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
     <?php if (!$finance_report_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_report_unavailable']) ? $labels['finance_report_unavailable'] : 'Finance report data is unavailable.') ?></div>
     <?php elseif (!$finance_report_errors): ?>
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section class="overflow-hidden border border-slate-200 bg-white shadow-sm">
             <div class="overflow-x-auto">
                 <table id="finance-report-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead><tr><?php foreach ($finance_report_columns as $column): $label_key = isset($column['label_key']) ? $column['label_key'] : ''; ?><th scope="col"><?= html_escape($label_key !== '' && isset($labels[$label_key]) ? $labels[$label_key] : $column['label']) ?></th><?php endforeach; ?></tr></thead>

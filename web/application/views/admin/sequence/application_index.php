@@ -29,8 +29,8 @@ $sequence_title = $labels['sequence_heading'];
         <div role="note" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape($labels['sequence_write_disabled']) ?></div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($sequence_title) ?>" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto rounded-b-2xl">
+    <section aria-label="<?= html_escape($sequence_title) ?>" class="border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
             <table id="application-sequence-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <caption class="sr-only"><?= html_escape($sequence_title) ?></caption>
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">

@@ -128,7 +128,7 @@ $can_edit = $finance_can_update && $finance_write_available;
             <?= html_escape(isset($labels['module_backend_unavailable']) ? $labels['module_backend_unavailable'] : 'Finance storage is unavailable.') ?>
         </div>
     <?php else: ?>
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
+        <section class="overflow-hidden border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
             <h2 id="finance-resource-heading" class="sr-only"><?= html_escape($title) ?></h2>
             <div class="overflow-x-auto">
                 <table id="finance-resource-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">

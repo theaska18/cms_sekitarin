@@ -54,9 +54,9 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
         </div>
     <?php endif; ?>
 
-    <section aria-labelledby="tenant-list-heading" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-labelledby="tenant-list-heading" class="border border-slate-200 bg-white shadow-sm">
         <h2 id="tenant-list-heading" class="sr-only"><?= html_escape($tenant_title) ?></h2>
-        <div class="overflow-x-auto rounded-b-2xl">
+        <div class="overflow-x-auto">
             <table id="tenant-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>

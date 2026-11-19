@@ -24,6 +24,20 @@ class DataTableLayoutContractTests(unittest.TestCase):
         rule = css.split(".dt-container table.dataTable td {", 1)[1].split("}", 1)[0]
         self.assertIn("white-space: nowrap;", rule)
 
+    def test_datatable_panels_have_no_border_radius(self):
+        views = ROOT / "web/application/views/admin"
+        for path in views.rglob("*.php"):
+            content = path.read_text(encoding="utf-8", errors="ignore")
+            if ".DataTable(" not in content:
+                continue
+            for line in content.splitlines():
+                if "finance-data-exchange" in line:
+                    continue
+                with self.subTest(view=str(path.relative_to(ROOT)), line=line.strip()[:80]):
+                    self.assertNotIn("overflow-x-auto rounded", line)
+                    self.assertNotIn("overflow-hidden rounded", line)
+                    self.assertNotIn("rounded-tl-none rounded-tr-none rounded-bl-2xl", line)
+
     def test_datatable_panels_have_no_padding(self):
         views = ROOT / "web/application/views/admin"
         for path in views.rglob("*.php"):

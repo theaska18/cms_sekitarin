@@ -51,9 +51,9 @@ $approval_flow_template_status_messages = array(
         <div role="note" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape($labels['approval_flow_template_write_disabled']) ?></div>
     <?php endif; ?>
 
-    <section aria-labelledby="approval-flow-template-list-heading" class="rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm">
+    <section aria-labelledby="approval-flow-template-list-heading" class="border border-slate-200 bg-white shadow-sm">
         <h2 id="approval-flow-template-list-heading" class="sr-only"><?= html_escape($labels['approval_flow_template_heading']) ?></h2>
-        <div class="overflow-x-auto rounded-b-2xl">
+        <div class="overflow-x-auto">
             <table id="approval-flow-template-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
                 <caption class="sr-only"><?= html_escape($labels['approval_flow_template_heading']) ?></caption>
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">

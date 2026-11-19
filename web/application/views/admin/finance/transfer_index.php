@@ -34,7 +34,7 @@ $t_labels = array(
 <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $finance_status === 'insufficient_balance' ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($labels['finance_status_' . $finance_status]) ? $labels['finance_status_' . $finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : $finance_status)) ?></div>
 <?php endif; ?>
 <?php if(!$finance_transfer_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_transfer_unavailable']) ? $labels['finance_transfer_unavailable'] : 'Transfer storage is unavailable.') ?></div><?php else: ?>
-<section class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+<section class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
 <table id="finance-transfer-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
 <thead><tr>
 <th><?= html_escape($t_labels['actions']) ?></th>

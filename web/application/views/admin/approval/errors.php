@@ -23,7 +23,7 @@
     <?php if (!$approval_error_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Penyimpanan error approval belum tersedia. Pastikan migrasi dijalankan dan tenant aktif.</div>
     <?php else: ?>
-        <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
             <table id="approval-error-table" class="w-full min-w-[68rem] text-left text-sm">
                 <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
                     <tr>
