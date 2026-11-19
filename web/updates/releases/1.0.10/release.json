@@ -1,0 +1,101 @@
+{
+  "version": "1.0.10",
+  "from_version": "1.0.9",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.9",
+  "changelog": "Optimalisasi Design.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "0252bf3d8e12dfbc9db65c24eab5a81cbe768a940b84c43c13ff636ae7f981c6",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/chart_of_accounts_index.php",
+      "sha256": "b953a4b70c53020ec9a37220a318451323dd760166c9ff53a486b58a03cd7520",
+      "size": 16906
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "a9fe46fc2509cc32ad04d1f34e7ae050abeca8fd231aa1390514520ed099bcd6",
+      "size": 14469
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "54b06aea8d6348718a157c92abe1565033c531aca72b607e77e9cf4bb7727e43",
+      "size": 9791
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "cbd66d7720defc649a9eb5fd689b8885fe26c6dd39010eb8d996197548150159",
+      "size": 20672
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "845192d9e4d4e9dbaedacf4b58efc17cdf657c14bd09c5cfc5d1b00926adb4ef",
+      "size": 11508
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "d7b9adeab701647dbdb3990408bde1329f3c2da83d89ac6c5ad6b918da9e7de0",
+      "size": 10477
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "621aa0314ef55264add34a9ed3e2d85b67cd8c58c032ef468d5f6d457285af4c",
+      "size": 19250
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "e68f247eb202ecdd352484a2b355ac1698d053f827b21eb69d1a25fc9bf33a4f",
+      "size": 21196
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "53a64946c16d27dd22d16444522d0eb125d410d6a9b3145ead04ca561d92bf6f",
+      "size": 22358
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "f1ee2d0e8b972ee32f945c4a276a4ad70b8aba153c6fd8bb97b9ceea8f91d766",
+      "size": 16022
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "949465bc94d2bdc6fbf05818372d61bde5052b5149f598f9a674a76b877a4a20",
+      "size": 34148
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "ee76472c7a1195231c389f846b562b4ac0b59673574e2aa5cd94ea12abe038a7",
+      "size": 34821
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "5b6e10e060c826bbf4ae3ffddd35c775841f4963f0205c362c1e677aa0fe0312",
+      "size": 49883
+    },
+    {
+      "path": "assets/css/admin-topbar-actions.css",
+      "sha256": "dae0d6050683b578e8a0726943ab282ac2a936fb49374e86fe0de0c862351d2f",
+      "size": 11622
+    },
+    {
+      "path": "assets/css/tailwind.css",
+      "sha256": "a3cb65f1f37169fcb48cbdf57e018cf9ef7481590fed84e47cd1c9a86b2a2e6b",
+      "size": 66860
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.10.zip",
+    "sha256": "433634e1f038a5b747f6c68e749942a74b14f3d93c22e8f22025b7d8a6b260c8",
+    "size": 80863
+  },
+  "from_ref": "v1.0.9",
+  "generated_at": "2026-11-19T09:45:35+00:00"
+}

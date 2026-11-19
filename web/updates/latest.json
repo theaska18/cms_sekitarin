@@ -1,11 +1,11 @@
 {
-  "version": "1.0.9",
-  "released_at": "2026-11-18",
-  "changelog": "Optimalisasi Finance.",
+  "version": "1.0.10",
+  "released_at": "2026-11-19",
+  "changelog": "Optimalisasi Design.",
   "min_php": "8.1",
-  "requires_version": "1.0.8",
-  "package": "cms-1.0.9.zip",
-  "sha256": "4de9553bed8c8c9d4c9de8f12bee7013d005253a505d80428e657a3a1ce8f8ec",
-  "size": 6603,
+  "requires_version": "1.0.9",
+  "package": "cms-1.0.10.zip",
+  "sha256": "433634e1f038a5b747f6c68e749942a74b14f3d93c22e8f22025b7d8a6b260c8",
+  "size": 80863,
   "migrations": []
 }
