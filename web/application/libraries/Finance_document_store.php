@@ -239,7 +239,7 @@ class Finance_document_store
             }
             $header_values[$spec['number']] = (string) $next_code['code'];
             $header_values['status'] = 'draft';
-            $header_values['create_on'] = date('Y-m-d H:i:s');
+            $header_values['create_on'] = app_now();
             $header_values['created_by'] = (int) $user_id;
             $this->db->insert($spec['header'], $header_values);
             $doc_id = (int) $this->db->insert_id();
@@ -351,9 +351,9 @@ class Finance_document_store
             'status' => 'posted',
             'debit_total' => $base_total,
             'credit_total' => $base_total,
-            'create_on' => date('Y-m-d H:i:s'),
+            'create_on' => app_now(),
             'created_by' => (int) $user_id,
-            'posted_on' => date('Y-m-d H:i:s'),
+            'posted_on' => app_now(),
             'posted_by' => (int) $user_id,
         ));
         $journal_id = (int) $this->db->insert_id();
@@ -401,7 +401,7 @@ class Finance_document_store
             )));
         }
         $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], (int) $id)->where('status', 'approved')
-            ->update($spec['header'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user_id));
+            ->update($spec['header'], array('status' => 'posted', 'posted_on' => app_now(), 'posted_by' => (int) $user_id));
         if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return 'post_error';

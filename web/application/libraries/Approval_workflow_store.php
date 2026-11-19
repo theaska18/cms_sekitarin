@@ -172,7 +172,7 @@ class Approval_workflow_store
             || preg_match('/[\\x00-\\x1F\\x7F]/',$code.$name)
             || ($head !== NULL && !$this->hierarchy_employee_exists($head))) { return FALSE; }
         $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org))->update('hr_org',array(
-            'parent_org'=>$parent ?: NULL,'org_code'=>$code,'org_name'=>$name,'update_on'=>date('Y-m-d H:i:s')
+            'parent_org'=>$parent ?: NULL,'org_code'=>$code,'org_name'=>$name,'update_on'=>app_now()
         ));
         $ok = $this->db->affected_rows()===1 || $this->org_matches($org,$parent,$code,$name);
         if (!$ok || $head === NULL) { return $ok; }
@@ -189,7 +189,7 @@ class Approval_workflow_store
     {
         $org=(int)$org; $employee=(int)$employee;
         if (!$this->org_exists($org) || !$employee || !$this->db->where(array('tenant_id'=>$this->tenant,'employee_id'=>$employee))->count_all_results('hr_employee')) { return FALSE; }
-        $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org))->update('hr_org',array('head_employee_id'=>$employee,'update_on'=>date('Y-m-d H:i:s')));
+        $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org))->update('hr_org',array('head_employee_id'=>$employee,'update_on'=>app_now()));
         return $this->db->affected_rows() === 1 || (int)$this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org,'head_employee_id'=>$employee))->count_all_results('hr_org') === 1;
     }
 
@@ -225,7 +225,7 @@ class Approval_workflow_store
             || preg_match('/[\\x00-\\x1F\\x7F]/', $code . $name)) { return FALSE; }
         if (!$this->db->insert('hr_org', array(
             'parent_org' => $parent, 'tenant_id' => $this->tenant, 'org_code' => $code,
-            'org_name' => $name, 'head_employee_id' => NULL, 'create_on' => date('Y-m-d H:i:s'),
+            'org_name' => $name, 'head_employee_id' => NULL, 'create_on' => app_now(),
         ))) { return FALSE; }
         return (int) $this->db->insert_id();
     }
@@ -243,7 +243,7 @@ class Approval_workflow_store
             'org_code' => $code,
             'org_name' => $name,
             'head_employee_id' => NULL,
-            'create_on' => date('Y-m-d H:i:s'),
+            'create_on' => app_now(),
         ))) { return FALSE; }
         return (int) $this->db->insert_id();
     }
@@ -260,7 +260,7 @@ class Approval_workflow_store
         $org = (int)$org; $parent = (int)$parent;
         if (!$org || $org === $parent || !$this->org_exists($org) || ($parent && !$this->org_exists($parent))) { return FALSE; }
         if ($parent && $this->would_cycle_org($org, $parent)) { return FALSE; }
-        $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org))->update('hr_org', array('parent_org'=>$parent ?: NULL,'update_on'=>date('Y-m-d H:i:s')));
+        $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org))->update('hr_org', array('parent_org'=>$parent ?: NULL,'update_on'=>app_now()));
         return $this->db->affected_rows() === 1 || $this->db->where(array('tenant_id'=>$this->tenant,'org_id'=>$org,'parent_org'=>$parent ?: NULL))->count_all_results('hr_org') === 1;
     }
 
@@ -411,7 +411,7 @@ class Approval_workflow_store
         if (!$flow_exists) { return FALSE; }
         $normalized_steps = $this->normalize_steps($steps, TRUE);
         if ($normalized_steps === FALSE) { return FALSE; }
-        $now = date('Y-m-d H:i:s');
+        $now = app_now();
         $this->db->trans_begin();
         $override = $this->flow_override($flow_code);
         if ($override) {
@@ -792,7 +792,7 @@ class Approval_workflow_store
             ->limit(1)->get('app_approval_request')->row_array();
         if (!$request) { return 'not_found'; }
 
-        $now=date('Y-m-d H:i:s');
+        $now=app_now();
         $this->db->trans_begin();
         $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request['request_id'],'status'=>'needs_assignment'))
             ->update('app_approval_request',array('status'=>'pending','current_approver_user_id'=>(int)$account['user_id'],'update_on'=>$now));
@@ -830,7 +830,7 @@ class Approval_workflow_store
         $override=$this->flow_override($flow_code);
         $flow_id=$override ? (int)$override['flow_id'] : NULL;
         $steps=$this->effective_steps($flow_code);
-        $created=date('Y-m-d H:i:s');
+        $created=app_now();
         if (!$steps) {
             $this->db->trans_begin();
             $inserted=$this->db->insert('app_approval_request',array(
@@ -892,7 +892,7 @@ class Approval_workflow_store
         $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>$request_id))
             ->update('app_approval_request',array(
                 'status'=>$new_status,'current_step'=>$next_number,
-                'current_approver_user_id'=>$next_user,'update_on'=>date('Y-m-d H:i:s'),
+                'current_approver_user_id'=>$next_user,'update_on'=>app_now(),
             ));
         if ($new_status === 'approved') {
             $finalized = $this->finalize_source(array(
@@ -943,7 +943,7 @@ class Approval_workflow_store
                 'approver_user_id' => (int) $requester_user_id,
                 'decision' => 'approved',
                 'note' => 'Auto-approved: requester is the configured approver.',
-                'create_on' => date('Y-m-d H:i:s'),
+                'create_on' => app_now(),
             ))) {
                 return FALSE;
             }
@@ -982,7 +982,7 @@ class Approval_workflow_store
     {
         try { $token=bin2hex(random_bytes(32)); } catch (Exception $e) { return FALSE; }
         $expires=date('Y-m-d H:i:s',time()+86400);
-        $ok=$this->db->insert('app_approval_link_token',array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'approver_user_id'=>(int)$approver,'decision'=>$decision,'token_hash'=>hash('sha256',$token),'expires_at'=>$expires,'used_at'=>NULL,'create_on'=>date('Y-m-d H:i:s')));
+        $ok=$this->db->insert('app_approval_link_token',array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'approver_user_id'=>(int)$approver,'decision'=>$decision,'token_hash'=>hash('sha256',$token),'expires_at'=>$expires,'used_at'=>NULL,'create_on'=>app_now()));
         return $ok ? $token : FALSE;
     }
 
@@ -996,14 +996,14 @@ class Approval_workflow_store
         $data=array('user_id'=>(int)$approver,'title'=>'Permintaan persetujuan','message'=>$message);
         if (isset($fields['read_flag'])) { $data['read_flag']=0; }
         if (isset($fields['view_flag'])) { $data['view_flag']=0; }
-        foreach (array('create_on','created_at','created_date','date_created') as $date_field) { if (isset($fields[$date_field])) { $data[$date_field]=date('Y-m-d H:i:s'); break; } }
+        foreach (array('create_on','created_at','created_date','date_created') as $date_field) { if (isset($fields[$date_field])) { $data[$date_field]=app_now(); break; } }
         return $this->db->insert('app_notification',$data);
     }
 
     public function approval_token_request($token)
     {
         if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/',$token) || !$this->db->table_exists('app_approval_link_token')) { return FALSE; }
-        $row=$this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->where('expires_at >',date('Y-m-d H:i:s'))->get('app_approval_link_token')->row_array();
+        $row=$this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->where('expires_at >',app_now())->get('app_approval_link_token')->row_array();
         if (!$row) { return FALSE; }
         $request=$this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$row['request_id'],'status'=>'pending'))->get('app_approval_request')->row_array();
         if (!$request) { return FALSE; }
@@ -1042,7 +1042,7 @@ class Approval_workflow_store
             || ($request['decision']!=='view' && $request['decision']!==$decision)
             || ($decision==='revise' && $note==='')) { return FALSE; }
         if (!$this->decide($request['request_id'],$decision,$note)) { return FALSE; }
-        $this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->update('app_approval_link_token',array('used_at'=>date('Y-m-d H:i:s')));
+        $this->db->where(array('tenant_id'=>$this->tenant,'approver_user_id'=>$this->user,'token_hash'=>hash('sha256',$token)))->where('used_at IS NULL',NULL,FALSE)->update('app_approval_link_token',array('used_at'=>app_now()));
         return $this->db->affected_rows()===1;
     }
 
@@ -1063,7 +1063,7 @@ class Approval_workflow_store
         }
         if (!$step || !$this->db->insert('app_approval_action',array(
             'tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'step_number'=>$current_step,
-            'approver_user_id'=>$this->user,'decision'=>$decision,'note'=>$note,'create_on'=>date('Y-m-d H:i:s'),
+            'approver_user_id'=>$this->user,'decision'=>$decision,'note'=>$note,'create_on'=>app_now(),
         ))) { $this->db->trans_rollback(); return FALSE; }
 
         $next_step=NULL;
@@ -1105,7 +1105,7 @@ class Approval_workflow_store
         }
         $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'status'=>'pending','current_step'=>$current_step))
             ->update('app_approval_request',array('status'=>$new_status,'current_step'=>$next_number,
-                'current_approver_user_id'=>$next_user,'update_on'=>date('Y-m-d H:i:s')));
+                'current_approver_user_id'=>$next_user,'update_on'=>app_now()));
         if ($this->db->affected_rows()!==1) { $this->db->trans_rollback(); return FALSE; }
         if ($next_step && $resolution && !$resolution['ok']
             && !$this->insert_approval_error((int)$request_id,(int)$request['flow_id'],$next_number,
@@ -1321,7 +1321,7 @@ class Approval_workflow_store
             'tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'flow_id'=>$flow_id ? (int)$flow_id : NULL,
             'step_number'=>max(1,(int)$step_number),'org_id'=>$org_id ? (int)$org_id : NULL,
             'error_code'=>substr((string)$error_code,0,64),'error_message'=>substr((string)$message,0,2000),
-            'status'=>'open','create_on'=>date('Y-m-d H:i:s'),
+            'status'=>'open','create_on'=>app_now(),
         ));
     }
 
@@ -1329,7 +1329,7 @@ class Approval_workflow_store
     {
         $this->db->trans_begin();
         $this->db->where(array('tenant_id'=>$this->tenant,'request_id'=>(int)$request_id,'status'=>'pending'))
-            ->update('app_approval_request',array('status'=>'needs_assignment','current_approver_user_id'=>NULL,'update_on'=>date('Y-m-d H:i:s')));
+            ->update('app_approval_request',array('status'=>'needs_assignment','current_approver_user_id'=>NULL,'update_on'=>app_now()));
         if ($this->db->affected_rows()!==1
             || !$this->insert_approval_error($request_id,$flow_id,$step_number,$error_code,$message,$org_id)
             || $this->db->trans_status()===FALSE) {

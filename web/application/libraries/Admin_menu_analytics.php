@@ -35,7 +35,7 @@ class Admin_menu_analytics
             'tenant_id' => (int) $tenant_id,
             'user_id' => (int) $user_id,
             'menu_code' => $menu_code,
-            'visited_at' => date('Y-m-d H:i:s'),
+            'visited_at' => app_now(),
         ));
     }
 

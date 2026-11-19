@@ -177,7 +177,7 @@ class Finance_integration_store
             'description' => (string) $data['description'],
             'status' => 'received',
             'payload_json' => isset($data['payload_json']) ? (string) $data['payload_json'] : NULL,
-            'received_at' => date('Y-m-d H:i:s'),
+            'received_at' => app_now(),
         );
         return $this->db->insert($spec['table'], $values) === TRUE;
     }
@@ -194,7 +194,7 @@ class Finance_integration_store
                 'status' => 'processed',
                 'error_message' => NULL,
                 $spec['document_id'] => (int) $document_id,
-                'processed_at' => date('Y-m-d H:i:s'),
+                'processed_at' => app_now(),
             )) === TRUE;
     }
 

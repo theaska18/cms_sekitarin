@@ -168,7 +168,7 @@ class Admin extends CI_Controller
                 if ($full_name === '' || strlen($full_name) > 150) { $errors[] = 'full_name'; }
                 if (!$errors) {
                     $db->where('user_id', $user_id)->where('tenant_id', $tenant_id)
-                        ->update('app_user', array('username' => $username, 'full_name' => $full_name, 'update_on' => date('Y-m-d H:i:s')));
+                        ->update('app_user', array('username' => $username, 'full_name' => $full_name, 'update_on' => app_now()));
                     if ($db->trans_status() !== FALSE) {
                         $this->current_user['username'] = $username;
                         $this->current_user['full_name'] = $full_name;
@@ -193,7 +193,7 @@ class Admin extends CI_Controller
                 if ($password !== $confirm) { $errors[] = 'password_mismatch'; }
                 if (!$errors) {
                     $db->where('user_id', $user_id)->where('tenant_id', $tenant_id)
-                        ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => date('Y-m-d H:i:s')));
+                        ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => app_now()));
                     if ($db->trans_status() !== FALSE) {
                         $this->session->set_flashdata('profile_notice', 'password_saved');
                         redirect('/admin/profile', 'location', 303); return;

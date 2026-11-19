@@ -394,7 +394,7 @@ class Admin_finance extends Admin
                     'tax_name' => $row['tax_name'],
                     'rate_percent' => $row['rate_percent'],
                     'active_flag' => $row['active_flag'],
-                    'create_on' => date('Y-m-d H:i:s'),
+                    'create_on' => app_now(),
                     'created_by' => (int) $this->current_user['user_id'],
                 ));
                 if ($this->db->affected_rows() !== 1) {
@@ -562,7 +562,7 @@ class Admin_finance extends Admin
                     'category_code' => $row['category_code'],
                     'category_name' => $row['category_name'],
                     'active_flag' => $row['active_flag'],
-                    'create_on' => date('Y-m-d H:i:s'),
+                    'create_on' => app_now(),
                 ));
                 if ($this->db->affected_rows() !== 1) {
                     $errors[] = 'Kategori ' . $row['category_code'] . ' gagal disimpan.';
@@ -784,7 +784,7 @@ class Admin_finance extends Admin
                     'posting_flag' => $row['posting_flag'],
                     'description' => $row['description'],
                     'active_flag' => $row['active_flag'],
-                    'create_on' => date('Y-m-d H:i:s'),
+                    'create_on' => app_now(),
                     'created_by' => $user_id,
                 ));
                 if ($this->db->affected_rows() !== 1) {
@@ -3043,6 +3043,7 @@ class Admin_finance extends Admin
             return;
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
+        $client_timezone = $this->input->get('client_timezone', TRUE);
         $rows = $store->rows($slug, $tenant_id, $filters['start_on'], $filters['end_on']);
         if ($rows === FALSE) {
             $this->session->set_flashdata('finance_status', 'unavailable');
@@ -3089,7 +3090,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array($as_of_report ? 'As of' : 'Period',
             $as_of_report ? $filters['end_on'] : $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
-        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
         $this->finance_csv_row($stream, array('Rows', count($rows)));
@@ -3102,6 +3103,8 @@ class Admin_finance extends Admin
                 $value = isset($row[$column['name']]) ? $row[$column['name']] : '';
                 if (in_array($column['name'], $numeric, TRUE)) {
                     $value = number_format((float) $value, 2, '.', '');
+                } elseif (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $value)) {
+                    $value = $this->app_time->localize($value, $client_timezone);
                 }
                 $line[] = $value;
             }
@@ -3222,7 +3225,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Method', $method_label));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
-        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
         $this->finance_csv_row($stream, array());
@@ -3396,7 +3399,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Tenant', $tenant_name));
         $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
-        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
         $this->finance_csv_row($stream, array());
@@ -3513,7 +3516,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Tenant', $tenant_name));
         $this->finance_csv_row($stream, array('As of', $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
-        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
         $this->finance_csv_row($stream, array());

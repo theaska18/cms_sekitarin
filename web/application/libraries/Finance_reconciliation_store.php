@@ -164,7 +164,7 @@ class Finance_reconciliation_store
                 if(!is_array($next_code)||!isset($next_code['code'])){$this->db->trans_rollback();return 'sequence_unavailable';}
             }
             if($this->reconciliation_number_exists($tenant,(string)$next_code['code'])){$this->db->trans_rollback();return 'sequence_unavailable';}
-            $data['tenant_id']=(int)$tenant;$data['reconciliation_number']=(string)$next_code['code'];$data['status']='draft';$data['create_on']=date('Y-m-d H:i:s');$data['created_by']=(int)$user;
+            $data['tenant_id']=(int)$tenant;$data['reconciliation_number']=(string)$next_code['code'];$data['status']='draft';$data['create_on']=app_now();$data['created_by']=(int)$user;
             $this->db->insert('fin_bank_reconciliation',$data);$recon_id=(int)$this->db->insert_id();
             if(!$recon_id||!$CI->application_sequence_store->advance_sequence($tenant,'bank_reconciliation_code',$next_code)){$this->db->trans_rollback();return 'sequence_unavailable';}
         }
@@ -180,7 +180,7 @@ class Finance_reconciliation_store
         $sum=0.0;foreach($row['lines'] as $line){if((int)$line['matched_flag']!==1)return 'unmatched_lines';$sum+=(float)$line['statement_amount'];}
         if(abs(round((float)$row['opening_balance']+$sum,6)-(float)$row['closing_balance'])>0.000001)return 'closing_balance_mismatch';
         $this->db->where('tenant_id',(int)$tenant)->where('reconciliation_id',(int)$id)->where('status','approved')
-            ->update('fin_bank_reconciliation',array('status'=>'completed','completed_on'=>date('Y-m-d H:i:s'),'completed_by'=>(int)$user));
+            ->update('fin_bank_reconciliation',array('status'=>'completed','completed_on'=>app_now(),'completed_by'=>(int)$user));
         return $this->db->trans_status()===FALSE?'complete_error':'completed';
     }
 }

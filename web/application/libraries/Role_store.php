@@ -175,7 +175,7 @@ class Role_store
         if (!$this->tenant_exists($tenant_id)) {
             return FALSE;
         }
-        $now = date('Y-m-d H:i:s');
+        $now = app_now();
         return $this->db->insert('app_role', array(
             'tenant_id' => (int) $record['tenant_id'],
             'role_code' => $record['role_code'],
@@ -198,7 +198,7 @@ class Role_store
                 'role_name' => $record['role_name'],
                 'description' => $record['description'],
                 'active_flag' => (int) $record['active_flag'],
-                'update_on' => date('Y-m-d H:i:s'),
+                'update_on' => app_now(),
             )) === TRUE;
     }
 

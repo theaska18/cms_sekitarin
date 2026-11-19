@@ -249,7 +249,7 @@ class Finance_payment_store
                 'base_amount' => $payment_base,
                 'status' => 'draft',
                 'reference' => $values['reference'],
-                'create_on' => date('Y-m-d H:i:s'),
+                'create_on' => app_now(),
                 'created_by' => (int) $user,
             ));
             $payment_id = (int) $this->db->insert_id();
@@ -400,8 +400,8 @@ class Finance_payment_store
             'journal_number' => ($kind === 'customer' ? 'RC-' : 'SP-') . (int) $id,
             'journal_date' => $payment['payment_date'], 'source_type' => $source, 'source_id' => (int) $id,
             'description' => 'Posted ' . $payment['payment_number'], 'status' => 'posted',
-            'debit_total' => $debit, 'credit_total' => $credit, 'create_on' => date('Y-m-d H:i:s'),
-            'created_by' => (int) $user, 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user,
+            'debit_total' => $debit, 'credit_total' => $credit, 'create_on' => app_now(),
+            'created_by' => (int) $user, 'posted_on' => app_now(), 'posted_by' => (int) $user,
         ));
         $journal_id = (int) $this->db->insert_id();
         $base_lines = array(
@@ -427,7 +427,7 @@ class Finance_payment_store
             ));
         }
         $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->where('status', 'approved')
-            ->update($spec['table'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user));
+            ->update($spec['table'], array('status' => 'posted', 'posted_on' => app_now(), 'posted_by' => (int) $user));
         if ($journal_id < 1 || $this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return 'post_error';

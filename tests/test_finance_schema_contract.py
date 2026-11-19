@@ -138,7 +138,7 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("to_account_name", transfer_view)
         self.assertIn("current_approver_name", transfer_view)
         self.assertIn("financeFormatLocalTimes", shared)
-        self.assertIn("timeZoneName: 'short'", shared)
+        self.assertIn("timeZoneName: 'short'", (ROOT / "web/assets/js/app-time.js").read_text(encoding="utf-8"))
         self.assertIn("toLocaleString('en-US'", shared)
         for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
             with self.subTest(locale=locale):

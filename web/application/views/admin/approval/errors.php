@@ -72,7 +72,7 @@
             {data:null,orderable:false,searchable:false,render:function(value,type,row){return type==='display'?escapeHtml(row.flow_name||row.flow_code)+'<div class="text-xs text-slate-500">Tahap '+parseInt(row.step_number,10)+'</div>':'';}},
             {data:null,orderable:false,searchable:false,render:function(value,type,row){return type==='display'?escapeHtml(row.org_name?((row.org_code||'')+' — '+row.org_name):'—'):'';}},
             {data:'error_code',name:'error_code',render:function(value,type,row){return type==='display'?'<strong>'+escapeHtml(value)+'</strong><div class="mt-1 text-xs font-normal leading-5 text-slate-600">'+escapeHtml(row.error_message)+'</div>':value;}},
-            {data:'create_on',name:'create_on',render:function(value,type){return type==='display'?escapeHtml(value):value;}},
+            {data:'create_on',name:'create_on',render:function(value,type){return type==='display'?(window.AppTime?window.AppTime.localTimeHtml(value):escapeHtml(value)):value;}},
             {data:null,orderable:false,searchable:false,render:function(value,type,row,meta){
                 if(type!=='display')return '';
                 var formId='approval-error-form-'+meta.row;

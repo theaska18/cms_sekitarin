@@ -3,8 +3,7 @@
 $approved = $approval_confirmation_decision === 'approved';
 $decision_required = $approval_confirmation_decision === NULL;
 $token_decision = isset($approval_confirmation_token_decision) ? $approval_confirmation_token_decision : $approval_confirmation_decision;
-$created_at = DateTime::createFromFormat('Y-m-d H:i:s', (string) $approval_confirmation['create_on'], new DateTimeZone('UTC'));
-$created_at_iso = $created_at instanceof DateTime ? $created_at->format('Y-m-d\TH:i:s\Z') : '';
+$created_at_iso = app_utc_iso($approval_confirmation['create_on']);
 ?>
 <main class="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
     <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">

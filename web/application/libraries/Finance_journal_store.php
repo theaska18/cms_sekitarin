@@ -209,7 +209,7 @@ class Finance_journal_store
                 'status' => 'draft',
                 'debit_total' => $debit_total,
                 'credit_total' => $credit_total,
-                'create_on' => date('Y-m-d H:i:s'),
+                'create_on' => app_now(),
                 'created_by' => (int) $user_id,
             ));
             $entry_id = (int) $this->db->insert_id();
@@ -284,7 +284,7 @@ class Finance_journal_store
                 'status' => 'posted',
                 'debit_total' => $debits,
                 'credit_total' => $credits,
-                'posted_on' => date('Y-m-d H:i:s'),
+                'posted_on' => app_now(),
                 'posted_by' => (int) $user_id,
             ));
         if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {

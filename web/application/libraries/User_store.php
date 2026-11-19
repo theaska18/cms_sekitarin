@@ -295,7 +295,7 @@ class User_store
             'employee_id' => $record['employee_flag'] ? (int) $record['employee_id'] : NULL,
             'password' => password_hash($record['password'], PASSWORD_DEFAULT), 'block_flag' => 0,
             'access_api_flag' => (int) $record['access_api_flag'], 'api_secret' => $record['access_api_flag'] ? $record['api_secret'] : NULL,
-            'create_on' => date('Y-m-d H:i:s'),
+            'create_on' => app_now(),
         );
         if ($this->has_chat_flag()) { $data['chat_flag'] = isset($record['chat_flag']) && (int) $record['chat_flag'] === 1 ? 1 : 0; }
         return $this->db->insert('app_user', $data) && $this->db->affected_rows() === 1;
@@ -313,7 +313,7 @@ class User_store
             'emloyee_flag' => (int) $record['employee_flag'],
             'employee_id' => $record['employee_flag'] ? (int) $record['employee_id'] : NULL,
             'access_api_flag' => (int) $record['access_api_flag'], 'api_secret' => $record['access_api_flag'] ? $record['api_secret'] : NULL,
-            'update_on' => date('Y-m-d H:i:s'),
+            'update_on' => app_now(),
         );
         if ($this->has_chat_flag()) { $data['chat_flag'] = isset($record['chat_flag']) && (int) $record['chat_flag'] === 1 ? 1 : 0; }
         return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
@@ -326,7 +326,7 @@ class User_store
             return FALSE;
         }
         return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
-            ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => date('Y-m-d H:i:s')));
+            ->update('app_user', array('password' => password_hash($password, PASSWORD_DEFAULT), 'update_on' => app_now()));
     }
 
     public function delete($user_id, $tenant_id)
@@ -358,7 +358,7 @@ class User_store
             return FALSE;
         }
         return $this->db->where('user_id', (int) $user_id)->where('tenant_id', (int) $tenant_id)
-            ->update('app_user', array('block_flag' => $blocked ? 1 : 0, 'update_on' => date('Y-m-d H:i:s')));
+            ->update('app_user', array('block_flag' => $blocked ? 1 : 0, 'update_on' => app_now()));
     }
 
     private function apply_filters($role_id, $block_flag, $fields = array())

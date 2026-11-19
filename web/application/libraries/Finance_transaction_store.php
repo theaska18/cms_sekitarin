@@ -344,7 +344,7 @@ class Finance_transaction_store
                 'base_total_amount' => $base_total,
                 'status' => 'draft',
                 'description' => $values['description'],
-                'create_on' => date('Y-m-d H:i:s'),
+                'create_on' => app_now(),
                 'created_by' => (int) $user_id,
             ));
             $transaction_id = (int) $this->db->insert_id();
@@ -486,9 +486,9 @@ class Finance_transaction_store
             'status' => 'posted',
             'debit_total' => $debit_total,
             'credit_total' => $credit_total,
-            'create_on' => date('Y-m-d H:i:s'),
+            'create_on' => app_now(),
             'created_by' => (int) $user_id,
-            'posted_on' => date('Y-m-d H:i:s'),
+            'posted_on' => app_now(),
             'posted_by' => (int) $user_id,
         ));
         $journal_id = (int) $this->db->insert_id();
@@ -540,7 +540,7 @@ class Finance_transaction_store
             ->where('status', 'approved')
             ->update('fin_transaction', array(
                 'status' => 'posted',
-                'posted_on' => date('Y-m-d H:i:s'),
+                'posted_on' => app_now(),
                 'posted_by' => (int) $user_id,
             ));
         if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {

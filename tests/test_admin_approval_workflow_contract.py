@@ -34,7 +34,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         self.assertIn('name="org_name"', form)
         self.assertIn("'parent_org' => NULL", store)
         self.assertIn("'tenant_id' => $this->tenant", store)
-        self.assertIn("'create_on' => date('Y-m-d H:i:s')", store)
+        self.assertIn("'create_on' => app_now()", store)
         self.assertIn("set_parent_org", controller)
         self.assertNotIn("set_manager", controller)
         self.assertNotIn("get('hr_employee_hierarchy')", store)

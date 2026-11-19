@@ -192,6 +192,14 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
         cancelled: label('finance_status_cancelled', 'Cancelled')
     };
     var numeric = ['debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance'];
+    (function () {
+        var link = document.querySelector('[data-finance-report-export]');
+        if (!link) return;
+        var url = new URL(link.href, window.location.origin);
+        var tz = window.AppTime ? window.AppTime.localTimezone() : '';
+        if (tz) url.searchParams.set('client_timezone', tz);
+        link.href = url.toString();
+    }());
     function badge(label, className) {
         return '<span class="inline-flex w-fit items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ' + className + '">' + escapeHtml(label) + '</span>';
     }
@@ -264,7 +272,8 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
             var endNode = panel ? panel.querySelector('[data-finance-filter="end_on"]') : null;
             var start = startNode && startNode.value ? startNode.value : (data.start_on || '');
             var end = endNode && endNode.value ? endNode.value : (data.end_on || '');
-            link.href = <?= json_encode($current_path . '/export') ?> + '?start_on=' + encodeURIComponent(start) + '&end_on=' + encodeURIComponent(end);
+            var tz = window.AppTime ? window.AppTime.localTimezone() : '';
+            link.href = <?= json_encode($current_path . '/export') ?> + '?start_on=' + encodeURIComponent(start) + '&end_on=' + encodeURIComponent(end) + '&client_timezone=' + encodeURIComponent(tz);
         },
         columns: columns,
         language: {emptyTable:<?= json_encode($report_empty_label) ?>,search:<?= json_encode(isset($labels['finance_dt_search']) ? $labels['finance_dt_search'] : 'Search:') ?>,lengthMenu:<?= json_encode(isset($labels['finance_dt_length']) ? $labels['finance_dt_length'] : 'Show _MENU_') ?>,info:<?= json_encode(isset($labels['finance_dt_info']) ? $labels['finance_dt_info'] : 'Showing _START_ to _END_ of _TOTAL_') ?>,infoEmpty:<?= json_encode(isset($labels['finance_doc_dt_info_empty']) ? $labels['finance_doc_dt_info_empty'] : 'No records') ?>,zeroRecords:<?= json_encode(isset($labels['finance_report_dt_zero']) ? $labels['finance_report_dt_zero'] : 'No matching records') ?>,processing:<?= json_encode(isset($labels['finance_dt_processing']) ? $labels['finance_dt_processing'] : 'Loading…') ?>}

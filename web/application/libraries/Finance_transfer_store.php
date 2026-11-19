@@ -141,7 +141,7 @@ class Finance_transfer_store
                 return 'sequence_unavailable';
             }
             $data['tenant_id']=(int)$tenant;$data['transfer_number']=(string)$next_code['code'];$data['status']='draft';
-            $data['create_on']=date('Y-m-d H:i:s');$data['created_by']=(int)$user;
+            $data['create_on']=app_now();$data['created_by']=(int)$user;
             $this->db->insert('fin_cash_transfer',$data);$id=(int)$this->db->insert_id();
             if(!$id || !$CI->application_sequence_store->advance_sequence($tenant, 'transfer_code', $next_code)){
                 $this->db->trans_rollback();return 'sequence_unavailable';
@@ -207,7 +207,7 @@ class Finance_transfer_store
         $this->db->insert('fin_journal_entry',array('tenant_id'=>(int)$tenant,'period_id'=>(int)$period->row()->period_id,
             'journal_number'=>$journal_number,'journal_date'=>$row['transfer_date'],'source_type'=>'cash_transfer','source_id'=>(int)$id,
             'description'=>'Posted '.$row['transfer_number'],'status'=>'posted','debit_total'=>$debit,'credit_total'=>$credit,
-            'create_on'=>date('Y-m-d H:i:s'),'created_by'=>(int)$user,'posted_on'=>date('Y-m-d H:i:s'),'posted_by'=>(int)$user));
+            'create_on'=>app_now(),'created_by'=>(int)$user,'posted_on'=>app_now(),'posted_by'=>(int)$user));
         $journal=(int)$this->db->insert_id();
         if ($journal < 1
             || (is_array($next_journal) && !$CI->application_sequence_store->advance_sequence($tenant, 'journal_transfer', $next_journal))) {
@@ -222,7 +222,7 @@ class Finance_transfer_store
             'description'=>$row['transfer_number'],'currency_code'=>$line['currency'],'exchange_rate'=>$line['rate'],'debit_amount'=>$line['debit'],'credit_amount'=>$line['credit'],
             'debit_base_amount'=>$line['base_debit'],'credit_base_amount'=>$line['base_credit']));
         $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',(int)$id)->where('status','approved')
-            ->update('fin_cash_transfer',array('status'=>'posted','posted_on'=>date('Y-m-d H:i:s'),'posted_by'=>(int)$user));
+            ->update('fin_cash_transfer',array('status'=>'posted','posted_on'=>app_now(),'posted_by'=>(int)$user));
         if(!$journal||$this->db->trans_status()===FALSE||(int)$this->db->affected_rows()!==1){$this->db->trans_rollback();return 'post_error';}
         $this->db->trans_commit();return 'posted';
     }

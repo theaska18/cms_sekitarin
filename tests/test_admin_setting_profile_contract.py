@@ -102,7 +102,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
     def test_logout_is_post_only_csrf_protected_and_expires_session(self):
         auth = (ROOT / "web/application/controllers/Auth.php").read_text()
         identity = (ROOT / "web/application/libraries/Admin_identity.php").read_text()
-        self.assertIn("$autoload['libraries'] = array('session');", self.autoload)
+        self.assertIn("$autoload['libraries'] = array('session', 'app_time');", self.autoload)
         self.assertIn("$route['logout'] = 'auth/logout';", self.routes)
         self.assertIn('method="post" action="/logout"', self.header)
         self.assertIn("$csrf_hash", self.header)

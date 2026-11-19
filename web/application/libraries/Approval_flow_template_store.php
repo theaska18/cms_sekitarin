@@ -230,7 +230,7 @@ class Approval_flow_template_store
             return FALSE;
         }
 
-        $now = date('Y-m-d H:i:s');
+        $now = app_now();
         $this->db->trans_begin();
         if ($is_new) {
             if ($this->db->insert('sys_approval_flow', array(

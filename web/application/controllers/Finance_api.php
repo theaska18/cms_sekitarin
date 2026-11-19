@@ -250,9 +250,9 @@ class Finance_api extends CI_Controller
             'draft_created' => $draft_id > 0,
             'draft_id' => $draft_id > 0 ? $draft_id : NULL,
             'draft_status' => $draft_status,
-            'received_at' => $row['received_at'],
-            'processed_at' => $row['processed_at'],
-            'cancelled_at' => array_key_exists('cancelled_at', $row) ? $row['cancelled_at'] : NULL,
+            'received_at' => app_utc_iso($row['received_at']),
+            'processed_at' => app_utc_iso($row['processed_at']),
+            'cancelled_at' => array_key_exists('cancelled_at', $row) ? app_utc_iso($row['cancelled_at']) : NULL,
         ), 200);
     }
 
@@ -267,7 +267,7 @@ class Finance_api extends CI_Controller
                 'status' => 'cancelled',
                 'review_status' => 'cancelled',
                 'inbox_id' => $inbox_id,
-                'cancelled_at' => array_key_exists('cancelled_at', $row) ? $row['cancelled_at'] : NULL,
+                'cancelled_at' => array_key_exists('cancelled_at', $row) ? app_utc_iso($row['cancelled_at']) : NULL,
                 'already_cancelled' => TRUE,
             ), 200);
             return;
@@ -285,7 +285,7 @@ class Finance_api extends CI_Controller
                 ), 409);
                 return;
             }
-            $cancelled_at = date('Y-m-d H:i:s');
+            $cancelled_at = app_now();
             if ($store->cancel_linked_cancelled($kind, $tenant_id, $inbox_id, $cancelled_at) !== TRUE) {
                 $fresh = $store->find($kind, $tenant_id, $inbox_id);
                 if (is_array($fresh) && (string) $fresh['status'] === 'cancelled') {
@@ -293,7 +293,7 @@ class Finance_api extends CI_Controller
                         'status' => 'cancelled',
                         'review_status' => 'cancelled',
                         'inbox_id' => $inbox_id,
-                        'cancelled_at' => array_key_exists('cancelled_at', $fresh) ? $fresh['cancelled_at'] : NULL,
+                        'cancelled_at' => array_key_exists('cancelled_at', $fresh) ? app_utc_iso($fresh['cancelled_at']) : NULL,
                         'already_cancelled' => TRUE,
                     ), 200);
                     return;
@@ -305,7 +305,7 @@ class Finance_api extends CI_Controller
                 'status' => 'cancelled',
                 'review_status' => 'cancelled',
                 'inbox_id' => $inbox_id,
-                'cancelled_at' => $cancelled_at,
+                'cancelled_at' => app_utc_iso($cancelled_at),
             ), 200);
             return;
         }
@@ -320,7 +320,7 @@ class Finance_api extends CI_Controller
             return;
         }
 
-        $cancelled_at = date('Y-m-d H:i:s');
+        $cancelled_at = app_now();
         if ($store->cancel($kind, $tenant_id, $inbox_id, $cancelled_at) !== TRUE) {
             $fresh = $store->find($kind, $tenant_id, $inbox_id);
             if (is_array($fresh) && (string) $fresh['status'] === 'cancelled') {
@@ -328,7 +328,7 @@ class Finance_api extends CI_Controller
                     'status' => 'cancelled',
                     'review_status' => 'cancelled',
                     'inbox_id' => $inbox_id,
-                    'cancelled_at' => array_key_exists('cancelled_at', $fresh) ? $fresh['cancelled_at'] : NULL,
+                    'cancelled_at' => array_key_exists('cancelled_at', $fresh) ? app_utc_iso($fresh['cancelled_at']) : NULL,
                     'already_cancelled' => TRUE,
                 ), 200);
                 return;

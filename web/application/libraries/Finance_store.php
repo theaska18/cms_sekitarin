@@ -190,7 +190,7 @@ class Finance_store
     private function stamp($table, &$values, $date_column, $user_column, $user_id)
     {
         if ($this->db->field_exists($date_column, $table)) {
-            $values[$date_column] = date('Y-m-d H:i:s');
+            $values[$date_column] = app_now();
         }
         if ($this->db->field_exists($user_column, $table)) {
             $values[$user_column] = (int) $user_id;

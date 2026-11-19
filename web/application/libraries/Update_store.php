@@ -343,7 +343,7 @@ class Update_store
             @unlink($this->lock_path);
         });
 
-        $now = date('Y-m-d H:i:s');
+        $now = app_now();
         $inserted = $this->db->insert('sys_update', array(
             'version' => $release['version'],
             'previous_version' => $current,
@@ -891,7 +891,7 @@ class Update_store
                     'update_id' => (int) $update_id,
                     'migration_name' => $name,
                     'checksum' => $checksum,
-                    'applied_on' => date('Y-m-d H:i:s'),
+                    'applied_on' => app_now(),
                 ));
                 $this->append_log($update_id, $log, 'Migration diterapkan: ' . $name);
             }
@@ -1158,7 +1158,7 @@ class Update_store
     {
         $data = array('status' => $status);
         if ($finished) {
-            $data['finished_on'] = date('Y-m-d H:i:s');
+            $data['finished_on'] = app_now();
         }
         $this->db->where('update_id', (int) $update_id)->update('sys_update', $data);
     }

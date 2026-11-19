@@ -194,7 +194,7 @@ class Employee_store
         if (!$this->writes_supported() || (int) $tenant_id !== $this->tenant_id()) { return FALSE; }
         $data = $this->employee_data($record);
         $data['tenant_id'] = (int) $tenant_id;
-        $data['create_on'] = date('Y-m-d H:i:s');
+        $data['create_on'] = app_now();
         return $this->db->insert('hr_employee', $data);
     }
 
@@ -202,7 +202,7 @@ class Employee_store
     {
         if (!$this->writes_supported() || (int) $tenant_id !== $this->tenant_id() || !$this->find($employee_id, $tenant_id)) { return FALSE; }
         $data = $this->employee_data($record);
-        $data['update_on'] = date('Y-m-d H:i:s');
+        $data['update_on'] = app_now();
         return $this->db->where('employee_id', (int) $employee_id)->where('tenant_id', (int) $tenant_id)
             ->update('hr_employee', $data);
     }

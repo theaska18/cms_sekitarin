@@ -201,7 +201,7 @@ $notifications_page_icon = function ($name) {
                                     <?php if (!$is_read): ?><span class="h-2 w-2 shrink-0 rounded-full bg-blue-600" aria-label="<?php echo html_escape($notifications_unread); ?>" title="<?php echo html_escape($notifications_unread); ?>"></span><?php endif; ?>
                                 </div>
                                 <?php if ($notification['message'] !== ''): ?><p class="notification-message-preview mt-2 block truncate text-xs leading-5 text-slate-600"><?php echo html_escape($message_preview($notification['message'])); ?></p><?php endif; ?>
-                                <?php if ($notification['created_at'] !== ''): ?><time class="mt-1 block text-xs font-medium text-slate-500" datetime="<?php echo html_escape($notification['created_at']); ?>" title="<?php echo html_escape($notification['created_at']); ?>"><?php echo html_escape($relative_time($notification['created_at'])); ?></time><?php endif; ?>
+                                <?php if ($notification['created_at'] !== ''): ?><time class="mt-1 block text-xs font-medium text-slate-500" datetime="<?php echo html_escape(app_utc_iso($notification['created_at'])); ?>" title="<?php echo html_escape(app_utc_iso($notification['created_at'])); ?>"><?php echo html_escape($relative_time($notification['created_at'])); ?></time><?php endif; ?>
                             </a>
                         </li>
                     <?php endforeach; ?>
@@ -279,7 +279,7 @@ $notifications_page_icon = function ($name) {
                                 </div>
                                 <?php $selected_is_read = in_array(strtolower((string) $selected_notification['read_flag']), array('1', 'true', 'read', 'yes'), TRUE); ?>
                                 <div class="mt-2 flex flex-wrap items-center gap-2">
-                                    <?php if ($selected_notification['created_at'] !== ''): ?><time class="text-sm font-medium text-slate-500" datetime="<?php echo html_escape($selected_notification['created_at']); ?>" title="<?php echo html_escape($selected_notification['created_at']); ?>"><?php echo html_escape($relative_time($selected_notification['created_at'])); ?></time><?php endif; ?>
+                                    <?php if ($selected_notification['created_at'] !== ''): ?><time class="text-sm font-medium text-slate-500" datetime="<?php echo html_escape(app_utc_iso($selected_notification['created_at'])); ?>" title="<?php echo html_escape(app_utc_iso($selected_notification['created_at'])); ?>"><?php echo html_escape($relative_time($selected_notification['created_at'])); ?></time><?php endif; ?>
                                     <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold <?php echo $selected_is_read ? 'bg-slate-100 text-slate-600' : 'bg-indigo-100 text-indigo-700'; ?>"><?php echo html_escape($selected_is_read ? $notifications_read : $notifications_unread); ?></span>
                                 </div>
                             </div>

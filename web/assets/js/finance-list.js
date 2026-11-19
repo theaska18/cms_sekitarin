@@ -8,14 +8,7 @@
     'use strict';
 
     function toUtcIso(value) {
-        var text = String(value == null ? '' : value).trim();
-        if (text === '') {
-            return '';
-        }
-        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)) {
-            return text.replace(' ', 'T') + 'Z';
-        }
-        return text;
+        return window.AppTime ? window.AppTime.serverToUtcIso(value) : String(value == null ? '' : value);
     }
 
     function formatAmount(value) {
@@ -30,28 +23,9 @@
     }
 
     function formatLocalTimes(root) {
-        var scope = root || document;
-        var nodes = scope.querySelectorAll('[data-local-datetime]');
-        if (!nodes.length || typeof Intl === 'undefined' || typeof Intl.DateTimeFormat !== 'function') {
-            return;
+        if (window.AppTime) {
+            window.AppTime.formatLocalTimes(root || document);
         }
-        var locale = (document.documentElement.getAttribute('lang') || 'id-ID').trim() || 'id-ID';
-        var formatter = new Intl.DateTimeFormat(locale, {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZoneName: 'short'
-        });
-        Array.prototype.forEach.call(nodes, function (node) {
-            var date = new Date(toUtcIso(node.getAttribute('datetime') || ''));
-            if (isNaN(date.getTime())) {
-                return;
-            }
-            node.textContent = formatter.format(date);
-            node.setAttribute('title', toUtcIso(node.getAttribute('datetime') || ''));
-        });
     }
 
     function formatDate(value) {
@@ -73,9 +47,7 @@
     }
 
     function localTimeHtml(value) {
-        var iso = toUtcIso(value);
-        var fallback = String(value == null ? '' : value);
-        return '<time data-local-datetime datetime="' + escapeAttribute(iso) + '">' + escapeHtml(fallback) + '</time>';
+        return window.AppTime ? window.AppTime.localTimeHtml(value) : String(value == null ? '' : value);
     }
 
     function escapeHtml(value) {

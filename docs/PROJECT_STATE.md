@@ -57,6 +57,16 @@ Alur:
 
 Dokumentasi lengkap: [`web/updates/README.md`](../web/updates/README.md).
 
+## Aturan waktu
+
+- Penyimpanan timestamp mengikuti `TIME_ZONE` server melalui `App_time`/`app_now()`.
+- Tampilan timestamp selalu dikonversi ke timezone browser melalui `app-time.js`
+  atau `<time data-local-datetime>`.
+- Input datetime dari browser dikonversi ke timezone server sebelum disimpan.
+- Tanggal kalender tidak digeser timezone.
+- Export waktu memakai `client_timezone` browser.
+- Detail aturan ada di `AGENTS.md` bagian **Time zone rule (absolute)**.
+
 ## Database
 
 - Jangan membuat migration baru di `web/application/migrations/`.

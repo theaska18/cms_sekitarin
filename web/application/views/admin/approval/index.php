@@ -217,7 +217,7 @@
                     var color=step.status==='approved'?'text-emerald-700':(step.status==='rejected'?'text-rose-700':(step.status==='needs_assignment'?'text-amber-800':(step.status==='pending'?'text-indigo-700':'text-slate-500')));
                     var line='<li class="border-s-2 border-slate-200 ps-2"><div class="flex flex-wrap justify-between gap-2"><span class="font-medium '+color+'">Tahap '+parseInt(step.step_number,10)+' · '+escapeHtml(step.approver_label)+'</span><span class="inline-flex items-center gap-1 text-xs '+color+'">'+statusIcon(step.status)+escapeHtml(statusText(step.status,step.assigned_approver_name))+'</span></div>';
                     if(step.action){
-                        line+='<div class="mt-1 text-xs text-slate-500">'+escapeHtml(step.action.approver_label||'')+' · '+escapeHtml(step.action.create_on||'')+'</div>';
+                        line+='<div class="mt-1 text-xs text-slate-500">'+escapeHtml(step.action.approver_label||'')+' · '+(step.action.create_on?(window.AppTime?window.AppTime.localTimeHtml(step.action.create_on):escapeHtml(step.action.create_on)):'')+'</div>';
                         if(step.action.note)line+='<div class="mt-1 whitespace-pre-wrap text-xs text-slate-600">'+escapeHtml(step.action.note)+'</div>';
                     }
                     line+='</li>';return line;
@@ -225,8 +225,8 @@
             }},
             {data:'latest_action',name:'create_on',render:function(action,type,row){
                 if(type!=='display')return row.create_on;
-                if(!action)return '<span class="text-xs text-slate-500">'+escapeHtml(row.create_on||'Belum ada keputusan')+'</span>';
-                return '<div class="inline-flex items-center gap-1.5 text-sm">'+statusIcon(action.decision)+escapeHtml(statusLabels[action.decision]||action.decision)+'</div><div class="mt-1 text-xs text-slate-500">'+escapeHtml(action.approver_label||action.approver_name||'')+' · '+escapeHtml(action.create_on||'')+'</div>';
+                if(!action)return '<span class="text-xs text-slate-500">'+(row.create_on?(window.AppTime?window.AppTime.localTimeHtml(row.create_on):escapeHtml(row.create_on)):'Belum ada keputusan')+'</span>';
+                return '<div class="inline-flex items-center gap-1.5 text-sm">'+statusIcon(action.decision)+escapeHtml(statusLabels[action.decision]||action.decision)+'</div><div class="mt-1 text-xs text-slate-500">'+escapeHtml(action.approver_label||action.approver_name||'')+' · '+(action.create_on?(window.AppTime?window.AppTime.localTimeHtml(action.create_on):escapeHtml(action.create_on)):'')+'</div>';
             }}
         ]
     });

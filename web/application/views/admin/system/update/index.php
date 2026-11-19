@@ -22,7 +22,7 @@ $history_local_time = function ($value) {
     if ($value === '' || $value === '0000-00-00 00:00:00') {
         return '<span class="text-slate-400">—</span>';
     }
-    $iso = str_replace(' ', 'T', $value) . 'Z';
+    $iso = app_utc_iso($value);
     return '<time data-local-datetime datetime="' . html_escape($iso) . '">' . html_escape($value) . '</time>';
 };
 $history_page_icon = function ($name) {

@@ -88,7 +88,7 @@ class Finance_cancellation_store
             'status' => 'pending',
             'reason' => $reason,
             'requested_by' => (int) $user_id,
-            'requested_on' => date('Y-m-d H:i:s'),
+            'requested_on' => app_now(),
         ));
         $cancellation_id = (int) $this->db->insert_id();
         if ($inserted !== TRUE || $cancellation_id < 1) {
@@ -184,14 +184,14 @@ class Finance_cancellation_store
                     ->where('status', 'cancel_pending')
                     ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
                 $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])
-                    ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => date('Y-m-d H:i:s')));
+                    ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => app_now()));
                 return FALSE;
             }
             $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
                 ->update($spec['table'], array('status' => 'cancelled'));
             $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])->update('fin_cancellation', array(
                 'status' => 'approved',
-                'decided_on' => date('Y-m-d H:i:s'),
+                'decided_on' => app_now(),
                 'reversal_journal_id' => $reversal_id ? (int) $reversal_id : NULL,
             ));
             $this->sync_integration_inbox($tenant_id, (string) $cancellation['source_type'], $source_id);
@@ -203,7 +203,7 @@ class Finance_cancellation_store
             ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
         $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])->update('fin_cancellation', array(
             'status' => $decision === 'revise' ? 'revise' : 'rejected',
-            'decided_on' => date('Y-m-d H:i:s'),
+            'decided_on' => app_now(),
         ));
         return TRUE;
     }
@@ -257,7 +257,7 @@ class Finance_cancellation_store
             ->where('status !=', 'cancelled')
             ->update($target['table'], array(
                 'status' => 'cancelled',
-                'cancelled_at' => date('Y-m-d H:i:s'),
+                'cancelled_at' => app_now(),
             ));
     }
 
@@ -406,7 +406,7 @@ class Finance_cancellation_store
             ->count_all_results('fin_journal_entry') > 0) {
             $number = 'CNL-' . substr((string) $original['journal_number'], 0, 34) . '-' . $suffix++;
         }
-        $now = date('Y-m-d H:i:s');
+        $now = app_now();
         $inserted = $this->db->insert('fin_journal_entry', array(
             'tenant_id' => $tenant_id,
             'period_id' => (int) $target['period_id'],

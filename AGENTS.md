@@ -38,6 +38,25 @@ Contract tests check source expectations, not browser/runtime behavior.
 permissions; run only in a suitable local environment. README documents a known
 admin-contract locale expectation that omits `hr` resources.
 
+## Time zone rule (absolute)
+
+- **Storage time zone is the configured server `TIME_ZONE`.** Use
+  `App_time` / `app_now()` / `app_to_storage()` for timestamps. Do not add new
+  raw `date('Y-m-d H:i:s')` calls for stored timestamps.
+- **Display time zone is the browser local zone.** Server-time values must be
+  rendered through UTC ISO (`app_utc_iso()` or `<time data-local-datetime>`)
+  and formatted by `web/assets/js/app-time.js`. Never render raw database
+  timestamps directly into the UI.
+- **Browser input time is converted to the server time zone before saving.**
+  Forms send `client_timezone`; use `App_time::to_storage()` for datetime
+  values.
+- **Calendar dates are not timezone-shifted.** Business dates such as
+  `invoice_date`, `bill_date`, `due_date`, `statement_date`, `transaction_on`,
+  `journal_date`, `start_on`, and `end_on` are stored as calendar dates.
+- **Exports** containing time must use the browser local zone (pass
+  `client_timezone`) or state the time zone explicitly.
+- API responses expose timestamps as UTC ISO 8601.
+
 ## Project conventions
 
 - Application code is under `web/application/` (`controllers`, `models`,
