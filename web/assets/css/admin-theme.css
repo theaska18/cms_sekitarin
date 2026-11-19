@@ -738,7 +738,7 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
 #admin-content-fade {
     position: sticky;
     top: 4rem;
-    z-index: 15;
+    z-index: 35;
     height: 1.75rem;
     margin: 0 0 -1.75rem;
     pointer-events: none;

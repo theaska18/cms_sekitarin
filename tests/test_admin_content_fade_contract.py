@@ -10,6 +10,7 @@ CSS = ROOT / "web/assets/css/admin-theme.css"
 class AdminContentFadeContractTests(unittest.TestCase):
     def test_fade_sits_inside_the_content_column_only(self):
         header = HEADER.read_text(encoding="utf-8")
+        self.assertIn('admin-topbar sticky top-0 z-40', header)
         self.assertIn('id="admin-main"', header)
         self.assertIn('id="admin-content-fade"', header)
         main_start = header.index('id="admin-main"')
@@ -23,6 +24,7 @@ class AdminContentFadeContractTests(unittest.TestCase):
         self.assertIn("#admin-content-fade", css)
         self.assertIn("position: sticky", css)
         self.assertIn("top: 4rem", css)
+        self.assertIn("z-index: 35", css)
         self.assertIn("pointer-events: none", css)
         self.assertIn("linear-gradient", css)
         self.assertIn('html[data-theme="dark"] #admin-content-fade', css)
