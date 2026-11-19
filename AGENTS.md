@@ -60,6 +60,18 @@ admin-contract locale expectation that omits `hr` resources.
   Use System Property as the reference and reuse
   `web/application/libraries/Datatable_server.php` for request parsing, paging,
   ordering, and response envelopes.
+- Every new data column in a tabular list must have a corresponding filter in the
+  shared filter panel. Action, selection, and other non-data control columns are
+  exempt. Map filters by column type:
+  - text/code → string search;
+  - status/flag/enum → select;
+  - date/datetime → date range;
+  - number/amount → numeric range or select where appropriate.
+  Implement filters server-side so count, page, and filtered totals use the same
+  rules. Use `web/application/libraries/Finance_filter_panel.php` for Finance
+  lists and its `date_fields` configuration for multiple date columns. When
+  adding a column, update the list view, filter panel configuration, controller,
+  store, and contract tests together.
 - Code inputs: on blur, lowercase and remove whitespace. Name inputs: uppercase
   the first character of each word while preserving the rest of each word's case;
   apply canonicalization before saving when required.
