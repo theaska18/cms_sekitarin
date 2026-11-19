@@ -130,7 +130,7 @@ $can_edit = $finance_can_update && $finance_write_available;
     <?php else: ?>
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="finance-resource-heading">
             <h2 id="finance-resource-heading" class="sr-only"><?= html_escape($title) ?></h2>
-            <div class="overflow-x-auto p-2 sm:p-5">
+            <div class="overflow-x-auto">
                 <table id="finance-resource-table" class="finance-list-table min-w-full whitespace-nowrap text-sm">
                     <thead><tr>
                         <?php if ($can_edit): ?><th scope="col"><?= html_escape(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?></th><?php endif; ?>

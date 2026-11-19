@@ -17,6 +17,16 @@ class DataTableLayoutContractTests(unittest.TestCase):
         self.assertIn("max-height: 60dvh;", css)
         self.assertIn("overflow-y: auto;", css)
 
+    def test_datatable_panels_have_no_padding(self):
+        views = ROOT / "web/application/views/admin"
+        for path in views.rglob("*.php"):
+            content = path.read_text(encoding="utf-8", errors="ignore")
+            if ".DataTable(" not in content:
+                continue
+            with self.subTest(view=str(path.relative_to(ROOT))):
+                self.assertNotIn("overflow-x-auto p-", content)
+                self.assertNotIn("bg-white p-2 shadow-sm sm:p-4", content)
+
     def test_datatable_scrolls_instead_of_the_page(self):
         css = THEME.read_text(encoding="utf-8")
         self.assertIn(".dt-container {", css)
