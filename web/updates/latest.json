@@ -1,14 +1,14 @@
 {
-  "version": "1.0.23",
+  "version": "1.0.24",
   "released_at": "2026-11-19",
-  "changelog": "Perbaikan Finance: pembatalan dapat diajukan ulang dengan riwayat, status dibatalkan tampil di filter dan daftar, alokasi pembayaran aktif dicegah melebihi sisa tagihan, validasi periode akuntansi (fiscal year, overlap, draf aktif), query pajak hanya dimuat di Pengaturan Keuangan, optimasi sisa tagihan dokumen, kolom dokumen pada daftar pembayaran, jumlah import/dilewati, dan laporan saldo bank per rekening.",
+  "changelog": "Perbaikan lanjutan Finance: edit transaksi revisi, hapus draft dengan pelepasan reservasi, locking dokumen dan validasi transisi status, pembatalan di periode terbuka dan atomik, status menunggu pembatalan, validasi fiscal year/master data/departemen, integrasi menjaga total submission, sort pembayaran, laporan riwayat pembatalan, ringkasan laporan berbasis SQL, validasi jurnal balance, hardening CSV, dan batas payload API.",
   "min_php": "8.1",
-  "requires_version": "1.0.22",
-  "package": "cms-1.0.23.zip",
-  "sha256": "66165cca0eed8de7c1ef350ef44224816bbae8a5ea2d245e207b5d0f64f70b8f",
-  "size": 222487,
+  "requires_version": "1.0.23",
+  "package": "cms-1.0.24.zip",
+  "sha256": "9e3ec88a7dce147b6968cbaa4c4bb4874d6383cd346b0922f01c055d7be2be87",
+  "size": 256944,
   "migrations": [
-    "20261119001300_add_finance_balance_index.sql",
-    "20261119001400_allow_repeated_finance_cancellations.sql"
+    "20261119001500_unique_reconciliation_journal_line.sql",
+    "20261119001600_unique_api_secret.sql"
   ]
 }
