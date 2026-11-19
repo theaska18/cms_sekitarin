@@ -1,14 +1,11 @@
 {
-  "version": "1.0.24",
+  "version": "1.0.25",
   "released_at": "2026-11-19",
-  "changelog": "Perbaikan lanjutan Finance: edit transaksi revisi, hapus draft dengan pelepasan reservasi, locking dokumen dan validasi transisi status, pembatalan di periode terbuka dan atomik, status menunggu pembatalan, validasi fiscal year/master data/departemen, integrasi menjaga total submission, sort pembayaran, laporan riwayat pembatalan, ringkasan laporan berbasis SQL, validasi jurnal balance, hardening CSV, dan batas payload API.",
+  "changelog": "Melokalkan seluruh label dan nilai laporan Riwayat Pembatalan: kolom tanggal, sumber, status, alasan, pemohon, dan jurnal reversal kini mengikuti bahasa aktif.",
   "min_php": "8.1",
-  "requires_version": "1.0.23",
-  "package": "cms-1.0.24.zip",
-  "sha256": "9e3ec88a7dce147b6968cbaa4c4bb4874d6383cd346b0922f01c055d7be2be87",
-  "size": 256944,
-  "migrations": [
-    "20261119001500_unique_reconciliation_journal_line.sql",
-    "20261119001600_unique_api_secret.sql"
-  ]
+  "requires_version": "1.0.24",
+  "package": "cms-1.0.25.zip",
+  "sha256": "d9a6b04f8e9ff5effff93933cd865aeed9a2345c0e974d5a2c6affe8debfdcd4",
+  "size": 89803,
+  "migrations": []
 }

@@ -1,0 +1,76 @@
+{
+  "version": "1.0.25",
+  "from_version": "1.0.24",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.24",
+  "changelog": "Melokalkan seluruh label dan nilai laporan Riwayat Pembatalan: kolom tanggal, sumber, status, alasan, pemohon, dan jurnal reversal kini mengikuti bahasa aktif.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "8c2ce0ee6d6ff1bb2aa8cf7c67f1344b51f92cc53bf14507667bbd069c1779d7",
+      "size": 449
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "493bfc8b413729f7f665c6bfc989cd9a35798b5f6b163f0ef90bed90d456113a",
+      "size": 53107
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "8a1a79ca99be5165b0767acc7c63b1dcc3dfcabe23e1fb5d5a1932fe71fc17be",
+      "size": 41948
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "bf90eabbff1959cd46e786e9deb0cc5c566c73190809ab6fb121505175b02d02",
+      "size": 43886
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "64bab1017604b97f761be30cc1251b2ff2eca500b7292d152521df9a2bcb4a5b",
+      "size": 47799
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "090a0329f04f63c94f4a1a93f273d31ad4b3771e36094df323c9d80ed8c685ee",
+      "size": 46561
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "82c7e6e65c305a1f10a1d04c950208bca99ce524e8874325e30e16778402b703",
+      "size": 44533
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "d137d657fae5b85c11bf20ddf4df3b78346dac4e515d011f5ecfa824b7e601b1",
+      "size": 47408
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "d0f417155a52b87d570255ef003e5c1e2bd31764fdb483213bd6418703e4ec30",
+      "size": 46056
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "2c97a7ab9c94ea7169eed049fbeb8920176f9c441122b62870802f25e2aae7a6",
+      "size": 47077
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "e39301441dd3e2cd031cd16fa2afc3aa59de45a91492c2272217ce548d20a8bb",
+      "size": 21959
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.25.zip",
+    "sha256": "d9a6b04f8e9ff5effff93933cd865aeed9a2345c0e974d5a2c6affe8debfdcd4",
+    "size": 89803
+  },
+  "from_ref": "v1.0.24",
+  "generated_at": "2026-11-19T20:00:17+00:00"
+}
