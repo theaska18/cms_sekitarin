@@ -65,6 +65,15 @@ class FinanceUiContractTests(unittest.TestCase):
         self.assertIn("rounded-md border px-2 py-0.5", source)
         self.assertIn("border-indigo-300", source)
 
+    def test_report_default_end_date_uses_browser_local_date(self):
+        source = (FIN / "report_index.php").read_text(encoding="utf-8")
+        for marker in (
+            "url.searchParams.has('start_on')", "url.searchParams.has('end_on')",
+            "formatDate(now)", "window.location.replace(url.toString())",
+            "data-default-start", "data-default-end",
+        ):
+            self.assertIn(marker, source)
+
     def test_filter_panel_markup_stays_balanced(self):
         source = (FIN / "partials/filter_panel.php").read_text(encoding="utf-8")
         self.assertEqual(source.count("<div"), source.count("</div>"))

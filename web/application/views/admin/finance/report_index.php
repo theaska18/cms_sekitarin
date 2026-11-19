@@ -37,6 +37,31 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
         </p>
     </header>
 <?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-report-table','status_preset'=>'none','date_preset'=>'report','default_start'=>$finance_report_filters['start_on'],'default_end'=>$finance_report_filters['end_on'],'export'=>FALSE), $labels) ?>
+<script>
+(function () {
+    var url = new URL(window.location.href);
+    if (url.searchParams.has('start_on') || url.searchParams.has('end_on')) return;
+    var panel = document.querySelector('[data-finance-filter-panel]');
+    if (!panel) return;
+    var startInput = panel.querySelector('[data-finance-filter="start_on"]');
+    var endInput = panel.querySelector('[data-finance-filter="end_on"]');
+    var serverStart = panel.getAttribute('data-default-start') || '';
+    var serverEnd = panel.getAttribute('data-default-end') || '';
+    if (!startInput || !endInput || serverStart === '' || serverEnd === '') return;
+    function formatDate(date) {
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+    }
+    var now = new Date();
+    var localEnd = formatDate(now);
+    var span = Math.max(1, Math.round((Date.parse(serverEnd + 'T00:00:00Z') - Date.parse(serverStart + 'T00:00:00Z')) / 86400000) + 1);
+    var localStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (span - 1));
+    var localStart = formatDate(localStartDate);
+    if (startInput.value === localStart && endInput.value === localEnd) return;
+    url.searchParams.set('start_on', localStart);
+    url.searchParams.set('end_on', localEnd);
+    window.location.replace(url.toString());
+}());
+</script>
     <?php if (!$finance_report_errors && $finance_report_summary !== FALSE): ?>
     <section aria-label="<?= html_escape($title) ?>" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
