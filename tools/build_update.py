@@ -326,7 +326,8 @@ def build(args: argparse.Namespace) -> int:
     else:
         warn("--allow-dirty aktif; paket dibangun dari isi working tree")
 
-    requires_version = args.requires_version or version_at_ref(root, from_ref)
+    base_version = version_at_ref(root, from_ref)
+    requires_version = args.requires_version or base_version
     if requires_version is None:
         requires_version = current_published_version(root)
     if requires_version is None:
@@ -334,6 +335,12 @@ def build(args: argparse.Namespace) -> int:
     parse_versions(requires_version)
     if compare_versions(version, requires_version) <= 0:
         fail(f"versi {version} harus lebih baru dari {requires_version}")
+    if base_version is not None and compare_versions(requires_version, base_version) < 0:
+        fail(
+            f"requires-version {requires_version} lebih rendah dari versi baseline {base_version}; "
+            f"paket hanya memuat perubahan sejak {from_ref}. Gunakan --from v{requires_version} "
+            "atau bangun paket kumulatif dari versi dasar yang lebih lama."
+        )
 
     entries = changed_paths(root, from_ref)
     if not entries:

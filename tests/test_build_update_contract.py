@@ -157,6 +157,15 @@ class BuildUpdateGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(0, accepted.returncode, accepted.stderr + accepted.stdout)
 
+    def test_requires_version_cannot_undercut_the_package_baseline(self):
+        self.write("web/application/base.txt", "release\n")
+        self.commit("release change")
+        result = self.build(
+            "--version", "1.0.1", "--from", "v1.0.0", "--requires-version", "0.9.0",
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("lebih rendah dari versi baseline", result.stderr)
+
     def test_commit_and_tag_commits_release_and_creates_tag(self):
         self.write("web/application/base.txt", "tagged release\n")
         self.commit("release change")

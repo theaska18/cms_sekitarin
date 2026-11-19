@@ -113,13 +113,15 @@ class Update_store
             return array('ok' => FALSE, 'error' => 'invalid_version', 'current_version' => $current);
         }
         $available = version_compare($latest, $current, '>');
+        if (isset($payload['update_available'])) {
+            $available = $available && (bool) $payload['update_available'];
+        }
         $release = NULL;
         if ($available && isset($payload['release']) && is_array($payload['release'])) {
             $release = $this->normalize_release($payload['release'], $link);
             if ($release === NULL) {
                 return array('ok' => FALSE, 'error' => 'invalid_release', 'current_version' => $current);
             }
-            $latest = $release['version'];
         }
 
         return array(
@@ -127,6 +129,7 @@ class Update_store
             'error' => '',
             'current_version' => $current,
             'latest_version' => $latest,
+            'target_version' => $release !== NULL ? $release['version'] : '',
             'update_available' => $available,
             'release' => $release,
             'compatible' => isset($payload['compatible']) ? (bool) $payload['compatible'] : TRUE,
@@ -1146,6 +1149,9 @@ class Update_store
         if (function_exists('opcache_invalidate')) {
             @opcache_invalidate($path, TRUE);
         }
+        // Keep the in-memory config current so chained updates see the new base.
+        $this->config->set_item('app_version', $version, 'version');
+        $this->config->set_item('app_update_channel', $channel, 'version');
     }
 
     private function set_status($update_id, $status, $finished = FALSE)

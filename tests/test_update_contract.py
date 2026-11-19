@@ -64,6 +64,7 @@ class UpdateContractTests(unittest.TestCase):
         self.assertIn("has_admin_access_code('sys_update_run')", controller)
         self.assertIn("$this->input->method(TRUE) !== 'POST'", controller)
         self.assertIn("redirect('/admin/system/update', 'location', 303)", controller)
+        self.assertIn("for ($step = 0; $step < 10; $step++)", controller)
 
     def test_update_runner_verifies_checksum_and_rolls_back(self):
         store = (APP / "libraries/Update_store.php").read_text()
@@ -80,6 +81,8 @@ class UpdateContractTests(unittest.TestCase):
             self.assertIn(marker, store)
         self.assertIn("update.lock", store)
         self.assertIn("runner_checks", store)
+        self.assertIn("set_item('app_version'", store)
+        self.assertIn("target_version", store)
 
     def test_proxy_https_scheme_and_package_url_upgrade(self):
         config = (APP / "config/config.php").read_text()
@@ -99,6 +102,8 @@ class UpdateContractTests(unittest.TestCase):
             "public function check", "public function package", "version_compare(",
             "update_available", "sha256", "package_url", "readfile($path)",
             "preg_match('/\\Acms-\\d+\\.\\d+\\.\\d+\\.zip\\z/'",
+            "next_compatible_release", "load_releases", "read_release_manifest",
+            "target_version",
         ):
             self.assertIn(marker, controller)
         self.assertRegex(catalog["version"], r"^\d+\.\d+\.\d+$")

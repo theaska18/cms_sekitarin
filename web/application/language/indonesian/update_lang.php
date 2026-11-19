@@ -42,6 +42,7 @@ $lang['update_notice_check_failed'] = 'Server update tidak dapat dihubungi atau 
 $lang['update_notice_no_update'] = 'Tidak ada rilis terbaru yang tersedia.';
 $lang['update_notice_updated'] = 'Update berhasil diselesaikan.';
 $lang['update_notice_update_failed'] = 'Update gagal. Backup dipulihkan jika memungkinkan; periksa log di bawah.';
+$lang['update_incompatible'] = 'Update tidak dapat dijalankan pada versi terpasang atau versi PHP ini. Jalankan rilis terdekat yang tersedia terlebih dahulu.';
 $lang['update_error_invalid_link'] = 'Property link update bukan URL yang valid.';
 $lang['update_error_request_failed'] = 'Server update tidak dapat dihubungi.';
 $lang['update_error_invalid_response'] = 'Server update memberi respons yang tidak valid.';

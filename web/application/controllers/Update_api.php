@@ -36,9 +36,13 @@ class Update_api extends CI_Controller
 
         $latest_version = (string) $manifest['version'];
         $update_available = version_compare($latest_version, $current_version, '>');
-        $compatible = TRUE;
-        if ($client_php !== '' && isset($manifest['min_php']) && $manifest['min_php'] !== ''
-            && version_compare($client_php, (string) $manifest['min_php'], '<')) {
+        $target = NULL;
+        if ($update_available) {
+            $target = $this->next_compatible_release($manifest, $current_version);
+        }
+        $compatible = $target !== NULL;
+        if ($target !== NULL && $client_php !== '' && $target['min_php'] !== ''
+            && version_compare($client_php, (string) $target['min_php'], '<')) {
             $compatible = FALSE;
         }
 
@@ -46,15 +50,53 @@ class Update_api extends CI_Controller
             'status' => 'ok',
             'current_version' => $current_version,
             'latest_version' => $latest_version,
-            'update_available' => $update_available,
+            'target_version' => $target !== NULL ? $target['version'] : '',
+            'update_available' => $update_available && $target !== NULL,
             'compatible' => $compatible,
             'checked_at' => gmdate('c'),
         );
-        if ($update_available) {
-            $payload['release'] = $this->release_payload($manifest);
+        if ($update_available && $target !== NULL) {
+            $payload['release'] = $this->release_payload($target);
         }
 
         $this->json($payload, 200);
+    }
+
+    /**
+     * Pick the nearest release the installed version can apply directly.
+     * Delta packages declare the version they were built from; when the latest
+     * package needs a newer base, clients are advanced one release at a time.
+     */
+    private function next_compatible_release($latest, $current_version)
+    {
+        if (version_compare((string) $latest['requires_version'], $current_version, '<=')) {
+            return $this->package_available($latest) ? $latest : NULL;
+        }
+        $candidates = array();
+        foreach ($this->load_releases() as $release) {
+            if (version_compare($release['version'], $current_version, '>')
+                && version_compare($release['version'], $latest['version'], '<=')
+                && version_compare((string) $release['requires_version'], $current_version, '<=')
+                && $this->package_available($release)) {
+                $candidates[] = $release;
+            }
+        }
+        if (!$candidates) {
+            return NULL;
+        }
+        usort($candidates, function ($left, $right) {
+            return version_compare($left['version'], $right['version']);
+        });
+        return $candidates[0];
+    }
+
+    private function package_available($manifest)
+    {
+        if (empty($manifest['package'])) {
+            return FALSE;
+        }
+        $path = FCPATH . 'updates' . DIRECTORY_SEPARATOR . $manifest['package'];
+        return is_file($path) && is_readable($path);
     }
 
     public function package($filename = '')
@@ -69,13 +111,14 @@ class Update_api extends CI_Controller
             return;
         }
 
-        $manifest = $this->load_manifest();
-        if ($manifest === NULL) {
-            show_404();
-            return;
+        $allowed = FALSE;
+        foreach ($this->load_releases() as $release) {
+            if (!empty($release['package']) && hash_equals((string) $release['package'], $filename)) {
+                $allowed = TRUE;
+                break;
+            }
         }
-        $package_name = isset($manifest['package']) ? (string) $manifest['package'] : '';
-        if ($package_name === '' || !hash_equals($package_name, $filename)) {
+        if (!$allowed) {
             show_404();
             return;
         }
@@ -94,6 +137,53 @@ class Update_api extends CI_Controller
         header('X-Content-Type-Options: nosniff');
         readfile($path);
         exit;
+    }
+
+    /** Latest catalog plus every archived release manifest, keyed by version. */
+    private function load_releases()
+    {
+        $releases = array();
+        $latest = $this->load_manifest();
+        if ($latest !== NULL) {
+            $releases[$latest['version']] = $latest;
+        }
+        $directory = FCPATH . 'updates' . DIRECTORY_SEPARATOR . 'releases';
+        if (is_dir($directory)) {
+            foreach ((array) glob($directory . DIRECTORY_SEPARATOR . '*' . DIRECTORY_SEPARATOR . 'release.json') as $file) {
+                $release = $this->read_release_manifest($file);
+                if ($release !== NULL && !isset($releases[$release['version']])) {
+                    $releases[$release['version']] = $release;
+                }
+            }
+        }
+        uksort($releases, 'version_compare');
+        return $releases;
+    }
+
+    /** Normalize an archived release.json into the latest.json shape. */
+    private function read_release_manifest($path)
+    {
+        if (!is_file($path) || !is_readable($path)) {
+            return NULL;
+        }
+        $contents = file_get_contents($path);
+        $data = $contents === FALSE ? NULL : json_decode($contents, TRUE);
+        if (!is_array($data) || !isset($data['version']) || !$this->is_version((string) $data['version'])) {
+            return NULL;
+        }
+        $package = isset($data['package']) && is_array($data['package']) ? $data['package'] : array();
+        return array(
+            'version' => (string) $data['version'],
+            'package' => isset($package['name']) && is_string($package['name']) ? $package['name'] : '',
+            'sha256' => isset($package['sha256']) && is_string($package['sha256']) ? strtolower($package['sha256']) : '',
+            'size' => isset($package['size']) ? (int) $package['size'] : 0,
+            'min_php' => isset($data['min_php']) ? (string) $data['min_php'] : '',
+            'requires_version' => isset($data['requires_version']) ? (string) $data['requires_version'] : '0.0.0',
+            'changelog' => isset($data['changelog']) ? (string) $data['changelog'] : '',
+            'released_at' => isset($data['released_at']) ? (string) $data['released_at'] : '',
+            'migrations' => isset($data['migrations']) && is_array($data['migrations'])
+                ? array_values(array_filter($data['migrations'], 'is_string')) : array(),
+        );
     }
 
     private function load_manifest()

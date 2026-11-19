@@ -42,6 +42,7 @@ $lang['update_notice_check_failed'] = 'The update server could not be reached or
 $lang['update_notice_no_update'] = 'No newer release is available.';
 $lang['update_notice_updated'] = 'The update completed successfully.';
 $lang['update_notice_update_failed'] = 'The update failed. Backups were restored when possible; review the log below.';
+$lang['update_incompatible'] = 'This update cannot run on the installed version or PHP version. Update to the nearest available release first.';
 $lang['update_error_invalid_link'] = 'The update link property is not a valid URL.';
 $lang['update_error_request_failed'] = 'The update server could not be reached.';
 $lang['update_error_invalid_response'] = 'The update server returned an invalid response.';

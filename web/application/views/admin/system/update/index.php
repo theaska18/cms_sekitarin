@@ -38,7 +38,8 @@ $history_page_icon = function ($name) {
 $checks = isset($update_checks) && is_array($update_checks) ? $update_checks : array();
 $runner_ready = !empty($checks['writable']) && !empty($checks['archive']) && !empty($checks['exec']) && !empty($checks['mysql_client']);
 $schema_available = !empty($update_schema_available);
-$can_run = !empty($update_can_run) && $available && $runner_ready && $active === NULL && $schema_available;
+$compatible = !empty($check['compatible']);
+$can_run = !empty($update_can_run) && $available && $runner_ready && $active === NULL && $schema_available && $compatible;
 $error_detail = isset($check['detail']) && $check['detail'] !== '' ? (string) $check['detail'] : '';
 
 $status_labels = array(
@@ -203,6 +204,10 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                     </form>
                 <?php endif; ?>
             </div>
+
+            <?php if (!$compatible): ?>
+                <div role="alert" class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape($labels['update_incompatible']) ?></div>
+            <?php endif; ?>
 
             <p class="mt-4 text-sm leading-6 text-slate-600 update-muted"><?= html_escape(sprintf($labels['update_available_body'], (string) $release['version'])) ?></p>
 

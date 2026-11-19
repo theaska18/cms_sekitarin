@@ -125,8 +125,31 @@ class Admin_update extends Admin
             return;
         }
 
-        $result = $store->run($check['release'], (int) $this->current_user['user_id']);
-        if (is_string($result['log']) && strlen($result['log']) > 12000) {
+        $result = NULL;
+        $combined_log = '';
+        // Delta packages may need intermediate releases; apply them in order.
+        for ($step = 0; $step < 10; $step++) {
+            if ($step > 0) {
+                $check = $store->check();
+                if (!$check['ok'] || empty($check['update_available']) || empty($check['release'])) {
+                    break;
+                }
+            }
+            $step_result = $store->run($check['release'], (int) $this->current_user['user_id']);
+            $combined_log .= ($combined_log === '' ? '' : "\n") . (string) $step_result['log'];
+            $result = $step_result;
+            if (!$step_result['ok']) {
+                break;
+            }
+        }
+        if ($result === NULL) {
+            $this->session->set_flashdata('admin_update_check', $check);
+            $this->session->set_flashdata('admin_update_notice', 'no_update');
+            redirect('/admin/system/update', 'location', 303);
+            return;
+        }
+        $result['log'] = $combined_log;
+        if (strlen($result['log']) > 12000) {
             $result['log'] = substr($result['log'], -12000);
         }
         $this->session->set_flashdata('admin_update_result', $result);
