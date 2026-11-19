@@ -144,8 +144,8 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                     Excel
                 </button>
             </div>
+            </div>
             <?php endif; ?>
-        </div>
             <div class="ms-auto flex flex-wrap gap-2">
             <button type="button" data-finance-filter-reset class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <?= html_escape(isset($labels['finance_filter_reset']) ? $labels['finance_filter_reset'] : 'Reset') ?>

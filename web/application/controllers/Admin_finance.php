@@ -3791,6 +3791,7 @@ class Admin_finance extends Admin
             'cancellation_history' => array(
                 array('name' => 'requested_on', 'label' => 'Requested at'),
                 array('name' => 'source_id', 'label' => 'Source'),
+                array('name' => 'previous_status', 'label' => 'Previous status'),
                 array('name' => 'status', 'label' => 'Cancellation status'),
                 array('name' => 'reason', 'label' => 'Reason'),
                 array('name' => 'requested_by_name', 'label' => 'Requested by'),

@@ -65,6 +65,17 @@ class FinanceUiContractTests(unittest.TestCase):
         self.assertIn("rounded-md border px-2 py-0.5", source)
         self.assertIn("border-indigo-300", source)
 
+    def test_filter_panel_markup_stays_balanced(self):
+        source = (FIN / "partials/filter_panel.php").read_text(encoding="utf-8")
+        self.assertEqual(source.count("<div"), source.count("</div>"))
+
+    def test_cancellation_history_fits_desktop_report_shell(self):
+        source = (FIN / "report_index.php").read_text(encoding="utf-8")
+        theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
+        self.assertIn('data-finance-layout="cancellation"', source)
+        self.assertIn('[data-finance-layout="cancellation"]', theme)
+        self.assertIn("@media (min-width: 1280px)", theme)
+
     def test_long_forms_use_sticky_action_bars(self):
         for name in ("journal_form.php", "reconciliation_form.php"):
             self.assertIn("sticky bottom-0", (FIN / name).read_text(encoding="utf-8"), name)
