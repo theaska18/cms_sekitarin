@@ -1,11 +1,11 @@
 {
   "version": "1.0.14",
   "released_at": "2026-11-19",
-  "changelog": "Penyatuan shell DataTable dan panel filter di seluruh halaman admin; filter per kolom untuk Property, Tenant, Sequence, Approval, Approval Flow Template, dan Menu Access.",
+  "changelog": "Penyatuan shell DataTable dan panel filter di seluruh halaman admin; filter per kolom untuk Property, Tenant, Sequence, Approval, Approval Flow Template, dan Menu Access; perbaikan padding halaman dashboard.",
   "min_php": "8.1",
   "requires_version": "1.0.13",
   "package": "cms-1.0.14.zip",
-  "sha256": "850caa7416cfa6b045c56ac3ed849bc8c0cf383d9fcc9f341fab354b183e8598",
-  "size": 183293,
+  "sha256": "1f245d00265b71bcfedf8e326adff7d0b9a4c9c809a23a7e3b084d691e54feff",
+  "size": 184926,
   "migrations": []
 }

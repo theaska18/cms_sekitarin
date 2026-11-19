@@ -5,7 +5,7 @@
   "released_at": "2026-11-19",
   "min_php": "8.1",
   "requires_version": "1.0.13",
-  "changelog": "Penyatuan shell DataTable dan panel filter di seluruh halaman admin; filter per kolom untuk Property, Tenant, Sequence, Approval, Approval Flow Template, dan Menu Access.",
+  "changelog": "Penyatuan shell DataTable dan panel filter di seluruh halaman admin; filter per kolom untuk Property, Tenant, Sequence, Approval, Approval Flow Template, dan Menu Access; perbaikan padding halaman dashboard.",
   "files": [
     {
       "path": "application/config/version.php",
@@ -116,6 +116,11 @@
       "path": "application/views/admin/approval_flow_template/index.php",
       "sha256": "4a88cf46cac31c52bc26f3a563e7df47b1297c217f92818a075238460a509f74",
       "size": 16060
+    },
+    {
+      "path": "application/views/admin/dashboard.php",
+      "sha256": "36aed5889de51c9cab2170e54c5835a734e083751e81ed99d18e4958f6d03847",
+      "size": 4535
     },
     {
       "path": "application/views/admin/finance/document_index.php",
