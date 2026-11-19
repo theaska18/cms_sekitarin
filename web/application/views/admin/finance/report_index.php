@@ -132,6 +132,36 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
         });
     }
     var definitions = <?= json_encode($finance_report_columns, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var isCancellationHistory = <?= json_encode($finance_report_slug === 'cancellation_history') ?>;
+    function label(key, fallback) { return <?= json_encode($labels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>[key] || fallback; }
+    var cancellationSources = {
+        fin_transaction: label('finance_all_transactions', 'Transaction'),
+        fin_sales_invoice: label('finance_sales_invoices', 'Sales invoice'),
+        fin_purchase_bill: label('finance_purchase_bills', 'Purchase bill'),
+        fin_customer_payment: label('finance_customer_payments', 'Customer payment'),
+        fin_supplier_payment: label('finance_supplier_payments', 'Supplier payment'),
+        fin_cash_transfer: label('finance_cash_bank_transfer', 'Cash/bank transfer'),
+        fin_bank_reconciliation: label('finance_bank_reconciliation', 'Bank reconciliation'),
+        fin_journal_entry: label('finance_journal_entries', 'Journal entry')
+    };
+    var cancellationStatuses = {
+        pending: label('finance_cancellation_status_pending', 'Pending'),
+        approved: label('finance_cancellation_status_approved', 'Approved'),
+        rejected: label('finance_cancellation_status_rejected', 'Rejected'),
+        revise: label('finance_cancellation_status_revise', 'Revision'),
+        failed: label('finance_cancellation_status_failed', 'Failed')
+    };
+    var documentStatuses = {
+        draft: label('finance_tx_state_draft', 'Draft'),
+        pending_approval: label('finance_tx_state_pending_approval', 'Pending'),
+        approved: label('finance_tx_state_approved', 'Approved'),
+        revise: label('finance_tx_state_revise', 'Revise'),
+        rejected: label('finance_tx_state_rejected', 'Rejected'),
+        cancel_pending: label('finance_tx_state_cancel_pending', 'Cancellation pending'),
+        posted: label('finance_status_posted', 'Posted'),
+        completed: label('finance_status_completed', 'Completed'),
+        cancelled: label('finance_status_cancelled', 'Cancelled')
+    };
     var numeric = ['debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance'];
     var columns = definitions.map(function (column) {
         return {
@@ -143,6 +173,11 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
                 if (numeric.indexOf(column.name) >= 0 && value !== null && value !== '') {
                     var amount = Number(value);
                     return Number.isFinite(amount) ? escapeHtml(window.financeFormatAmount(amount)) : '';
+                }
+                if (isCancellationHistory) {
+                    if (column.name === 'source_type') value = cancellationSources[value] || value;
+                    else if (column.name === 'status') value = cancellationStatuses[value] || value;
+                    else if (column.name === 'previous_status') value = documentStatuses[value] || value;
                 }
                 return escapeHtml(value);
             }
