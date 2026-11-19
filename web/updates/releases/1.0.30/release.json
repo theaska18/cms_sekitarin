@@ -1,0 +1,81 @@
+{
+  "version": "1.0.30",
+  "from_version": "1.0.29",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.29",
+  "changelog": "Rilis pemeliharaan: waktu disimpan dalam UTC, tampilan mengikuti timezone browser, export memakai timezone browser dan mencantumkan Time Zone, API timestamp memakai UTC ISO, filter tanggal lokal untuk semua laporan, perbaikan query integrasi, serta tabel Riwayat Pembatalan memakai lebar kolom alami tanpa ellipsis.",
+  "files": [
+    {
+      "path": "application/config/config.php",
+      "sha256": "417ecdcd39237f679bc423d3722d8cefcda100ea7cd524972a9e04f2bb6b2637",
+      "size": 19730
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "cc85e7ac078cad1f70e0e8637965e59cfbc346c33981fd0922e86ac5b0e34a9f",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "ab4ad4366e779146cda09ec0017a2feb2e07ffe3c728905871c39ea103c096e1",
+      "size": 252177
+    },
+    {
+      "path": "application/controllers/Finance_api.php",
+      "sha256": "e808c768e1e1e0deaff8ef9d8ab71ad0367f531563355e11af1a6f78ab292604",
+      "size": 16978
+    },
+    {
+      "path": "application/libraries/App_time.php",
+      "sha256": "b277361ea944c217c0d44ba442501b6b3cb68c345873a034596492602ee6fa07",
+      "size": 2807
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "3502dc5691142c1d7c2fd2145add63fd434b7937da3a5e9707b650ce56a7a7b8",
+      "size": 12445
+    },
+    {
+      "path": "application/views/admin/finance/report_balance_sheet_skontro.php",
+      "sha256": "feb80f9ebd991f60d22f742c27149823c273743ba3e1bcfd39990f21b47d4aa3",
+      "size": 16555
+    },
+    {
+      "path": "application/views/admin/finance/report_cash_flow.php",
+      "sha256": "0e127947df886d1b9e74fa752e895d389f4b3b3d2e3d414b93ea65091cb5370d",
+      "size": 18165
+    },
+    {
+      "path": "application/views/admin/finance/report_index.php",
+      "sha256": "a0962b4997ad19c722565540e1fcf6206d1ff5b1a82d490cc5a0d1245212b63b",
+      "size": 27332
+    },
+    {
+      "path": "application/views/admin/finance/report_profit_loss.php",
+      "sha256": "b028ef7b706fa128a551c0ab52667a0918c41dfb252ba86e347b1afb8dc55d29",
+      "size": 15636
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "d7c8b2566d005bfd9aaa649cfac90f17e100f43e36548c6e184b7f2d1d715172",
+      "size": 54232
+    },
+    {
+      "path": "assets/js/app-time.js",
+      "sha256": "0c14c575344f8b77a2e538631c575d627c6e36a5a68e98560480659baf9678d3",
+      "size": 7630
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.30.zip",
+    "sha256": "c60b9ee19c7aff96ac5bf2372682df33c1337a4e9a6736c509159a4501ce9759",
+    "size": 71467
+  },
+  "from_ref": "v1.0.29",
+  "generated_at": "2026-11-19T21:03:21+00:00"
+}

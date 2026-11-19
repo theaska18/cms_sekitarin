@@ -1,11 +1,11 @@
 {
-  "version": "1.0.29",
+  "version": "1.0.30",
   "released_at": "2026-11-19",
-  "changelog": "Standarisasi waktu: penyimpanan mengikuti TIME_ZONE server, semua timestamp ditampilkan dalam timezone browser, form mengirim client_timezone, timestamp server memakai helper terpusat, export laporan memakai waktu lokal browser, dan tanggal kalender tidak digeser timezone. Aturan mutlak dicatat di AGENTS.md.",
+  "changelog": "Rilis pemeliharaan: waktu disimpan dalam UTC, tampilan mengikuti timezone browser, export memakai timezone browser dan mencantumkan Time Zone, API timestamp memakai UTC ISO, filter tanggal lokal untuk semua laporan, perbaikan query integrasi, serta tabel Riwayat Pembatalan memakai lebar kolom alami tanpa ellipsis.",
   "min_php": "8.1",
-  "requires_version": "1.0.28",
-  "package": "cms-1.0.29.zip",
-  "sha256": "95be0bddbad66262a4838efb2f47e35c12b60c18b36f45532b426335c6313d93",
-  "size": 183117,
+  "requires_version": "1.0.29",
+  "package": "cms-1.0.30.zip",
+  "sha256": "c60b9ee19c7aff96ac5bf2372682df33c1337a4e9a6736c509159a4501ce9759",
+  "size": 71467,
   "migrations": []
 }
