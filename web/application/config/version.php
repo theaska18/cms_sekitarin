@@ -8,5 +8,5 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | The installed release. Update packages replace this file with the
 | version they install. Keep the value in semantic version form.
 */
-$config['app_version'] = '1.0.22';
+$config['app_version'] = '1.0.23';
 $config['app_update_channel'] = 'stable';

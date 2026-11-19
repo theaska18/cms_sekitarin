@@ -1,11 +1,14 @@
 {
-  "version": "1.0.22",
+  "version": "1.0.23",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.22: import kategori melewati kode yang sudah ada dan tetap mengimpor kategori baru.",
+  "changelog": "Perbaikan Finance: pembatalan dapat diajukan ulang dengan riwayat, status dibatalkan tampil di filter dan daftar, alokasi pembayaran aktif dicegah melebihi sisa tagihan, validasi periode akuntansi (fiscal year, overlap, draf aktif), query pajak hanya dimuat di Pengaturan Keuangan, optimasi sisa tagihan dokumen, kolom dokumen pada daftar pembayaran, jumlah import/dilewati, dan laporan saldo bank per rekening.",
   "min_php": "8.1",
-  "requires_version": "1.0.21",
-  "package": "cms-1.0.22.zip",
-  "sha256": "8829782a3fafab6ac8388c801103bfe29987e995ca4ed723f2c330eb33ae98d0",
-  "size": 29912,
-  "migrations": []
+  "requires_version": "1.0.22",
+  "package": "cms-1.0.23.zip",
+  "sha256": "66165cca0eed8de7c1ef350ef44224816bbae8a5ea2d245e207b5d0f64f70b8f",
+  "size": 222487,
+  "migrations": [
+    "20261119001300_add_finance_balance_index.sql",
+    "20261119001400_allow_repeated_finance_cancellations.sql"
+  ]
 }
