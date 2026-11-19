@@ -788,6 +788,7 @@ CREATE TABLE `fin_journal_line` (
   PRIMARY KEY (`journal_line_id`),
   UNIQUE KEY `uq_journal_line_1` (`tenant_id`,`journal_entry_id`,`line_number`),
   KEY `tenant_id_account_id` (`tenant_id`,`account_id`),
+  KEY `idx_fin_journal_line_account_currency` (`tenant_id`,`account_id`,`currency_code`),
   KEY `tenant_id_department_id` (`tenant_id`,`department_id`),
   KEY `idx_fin_journal_line_journal_entry_id` (`journal_entry_id`),
   KEY `idx_fin_journal_line_account_id` (`account_id`),

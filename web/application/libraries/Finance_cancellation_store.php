@@ -64,6 +64,10 @@ class Finance_cancellation_store
         if ($this->linked_payments_exist($tenant_id, $source_type, (int) $source_id)) {
             return array('ok' => FALSE, 'error' => 'has_payments');
         }
+        $period_status = $this->reversal_period_status($tenant_id, $source_type, (int) $source_id, $status);
+        if ($period_status !== 'ok') {
+            return array('ok' => FALSE, 'error' => $period_status);
+        }
         $balance_check = $this->validate_reversal_balance($tenant_id, $source_type, (int) $source_id, $status);
         if ($balance_check !== 'ok') {
             return array('ok' => FALSE, 'error' => $balance_check);
@@ -143,6 +147,16 @@ class Finance_cancellation_store
         if ($decision === 'approved') {
             $this->db->trans_begin();
             if ($this->linked_payments_exist($tenant_id, (string) $cancellation['source_type'], $source_id)) {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
+            $period_status = $this->reversal_period_status(
+                $tenant_id,
+                (string) $cancellation['source_type'],
+                $source_id,
+                (string) $cancellation['previous_status']
+            );
+            if ($period_status !== 'ok') {
                 $this->db->trans_rollback();
                 return FALSE;
             }
@@ -257,6 +271,26 @@ class Finance_cancellation_store
             ->where_in('p.status', array('draft', 'pending_approval', 'approved', 'revise', 'posted'))
             ->count_all_results();
         return $count === FALSE ? TRUE : $count > 0;
+    }
+
+    /** Reversal journals must land in exactly one open accounting period. */
+    private function reversal_period_status($tenant_id, $source_type, $source_id, $previous_status)
+    {
+        $context = $this->reversal_context($tenant_id, $source_type, $source_id, $previous_status);
+        if (empty($context['needed']) || empty($context['original']['journal_date'])) {
+            return 'ok';
+        }
+        $date = (string) $context['original']['journal_date'];
+        $count = $this->db->from('fin_accounting_period')
+            ->where('tenant_id', (int) $tenant_id)
+            ->where('start_on <=', $date)
+            ->where('end_on >=', $date)
+            ->where('status', 'open')
+            ->count_all_results();
+        if ($count === FALSE) {
+            return 'period_closed';
+        }
+        return $count === 1 ? 'ok' : ($count > 1 ? 'period_ambiguous' : 'period_closed');
     }
 
     /** Validate that posting the reversal would not take a cash/bank account below zero. */

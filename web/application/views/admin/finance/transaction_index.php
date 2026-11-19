@@ -22,6 +22,8 @@ $extra_status_messages = array(
     'not_postable' => 'Hanya transaksi berstatus disetujui yang dapat diposting.',
     'insufficient_balance' => isset($labels['finance_status_insufficient_balance']) ? $labels['finance_status_insufficient_balance'] : 'Saldo kas/bank tidak mencukupi.',
     'document_has_payments' => isset($labels['finance_status_document_has_payments']) ? $labels['finance_status_document_has_payments'] : 'Faktur/tagihan masih memiliki pembayaran. Batalkan pembayaran terlebih dahulu.',
+    'period_closed' => isset($labels['finance_doc_status_period_closed']) ? $labels['finance_doc_status_period_closed'] : 'No open accounting period includes the transaction date.',
+    'period_ambiguous' => isset($labels['finance_doc_status_period_ambiguous']) ? $labels['finance_doc_status_period_ambiguous'] : 'More than one open accounting period includes the transaction date.',
 );
 if ($finance_status !== '') {
     $status_key = 'finance_tx_status_' . $finance_status;

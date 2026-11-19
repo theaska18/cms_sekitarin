@@ -61,7 +61,7 @@ class FinanceAutocompleteContractTests(unittest.TestCase):
     def test_payment_document_lookup_searches_integration_number(self):
         source = read(APP / "libraries" / "Finance_payment_store.php")
         self.assertIn("integration_number", source)
-        self.assertIn("or_like('integration_number', $term)", source)
+        self.assertIn("or_like('d.integration_number', $term)", source)
         self.assertIn("function lookup_label", source)
         self.assertIn("integration_number,currency_code", source)
         view = read(FINANCE_VIEWS / "payment_form.php")

@@ -48,6 +48,17 @@ class FinanceCancellationContractTests(unittest.TestCase):
         transaction_view = (APP / "views" / "admin" / "finance" / "transaction_index.php").read_text(encoding="utf-8")
         self.assertIn("'document_has_payments' =>", transaction_view)
 
+    def test_cancellation_reversal_respects_closed_periods(self):
+        store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
+        self.assertIn("reversal_period_status", store)
+        self.assertIn("fin_accounting_period", store)
+        self.assertIn("'status', 'open'", store)
+        self.assertIn("period_ambiguous", store)
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        self.assertIn("in_array($error, array('period_closed', 'period_ambiguous'), TRUE)", controller)
+        transaction_view = (APP / "views" / "admin" / "finance" / "transaction_index.php").read_text(encoding="utf-8")
+        self.assertIn("'period_closed' =>", transaction_view)
+
     def test_approval_flow_supports_cancel_requests(self):
         source = (APP / "libraries" / "Approval_workflow_store.php").read_text(encoding="utf-8")
         self.assertIn("$request_action = 'submit'", source)

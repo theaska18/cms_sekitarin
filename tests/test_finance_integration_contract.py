@@ -158,7 +158,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("finance_document_view", controller)
         self.assertIn("admin/finance/document_view", controller)
         store = STORE.read_text(encoding="utf-8")
-        self.assertIn("$row['draft_status']", store)
+        self.assertIn("AS draft_status", store)
         view = LIST_VIEW.read_text(encoding="utf-8")
         self.assertIn("row.draft_status", view)
         self.assertIn("'/view/'", view)

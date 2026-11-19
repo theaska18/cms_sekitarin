@@ -408,6 +408,15 @@ class Finance_payment_store
         return $totals;
     }
 
+    private function posted_paid_sql($spec, $alias)
+    {
+        return '(SELECT COALESCE(SUM(a.amount),0) FROM `' . $spec['allocation'] . '` a'
+            . ' INNER JOIN `' . $spec['table'] . '` p'
+            . ' ON p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id'
+            . ' WHERE a.tenant_id=' . $alias . '.tenant_id AND a.' . $spec['document_id'] . '=' . $alias . '.' . $spec['document_id']
+            . " AND p.status='posted')";
+    }
+
     public function lookup($tenant, $kind, $term)
     {
         if ($kind === 'cash_account') {
@@ -426,13 +435,16 @@ class Finance_payment_store
         }
         $spec = $this->spec($kind);
         if (!$spec) return array();
-        $this->db->select($spec['document_id'] . ',' . $spec['document_number'] . ',integration_number,currency_code,total_amount')
-            ->where('tenant_id', (int) $tenant)->where('status', 'posted');
+        $paid_sql = $this->posted_paid_sql($spec, 'd');
+        $this->db->select('d.' . $spec['document_id'] . ',d.' . $spec['document_number'] . ',d.integration_number,d.currency_code,d.total_amount', FALSE)
+            ->from($spec['document_table'] . ' d')
+            ->where('d.tenant_id', (int) $tenant)->where('d.status', 'posted')
+            ->where('d.total_amount - ' . $paid_sql . ' > 0.000001', NULL, FALSE);
         if ($term !== '') {
-            $this->db->group_start()->like($spec['document_number'], $term)
-                ->or_like('integration_number', $term)->group_end();
+            $this->db->group_start()->like('d.' . $spec['document_number'], $term)
+                ->or_like('d.integration_number', $term)->group_end();
         }
-        $query = $this->db->order_by($spec['document_number'], 'ASC')->limit(20)->get($spec['document_table']);
+        $query = $this->db->order_by('d.' . $spec['document_number'], 'ASC')->limit(20)->get();
         if ($query === FALSE) {
             return array();
         }

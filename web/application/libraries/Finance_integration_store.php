@@ -79,24 +79,18 @@ class Finance_integration_store
 
         $this->apply_search($spec, $search);
         $this->apply_filters($spec, $filters);
-        $query = $this->db->from($spec['table'])
-            ->where('tenant_id', (int) $tenant_id)
+        $document_table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
+        $draft_status = '(SELECT d.status FROM `' . $document_table . '` d'
+            . ' WHERE d.' . $spec['document_id'] . '=t.' . $spec['document_id']
+            . ' AND d.tenant_id=t.tenant_id LIMIT 1)';
+        $query = $this->db->select('t.*,' . $draft_status . ' AS draft_status', FALSE)
+            ->from($spec['table'] . ' t')
+            ->where('t.tenant_id', (int) $tenant_id)
             ->order_by($order_column, $direction)
-            ->order_by($spec['id'], 'DESC')
+            ->order_by('t.' . $spec['id'], 'DESC')
             ->limit($limit, $offset)
             ->get();
-        if ($query === FALSE) {
-            return array();
-        }
-        $rows = $query->result_array();
-        foreach ($rows as &$row) {
-            $document_id = (int) $row[$spec['document_id']];
-            $row['draft_status'] = $document_id > 0
-                ? $this->document_status($kind, (int) $tenant_id, $document_id)
-                : NULL;
-        }
-        unset($row);
-        return $rows;
+        return $query === FALSE ? array() : $query->result_array();
     }
 
     public function find($kind, $tenant_id, $inbox_id)

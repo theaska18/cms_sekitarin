@@ -363,6 +363,9 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("Akun pajak ' . $row['account_code'] . ' tidak ditemukan.", controller)
         self.assertIn("Akun pajak ' . $row['account_code'] . ' harus bertipe aset atau liabilitas.", controller)
         self.assertIn("akun pajak wajib untuk tarif lebih dari 0", controller)
+        self.assertIn("!isset($existing[(string) $row['tax_code']])", controller)
+        self.assertIn("foreach ($import_rows as $row)", controller)
+        self.assertNotIn("Import dibatalkan. Kode pajak sudah ada di tenant", controller)
         self.assertIn("tax_file", view)
         self.assertIn("finance_tax_import_errors", view)
         for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):

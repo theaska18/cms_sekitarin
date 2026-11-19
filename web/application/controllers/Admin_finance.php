@@ -338,12 +338,14 @@ class Admin_finance extends Admin
             foreach ($existing_rows as $row) {
                 $existing[(string) $row['tax_code']] = TRUE;
             }
-            $conflicts = array_values(array_intersect(array_keys($file_codes), array_keys($existing)));
-            if ($conflicts) {
-                $errors[] = 'Import dibatalkan. Kode pajak sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            $import_rows = array();
+            foreach ($rows as $row) {
+                if (!isset($existing[(string) $row['tax_code']])) {
+                    $import_rows[] = $row;
+                }
             }
             $codes = array();
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 if ($row['account_code'] !== '') {
                     $codes[$row['account_code']] = TRUE;
                 }
@@ -357,7 +359,7 @@ class Admin_finance extends Admin
                     $accounts[(string) $account['account_code']] = $account;
                 }
             }
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 if ($row['account_code'] === '') {
                     continue;
                 }
@@ -377,7 +379,7 @@ class Admin_finance extends Admin
         if (!$errors && $rows) {
             $tenant_id = (int) $this->current_user['tenant_id'];
             $this->db->trans_begin();
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 $account_id = NULL;
                 if ($row['account_code'] !== '') {
                     $account_id = isset($accounts[$row['account_code']]) ? (int) $accounts[$row['account_code']]['account_id'] : NULL;
@@ -402,7 +404,7 @@ class Admin_finance extends Admin
             } else {
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'tax_imported');
-                $this->session->set_flashdata('tax_import_count', count($rows));
+                $this->session->set_flashdata('tax_import_count', count($import_rows));
                 redirect('/admin/finance/tax_configuration', 'location', 303);
                 return;
             }
@@ -867,7 +869,7 @@ class Admin_finance extends Admin
             $status = !empty($result['auto_approved']) ? 'cancel_auto_approved' : 'approval_submitted';
         } else {
             $error = isset($result['error']) ? (string) $result['error'] : 'error';
-            $status = $error === 'insufficient_balance' ? 'insufficient_balance' : ($error === 'has_payments' ? 'document_has_payments' : (in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error')));
+            $status = $error === 'insufficient_balance' ? 'insufficient_balance' : ($error === 'has_payments' ? 'document_has_payments' : (in_array($error, array('period_closed', 'period_ambiguous'), TRUE) ? $error : (in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error'))));
         }
         $this->session->set_flashdata('finance_status', $status);
         redirect($return_url, 'location', 303);
