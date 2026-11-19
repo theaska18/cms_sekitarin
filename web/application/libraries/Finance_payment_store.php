@@ -24,7 +24,8 @@ class Finance_payment_store
             $spec['allocation'] => array('tenant_id', $spec['id'], $spec['document_id'], 'amount', 'base_amount'),
             $spec['document_table'] => array('tenant_id', $spec['document_id'], $spec['person_id'], $spec['document_number'], 'currency_code', 'exchange_rate', 'total_amount', 'base_total_amount', 'status'),
             'fin_cash_account' => array('tenant_id', 'cash_account_id', 'account_id', 'currency_code', 'active_flag'),
-            'fin_settings' => array('tenant_id', $spec['control'], 'fx_gain_account_id', 'fx_loss_account_id'),
+            'fin_settings' => array('tenant_id', $spec['control'], 'fx_gain_account_id', 'fx_loss_account_id',
+                'rounding_tolerance', 'rounding_gain_account_id', 'rounding_loss_account_id'),
         );
         foreach ($checks as $table => $columns) {
             if (!$this->db->table_exists($table) || !is_array($fields = $this->db->list_fields($table)) || array_diff($columns, $fields)) {
@@ -110,13 +111,22 @@ class Finance_payment_store
             ->where('p.status', 'posted')->get();
         if ($allocation === FALSE) return 'unavailable';
         $outstanding = round((float) $doc['total_amount'] - (float) $allocation->row()->allocated, 6);
-        if ($amount > $outstanding + 0.000001) return 'overpayment';
+        if ($outstanding <= 0.000001) return 'overpayment';
         $settings = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
         if ($settings === FALSE || !$settings->num_rows()) return 'settings_missing';
-        $base_currency = strtoupper((string) $settings->row()->base_currency);
+        $settings_row = $settings->row_array();
+        $tolerance = max(0, round((float) $settings_row['rounding_tolerance'], 6));
+        if ($amount > $outstanding + $tolerance + 0.000001) return 'overpayment';
+        $applied = $amount > $outstanding ? $outstanding : $amount;
+        $rounding = round($amount - $applied, 6);
+        $base_currency = strtoupper((string) $settings_row['base_currency']);
         if ($doc['currency_code'] === $base_currency && abs($rate - 1) > 0.0000001) return 'exchange_rate_invalid';
+        if ($rounding > 0.000001) {
+            $rounding_account = $kind === 'customer' ? 'rounding_gain_account_id' : 'rounding_loss_account_id';
+            if (empty($settings_row[$rounding_account])) return 'rounding_account_missing';
+        }
         $payment_base = round($amount * $rate, 6);
-        $allocation_base = round($amount * (float) $doc['exchange_rate'], 6);
+        $allocation_base = round($applied * (float) $doc['exchange_rate'], 6);
 
         $this->db->trans_begin();
         if ($id !== NULL) {
@@ -182,7 +192,7 @@ class Finance_payment_store
             'tenant_id' => (int) $tenant,
             $spec['id'] => $payment_id,
             $spec['document_id'] => (int) $doc[$spec['document_id']],
-            'amount' => $amount,
+            'amount' => $applied,
             'base_amount' => $allocation_base,
         ));
         if ($this->db->trans_status() === FALSE) {
@@ -217,6 +227,14 @@ class Finance_payment_store
         $settings_q = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
         if ($settings_q === FALSE || !$settings_q->num_rows()) return 'settings_missing';
         $settings = $settings_q->row_array();
+        $tolerance = max(0, round((float) $settings['rounding_tolerance'], 6));
+        $payment_amount = round((float) $payment['amount'], 6);
+        $applied_amount = round((float) $alloc['amount'], 6);
+        $rounding = round($payment_amount - $applied_amount, 6);
+        if ($rounding < -0.000001) return 'allocation_invalid';
+        if ($rounding > $tolerance + 0.000001) return 'overpayment';
+        $applied_payment_base = round($applied_amount * (float) $payment['exchange_rate'], 6);
+        $rounding_base = round((float) $payment['base_amount'] - $applied_payment_base, 6);
         $control_id = (int) $settings[$spec['control']];
         $control = $this->tenant_row('fin_account', 'account_id', $tenant, $control_id);
         $cash = $this->tenant_row('fin_cash_account', 'cash_account_id', $tenant, $payment['cash_account_id']);
@@ -227,7 +245,7 @@ class Finance_payment_store
             || (int) $control['active_flag'] !== 1 || (int) $control['posting_flag'] !== 1 || (int) $cash['active_flag'] !== 1
             || (int) $cash_gl['active_flag'] !== 1 || (int) $cash_gl['posting_flag'] !== 1
             || $cash['currency_code'] !== $payment['currency_code']) return 'account_invalid';
-        $fx_difference = round((float) $payment['base_amount'] - (float) $alloc['base_amount'], 6);
+        $fx_difference = round($applied_payment_base - (float) $alloc['base_amount'], 6);
         $fx_account = NULL;
         if (abs($fx_difference) > 0.000001) {
             $fx_id = $kind === 'customer'
@@ -237,6 +255,15 @@ class Finance_payment_store
             $gain = ($kind === 'customer') ? $fx_difference > 0 : $fx_difference < 0;
             $expected_fx_type = $gain ? 'revenue' : 'expense';
             if (!$fx_account || (int) $fx_account['active_flag'] !== 1 || (int) $fx_account['posting_flag'] !== 1 || $fx_account['account_type'] !== $expected_fx_type) return 'fx_account_missing';
+        }
+        $rounding_account = NULL;
+        if (abs($rounding_base) > 0.000001) {
+            $rounding_field = $kind === 'customer' ? 'rounding_gain_account_id' : 'rounding_loss_account_id';
+            $rounding_account = $this->tenant_row('fin_account', 'account_id', $tenant, (int) $settings[$rounding_field]);
+            $expected_rounding_type = $kind === 'customer' ? 'revenue' : 'expense';
+            if (!$rounding_account || (int) $rounding_account['active_flag'] !== 1
+                || (int) $rounding_account['posting_flag'] !== 1
+                || $rounding_account['account_type'] !== $expected_rounding_type) return 'rounding_account_missing';
         }
         $period = $this->db->where('tenant_id', (int) $tenant)->where('start_on <=', $payment['payment_date'])
             ->where('end_on >=', $payment['payment_date'])->where('status', 'open')->get('fin_accounting_period');
@@ -249,6 +276,9 @@ class Finance_payment_store
             } else {
                 if ($fx_difference > 0) $debit += $fx_difference; else $credit += abs($fx_difference);
             }
+        }
+        if ($rounding_account && abs($rounding_base) > 0.000001) {
+            if ($kind === 'customer') $credit += abs($rounding_base); else $debit += abs($rounding_base);
         }
         $this->db->trans_begin();
         if ($kind === 'supplier') {
@@ -288,6 +318,10 @@ class Finance_payment_store
         if ($fx_account && abs($fx_difference) > 0.000001) {
             $gain = ($kind === 'customer') ? $fx_difference > 0 : $fx_difference < 0;
             $base_lines[] = array('account_id' => (int) $fx_account['account_id'], 'debit_amount' => $gain ? 0 : abs($fx_difference), 'credit_amount' => $gain ? abs($fx_difference) : 0, 'debit_base_amount' => $gain ? 0 : abs($fx_difference), 'credit_base_amount' => $gain ? abs($fx_difference) : 0, 'currency_code' => $settings['base_currency'], 'exchange_rate' => 1, 'description' => 'Realized FX');
+        }
+        if ($rounding_account && abs($rounding_base) > 0.000001) {
+            $gain = $kind === 'customer';
+            $base_lines[] = array('account_id' => (int) $rounding_account['account_id'], 'debit_amount' => $gain ? 0 : abs($rounding_base), 'credit_amount' => $gain ? abs($rounding_base) : 0, 'debit_base_amount' => $gain ? 0 : abs($rounding_base), 'credit_base_amount' => $gain ? abs($rounding_base) : 0, 'currency_code' => $settings['base_currency'], 'exchange_rate' => 1, 'description' => 'Rounding difference');
         }
         foreach ($base_lines as $index => $line) {
             $this->db->insert('fin_journal_line', array(

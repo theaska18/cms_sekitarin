@@ -1037,16 +1037,23 @@ CREATE TABLE `fin_settings` (
   `payable_account_id` bigint unsigned DEFAULT NULL,
   `fx_gain_account_id` bigint unsigned DEFAULT NULL,
   `fx_loss_account_id` bigint unsigned DEFAULT NULL,
+  `rounding_tolerance` decimal(20,6) NOT NULL DEFAULT '1.000000',
+  `rounding_gain_account_id` bigint unsigned DEFAULT NULL,
+  `rounding_loss_account_id` bigint unsigned DEFAULT NULL,
   PRIMARY KEY (`settings_id`),
   UNIQUE KEY `uq_settings_1` (`tenant_id`),
   KEY `idx_fin_settings_receivable_account_id` (`receivable_account_id`),
   KEY `idx_fin_settings_payable_account_id` (`payable_account_id`),
   KEY `idx_fin_settings_fx_gain_account_id` (`fx_gain_account_id`),
   KEY `idx_fin_settings_fx_loss_account_id` (`fx_loss_account_id`),
+  KEY `idx_fin_settings_rounding_gain_account_id` (`rounding_gain_account_id`),
+  KEY `idx_fin_settings_rounding_loss_account_id` (`rounding_loss_account_id`),
   CONSTRAINT `fk_fin_settings_fx_gain_account_id` FOREIGN KEY (`fx_gain_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_settings_fx_loss_account_id` FOREIGN KEY (`fx_loss_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_settings_payable_account_id` FOREIGN KEY (`payable_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_settings_receivable_account_id` FOREIGN KEY (`receivable_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_fin_settings_rounding_gain_account_id` FOREIGN KEY (`rounding_gain_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT `fk_fin_settings_rounding_loss_account_id` FOREIGN KEY (`rounding_loss_account_id`) REFERENCES `fin_account` (`account_id`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `fk_fin_settings_tenant_id` FOREIGN KEY (`tenant_id`) REFERENCES `sys_tenant` (`tenant_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
