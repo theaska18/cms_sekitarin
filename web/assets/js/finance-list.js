@@ -170,3 +170,98 @@
     window.financeOpenActionMenu = openMenu;
     window.financeCloseActionMenus = closeMenus;
 })(window, document);
+
+/* Approval-backed cancellation actions for Finance list tables. */
+(function (window, document) {
+    'use strict';
+    if (!window.jQuery) return;
+    var $ = window.jQuery;
+
+    function configFor(tableId) {
+        var path = String(window.location.pathname || '').replace(/\/+$/, '');
+        if (tableId === 'finance-transaction-table') {
+            if (path.indexOf('/admin/finance/income') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_income'};
+            if (path.indexOf('/admin/finance/expenses') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_expenses'};
+            return null;
+        }
+        if (tableId === 'finance-document-table') {
+            if (path.indexOf('/admin/finance/sales_invoices') === 0) return {source: 'fin_sales_invoice', id: 'sales_invoice_id', menu: 'fin_sales_invoices'};
+            if (path.indexOf('/admin/finance/purchase_bills') === 0) return {source: 'fin_purchase_bill', id: 'purchase_bill_id', menu: 'fin_purchase_bills'};
+            return null;
+        }
+        if (tableId === 'finance-payment-table') {
+            if (path.indexOf('/admin/finance/customer_payments') === 0) return {source: 'fin_customer_payment', id: 'customer_payment_id', menu: 'fin_customer_payments'};
+            if (path.indexOf('/admin/finance/supplier_payments') === 0) return {source: 'fin_supplier_payment', id: 'supplier_payment_id', menu: 'fin_supplier_payments'};
+            return null;
+        }
+        if (tableId === 'finance-transfer-table') return {source: 'fin_cash_transfer', id: 'cash_transfer_id', menu: 'fin_cash_bank_transfer'};
+        if (tableId === 'finance-reconciliation-table') return {source: 'fin_bank_reconciliation', id: 'reconciliation_id', menu: 'fin_bank_reconciliation'};
+        if (tableId === 'finance-journal-table') {
+            if (path.indexOf('/admin/finance/opening_balances') === 0) return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_opening_balances'};
+            return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_journal_entries'};
+        }
+        return null;
+    }
+
+    function inject(table) {
+        var id = table.attr('id');
+        var cfg = configFor(id);
+        if (!cfg || !$.fn.DataTable || !$.fn.DataTable.isDataTable(table[0])) return;
+        var api = table.DataTable();
+        api.rows().every(function () {
+            var row = this.data();
+            var node = this.node();
+            if (!row || !node || ['approved', 'posted', 'completed'].indexOf(String(row.status || '')) === -1) return;
+            var sourceId = parseInt(row[cfg.id], 10) || 0;
+            if (!sourceId) return;
+            var menu = node.querySelector('td [role="menu"]');
+            if (!menu || menu.querySelector('[data-finance-cancel-open]')) return;
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'menuitem');
+            button.setAttribute('data-finance-cancel-open', '1');
+            button.setAttribute('data-source-type', cfg.source);
+            button.setAttribute('data-source-id', String(sourceId));
+            button.setAttribute('data-menu-code', cfg.menu);
+            button.setAttribute('data-cancel-label', String(row.transaction_number || row.invoice_number || row.bill_number || row.payment_number || row.transfer_number || row.reconciliation_number || row.journal_number || ('#' + sourceId)));
+            button.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none';
+            button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>Batalkan';
+            menu.appendChild(button);
+        });
+    }
+
+    function init() {
+        $('table[id^="finance-"]').each(function () {
+            var table = $(this);
+            if (!$.fn.DataTable || !$.fn.DataTable.isDataTable(this)) return;
+            table.off('draw.financeCancel').on('draw.financeCancel', function () { inject(table); });
+            inject(table);
+        });
+    }
+
+    $(document).on('init.dt draw.dt', init);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+    document.addEventListener('click', function (event) {
+        var opener = event.target.closest('[data-finance-cancel-open]');
+        if (!opener) return;
+        var dialog = document.getElementById('finance-cancel-dialog');
+        if (!dialog) return;
+        event.preventDefault();
+        document.querySelectorAll('[data-finance-menu], [data-finance-actions-menu], [data-transfer-actions-menu], [data-journal-actions-menu]').forEach(function (menu) { menu.hidden = true; });
+        dialog.querySelector('[name="source_type"]').value = opener.getAttribute('data-source-type') || '';
+        dialog.querySelector('[name="source_id"]').value = opener.getAttribute('data-source-id') || '';
+        dialog.querySelector('[name="menu_code"]').value = opener.getAttribute('data-menu-code') || '';
+        dialog.querySelector('[name="return_url"]').value = window.location.pathname;
+        dialog.querySelector('[data-finance-cancel-label]').textContent = opener.getAttribute('data-cancel-label') || '';
+        dialog.showModal();
+        var reason = dialog.querySelector('[name="reason"]');
+        if (reason) setTimeout(function () { reason.focus(); }, 30);
+    });
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-finance-cancel-close]')) {
+            var dialog = document.getElementById('finance-cancel-dialog');
+            if (dialog && dialog.open) dialog.close();
+        }
+    });
+})(window, document);

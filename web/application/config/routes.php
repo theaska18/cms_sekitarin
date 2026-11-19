@@ -42,6 +42,7 @@ $route['admin/finance/tax_configuration/export'] = 'admin_finance/tax_export';
 $route['admin/finance/tax_configuration/import'] = 'admin_finance/tax_import';
 $route['admin/finance/categories/export'] = 'admin_finance/category_export';
 $route['admin/finance/categories/import'] = 'admin_finance/category_import';
+$route['admin/finance/cancel_request'] = 'admin_finance/cancel_request';
 $route['admin/finance/chart_of_accounts/export'] = 'admin_finance/chart_of_accounts_export';
 $route['admin/finance/chart_of_accounts/import'] = 'admin_finance/chart_of_accounts_import';
 $route['admin/finance/(:any)/export'] = 'admin_finance/report_export/$1';

@@ -55,7 +55,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
 
     def test_workflow_submission_and_decision_enforce_step_and_tenant(self):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
-        self.assertIn("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)", store)
+        self.assertIn("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL, $request_action = 'submit')", store)
         self.assertIn("public function decide($request_id, $decision, $note)", store)
         self.assertIn("'flow_code'=>$flow_code", store)
         self.assertIn("'requester_employee_id'", store)
@@ -81,7 +81,7 @@ class AdminApprovalWorkflowContractTests(unittest.TestCase):
         store = (APP / "libraries/Approval_workflow_store.php").read_text()
         form = (APP / "views/admin/approval_flow/add.php").read_text()
         script = (ROOT / "web/assets/js/approval-step-editor.js").read_text()
-        submit = store.split("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)", 1)[1].split(
+        submit = store.split("public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL, $request_action = 'submit')", 1)[1].split(
             "private function create_approval_token", 1
         )[0]
         auto_branch = submit.split("if (!$steps)", 1)[1].split("$step=isset($steps[0])", 1)[0]

@@ -810,7 +810,7 @@ class Approval_workflow_store
         return $this->db->trans_status()===FALSE ? 'error' : 'routed';
     }
 
-    public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL)
+    public function submit($flow_code, $subject, $details, $source_type = NULL, $source_id = NULL, $requester_user_id = NULL, $request_action = 'submit')
     {
         $flow_code=trim((string)$flow_code); $subject=trim((string)$subject); $details=trim((string)$details);
         if (!$this->available() || $flow_code === '' || strlen($flow_code)>32
@@ -841,11 +841,13 @@ class Approval_workflow_store
                 'current_approver_user_id'=>NULL,'create_on'=>$created,'update_on'=>$created,
                 'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
                 'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
+                'request_action'=>$request_action === 'cancel' ? 'cancel' : 'submit',
             ));
             if (!$inserted || $this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
             $request_id=(int)$this->db->insert_id();
             $this->finalize_source(array(
-                'source_type'=>$source_type,'source_id'=>$source_id,'status'=>'approved',
+                'request_id'=>$request_id,'source_type'=>$source_type,'source_id'=>$source_id,'status'=>'approved',
+                'request_action'=>$request_action,
             ));
             if ($this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
             $this->db->trans_commit();
@@ -866,6 +868,7 @@ class Approval_workflow_store
             'create_on'=>$created,'update_on'=>$created,
             'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
             'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
+            'request_action'=>$request_action === 'cancel' ? 'cancel' : 'submit',
         ));
         if (!$inserted) { $this->db->trans_rollback(); return FALSE; }
         $request_id=(int)$this->db->insert_id();
@@ -1005,11 +1008,14 @@ class Approval_workflow_store
             $this->db->trans_rollback(); return FALSE;
         }
         if ($new_status === 'approved' || $new_status === 'revise' || $new_status === 'rejected') {
-            $this->finalize_source(array(
+            $finalized = $this->finalize_source(array(
+                'request_id'=>(int)$request_id,
                 'source_type'=>isset($request['source_type']) ? $request['source_type'] : NULL,
                 'source_id'=>isset($request['source_id']) ? $request['source_id'] : NULL,
                 'status'=>$new_status,
+                'request_action'=>isset($request['request_action']) ? $request['request_action'] : 'submit',
             ));
+            if ($finalized === FALSE) { $this->db->trans_rollback(); return FALSE; }
         }
         if ($this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
         $this->db->trans_commit();
@@ -1028,6 +1034,14 @@ class Approval_workflow_store
         $type = isset($request['source_type']) ? (string)$request['source_type'] : '';
         $id = isset($request['source_id']) ? (int)$request['source_id'] : 0;
         $status = isset($request['status']) ? (string)$request['status'] : '';
+        if (isset($request['request_action']) && $request['request_action'] === 'cancel') {
+            $CI =& get_instance();
+            $CI->load->library('finance_cancellation_store');
+            return $CI->finance_cancellation_store->finalize_for_request(
+                isset($request['request_id']) ? (int)$request['request_id'] : 0,
+                $status
+            );
+        }
         $targets = array(
             'fin_transaction' => array('table' => 'fin_transaction', 'id' => 'transaction_id'),
             'fin_cash_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id'),

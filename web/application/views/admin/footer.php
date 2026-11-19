@@ -660,6 +660,24 @@
     updateContentFade();
 }());
 </script>
+<dialog id="finance-cancel-dialog" aria-labelledby="finance-cancel-title" class="w-[min(92vw,32rem)] rounded-2xl border border-slate-200 p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/50">
+    <form method="post" action="/admin/finance/cancel_request" class="p-6">
+        <input type="hidden" name="<?= html_escape(isset($csrf_token_name) ? $csrf_token_name : $this->security->get_csrf_token_name()) ?>" value="<?= html_escape(isset($csrf_hash) ? $csrf_hash : $this->security->get_csrf_hash()) ?>">
+        <input type="hidden" name="source_type" value="">
+        <input type="hidden" name="source_id" value="">
+        <input type="hidden" name="menu_code" value="">
+        <input type="hidden" name="return_url" value="">
+        <h2 id="finance-cancel-title" class="text-lg font-semibold">Ajukan pembatalan</h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600">Transaksi <strong data-finance-cancel-label></strong> akan diajukan ke alur persetujuan pembatalan.</p>
+        <label class="mt-4 block text-sm font-semibold text-slate-700">Alasan pembatalan
+            <textarea name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"></textarea>
+        </label>
+        <div class="mt-6 flex justify-end gap-3">
+            <button type="button" data-finance-cancel-close class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Batal</button>
+            <button type="submit" class="min-h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700">Ajukan pembatalan</button>
+        </div>
+    </form>
+</dialog>
 <script src="/assets/js/admin-action-menu.js?v=<?= is_file(FCPATH . 'assets/js/admin-action-menu.js') ? filemtime(FCPATH . 'assets/js/admin-action-menu.js') : '1' ?>"></script>
 <script src="/assets/js/finance-filters.js?v=<?= is_file(FCPATH . 'assets/js/finance-filters.js') ? filemtime(FCPATH . 'assets/js/finance-filters.js') : '1' ?>"></script>
 </body>

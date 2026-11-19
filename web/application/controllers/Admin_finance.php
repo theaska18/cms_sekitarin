@@ -811,6 +811,62 @@ class Admin_finance extends Admin
         redirect('/admin/finance/chart_of_accounts', 'location', 303);
     }
 
+    /** Create an approval-backed cancellation request for a Finance record. */
+    public function cancel_request()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            $this->output->set_header('Allow: POST')->set_status_header(405);
+            return;
+        }
+        $source_type = trim((string) $this->input->post('source_type', TRUE));
+        $source_id = (int) $this->input->post('source_id', TRUE);
+        $menu_code = trim((string) $this->input->post('menu_code', TRUE));
+        $reason = trim((string) $this->input->post('reason', TRUE));
+        $return_url = trim((string) $this->input->post('return_url', TRUE));
+        if ($return_url === '' || strpos($return_url, '/admin/finance/') !== 0) {
+            $return_url = '/admin/finance/all_transactions';
+        }
+        $allowed = array(
+            'fin_transaction' => array('fin_income', 'fin_expenses'),
+            'fin_sales_invoice' => array('fin_sales_invoices'),
+            'fin_purchase_bill' => array('fin_purchase_bills'),
+            'fin_customer_payment' => array('fin_customer_payments'),
+            'fin_supplier_payment' => array('fin_supplier_payments'),
+            'fin_cash_transfer' => array('fin_cash_bank_transfer'),
+            'fin_bank_reconciliation' => array('fin_bank_reconciliation'),
+            'fin_journal_entry' => array('fin_journal_entries', 'fin_opening_balances'),
+        );
+        if (!isset($allowed[$source_type]) || !in_array($menu_code, $allowed[$source_type], TRUE)
+            || $source_id < 1 || $reason === '') {
+            $this->session->set_flashdata('finance_status', 'cancel_invalid');
+            redirect($return_url, 'location', 303);
+            return;
+        }
+        if (!$this->has_admin_menu_code($menu_code)
+            || (!$this->has_admin_access_code($menu_code . '_update')
+                && !$this->has_admin_access_code($menu_code . '_delete'))) {
+            $this->finance_forbidden();
+            return;
+        }
+        $this->load->library('finance_cancellation_store');
+        $result = $this->finance_cancellation_store->request(
+            (int) $this->current_user['tenant_id'],
+            (int) $this->current_user['user_id'],
+            $source_type,
+            $source_id,
+            $menu_code,
+            $reason
+        );
+        if (!empty($result['ok'])) {
+            $status = 'approval_submitted';
+        } else {
+            $error = isset($result['error']) ? (string) $result['error'] : 'error';
+            $status = $error === 'no_flow' ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error');
+        }
+        $this->session->set_flashdata('finance_status', $status);
+        redirect($return_url, 'location', 303);
+    }
+
     public function data($slug = '')
     {
         if (in_array($slug, array('all_transactions', 'income', 'expenses'), TRUE)) {

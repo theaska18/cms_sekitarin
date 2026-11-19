@@ -70,6 +70,10 @@ admin-contract locale expectation that omits `hr` resources.
   `Finance_list_table::action_header($label)`; it keeps the accessible name in
   `aria-label` and adds `data-export-ignore="1"`. CSV/PDF exports must skip
   every column carrying that marker.
+- Finance cancellations must go through the approval flow
+  (`Finance_cancellation_store`). Never delete posted records: create a linked
+  reversal journal and keep the original record visible with status
+  `cancelled`.
 - Tables that use `Finance_list_table` get the shared horizontal scroll fades
   (`data-table-scroll` plus left/right fade spans). Do not build a separate
   table shell or scroll container for list pages.
