@@ -59,6 +59,10 @@ class Finance_cancellation_store
         if ($pending > 0) {
             return array('ok' => FALSE, 'error' => 'pending');
         }
+        $balance_check = $this->validate_reversal_balance($tenant_id, $source_type, (int) $source_id, $status);
+        if ($balance_check !== 'ok') {
+            return array('ok' => FALSE, 'error' => $balance_check);
+        }
         $flow_code = $this->cancel_flow($menu_code);
         if ($flow_code === '') {
             return array('ok' => FALSE, 'error' => 'no_flow');
@@ -101,7 +105,15 @@ class Finance_cancellation_store
         // because the cancellation row is linked to the request only after submit().
         if (isset($result['status']) && $result['status'] === 'auto_approved') {
             if ($this->finalize_for_request($request_id, 'approved') === FALSE) {
-                return array('ok' => FALSE, 'error' => 'approval');
+                $this->db->where(array('tenant_id' => (int) $tenant_id, $spec['id'] => (int) $source_id))
+                    ->where('status', 'cancel_pending')
+                    ->update($spec['table'], array('status' => $status));
+                $this->db->where('cancellation_id', $cancellation_id)->update('fin_cancellation', array(
+                    'status' => 'failed',
+                    'decided_on' => date('Y-m-d H:i:s'),
+                ));
+                $balance_check = $this->validate_reversal_balance($tenant_id, $source_type, (int) $source_id, $status);
+                return array('ok' => FALSE, 'error' => $balance_check !== 'ok' ? $balance_check : 'approval');
             }
             return array('ok' => TRUE, 'error' => '', 'request_id' => $request_id, 'auto_approved' => TRUE);
         }
@@ -124,8 +136,23 @@ class Finance_cancellation_store
         $source_id = (int) $cancellation['source_id'];
         $decision = (string) $decision;
         if ($decision === 'approved') {
+            $this->db->trans_begin();
+            $balance_check = $this->validate_reversal_balance(
+                $tenant_id,
+                (string) $cancellation['source_type'],
+                $source_id,
+                (string) $cancellation['previous_status']
+            );
+            if ($balance_check !== 'ok') {
+                $this->db->trans_rollback();
+                return FALSE;
+            }
             $reversal_id = $this->create_reversal($tenant_id, $cancellation);
             if ($reversal_id === FALSE) {
+                $this->db->trans_rollback();
+                $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
+                    ->where('status', 'cancel_pending')
+                    ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
                 $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])
                     ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => date('Y-m-d H:i:s')));
                 return FALSE;
@@ -138,7 +165,8 @@ class Finance_cancellation_store
                 'reversal_journal_id' => $reversal_id ? (int) $reversal_id : NULL,
             ));
             $this->sync_integration_inbox($tenant_id, (string) $cancellation['source_type'], $source_id);
-            return TRUE;
+            $this->db->trans_commit();
+            return $this->db->trans_status() !== FALSE;
         }
         $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
             ->where('status', 'cancel_pending')
@@ -203,12 +231,24 @@ class Finance_cancellation_store
             ));
     }
 
-    private function create_reversal($tenant_id, $cancellation)
+    /** Validate that posting the reversal would not take a cash/bank account below zero. */
+    private function validate_reversal_balance($tenant_id, $source_type, $source_id, $previous_status)
     {
-        $source_type = (string) $cancellation['source_type'];
-        $source_id = (int) $cancellation['source_id'];
-        if (in_array((string) $cancellation['previous_status'], array('approved', 'draft', 'revise'), TRUE)) {
-            return NULL;
+        $context = $this->reversal_context($tenant_id, $source_type, $source_id, $previous_status);
+        if (empty($context['needed'])) {
+            return 'ok';
+        }
+        $CI =& get_instance();
+        $CI->load->library('finance_balance_guard');
+        return $CI->finance_balance_guard->validate_journal_lines($tenant_id, $context['lines']);
+    }
+
+    /** Collect the original journal and its mirrored reversal lines. */
+    private function reversal_context($tenant_id, $source_type, $source_id, $previous_status)
+    {
+        if (!isset($this->sources[$source_type])
+            || in_array((string) $previous_status, array('approved', 'draft', 'revise'), TRUE)) {
+            return array('needed' => FALSE);
         }
         $spec = $this->sources[$source_type];
         if ($source_type === 'fin_journal_entry') {
@@ -220,15 +260,49 @@ class Finance_cancellation_store
                 ->limit(1)->get('fin_journal_entry')->row_array();
         }
         if (!$original || (string) $original['status'] !== 'posted') {
-            return NULL;
+            return array('needed' => FALSE);
         }
         $original_id = (int) $original['journal_entry_id'];
         $existing = $this->db->where(array('tenant_id' => $tenant_id,
             'source_type' => 'reversal', 'source_id' => $original_id))
             ->limit(1)->get('fin_journal_entry')->row_array();
         if ($existing) {
-            return (int) $existing['journal_entry_id'];
+            return array('needed' => FALSE, 'existing_id' => (int) $existing['journal_entry_id']);
         }
+        $original_lines = $this->db->where(array('tenant_id' => $tenant_id, 'journal_entry_id' => $original_id))
+            ->order_by('line_number', 'ASC')->get('fin_journal_line')->result_array();
+        $lines = array();
+        foreach ($original_lines as $line) {
+            $lines[] = array(
+                'account_id' => (int) $line['account_id'],
+                'currency_code' => (string) $line['currency_code'],
+                'debit_amount' => (float) $line['credit_amount'],
+                'credit_amount' => (float) $line['debit_amount'],
+            );
+        }
+        return array(
+            'needed' => TRUE,
+            'original' => $original,
+            'original_lines' => $original_lines,
+            'lines' => $lines,
+        );
+    }
+
+    private function create_reversal($tenant_id, $cancellation)
+    {
+        $source_type = (string) $cancellation['source_type'];
+        $source_id = (int) $cancellation['source_id'];
+        $context = $this->reversal_context(
+            $tenant_id,
+            $source_type,
+            $source_id,
+            (string) $cancellation['previous_status']
+        );
+        if (empty($context['needed'])) {
+            return isset($context['existing_id']) ? (int) $context['existing_id'] : NULL;
+        }
+        $original = $context['original'];
+        $original_id = (int) $original['journal_entry_id'];
         $number = 'CNL-' . substr((string) $original['journal_number'], 0, 40);
         $suffix = 1;
         while ($this->db->where(array('tenant_id' => $tenant_id, 'journal_number' => $number))
@@ -255,8 +329,7 @@ class Finance_cancellation_store
         ));
         if ($inserted !== TRUE) { return FALSE; }
         $reversal_id = (int) $this->db->insert_id();
-        $lines = $this->db->where(array('tenant_id' => $tenant_id, 'journal_entry_id' => $original_id))
-            ->order_by('line_number', 'ASC')->get('fin_journal_line')->result_array();
+        $lines = $context['original_lines'];
         foreach ($lines as $line) {
             if (!$this->db->insert('fin_journal_line', array(
                 'tenant_id' => $tenant_id,

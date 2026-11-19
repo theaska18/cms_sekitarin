@@ -21,6 +21,7 @@ $statuses = array(
     'approval_error' => isset($labels['finance_status_approval_error']) ? $labels['finance_status_approval_error'] : 'Approval could not be submitted.',
     'not_submittable' => isset($labels['finance_status_not_submittable']) ? $labels['finance_status_not_submittable'] : 'This record cannot be submitted for approval.',
     'not_postable' => isset($labels['finance_status_not_postable']) ? $labels['finance_status_not_postable'] : 'Only approved records can be posted.',
+    'insufficient_balance' => isset($labels['finance_status_insufficient_balance']) ? $labels['finance_status_insufficient_balance'] : 'Cash/bank balance is insufficient for this transaction.',
 );
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">

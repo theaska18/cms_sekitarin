@@ -17,6 +17,20 @@ class FinanceCancellationContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, source)
 
+    def test_cancellation_validates_cash_balance_before_reversal(self):
+        store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
+        for marker in (
+            "validate_reversal_balance", "reversal_context", "finance_balance_guard",
+            "validate_journal_lines", "balance_check", "trans_begin",
+            "trans_rollback", "cancel_pending",
+        ):
+            self.assertIn(marker, store)
+        self.assertIn("array('status' => (string) $cancellation['previous_status'])", store)
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        self.assertIn("$error === 'insufficient_balance' ? 'insufficient_balance'", controller)
+        document_view = (APP / "views" / "admin" / "finance" / "document_index.php").read_text(encoding="utf-8")
+        self.assertIn("'insufficient_balance' =>", document_view)
+
     def test_approval_flow_supports_cancel_requests(self):
         source = (APP / "libraries" / "Approval_workflow_store.php").read_text(encoding="utf-8")
         self.assertIn("$request_action = 'submit'", source)

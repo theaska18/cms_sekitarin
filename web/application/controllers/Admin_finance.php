@@ -861,7 +861,7 @@ class Admin_finance extends Admin
             $status = !empty($result['auto_approved']) ? 'cancel_auto_approved' : 'approval_submitted';
         } else {
             $error = isset($result['error']) ? (string) $result['error'] : 'error';
-            $status = in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error');
+            $status = $error === 'insufficient_balance' ? 'insufficient_balance' : (in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error'));
         }
         $this->session->set_flashdata('finance_status', $status);
         redirect($return_url, 'location', 303);
