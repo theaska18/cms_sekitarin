@@ -5,7 +5,7 @@
   "released_at": "2026-11-19",
   "min_php": "8.1",
   "requires_version": "1.0.12",
-  "changelog": "Rilis 1.0.15: shell DataTable dan panel filter admin yang seragam, filter per kolom, padding dashboard, dan dukungan update langsung dari 1.0.12.",
+  "changelog": "Rilis 1.0.15: shell DataTable dan panel filter admin yang seragam, filter per kolom, padding dashboard, serta update bertahap otomatis yang kompatibel dengan 1.0.12.",
   "files": [
     {
       "path": "application/config/version.php",
@@ -53,6 +53,16 @@
       "size": 30583
     },
     {
+      "path": "application/controllers/Admin_update.php",
+      "sha256": "78269337055e9a55a185f9f1a1ba2d8a6d9b66ec21d004c0fe8de35f59ceefd3",
+      "size": 7067
+    },
+    {
+      "path": "application/controllers/Update_api.php",
+      "sha256": "68649c6a65cce361ff1382ac157865f79a388a494a29fd4b3682b39c6f5fb77c",
+      "size": 10617
+    },
+    {
       "path": "application/language/arabic/finance_lang.php",
       "sha256": "32f90932cbf82afd9a703234ecd0c8a2ae400f39eb105a9c6e491c204b8cc23e",
       "size": 44825
@@ -68,6 +78,11 @@
       "size": 37559
     },
     {
+      "path": "application/language/english/update_lang.php",
+      "sha256": "92a435434d74b2ba433cb1aecad596676095c53b5b037f5f0b7ab45589e1bb96",
+      "size": 5131
+    },
+    {
       "path": "application/language/french/finance_lang.php",
       "sha256": "f7d4674cc82772b315f19a1f2f6f446c785c2259f9d5b692c70b5f89e7c3dba0",
       "size": 40256
@@ -81,6 +96,11 @@
       "path": "application/language/indonesian/finance_lang.php",
       "sha256": "3180ac20a305c928adbad324d5f929150d0f5538e888ab94ad47058c2671e8aa",
       "size": 37911
+    },
+    {
+      "path": "application/language/indonesian/update_lang.php",
+      "sha256": "63bc0beba7f2910235f1f03bfff2c3c325935b1ddca32c56160f006680667f57",
+      "size": 5090
     },
     {
       "path": "application/language/japanese/finance_lang.php",
@@ -183,6 +203,11 @@
       "size": 7180
     },
     {
+      "path": "application/libraries/Update_store.php",
+      "sha256": "df49f156b5d168e0f28f96ca608e2abbc0c941f1a25b487d8f06a378f30e5bda",
+      "size": 55115
+    },
+    {
       "path": "application/views/admin/approval/errors.php",
       "sha256": "689d47f5f43e248e8010d7ef683a2dd42cd0d09792c4e6d508760ea6198f463b",
       "size": 9773
@@ -276,6 +301,11 @@
       "path": "application/views/admin/sequence/index.php",
       "sha256": "d521b8ce2891a71ac42ef56c825d059e11cb14f5d497b192b6d3b294799f9a64",
       "size": 18609
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "911ba97ed3345c330304f4ec6d63ea53249e33a8c09a752ee2748348e82b991d",
+      "size": 30268
     },
     {
       "path": "application/views/admin/tenant/index.php",

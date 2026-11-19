@@ -1,11 +1,11 @@
 {
   "version": "1.0.15",
   "released_at": "2026-11-19",
-  "changelog": "Rilis 1.0.15: shell DataTable dan panel filter admin yang seragam, filter per kolom, padding dashboard, dan dukungan update langsung dari 1.0.12.",
+  "changelog": "Rilis 1.0.15: shell DataTable dan panel filter admin yang seragam, filter per kolom, padding dashboard, serta update bertahap otomatis yang kompatibel dengan 1.0.12.",
   "min_php": "8.1",
   "requires_version": "1.0.12",
   "package": "cms-1.0.15.zip",
-  "sha256": "f53aea34019cb310d4b24643c3593033fd3592517a1ed12a022a7d32e8dbd779",
-  "size": 288878,
+  "sha256": "1e3dfa75ab33048ee56883a78949dbe98e3031510e6df3dbe77fac7c8de12e95",
+  "size": 314444,
   "migrations": []
 }
