@@ -96,7 +96,7 @@ if ($can_add) {
                     <thead><tr>
                         <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_number']) ? $labels['finance_tx_column_number'] : 'Number') ?></th>
-                        <th scope="col"><?= html_escape(isset($labels['finance_tx_column_type']) ? $labels['finance_tx_column_type'] : 'Type') ?></th>
+                        <th scope="col"><?= $finance_transaction_slug === 'all_transactions' ? html_escape(isset($labels['finance_tx_column_type']) ? $labels['finance_tx_column_type'] : 'Type') : html_escape(isset($labels['finance_field_description']) ? $labels['finance_field_description'] : 'Description') ?></th>
                         <th scope="col"><?= html_escape($label_transaction_date) ?></th>
                         <th scope="col"><?= html_escape($label_created_at) ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_tx_column_amount']) ? $labels['finance_tx_column_amount'] : 'Amount') ?></th>
@@ -185,7 +185,11 @@ if ($can_add) {
                 return '<div class="relative inline-flex"><button type="button" data-finance-actions-toggle aria-label="' + escapeHtml(txLabels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-finance-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + items + '</div></div>';
             }},
             {data: 'transaction_number', name: 'transaction_number', render: function (v,t) { return t === 'display' ? escapeHtml(v) : v; }},
+            <?php if ($finance_transaction_slug === 'all_transactions'): ?>
             {data: 'transaction_type', name: 'transaction_type', render: function (v,t) { return t === 'display' ? escapeHtml(v === 'income' ? txLabels.typeIncome : txLabels.typeExpense) : v; }},
+            <?php else: ?>
+            {data: 'description', name: 'description', render: function (v,t) { return t === 'display' ? escapeHtml(v || '') : v; }},
+            <?php endif; ?>
             {data: 'transaction_on', name: 'transaction_on', render: function (v,t) { return t === 'display' ? escapeHtml(window.financeFormatDate(v)) : v; }},
             {data: 'create_on', name: 'create_on', render: function (v,t) { return t === 'display' ? window.financeLocalTimeHtml(v) : v; }},
             {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v,t) { return t === 'display' ? escapeHtml(window.financeFormatAmount(v)) : v; }},

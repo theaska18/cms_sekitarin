@@ -1678,16 +1678,21 @@ class Admin_finance extends Admin
             'manual' => 'Manual Journal',
             'opening_balance' => 'Opening Balance',
         );
+        $field_filters = array(
+            array('type' => 'range', 'name' => 'total_amount', 'label' => isset($this->lang->language['finance_column_total']) ? $this->lang->language['finance_column_total'] : 'Total', 'min_name' => 'amount_min', 'max_name' => 'amount_max'),
+            array('type' => 'select', 'name' => 'currency_code', 'label' => isset($this->lang->language['finance_column_currency']) ? $this->lang->language['finance_column_currency'] : 'Currency', 'options' => $currency_options),
+            array('type' => 'select', 'name' => 'created_by', 'label' => isset($this->lang->language['finance_created_by']) ? $this->lang->language['finance_created_by'] : 'Created by', 'options' => $user_options),
+        );
+        if ($type === 'all') {
+            array_unshift($field_filters, array('type' => 'select', 'name' => 'transaction_type', 'label' => isset($this->lang->language['finance_tx_column_type']) ? $this->lang->language['finance_tx_column_type'] : 'Type', 'options' => $type_options));
+        } else {
+            array_unshift($field_filters, array('type' => 'text', 'name' => 'description', 'label' => isset($this->lang->language['finance_field_description']) ? $this->lang->language['finance_field_description'] : 'Description'));
+        }
         return $this->finance_filter_panel->config(array(
             'date' => TRUE,
             'date_preset' => 'transaction',
             'status_preset' => 'transaction',
-            'field_filters' => array(
-                array('type' => 'select', 'name' => 'transaction_type', 'label' => isset($this->lang->language['finance_tx_column_type']) ? $this->lang->language['finance_tx_column_type'] : 'Type', 'options' => $type_options),
-                array('type' => 'range', 'name' => 'total_amount', 'label' => isset($this->lang->language['finance_column_total']) ? $this->lang->language['finance_column_total'] : 'Total', 'min_name' => 'amount_min', 'max_name' => 'amount_max'),
-                array('type' => 'select', 'name' => 'currency_code', 'label' => isset($this->lang->language['finance_column_currency']) ? $this->lang->language['finance_column_currency'] : 'Currency', 'options' => $currency_options),
-                array('type' => 'select', 'name' => 'created_by', 'label' => isset($this->lang->language['finance_created_by']) ? $this->lang->language['finance_created_by'] : 'Created by', 'options' => $user_options),
-            ),
+            'field_filters' => $field_filters,
         ));
     }
 
@@ -1710,7 +1715,7 @@ class Admin_finance extends Admin
         $filters = $this->finance_filter_panel->filters($this->finance_transaction_filter_config($type));
         $columns = array(
             1 => 'transaction_number',
-            2 => 'transaction_type',
+            2 => ($type === 'all' ? 'transaction_type' : 'description'),
             3 => 'transaction_on',
             4 => 'create_on',
             5 => 'total_amount',

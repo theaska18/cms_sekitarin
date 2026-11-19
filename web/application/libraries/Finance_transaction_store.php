@@ -144,7 +144,7 @@ class Finance_transaction_store
             $result = $this->db->query($sql, $binds);
             return $result === FALSE ? FALSE : $result->result_array();
         }
-        $allowed = array('transaction_number', 'transaction_type', 'transaction_on', 'create_on', 'total_amount', 'currency_code', 'status', 'created_by_name');
+        $allowed = array('transaction_number', 'transaction_type', 'description', 'transaction_on', 'create_on', 'total_amount', 'currency_code', 'status', 'created_by_name');
         $order = in_array($order, $allowed, TRUE) ? $order : 'transaction_on';
         $direction = strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC';
         $revise_note = "(SELECT a.note FROM app_approval_action a"
@@ -672,6 +672,7 @@ class Finance_transaction_store
         }
         $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
         if (!empty($fields['transaction_type'])) $this->db->where($alias . 'transaction_type', $fields['transaction_type']);
+        if (!empty($fields['description'])) $this->db->like($alias . 'description', $fields['description']);
         if (!empty($fields['amount_min'])) $this->db->where($alias . 'total_amount >=', $fields['amount_min']);
         if (!empty($fields['amount_max'])) $this->db->where($alias . 'total_amount <=', $fields['amount_max']);
         if (!empty($fields['currency_code'])) $this->db->where($alias . 'currency_code', $fields['currency_code']);
