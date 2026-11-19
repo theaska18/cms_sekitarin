@@ -80,10 +80,10 @@ class Finance_api extends CI_Controller
         if ($party_code !== '' && strlen($party_code) > 32) {
             $errors[] = $spec['code'];
         }
-        if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $amount_raw) || (float) $amount_raw <= 0) {
+        if (!preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $amount_raw) || (float) $amount_raw <= 0) {
             $errors[] = 'amount_before_tax';
         }
-        if (!preg_match('/^\d{1,3}(?:\.\d{1,6})?$/', $tax_raw) || (float) $tax_raw < 0 || (float) $tax_raw > 100) {
+        if (!preg_match('/^\d{1,3}(?:\.\d{1,2})?$/', $tax_raw) || (float) $tax_raw < 0 || (float) $tax_raw > 100) {
             $errors[] = 'tax_percent';
         }
         if ($description === '' || strlen($description) > 240) {

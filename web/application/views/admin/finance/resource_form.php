@@ -82,7 +82,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
                         </select>
                     <?php else: ?>
                         <?php $input_type = in_array($field['type'], array('date', 'email', 'number', 'decimal', 'currency'), TRUE) ? ($field['type'] === 'decimal' || $field['type'] === 'currency' ? 'text' : $field['type']) : 'text'; ?>
-                        <input id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" type="<?= html_escape($input_type) ?>" value="<?= html_escape($value) ?>" <?= !empty($field['required']) ? 'required' : '' ?> <?= isset($field['maxlength']) ? 'maxlength="' . (int) $field['maxlength'] . '"' : '' ?> <?= isset($field['normalize']) ? 'data-normalize="' . html_escape($field['normalize']) . '"' : '' ?> <?= $field['type'] === 'decimal' ? 'inputmode="decimal"' : '' ?> <?= $field['type'] === 'number' ? 'inputmode="numeric" min="1"' : '' ?><?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                        <input id="finance-<?= html_escape($name) ?>" name="<?= html_escape($name) ?>" type="<?= html_escape($input_type) ?>" value="<?= html_escape($value) ?>" <?= !empty($field['required']) ? 'required' : '' ?> <?= isset($field['maxlength']) ? 'maxlength="' . (int) $field['maxlength'] . '"' : '' ?> <?= isset($field['normalize']) ? 'data-normalize="' . html_escape($field['normalize']) . '"' : '' ?> <?= $field['type'] === 'decimal' ? 'inputmode="decimal" data-decimal-limit="2"' : '' ?> <?= $field['type'] === 'number' ? 'inputmode="numeric" min="1"' : '' ?><?= $described_by ?> class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200">
                     <?php endif; ?>
                     <?php if ($hint !== ''): ?>
                         <p id="<?= html_escape($hint_id) ?>" class="mt-1 text-xs text-slate-500"><?= html_escape($hint) ?></p>
@@ -116,6 +116,7 @@ foreach ($finance_resource['fields'] as $finance_field) {
 <?php if ($has_account_lookup || $has_fiscal_year_lookup): ?>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>
 <script src="/assets/js/vendor/jquery-ui.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery-ui.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery-ui.min.js') : '1' ?>"></script>
+<script src="/assets/js/currency-input.js?v=<?= is_file(FCPATH . 'assets/js/currency-input.js') ? filemtime(FCPATH . 'assets/js/currency-input.js') : '1' ?>"></script>
 <script>
 (function () {
     $('[data-finance-account-lookup]').each(function () {

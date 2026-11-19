@@ -64,6 +64,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     var inboxField = <?= json_encode($inbox_field) ?>;
     var dateField = <?= json_encode($date_field) ?>;
     function amount(value) { return window.financeFormatAmount ? window.financeFormatAmount(value) : value; }
+    function percent(value) { var number = Number(value); return isFinite(number) ? number.toLocaleString('en-US', {maximumFractionDigits: 2}) : value; }
     function documentDate(value) { return window.financeFormatDate ? window.financeFormatDate(value) : value; }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
@@ -84,7 +85,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
             {data: <?= json_encode($party_field) ?>, name: <?= json_encode($party_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: <?= json_encode($code_field) ?>, name: <?= json_encode($code_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'amount_before_tax', name: 'amount_before_tax', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
-            {data: 'tax_percent', name: 'tax_percent', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(v) + '%' : v; }},
+            {data: 'tax_percent', name: 'tax_percent', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(percent(v)) + '%' : v; }},
             {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
             {data: 'status', name: 'status', render: function (v, t) { if (t !== 'display') return v; return escapeHtml(statusLabels[v] || v); }}
         ],

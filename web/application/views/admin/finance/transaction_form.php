@@ -74,7 +74,7 @@ $kind_fields = array(
                 </div>
                 <div>
                     <label for="exchange_rate" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_tx_field_exchange_rate']) ? $labels['finance_tx_field_exchange_rate'] : 'Exchange rate to base currency') ?> *</label>
-                    <input id="exchange_rate" name="exchange_rate" type="text" inputmode="decimal" required value="<?= html_escape($record['exchange_rate']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+                    <input id="exchange_rate" name="exchange_rate" type="text" inputmode="decimal" data-decimal-limit="2" required value="<?= html_escape($record['exchange_rate'] === '' ? '' : number_format((float) $record['exchange_rate'], 2, '.', '')) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
                     <p class="mt-1 text-xs text-slate-500"><?= html_escape(isset($labels['finance_tx_hint_exchange_rate']) ? $labels['finance_tx_hint_exchange_rate'] : 'For a base-currency transaction, use 1. For other currencies, enter base currency units per transaction currency unit.') ?></p>
                 </div>
                 <div class="sm:col-span-2">

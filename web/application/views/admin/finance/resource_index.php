@@ -181,6 +181,9 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
             <?php endif; ?>
             <?php if ($column['name'] === 'active_flag' || $column['name'] === 'tax_inclusive_default'): ?>
             return escapeHtml(String(value) === '1' ? '<?= html_escape(isset($labels['finance_yes']) ? $labels['finance_yes'] : 'Yes') ?>' : '<?= html_escape(isset($labels['finance_no']) ? $labels['finance_no'] : 'No') ?>');
+            <?php elseif ($column['name'] === 'rate_percent'): ?>
+            var rate = Number(value);
+            return escapeHtml(isFinite(rate) ? rate.toLocaleString('en-US', {maximumFractionDigits: 2}) : value);
             <?php else: ?>
             return escapeHtml(value);
             <?php endif; ?>

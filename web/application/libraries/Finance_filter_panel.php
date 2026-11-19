@@ -109,8 +109,8 @@ class Finance_filter_panel
                 $max_name = !empty($field['max_name']) ? $field['max_name'] : $field['name'] . '_max';
                 $min = trim((string) $this->CI->input->get($min_name, TRUE));
                 $max = trim((string) $this->CI->input->get($max_name, TRUE));
-                if ($min !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,6})?$/', $min)) $min = '';
-                if ($max !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,6})?$/', $max)) $max = '';
+                if ($min !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,2})?$/', $min)) $min = '';
+                if ($max !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,2})?$/', $max)) $max = '';
                 $fields[$field['name']] = array('min' => $min, 'max' => $max);
             } else {
                 $value = trim((string) $this->CI->input->get($field['name'], TRUE));

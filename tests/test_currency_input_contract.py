@@ -39,7 +39,7 @@ class CurrencyInputContractTests(unittest.TestCase):
         self.assertIn("formatValue", source)
         self.assertIn("submit.currencyInput", source)
         self.assertIn("$field.val(raw)", source)
-        self.assertIn("MAX_FRACTION_DIGITS = 6", source)
+        self.assertIn("MAX_FRACTION_DIGITS = 2", source)
         self.assertIn("MAX_INTEGER_DIGITS = 14", source)
 
     def test_library_round_trips_locale_separators(self):
@@ -104,8 +104,44 @@ class CurrencyInputContractTests(unittest.TestCase):
 
     def test_server_still_validates_canonical_decimal_format(self):
         controller = read(APP / "controllers/Admin_finance.php")
-        self.assertIn(r"/^\d{1,14}(?:\.\d{1,6})?$/", controller)
+        self.assertIn(r"/^\d{1,14}(?:\.\d{1,2})?$/", controller)
         self.assertIn(r"/^\d{1,10}(?:\.\d{1,2})?$/", controller)
+        self.assertNotIn(r"\d{1,6}", controller)
+        api = read(APP / "controllers/Finance_api.php")
+        self.assertIn(r"/^\d{1,14}(?:\.\d{1,2})?$/", api)
+        self.assertIn(r"/^\d{1,3}(?:\.\d{1,2})?$/", api)
+        filters = read(APP / "libraries/Finance_filter_panel.php")
+        self.assertIn(r"/^-?\d{1,20}(?:\.\d{1,2})?$/", filters)
+
+    def test_non_currency_numeric_inputs_limit_two_decimals(self):
+        for filename, fields in {
+            "transaction_form.php": ["exchange_rate"],
+            "payment_form.php": ["exchange_rate"],
+            "transfer_form.php": ["from_exchange_rate", "to_exchange_rate"],
+            "journal_form.php": ["exchange_rate"],
+        }.items():
+            source = read(FINANCE / filename)
+            self.assertIn('data-decimal-limit="2"', source, filename)
+            for field in fields:
+                self.assertIn(field, source, filename)
+        resource_form = read(FINANCE / "resource_form.php")
+        self.assertIn("data-decimal-limit=\"2\"", resource_form)
+        self.assertIn("currency-input.js", resource_form)
+        filter_panel = read(FINANCE / "partials/filter_panel.php")
+        self.assertIn('data-decimal-limit="2"', filter_panel)
+        self.assertIn('step="0.01"', filter_panel)
+        filter_script = read(ROOT / "web" / "assets" / "js" / "finance-filters.js")
+        self.assertIn("function limitDecimal", filter_script)
+        self.assertIn("[data-decimal-limit]", filter_script)
+        integration_list = read(FINANCE / "integration_index.php")
+        self.assertIn("maximumFractionDigits: 2", integration_list)
+        resource_list = read(FINANCE / "resource_index.php")
+        self.assertIn("maximumFractionDigits: 2", resource_list)
+        controller = read(APP / "controllers/Admin_finance.php")
+        self.assertIn("maksimal 2 desimal", controller)
+        library = read(LIBRARY)
+        self.assertIn("data-decimal-limit", library)
+        self.assertIn("limitDecimalField", library)
 
 
 if __name__ == "__main__":

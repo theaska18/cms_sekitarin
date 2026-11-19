@@ -14,9 +14,9 @@
  *   $input.currencyInput('set', '1250.500');             // set canonical value
  *
  * Attributes:
- *   data-decimal           Minimum fraction digits shown on blur (0-6, default 0).
- *                          Extra decimals entered by the user (up to 6) are kept.
- *   data-max-decimal       Maximum fraction digits accepted (0-6, default 6).
+ *   data-decimal           Minimum fraction digits shown on blur (0-2, default 0).
+ *                          Extra decimals entered by the user are limited by data-max-decimal.
+ *   data-max-decimal       Maximum fraction digits accepted (0-2, default 2).
  *   data-currency-default  Value used when the field is empty (default "0";
  *                          use data-currency-default="" to allow an empty value).
  *   data-allow-negative    "1" allows a leading minus sign (default disallowed).
@@ -30,7 +30,7 @@
     }
 
     var MAX_INTEGER_DIGITS = 14;
-    var MAX_FRACTION_DIGITS = 6;
+    var MAX_FRACTION_DIGITS = 2;
 
     var FALLBACK_SEPARATORS = {
         en: { group: ',', decimal: '.' },
@@ -323,7 +323,36 @@
         });
     };
 
+    function limitDecimalField(element) {
+        var limit = parseInt(element.getAttribute('data-decimal-limit'), 10);
+        if (isNaN(limit) || limit < 0) {
+            return;
+        }
+        limit = Math.min(limit, MAX_FRACTION_DIGITS);
+        var apply = function () {
+            var text = latinDigits(element.value);
+            var match = /^(-?)(\d*)([.,]?)(\d*)(.*)$/.exec(text);
+            if (!match || !match[3] || match[4].length <= limit) {
+                return;
+            }
+            element.value = match[1] + match[2] + match[3] + match[4].slice(0, limit);
+            if (typeof element.setSelectionRange === 'function') {
+                var position = element.value.length;
+                try {
+                    element.setSelectionRange(position, position);
+                } catch (error) {
+                    // Selection is a progressive enhancement only.
+                }
+            }
+        };
+        element.addEventListener('input', apply);
+        element.addEventListener('blur', apply);
+    }
+
     $(function () {
         $('[data-currency-input]').currencyInput();
+        $('[data-decimal-limit]').each(function () {
+            limitDecimalField(this);
+        });
     });
 })(window, document);

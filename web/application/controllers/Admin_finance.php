@@ -306,8 +306,8 @@ class Admin_finance extends Admin
                     if ($line[1] === '' || strlen($line[1]) > 100) {
                         $errors[] = 'Baris ' . $line_no . ': nama pajak wajib, maksimal 100 karakter.';
                     }
-                    if (!is_numeric($line[2]) || (float) $line[2] < 0 || (float) $line[2] > 100) {
-                        $errors[] = 'Baris ' . $line_no . ': tarif pajak harus angka 0-100.';
+                    if (!preg_match('/^\d{1,3}(?:\.\d{1,2})?$/', $line[2]) || (float) $line[2] < 0 || (float) $line[2] > 100) {
+                        $errors[] = 'Baris ' . $line_no . ': tarif pajak harus angka 0-100 dengan maksimal 2 desimal.';
                     }
                     if (!in_array($line[4], array('0', '1'), TRUE)) {
                         $errors[] = 'Baris ' . $line_no . ': active_flag harus 0 atau 1.';
@@ -1871,10 +1871,10 @@ class Admin_finance extends Admin
         if ($date === FALSE || $date->format('Y-m-d') !== $values['transaction_on']) {
             $errors[] = 'transaction_on_invalid';
         }
-        if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
+        if (!preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
             $errors[] = 'amount_invalid';
         }
-        if (!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
+        if (!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
         if (strlen($values['description']) > 240) {
@@ -2156,9 +2156,9 @@ class Admin_finance extends Admin
             $prefix = 'journal_line_' . ($index + 1);
             $debit = $line['debit_amount'];
             $credit = $line['credit_amount'];
-            $debit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $debit);
-            $credit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $credit);
-            $rate_valid = (bool) preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $line['exchange_rate'])
+            $debit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $debit);
+            $credit_valid = (bool) preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $credit);
+            $rate_valid = (bool) preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $line['exchange_rate'])
                 && (float) $line['exchange_rate'] > 0;
             if ((int) $line['account_id'] < 1) {
                 $errors[] = $prefix . '_account_required';
@@ -2457,7 +2457,7 @@ class Admin_finance extends Admin
         if (!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) {
             $errors[] = 'exchange_rate_invalid';
         }
-        if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
+        if (!preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $values['amount']) || (float) $values['amount'] <= 0) {
             $errors[] = 'amount_invalid';
         }
         if (strlen($values['description']) > 240 || strlen($values['memo']) > 10000) {
@@ -2639,8 +2639,8 @@ class Admin_finance extends Admin
         foreach (array('document_id','cash_account_id') as $id) if ($values[$id] < 1) $errors[] = $id . '_required';
         $date = DateTime::createFromFormat('!Y-m-d', $values['payment_date']);
         if ($date === FALSE || $date->format('Y-m-d') !== $values['payment_date']) $errors[] = 'payment_date_invalid';
-        if (!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $values['amount']) || (float) $values['amount'] <= 0) $errors[] = 'amount_invalid';
-        if (!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) $errors[] = 'exchange_rate_invalid';
+        if (!preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $values['amount']) || (float) $values['amount'] <= 0) $errors[] = 'amount_invalid';
+        if (!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/', $values['exchange_rate']) || (float) $values['exchange_rate'] <= 0) $errors[] = 'exchange_rate_invalid';
         if (strlen($values['reference']) > 80) $errors[] = 'reference_too_long';
         return array_values(array_unique($errors));
     }
@@ -2697,8 +2697,8 @@ class Admin_finance extends Admin
             $values['from_cash_account_id']=(int)$values['from_cash_account_id'];$values['to_cash_account_id']=(int)$values['to_cash_account_id'];
             $date=DateTime::createFromFormat('!Y-m-d',$values['transfer_date']);
             if($date===FALSE||$date->format('Y-m-d')!==$values['transfer_date'])$errors[]='transfer_date_invalid';
-            foreach(array('from_amount','to_amount') as $a)if(!preg_match('/^\d{1,14}(?:\.\d{1,6})?$/',$values[$a])||(float)$values[$a]<=0)$errors[]=$a.'_invalid';
-            foreach(array('from_exchange_rate','to_exchange_rate') as $r)if(!preg_match('/^\d{1,10}(?:\.\d{1,10})?$/',$values[$r])||(float)$values[$r]<=0)$errors[]=$r.'_invalid';
+            foreach(array('from_amount','to_amount') as $a)if(!preg_match('/^\d{1,14}(?:\.\d{1,2})?$/',$values[$a])||(float)$values[$a]<=0)$errors[]=$a.'_invalid';
+            foreach(array('from_exchange_rate','to_exchange_rate') as $r)if(!preg_match('/^\d{1,10}(?:\.\d{1,2})?$/',$values[$r])||(float)$values[$r]<=0)$errors[]=$r.'_invalid';
             if(!$values['from_cash_account_id']||!$values['to_cash_account_id'])$errors[]='cash_account_required';
             if(strlen($values['memo'])>10000)$errors[]='memo_too_long';
             if(!$errors){$previous=$this->db->db_debug;$this->db->db_debug=FALSE;$result=$store->save_draft((int)$this->current_user['tenant_id'],(int)$this->current_user['user_id'],$is_new?NULL:(int)$id,$values);$this->db->db_debug=$previous;
@@ -2777,10 +2777,10 @@ class Admin_finance extends Admin
             $d=DateTime::createFromFormat('!Y-m-d',$raw['statement_date']);
             if(!$raw['cash_account_id'])$errors[]='cash_account_required';
             if($d===FALSE||$d->format('Y-m-d')!==$raw['statement_date'])$errors[]='statement_date_invalid';
-            foreach(array('opening_balance','closing_balance') as $k)if(!preg_match('/^-?\d{1,14}(?:\.\d{1,6})?$/',$raw[$k]))$errors[]=$k.'_invalid';
+            foreach(array('opening_balance','closing_balance') as $k)if(!preg_match('/^-?\d{1,14}(?:\.\d{1,2})?$/',$raw[$k]))$errors[]=$k.'_invalid';
             if($raw['statement_reference']===''||strlen($raw['statement_reference'])>80)$errors[]='statement_reference_invalid';
             if(count($clean)<1)$errors[]='statement_lines_required';
-            foreach($clean as $line){$ld=DateTime::createFromFormat('!Y-m-d',$line['statement_on']);if($ld===FALSE||$ld->format('Y-m-d')!==$line['statement_on']||$line['statement_on']>$raw['statement_date'])$errors[]='statement_line_date_invalid';if(!preg_match('/^-?\d{1,14}(?:\.\d{1,6})?$/',$line['statement_amount']))$errors[]='statement_line_amount_invalid';}
+            foreach($clean as $line){$ld=DateTime::createFromFormat('!Y-m-d',$line['statement_on']);if($ld===FALSE||$ld->format('Y-m-d')!==$line['statement_on']||$line['statement_on']>$raw['statement_date'])$errors[]='statement_line_date_invalid';if(!preg_match('/^-?\d{1,14}(?:\.\d{1,2})?$/',$line['statement_amount']))$errors[]='statement_line_amount_invalid';}
             $values=array_merge($raw,array('lines'=>$clean));
             if(!$errors){$previous=$this->db->db_debug;$this->db->db_debug=FALSE;$result=$store->save_draft((int)$this->current_user['tenant_id'],(int)$this->current_user['user_id'],$is_new?NULL:(int)$id,$values);$this->db->db_debug=$previous;if($result==='saved'){$status=$was_revise&&!$is_new?$this->finance_reconciliation_start_approval((int)$id):'draft_saved';$this->session->set_flashdata('finance_status',$status);redirect('/admin/finance/bank_reconciliation','location',303);return;}$errors[]='reconciliation_'.$result;}
             $record=array_merge($record,$values);$this->load->library('finance_transfer_store');$labels['cash_account_id']=$store->cash_label((int)$this->current_user['tenant_id'],$record['cash_account_id']);foreach($record['lines'] as $i=>$line)$labels['lines'][$i]=$store->line_label((int)$this->current_user['tenant_id'],$line['journal_line_id']);
@@ -3766,7 +3766,7 @@ class Admin_finance extends Admin
                 $errors[] = $name . '_invalid';
             }
             if ($value !== '' && $field['type'] === 'decimal'
-                && !preg_match('/^\d{1,14}(?:\.\d{1,6})?$/', $value)) {
+                && !preg_match('/^\d{1,14}(?:\.\d{1,2})?$/', $value)) {
                 $errors[] = $name . '_invalid';
             }
             if ($value !== '' && $field['type'] === 'number' && !preg_match('/^\d+$/', $value)) {

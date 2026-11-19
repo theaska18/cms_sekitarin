@@ -97,8 +97,8 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                         <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-3 md:col-span-2">
                             <p class="mb-2 text-xs font-bold text-slate-700"><?= html_escape($field['label']) ?></p>
                             <div class="grid gap-2 sm:grid-cols-2">
-                                <input type="number" step="0.01" data-finance-filter="<?= html_escape($min_name) ?>" placeholder="Min" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
-                                <input type="number" step="0.01" data-finance-filter="<?= html_escape($max_name) ?>" placeholder="Max" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($min_name) ?>" placeholder="Min" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                                <input type="number" step="0.01" data-decimal-limit="2" data-finance-filter="<?= html_escape($max_name) ?>" placeholder="Max" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
                             </div>
                         </div>
                     <?php elseif ($field['type'] === 'select'): ?>

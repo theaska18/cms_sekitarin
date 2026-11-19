@@ -17,6 +17,27 @@
         }
     }
 
+    function limitDecimal(node) {
+        var limit = parseInt(node.getAttribute('data-decimal-limit'), 10);
+        if (isNaN(limit) || limit < 0) {
+            return;
+        }
+        var apply = function () {
+            var text = String(node.value || '');
+            var match = /^(-?)(\d*)([.,]?)(\d*)(.*)$/.exec(text);
+            if (!match || !match[3] || match[4].length <= limit) {
+                return;
+            }
+            node.value = match[1] + match[2] + match[3] + match[4].slice(0, limit);
+        };
+        if (node.getAttribute('data-decimal-limit-ready') === '1') {
+            return;
+        }
+        node.setAttribute('data-decimal-limit-ready', '1');
+        node.addEventListener('input', apply);
+        node.addEventListener('blur', apply);
+    }
+
     function init(panel) {
         if (panel.getAttribute('data-finance-filter-ready') === '1') {
             return;
@@ -249,6 +270,7 @@
     function initAll() {
         var panels = document.querySelectorAll('[data-finance-filter-panel]');
         Array.prototype.forEach.call(panels, init);
+        Array.prototype.forEach.call(document.querySelectorAll('[data-decimal-limit]'), limitDecimal);
     }
 
     if (document.readyState === 'loading') {

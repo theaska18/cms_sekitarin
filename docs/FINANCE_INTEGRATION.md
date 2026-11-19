@@ -141,8 +141,8 @@ Field:
 | `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `invoice_date`. |
 | `customer_name` | Ya | string, maks. 160 | Nama pelanggan sebagai referensi. Tidak dipakai untuk mapping. |
 | `customer_code` | Tidak | string, maks. 32 | Kode pelanggan sebagai referensi. |
-| `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 6 desimal | Nilai sebelum pajak. |
-| `tax_percent` | Tidak | angka 0–100, maks. 3 digit dan 6 desimal | Default `0`. |
+| `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 2 desimal | Nilai sebelum pajak. |
+| `tax_percent` | Tidak | angka 0–100, maks. 3 digit dan 2 desimal | Default `0`. |
 | `description` | Ya | string, maks. 240 | Deskripsi baris draft. |
 
 Contoh respons `202 Accepted`:
@@ -195,8 +195,8 @@ Field:
 | `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `bill_date`. |
 | `supplier_name` | Ya | string, maks. 160 | Nama pemasok sebagai referensi. Tidak dipakai untuk mapping. |
 | `supplier_code` | Tidak | string, maks. 32 | Kode pemasok sebagai referensi. |
-| `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 6 desimal | Nilai sebelum pajak. |
-| `tax_percent` | Tidak | angka 0–100, maks. 3 digit dan 6 desimal | Default `0`. |
+| `amount_before_tax` | Ya | angka > 0, maks. 14 digit dan 2 desimal | Nilai sebelum pajak. |
+| `tax_percent` | Tidak | angka 0–100, maks. 3 digit dan 2 desimal | Default `0`. |
 | `description` | Ya | string, maks. 240 | Deskripsi baris draft. |
 
 Contoh respons `202 Accepted`:
@@ -555,8 +555,7 @@ Supplier Payments
 3. Form draft terbuka dengan:
    - nama dan kode integrasi tampil di atas input pelanggan/pemasok;
    - nilai dari `amount_before_tax` dan `description` inbox;
-   - jumlah sebelum pajak ditampilkan 2 desimal, tetapi penyimpanan tetap
-     memakai nilai asli inbox;
+   - jumlah sebelum pajak ditampilkan dan disimpan dengan maksimal 2 desimal;
    - `amount` dan `description` **read-only**;
    - tanggal invoice/bill dan due date terisi dari data API;
    - field pelanggan/pemasok, akun, pajak, tanggal, currency, exchange rate,
