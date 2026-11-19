@@ -1,0 +1,61 @@
+{
+  "version": "1.0.12",
+  "from_version": "1.0.11",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.11",
+  "changelog": "Optimalisasi Design.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "39d3b629b3443962953dbad92cf4eb4a056b1ece5100fa92315125897eb66ead",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "b3b35b885398a321dfb4953861d1984c7ab5ad3126defa12d30ba2d86631a6e1",
+      "size": 19833
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "c80703dd2a8deed9c518388ae055d3c67677ddbf799677af79d984a15841cac6",
+      "size": 21519
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "fef39f5f036a17b5477444227956595752d55b88f427a5b30d3f877ca97d3664",
+      "size": 15504
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "2a6c50d9195e93fb2790b6518b66b0b9938097a2c7b6b3123e43c5289aa04b82",
+      "size": 34325
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "6c60c62c9bc2b93ed4956b858775e700c7318bb15af200cd201199bebb07c30d",
+      "size": 50468
+    },
+    {
+      "path": "assets/js/admin-action-menu.js",
+      "sha256": "431c84929ebfa9852d140f07755a0b32976782f448600fb85b66a66716986e4a",
+      "size": 3632
+    },
+    {
+      "path": "assets/js/finance-list.js",
+      "sha256": "4fd376c4ae67637bfc978bab206f96593d810909424fbe854bc58236a68badbc",
+      "size": 6489
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.12.zip",
+    "sha256": "f9b2f161dd383087161d8691e35cdb462da2c4497071a6b7bd538bb24f0ed1cf",
+    "size": 33035
+  },
+  "from_ref": "v1.0.11",
+  "generated_at": "2026-11-19T11:03:27+00:00"
+}

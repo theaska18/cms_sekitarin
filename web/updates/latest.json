@@ -1,11 +1,11 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.12",
   "released_at": "2026-11-19",
-  "changelog": "Optimalisasi Pengaturan.",
+  "changelog": "Optimalisasi Design.",
   "min_php": "8.1",
-  "requires_version": "1.0.10",
-  "package": "cms-1.0.11.zip",
-  "sha256": "68dafb1f5d25e378e089023828ce273de48b3e374987eb7599019b569dd07529",
-  "size": 3618,
+  "requires_version": "1.0.11",
+  "package": "cms-1.0.12.zip",
+  "sha256": "f9b2f161dd383087161d8691e35cdb462da2c4497071a6b7bd538bb24f0ed1cf",
+  "size": 33035,
   "migrations": []
 }
