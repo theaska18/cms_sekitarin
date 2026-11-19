@@ -588,14 +588,25 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
  * matches the All Transactions table; override the vendor 8px/10px default.
  */
 #admin-app-shell .finance-list-table {
-    --admin-table-cell-padding-block: .4rem;
-    --admin-table-cell-padding-inline: .65rem;
+    --admin-table-cell-padding-block: .2rem;
+    --admin-table-cell-padding-inline: .45rem;
 }
 
 #admin-app-shell .finance-list-table > thead > tr > th,
 #admin-app-shell .finance-list-table > tbody > tr > th,
 #admin-app-shell .finance-list-table > tbody > tr > td {
     padding: var(--admin-table-cell-padding-block) var(--admin-table-cell-padding-inline);
+}
+
+/* Keep row controls inside the shared compact row density. */
+#admin-app-shell .finance-list-table > tbody > tr > td img {
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+#admin-app-shell .finance-list-table > tbody > tr > td > div > button[aria-haspopup="menu"] {
+    width: 2rem;
+    height: 2rem;
 }
 
 /* Export/import exchange panels: explicit light/dark surfaces. */

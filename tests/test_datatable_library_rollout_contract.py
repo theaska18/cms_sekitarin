@@ -53,6 +53,14 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
             with self.subTest(view=str(path.relative_to(ROOT))):
                 self.assertIn("assets/js/admin-datatables.js", path.read_text(encoding="utf-8"))
 
+    def test_datatable_cell_padding_and_row_controls_are_shared(self):
+        css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text(encoding="utf-8")
+        self.assertIn("--admin-table-cell-padding-block: .2rem", css)
+        self.assertIn("--admin-table-cell-padding-inline: .45rem", css)
+        self.assertIn("padding: var(--admin-table-cell-padding-block) var(--admin-table-cell-padding-inline)", css)
+        self.assertIn('button[aria-haspopup="menu"]', css)
+        self.assertIn("width: 1.75rem", css)
+
     def test_mobile_datatables_keep_readable_columns_and_bottom_scroll(self):
         css = (ROOT / "web" / "assets" / "css" / "admin-theme.css").read_text(encoding="utf-8")
         self.assertIn("max-height: none", css)
