@@ -66,6 +66,12 @@ class FinanceHardeningContractTests(unittest.TestCase):
         self.assertIn("a.tenant_id=", document)
         self.assertNotIn("WHERE ca.tenant_id=? AND ca.active_flag=1", report)
 
+    def test_integration_inbox_queries_qualify_joined_columns(self):
+        store = (APP / "libraries" / "Finance_integration_store.php").read_text(encoding="utf-8")
+        self.assertIn("apply_search($spec, $search, 't.')", store)
+        self.assertIn("apply_filters($spec, $filters, 't.')", store)
+        self.assertIn("order_by('t.' . $order_column", store)
+
     def test_integration_draft_keeps_submitted_total(self):
         controller = (APP / "controllers" / "Admin_finance_integration.php").read_text(encoding="utf-8")
         store = (APP / "libraries" / "Finance_integration_store.php").read_text(encoding="utf-8")

@@ -77,8 +77,8 @@ class Finance_integration_store
         $order_column = isset($order_map[$order]) ? $order_map[$order] : 'received_at';
         $direction = strtoupper((string) $direction) === 'ASC' ? 'ASC' : 'DESC';
 
-        $this->apply_search($spec, $search);
-        $this->apply_filters($spec, $filters);
+        $this->apply_search($spec, $search, 't.');
+        $this->apply_filters($spec, $filters, 't.');
         $document_table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
         $selected = array(
             $spec['id'], 'tenant_id', 'created_by', $spec['number'], $spec['date'],
@@ -94,7 +94,7 @@ class Finance_integration_store
             ->from($spec['table'] . ' t')
             ->join($document_table . ' d', 'd.' . $spec['document_id'] . '=t.' . $spec['document_id'] . ' AND d.tenant_id=t.tenant_id', 'left')
             ->where('t.tenant_id', (int) $tenant_id)
-            ->order_by($order_column, $direction)
+            ->order_by('t.' . $order_column, $direction)
             ->order_by('t.' . $spec['id'], 'DESC')
             ->limit($limit, $offset)
             ->get();
@@ -298,30 +298,30 @@ class Finance_integration_store
         return NULL;
     }
 
-    private function apply_filters($spec, $filters)
+    private function apply_filters($spec, $filters, $alias = '')
     {
         if (!empty($filters['start_on'])) {
-            $this->db->where($spec['date'] . ' >=', $filters['start_on']);
+            $this->db->where($alias . $spec['date'] . ' >=', $filters['start_on']);
         }
         if (!empty($filters['end_on'])) {
-            $this->db->where($spec['date'] . ' <=', $filters['end_on']);
+            $this->db->where($alias . $spec['date'] . ' <=', $filters['end_on']);
         }
         if (!empty($filters['status'])) {
-            $this->db->where('status', $filters['status']);
+            $this->db->where($alias . 'status', $filters['status']);
         }
     }
 
-    private function apply_search($spec, $search)
+    private function apply_search($spec, $search, $alias = '')
     {
         $search = trim((string) $search);
         if ($search === '') {
             return;
         }
         $this->db->group_start()
-            ->like($spec['number'], $search)
-            ->or_like($spec['date'], $search)
-            ->or_like($spec['party_name'], $search)
-            ->or_like($spec['party_code'], $search)
+            ->like($alias . $spec['number'], $search)
+            ->or_like($alias . $spec['date'], $search)
+            ->or_like($alias . $spec['party_name'], $search)
+            ->or_like($alias . $spec['party_code'], $search)
             ->group_end();
     }
 }
