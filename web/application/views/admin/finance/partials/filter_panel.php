@@ -25,7 +25,7 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
          data-target="<?= html_escape($filter_target) ?>"
          data-default-start="<?= html_escape($filter_default_start) ?>"
          data-default-end="<?= html_escape($filter_default_end) ?>">
-    <div class="flex items-center gap-2">
+    <div class="flex items-center justify-end gap-2">
         <div class="relative w-full min-w-0 max-w-xs">
             <input type="search" data-finance-filter="search" autocomplete="off"
                    aria-label="<?= html_escape(isset($labels['finance_filter_search']) ? $labels['finance_filter_search'] : 'Search') ?>"
