@@ -8,6 +8,13 @@ class Admin_sequence extends Admin
 {
     const ADMIN_SEQUENCE_PATH = '/admin/system/sequence';
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     private function sequence_deny_access($message_key = 'sequence_no_access', $requested_path = NULL)
     {
         $requested_path = is_string($requested_path) && $requested_path !== ''
@@ -62,8 +69,41 @@ class Admin_sequence extends Admin
                 'sequence_delete_allowed' => $this->has_admin_access_code('sys_sequence_delete'),
                 'sequence_actions_available' => $this->has_admin_access_code('sys_sequence_update') || $this->has_admin_access_code('sys_sequence_delete'),
                 'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
+                'finance_filter_config' => $this->sequence_filter_config($this->sequence_store),
             )
         );
+    }
+
+    private function sequence_filter_config($store = NULL)
+    {
+        $labels = $this->lang->language;
+        $repeat_options = array();
+        $rows = $store !== NULL ? $store->repeat_type_options() : FALSE;
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $repeat_options[(string) $row['option_code']] = (string) $row['option_name'];
+            }
+        }
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#sequence-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'sequence_code', 'label' => isset($labels['sequence_sequence_code']) ? $labels['sequence_sequence_code'] : 'Code'),
+                array('type' => 'text', 'name' => 'sequence_name', 'label' => isset($labels['sequence_sequence_name']) ? $labels['sequence_sequence_name'] : 'Name'),
+                array('type' => 'text', 'name' => 'description', 'label' => isset($labels['sequence_description']) ? $labels['sequence_description'] : 'Description'),
+                array('type' => 'select', 'name' => 'repeat_type', 'label' => isset($labels['sequence_repeat_type']) ? $labels['sequence_repeat_type'] : 'Repeat', 'options' => $repeat_options),
+                array('type' => 'text', 'name' => 'menu_codes', 'label' => isset($labels['sequence_menu']) ? $labels['sequence_menu'] : 'Menu'),
+                array('type' => 'text', 'name' => 'format', 'label' => isset($labels['sequence_format']) ? $labels['sequence_format'] : 'Format'),
+            ),
+        ));
+    }
+
+    private function sequence_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->sequence_filter_config($this->sequence_store));
+        return array('search' => (string) $search, 'fields' => $panel['fields']);
     }
 
     /** DataTables server-side endpoint; the shared parser bounds paging and ordering. */
@@ -99,13 +139,13 @@ class Admin_sequence extends Admin
                 6 => 'format',
             ),
             function () use ($store) {
-                return $store->count('');
+                return $store->count('', $this->sequence_list_filters(''));
             },
             function ($search) use ($store) {
-                return $store->count($search);
+                return $store->count($search, $this->sequence_list_filters($search));
             },
             function ($search, $length, $start, $order, $direction) use ($store, $menu_labels) {
-                $records = $store->page($search, $length, $start, $order, $direction);
+                $records = $store->page($search, $length, $start, $order, $direction, $this->sequence_list_filters($search));
                 if ($records === FALSE) {
                     return FALSE;
                 }
@@ -143,8 +183,44 @@ class Admin_sequence extends Admin
                 'sequence_update_allowed' => $this->has_admin_access_code('app_sequence_update'),
                 'sequence_set_default_allowed' => $this->has_admin_access_code('app_sequence_set_default'),
                 'sequence_notice' => (string) $this->session->flashdata('sequence_notice'),
+                'finance_filter_config' => $this->application_sequence_filter_config($store),
             )
         );
+    }
+
+    private function application_sequence_filter_config($store = NULL)
+    {
+        $labels = $this->lang->language;
+        $repeat_options = array();
+        $rows = $store !== NULL ? $store->repeat_type_options() : FALSE;
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                $repeat_options[(string) $row['option_code']] = (string) $row['option_name'];
+            }
+        }
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#application-sequence-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'sequence_code', 'label' => isset($labels['sequence_sequence_code']) ? $labels['sequence_sequence_code'] : 'Code'),
+                array('type' => 'text', 'name' => 'sequence_name', 'label' => isset($labels['sequence_sequence_name']) ? $labels['sequence_sequence_name'] : 'Name'),
+                array('type' => 'select', 'name' => 'repeat_type', 'label' => isset($labels['sequence_repeat_type']) ? $labels['sequence_repeat_type'] : 'Repeat', 'options' => $repeat_options),
+                array('type' => 'text', 'name' => 'format', 'label' => isset($labels['sequence_format']) ? $labels['sequence_format'] : 'Format'),
+                array('type' => 'range', 'name' => 'last_value', 'label' => isset($labels['sequence_last_value']) ? $labels['sequence_last_value'] : 'Last value', 'min_name' => 'last_value_min', 'max_name' => 'last_value_max'),
+                array('type' => 'select', 'name' => 'use_flag', 'label' => isset($labels['sequence_use_flag']) ? $labels['sequence_use_flag'] : 'Use', 'options' => array(
+                    '1' => isset($labels['sequence_use_flag_enabled']) ? $labels['sequence_use_flag_enabled'] : 'Enabled',
+                    '0' => isset($labels['sequence_use_flag_disabled']) ? $labels['sequence_use_flag_disabled'] : 'Disabled',
+                )),
+            ),
+        ));
+    }
+
+    private function application_sequence_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->application_sequence_filter_config($this->application_sequence_store));
+        return array('search' => (string) $search, 'fields' => $panel['fields']);
     }
 
     /** DataTables endpoint scoped by effective tenant/role menu visibility. */
@@ -176,13 +252,13 @@ class Admin_sequence extends Admin
                 6 => 'use_flag',
             ),
             function () use ($store, $tenant_id, $menu_codes) {
-                return $store->count($tenant_id, $menu_codes, '');
+                return $store->count($tenant_id, $menu_codes, '', $this->application_sequence_list_filters(''));
             },
             function ($search) use ($store, $tenant_id, $menu_codes) {
-                return $store->count($tenant_id, $menu_codes, $search);
+                return $store->count($tenant_id, $menu_codes, $search, $this->application_sequence_list_filters($search));
             },
             function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $menu_codes) {
-                return $store->page($tenant_id, $menu_codes, $search, $length, $start, $order, $direction);
+                return $store->page($tenant_id, $menu_codes, $search, $length, $start, $order, $direction, $this->application_sequence_list_filters($search));
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'sequence_code')
         );

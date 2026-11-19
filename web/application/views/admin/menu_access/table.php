@@ -28,18 +28,32 @@ $menu_access_language = array(
     ),
 );
 $menu_access_json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
+$menu_access_attrs = 'data-menu-access-table'
+    . ' data-menu-access-datatable="' . html_escape(isset($menu_access_datatable_url) ? $menu_access_datatable_url : '') . '"'
+    . ' data-menu-access-toggle="' . html_escape(isset($menu_access_toggle_url) ? $menu_access_toggle_url : '') . '"'
+    . ' data-menu-access-write="' . ($menu_access_write_available ? '1' : '0') . '"'
+    . ' data-menu-access-page-length="25"'
+    . ' data-menu-access-saving="' . html_escape($menu_access_label('admin_menu_access_saving', 'Saving…')) . '"'
+    . ' data-menu-access-saved="' . html_escape($menu_access_label('admin_menu_access_saved', 'Saved')) . '"'
+    . ' data-menu-access-save-error="' . html_escape($menu_access_label('admin_menu_access_save_error', 'Could not save the change.')) . '"'
+    . ' data-menu-access-language="' . html_escape(json_encode($menu_access_language, $menu_access_json_flags)) . '"';
+$menu_access_panel = $this->finance_filter_panel->config(array(
+    'date' => FALSE,
+    'date_preset' => 'none',
+    'status_preset' => 'none',
+    'target' => '#' . $menu_access_table_id,
+    'field_filters' => array(
+        array('type' => 'text', 'name' => 'group', 'label' => $menu_access_label('admin_menu_group', 'Group')),
+        array('type' => 'text', 'name' => 'menu', 'label' => $menu_access_label('admin_menu', 'Menu')),
+        array('type' => 'text', 'name' => 'access', 'label' => $menu_access_label('admin_menu_access', 'Access')),
+    ),
+));
 ?>
-<div class="overflow-x-auto rounded-b-2xl">
-    <table id="<?= html_escape($menu_access_table_id) ?>" class="min-w-full divide-y divide-slate-200 text-left text-sm"
-           data-menu-access-table
-           data-menu-access-datatable="<?= html_escape(isset($menu_access_datatable_url) ? $menu_access_datatable_url : '') ?>"
-           data-menu-access-toggle="<?= html_escape(isset($menu_access_toggle_url) ? $menu_access_toggle_url : '') ?>"
-           data-menu-access-write="<?= $menu_access_write_available ? '1' : '0' ?>"
-           data-menu-access-page-length="25"
-           data-menu-access-saving="<?= html_escape($menu_access_label('admin_menu_access_saving', 'Saving…')) ?>"
-           data-menu-access-saved="<?= html_escape($menu_access_label('admin_menu_access_saved', 'Saved')) ?>"
-           data-menu-access-save-error="<?= html_escape($menu_access_label('admin_menu_access_save_error', 'Could not save the change.')) ?>"
-           data-menu-access-language="<?= html_escape(json_encode($menu_access_language, $menu_access_json_flags)) ?>">
+<?= $this->finance_filter_panel->render($menu_access_panel, $labels) ?>
+<?= $this->finance_list_table->open($menu_access_table_id, array(
+    'table_class' => 'finance-list-table min-w-full text-left text-sm',
+    'table_attrs' => $menu_access_attrs,
+)) ?>
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
                 <th scope="col" class="min-w-[8rem] px-2 py-3.5 sm:px-6"><?= html_escape($menu_access_label('admin_menu_group', 'Group')) ?></th>
@@ -70,5 +84,4 @@ $menu_access_json_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX
                 </tr>
             <?php endforeach; ?>
         </tbody>
-    </table>
-</div>
+<?= $this->finance_list_table->close() ?>

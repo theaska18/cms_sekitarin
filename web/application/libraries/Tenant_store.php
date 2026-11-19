@@ -183,5 +183,20 @@ class Tenant_store
                 ->or_like('phone_number', $filters['search'])
                 ->group_end();
         }
+        if (!empty($filters['date_ranges']['due_on'])) {
+            $range = $filters['date_ranges']['due_on'];
+            if (!empty($range['start'])) {
+                $this->db->where('due_on >=', $range['start']);
+            }
+            if (!empty($range['end'])) {
+                $this->db->where('due_on <=', $range['end']);
+            }
+        }
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array('tenant_code', 'tenant_name', 'email_address', 'phone_number') as $name) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($name, $fields[$name]);
+            }
+        }
     }
 }

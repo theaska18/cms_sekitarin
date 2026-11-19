@@ -30,20 +30,15 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($property_title) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['property_intro']) ?></p>
         </div>
-        <?php if ($can_add): ?>
-            <?php if ($write_available): ?>
-                <a href="/admin/system/property/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 py-0 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                    <?= html_escape($labels['property_add']) ?>
-                </a>
-            <?php else: ?>
-                <span class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-slate-200 px-4 py-0 text-sm font-semibold text-slate-500" aria-disabled="true">
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><path d="M10 4a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 10 4Z"/></svg>
-                    <?= html_escape($labels['property_add']) ?>
-                </span>
-            <?php endif; ?>
-        <?php endif; ?>
     </header>
+
+    <?php
+    $panel_config = $finance_filter_config;
+    if ($can_add && $write_available) {
+        $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => $labels['property_add']);
+    }
+    ?>
+    <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
 
     <?php if ($status_key !== ''): ?>
         <?php $is_error = in_array($status_key, array('not_found', 'save_error', 'delete_error', 'invalid'), TRUE); ?>
@@ -66,11 +61,8 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
         </div>
     <?php endif; ?>
 
-    <section aria-labelledby="property-list-heading" class="border border-slate-200 bg-white shadow-sm">
-        <h2 id="property-list-heading" class="sr-only"><?= html_escape($property_title) ?></h2>
-        <div class="overflow-x-auto">
-            <table id="property-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <?= $this->finance_list_table->open('property-data-table') ?>
+                <thead>
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['property_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['property_code_label']) ?></th>
@@ -125,10 +117,7 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
                         </tr>
                     <?php endif; ?>
                 </tbody>
-            </table>
-        </div>
-
-    </section>
+    <?= $this->finance_list_table->close() ?>
 
     <?php if ($write_available): ?>
         <div id="property-delete-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="property-delete-title" aria-describedby="property-delete-description" tabindex="-1" class="fixed inset-0 z-50 items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">

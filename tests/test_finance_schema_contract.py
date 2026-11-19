@@ -212,11 +212,16 @@ class FinanceSchemaContractTests(unittest.TestCase):
             "views/admin/finance/report_index.php",
             "views/admin/finance/dashboard.php",
         )
+        library = (APP / "libraries/Finance_list_table.php").read_text()
         for path in views:
             with self.subTest(view=path):
                 content = (APP / path).read_text()
-                self.assertIn("finance-list-table", content)
-                self.assertIn("whitespace-nowrap", content)
+                if "finance_list_table->open(" in content:
+                    self.assertIn("finance-list-table", library)
+                    self.assertIn("whitespace-nowrap", library)
+                else:
+                    self.assertIn("finance-list-table", content)
+                    self.assertIn("whitespace-nowrap", content)
         css = (ROOT / "web/assets/css/admin-theme.css").read_text()
         self.assertIn(".finance-list-table th", css)
         self.assertIn("white-space: nowrap", css)

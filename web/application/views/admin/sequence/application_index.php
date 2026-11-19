@@ -16,6 +16,8 @@ $sequence_title = $labels['sequence_heading'];
         <p class="mt-2 max-w-3xl text-base leading-7 text-slate-600"><?= html_escape($labels['sequence_application_intro']) ?></p>
     </header>
 
+    <?= $this->finance_filter_panel->render($finance_filter_config, $labels) ?>
+
     <?php if (!$backend_available): ?>
         <div role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
             <p class="font-semibold"><?= html_escape($labels['sequence_unavailable']) ?></p>
@@ -29,11 +31,8 @@ $sequence_title = $labels['sequence_heading'];
         <div role="note" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape($labels['sequence_write_disabled']) ?></div>
     <?php endif; ?>
 
-    <section aria-label="<?= html_escape($sequence_title) ?>" class="border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table id="application-sequence-data-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <caption class="sr-only"><?= html_escape($sequence_title) ?></caption>
-                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <?= $this->finance_list_table->open('application-sequence-data-table') ?>
+                <thead>
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['sequence_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['sequence_sequence_code']) ?></th>
@@ -45,9 +44,7 @@ $sequence_title = $labels['sequence_heading'];
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100"></tbody>
-            </table>
-        </div>
-    </section>
+    <?= $this->finance_list_table->close() ?>
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/datatables.min.js') ?>"></script>

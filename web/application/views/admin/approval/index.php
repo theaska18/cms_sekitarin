@@ -100,14 +100,13 @@
             <h2 id="my-approval-requests-heading" class="text-lg font-semibold">Pengajuan persetujuan saya</h2>
             <p class="mt-1 text-sm text-slate-600">Riwayat pengajuan beserta checklist setiap tahap flow.</p>
         </header>
-        <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
-            <table id="my-approval-history-table" class="w-full min-w-[68rem] text-left text-sm">
-                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <?= $this->finance_filter_panel->render($approval_history_filter_config, $labels) ?>
+        <?= $this->finance_list_table->open('my-approval-history-table', array('table_class' => 'finance-list-table min-w-[68rem] text-left text-sm')) ?>
+                <thead>
                     <tr><th scope="col" class="px-4 py-3">Permintaan</th><th scope="col" class="px-4 py-3">Alur</th><th scope="col" class="px-4 py-3">Status</th><th scope="col" class="px-4 py-3">Checklist persetujuan</th><th scope="col" class="px-4 py-3">Aktivitas terakhir</th></tr>
                 </thead>
                 <tbody></tbody>
-            </table>
-        </div>
+        <?= $this->finance_list_table->close() ?>
     </section>
     <?php endif; ?>
 </main>

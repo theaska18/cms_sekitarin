@@ -39,7 +39,11 @@ class FinanceMobileContractTests(unittest.TestCase):
             "resource_index.php",
             "chart_of_accounts_index.php",
         ):
-            self.assertIn("overflow-x-auto", read(FINANCE / name), name)
+            content = read(FINANCE / name)
+            if "finance_list_table->open(" in content:
+                self.assertIn("overflow-x-auto", read(ROOT / "web/application/libraries/Finance_list_table.php"), name)
+            else:
+                self.assertIn("overflow-x-auto", content, name)
 
 
 if __name__ == "__main__":

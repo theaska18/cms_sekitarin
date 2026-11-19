@@ -29,14 +29,15 @@ $approval_flow_template_status_messages = array(
             <h1 class="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl"><?= html_escape($labels['approval_flow_template_heading']) ?></h1>
             <p class="mt-2 text-base leading-7 text-slate-600"><?= html_escape($labels['approval_flow_template_intro']) ?></p>
         </div>
-        <?php if ($approval_flow_template_can_add): ?>
-            <?php if ($approval_flow_template_write_available): ?>
-                <a href="/admin/system/approval_flow_template/new" class="inline-flex h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><?= html_escape($labels['approval_flow_template_new']) ?></a>
-            <?php else: ?>
-                <span aria-disabled="true" class="inline-flex h-11 shrink-0 cursor-not-allowed items-center justify-center rounded-xl bg-slate-200 px-4 text-sm font-semibold text-slate-500"><?= html_escape($labels['approval_flow_template_new']) ?></span>
-            <?php endif; ?>
-        <?php endif; ?>
     </header>
+
+    <?php
+    $panel_config = $finance_filter_config;
+    if ($approval_flow_template_can_add && $approval_flow_template_write_available) {
+        $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => $labels['approval_flow_template_new']);
+    }
+    ?>
+    <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
 
     <?php if (!$approval_flow_template_backend_available): ?>
         <div role="status" class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
@@ -51,12 +52,8 @@ $approval_flow_template_status_messages = array(
         <div role="note" class="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700"><?= html_escape($labels['approval_flow_template_write_disabled']) ?></div>
     <?php endif; ?>
 
-    <section aria-labelledby="approval-flow-template-list-heading" class="border border-slate-200 bg-white shadow-sm">
-        <h2 id="approval-flow-template-list-heading" class="sr-only"><?= html_escape($labels['approval_flow_template_heading']) ?></h2>
-        <div class="overflow-x-auto">
-            <table id="approval-flow-template-table" class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <caption class="sr-only"><?= html_escape($labels['approval_flow_template_heading']) ?></caption>
-                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <?= $this->finance_list_table->open('approval-flow-template-table') ?>
+                <thead>
                     <tr>
                         <th scope="col" aria-label="<?= html_escape($labels['approval_flow_template_actions']) ?>" class="w-12 px-1 py-3.5 sm:px-3"></th>
                         <th scope="col" class="whitespace-nowrap px-2 py-3.5 sm:px-6"><?= html_escape($labels['approval_flow_template_code_label']) ?></th>
@@ -67,9 +64,7 @@ $approval_flow_template_status_messages = array(
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100"></tbody>
-            </table>
-        </div>
-    </section>
+    <?= $this->finance_list_table->close() ?>
 </main>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js') ? filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') : '1' ?>"></script>

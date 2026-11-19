@@ -23,9 +23,9 @@
     <?php if (!$approval_error_available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Penyimpanan error approval belum tersedia. Pastikan migrasi dijalankan dan tenant aktif.</div>
     <?php else: ?>
-        <div class="overflow-x-auto border border-slate-200 bg-white shadow-sm">
-            <table id="approval-error-table" class="w-full min-w-[68rem] text-left text-sm">
-                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <?= $this->finance_filter_panel->render($approval_error_filter_config, $labels) ?>
+        <?= $this->finance_list_table->open('approval-error-table', array('table_class' => 'finance-list-table min-w-[68rem] text-left text-sm')) ?>
+                <thead>
                     <tr>
                         <th scope="col" class="px-4 py-3">Permintaan</th>
                         <th scope="col" class="px-4 py-3">Pemohon</th>
@@ -37,8 +37,7 @@
                     </tr>
                 </thead>
                 <tbody></tbody>
-            </table>
-        </div>
+        <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
 </main>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= filemtime(FCPATH . 'assets/js/vendor/jquery.min.js') ?>"></script>

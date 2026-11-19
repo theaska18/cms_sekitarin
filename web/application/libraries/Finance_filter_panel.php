@@ -175,8 +175,9 @@ class Finance_filter_panel
                 ? $labels[$label_key] : (isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date');
             $date_fields[$index]['start_name'] = !empty($field['start_name']) ? $field['start_name'] : $field['key'] . '_start';
             $date_fields[$index]['end_name'] = !empty($field['end_name']) ? $field['end_name'] : $field['key'] . '_end';
-            $date_fields[$index]['start_value'] = ($index === 0) ? $defaults['start_on'] : '';
-            $date_fields[$index]['end_value'] = ($index === 0) ? $defaults['end_on'] : '';
+            $is_default = !empty($field['default']);
+            $date_fields[$index]['start_value'] = ($index === 0 && $is_default) ? $defaults['start_on'] : '';
+            $date_fields[$index]['end_value'] = ($index === 0 && $is_default) ? $defaults['end_on'] : '';
         }
         $data = array(
             'finance_filter_date' => !empty($config['date']),

@@ -70,11 +70,15 @@ class Menu_access_catalog
         return $rows;
     }
 
-    public function filter($rows, $search)
+    public function filter($rows, $search, $fields = array())
     {
         $rows = is_array($rows) ? $rows : array();
         $needle = $this->lower(trim((string) $search));
-        if ($needle === '') {
+        $fields = is_array($fields) ? $fields : array();
+        $group_needle = isset($fields['group']) ? $this->lower(trim((string) $fields['group'])) : '';
+        $menu_needle = isset($fields['menu']) ? $this->lower(trim((string) $fields['menu'])) : '';
+        $access_needle = isset($fields['access']) ? $this->lower(trim((string) $fields['access'])) : '';
+        if ($needle === '' && $group_needle === '' && $menu_needle === '' && $access_needle === '') {
             return $rows;
         }
         $filtered = array();
@@ -85,21 +89,49 @@ class Menu_access_catalog
                 isset($row['group_label']) ? $row['group_label'] : '',
                 isset($row['group_code']) ? $row['group_code'] : '',
             );
+            $access_haystack = array();
             if (isset($row['accesses']) && is_array($row['accesses'])) {
                 foreach ($row['accesses'] as $access) {
-                    $haystack[] = isset($access['name']) ? $access['name'] : '';
-                    $haystack[] = isset($access['code']) ? $access['code'] : '';
+                    $access_name = isset($access['name']) ? $access['name'] : '';
+                    $access_code = isset($access['code']) ? $access['code'] : '';
+                    $access_haystack[] = $access_name;
+                    $access_haystack[] = $access_code;
+                    $haystack[] = $access_name;
+                    $haystack[] = $access_code;
                 }
             }
-            foreach ($haystack as $value) {
-                if (strpos($this->lower((string) $value), $needle) !== FALSE) {
-                    $filtered[] = $row;
-                    break;
-                }
+            if ($needle !== '' && !$this->matches_any($haystack, $needle)) {
+                continue;
             }
+            if ($group_needle !== '' && !$this->matches_any(array(
+                isset($row['group_label']) ? $row['group_label'] : '',
+                isset($row['group_code']) ? $row['group_code'] : '',
+            ), $group_needle)) {
+                continue;
+            }
+            if ($menu_needle !== '' && !$this->matches_any(array(
+                isset($row['menu_name']) ? $row['menu_name'] : '',
+                isset($row['menu_code']) ? $row['menu_code'] : '',
+            ), $menu_needle)) {
+                continue;
+            }
+            if ($access_needle !== '' && !$this->matches_any($access_haystack, $access_needle)) {
+                continue;
+            }
+            $filtered[] = $row;
         }
 
         return $filtered;
+    }
+
+    private function matches_any($values, $needle)
+    {
+        foreach ($values as $value) {
+            if (strpos($this->lower((string) $value), $needle) !== FALSE) {
+                return TRUE;
+            }
+        }
+        return FALSE;
     }
 
     public function sort($rows, $order, $direction)

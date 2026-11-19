@@ -74,6 +74,11 @@
                     api.search(search.value).draw();
                 }, 300);
             });
+            search.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                }
+            });
         }
 
         var pageSize = panel.querySelector('[data-finance-filter="page_size"]');
@@ -114,6 +119,12 @@
                 if (first) first.focus();
             }
         }
+
+        panel.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && event.target.closest('[data-finance-filter]')) {
+                event.preventDefault();
+            }
+        });
 
         if (toggle && details) {
             toggle.addEventListener('click', function () {

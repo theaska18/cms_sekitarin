@@ -9,6 +9,13 @@ class Admin_approval_flow_template extends Admin
     const TEMPLATE_PATH = '/admin/system/approval_flow_template';
     const MENU_CODE = 'sys_approval_flow_template';
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function approval_flow_template_index()
     {
         if (!$this->has_admin_menu_code(self::MENU_CODE)) {
@@ -28,8 +35,36 @@ class Admin_approval_flow_template extends Admin
                 'approval_flow_template_can_update' => $this->has_admin_access_code('sys_approval_flow_template_update'),
                 'approval_flow_template_can_delete' => $this->has_admin_access_code('sys_approval_flow_template_delete'),
                 'approval_flow_template_status' => (string) $this->session->flashdata('approval_flow_template_status'),
+                'finance_filter_config' => $this->approval_flow_template_filter_config(),
             )
         );
+    }
+
+    private function approval_flow_template_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#approval-flow-template-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'flow_code', 'label' => isset($labels['approval_flow_template_code_label']) ? $labels['approval_flow_template_code_label'] : 'Code'),
+                array('type' => 'text', 'name' => 'flow_name', 'label' => isset($labels['approval_flow_template_name_label']) ? $labels['approval_flow_template_name_label'] : 'Name'),
+                array('type' => 'text', 'name' => 'description', 'label' => isset($labels['approval_flow_template_description_label']) ? $labels['approval_flow_template_description_label'] : 'Description'),
+                array('type' => 'text', 'name' => 'menu_codes', 'label' => isset($labels['approval_flow_template_menus_label']) ? $labels['approval_flow_template_menus_label'] : 'Menus'),
+                array('type' => 'select', 'name' => 'active_flag', 'label' => isset($labels['approval_flow_template_active_label']) ? $labels['approval_flow_template_active_label'] : 'Active', 'options' => array(
+                    '1' => isset($labels['approval_flow_template_active_yes']) ? $labels['approval_flow_template_active_yes'] : 'Active',
+                    '0' => isset($labels['approval_flow_template_active_no']) ? $labels['approval_flow_template_active_no'] : 'Inactive',
+                )),
+            ),
+        ));
+    }
+
+    private function approval_flow_template_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->approval_flow_template_filter_config());
+        return array('search' => (string) $search, 'fields' => $panel['fields']);
     }
 
     /** Server-side DataTables endpoint for the template list. */
@@ -48,13 +83,13 @@ class Admin_approval_flow_template extends Admin
         $this->datatable_server->respond(
             array(1 => 'flow_code', 2 => 'flow_name', 3 => 'description', 5 => 'active_flag'),
             function () use ($store) {
-                return $store->count('');
+                return $store->count('', $this->approval_flow_template_list_filters(''));
             },
             function ($search) use ($store) {
-                return $store->count($search);
+                return $store->count($search, $this->approval_flow_template_list_filters($search));
             },
             function ($search, $length, $start, $order, $direction) use ($store) {
-                return $store->page($search, $length, $start, $order, $direction);
+                return $store->page($search, $length, $start, $order, $direction, $this->approval_flow_template_list_filters($search));
             },
             array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'flow_code')
         );

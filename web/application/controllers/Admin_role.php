@@ -8,6 +8,13 @@ class Admin_role extends Admin
 {
     const ADMIN_ROLE_PATH = '/admin/application/role';
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     private function require_role_access($access_code = NULL, $message_key = 'role_no_access')
     {
         if (!$this->has_admin_menu_code('app_role')) {
@@ -394,16 +401,17 @@ class Admin_role extends Admin
         $columns = $this->menu_access_catalog;
         $rows = $columns->rows($groups, $role_state, $allowed_state);
         $write_available = $this->role_write_available($role_store);
+        $menu_filters = $this->menu_access_filters();
         $this->datatable_server->respond(
             array(0 => 'group', 1 => 'menu'),
-            function () use ($rows) {
-                return count($rows);
+            function () use ($rows, $columns, $menu_filters) {
+                return count($columns->filter($rows, '', $menu_filters));
             },
-            function ($search) use ($rows, $columns) {
-                return count($columns->filter($rows, $search));
+            function ($search) use ($rows, $columns, $menu_filters) {
+                return count($columns->filter($rows, $search, $menu_filters));
             },
-            function ($search, $length, $start, $order, $direction) use ($rows, $columns, $write_available) {
-                $filtered = $columns->filter($rows, $search);
+            function ($search, $length, $start, $order, $direction) use ($rows, $columns, $write_available, $menu_filters) {
+                $filtered = $columns->filter($rows, $search, $menu_filters);
                 $sorted = $columns->sort($filtered, $order, $direction);
                 $page = $columns->slice($sorted, $length, $start);
 
@@ -411,6 +419,16 @@ class Admin_role extends Admin
             },
             array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
         );
+    }
+
+    private function menu_access_filters()
+    {
+        $filters = array();
+        foreach (array('group', 'menu', 'access') as $name) {
+            $value = $this->input->get($name, TRUE);
+            $filters[$name] = is_string($value) ? substr(trim($value), 0, 120) : '';
+        }
+        return $filters;
     }
 
     /** Toggle one role menu or access checkbox inside the tenant-scoped catalog. */

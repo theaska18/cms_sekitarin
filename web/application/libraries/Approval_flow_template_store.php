@@ -73,18 +73,19 @@ class Approval_flow_template_store
         return $specs;
     }
 
-    public function count($search)
+    public function count($search, $filters = array())
     {
         if (!$this->schema_available()) {
             return FALSE;
         }
         $this->db->from('sys_approval_flow f');
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $count = $this->db->count_all_results();
         return $count === FALSE ? FALSE : (int) $count;
     }
 
-    public function page($search, $limit, $offset, $sort, $direction)
+    public function page($search, $limit, $offset, $sort, $direction, $filters = array())
     {
         if (!$this->schema_available()) {
             return FALSE;
@@ -94,6 +95,7 @@ class Approval_flow_template_store
         $query = $this->db->select('f.flow_code, f.flow_name, f.description, f.active_flag, ' . $menu_codes, FALSE)
             ->from('sys_approval_flow f');
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $sort_column = isset($this->sort_columns[$sort]) ? $this->sort_columns[$sort] : 'f.flow_code';
         $query->order_by($sort_column, strtoupper((string) $direction) === 'DESC' ? 'DESC' : 'ASC')
             ->limit(max(1, min(100, (int) $limit)), max(0, (int) $offset));
@@ -483,6 +485,31 @@ class Approval_flow_template_store
         $CI =& get_instance();
         $session = isset($CI->session) ? $CI->session->userdata('admin_user') : NULL;
         return is_array($session) && isset($session['user_id']) ? (int) $session['user_id'] : 0;
+    }
+
+    private function apply_field_filters($filters)
+    {
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array(
+            'flow_code' => 'f.flow_code',
+            'flow_name' => 'f.flow_name',
+            'description' => 'f.description',
+        ) as $name => $column) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($column, $fields[$name]);
+            }
+        }
+        if (isset($fields['menu_codes']) && $fields['menu_codes'] !== '') {
+            $literal = $this->db->escape($fields['menu_codes']);
+            $this->db->where(
+                "EXISTS (SELECT 1 FROM sys_approval_flow_menu m WHERE m.flow_code = f.flow_code AND LOCATE(" . $literal . ", m.menu_code) > 0)",
+                NULL,
+                FALSE
+            );
+        }
+        if (isset($fields['active_flag']) && $fields['active_flag'] !== '') {
+            $this->db->where('f.active_flag', (int) $fields['active_flag']);
+        }
     }
 
     private function apply_search($search)

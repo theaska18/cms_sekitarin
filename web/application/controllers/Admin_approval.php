@@ -4,6 +4,13 @@ require_once APPPATH . 'controllers/Admin.php';
 
 class Admin_approval extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function approval_index()
     {
         if (!$this->has_admin_menu_code('sys_approval')) { show_error('Access denied', 403); return; }
@@ -57,7 +64,73 @@ class Admin_approval extends Admin
             'approval_can_update'=>$can_update,
             'approval_can_manage_errors'=>$can_manage_errors,
             'approval_status'=>(string)$this->session->flashdata('admin_approval_status'),
+            'approval_history_filter_config'=>$this->approval_history_filter_config(),
         ));
+    }
+
+    private function approval_history_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'date_preset' => 'none',
+            'date_fields' => array(
+                array('key' => 'create_on', 'label_key' => 'finance_created_at', 'default' => FALSE),
+            ),
+            'status_preset' => 'none',
+            'target' => '#my-approval-history-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'subject', 'label' => isset($labels['admin_approval_subject']) ? $labels['admin_approval_subject'] : 'Request'),
+                array('type' => 'text', 'name' => 'flow_code', 'label' => isset($labels['admin_approval_flow']) ? $labels['admin_approval_flow'] : 'Flow'),
+                array('type' => 'select', 'name' => 'status', 'label' => isset($labels['admin_approval_status_label']) ? $labels['admin_approval_status_label'] : 'Status', 'options' => array(
+                    'approved' => 'Disetujui',
+                    'rejected' => 'Ditolak',
+                    'revise' => 'Revisi',
+                    'pending' => 'Menunggu persetujuan',
+                    'needs_assignment' => 'Menunggu penetapan admin',
+                )),
+                array('type' => 'select', 'name' => 'step_status', 'label' => 'Checklist persetujuan', 'options' => array(
+                    'approved' => 'Disetujui',
+                    'rejected' => 'Ditolak',
+                    'revise' => 'Revisi',
+                    'pending' => 'Menunggu persetujuan',
+                    'needs_assignment' => 'Menunggu penetapan admin',
+                )),
+            ),
+        ));
+    }
+
+    private function approval_history_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->approval_history_filter_config());
+        return array('search' => (string) $search, 'date_ranges' => $panel['date_ranges'], 'fields' => $panel['fields']);
+    }
+
+    private function approval_error_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'date_preset' => 'none',
+            'date_fields' => array(
+                array('key' => 'create_on', 'label_key' => 'finance_created_at', 'default' => FALSE),
+            ),
+            'status_preset' => 'none',
+            'target' => '#approval-error-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'subject', 'label' => isset($labels['admin_approval_subject']) ? $labels['admin_approval_subject'] : 'Request'),
+                array('type' => 'text', 'name' => 'requester_name', 'label' => 'Pemohon'),
+                array('type' => 'text', 'name' => 'flow_code', 'label' => isset($labels['admin_approval_flow']) ? $labels['admin_approval_flow'] : 'Flow'),
+                array('type' => 'text', 'name' => 'org', 'label' => 'Organisasi'),
+                array('type' => 'text', 'name' => 'error_code', 'label' => 'Penyebab'),
+            ),
+        ));
+    }
+
+    private function approval_error_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->approval_error_filter_config());
+        return array('search' => (string) $search, 'date_ranges' => $panel['date_ranges'], 'fields' => $panel['fields']);
     }
 
     public function approval_submit()
@@ -98,10 +171,10 @@ class Admin_approval extends Admin
         if (!$store->available()) { $this->datatable_server->error(503); return; }
         $this->datatable_server->respond(
             array(0=>'subject',1=>'flow_code',2=>'status',4=>'create_on'),
-            function() use ($store) { return $store->count_my_approval_requests(''); },
-            function($search) use ($store) { return $store->count_my_approval_requests($search); },
+            function() use ($store) { return $store->count_my_approval_requests('', $this->approval_history_list_filters('')); },
+            function($search) use ($store) { return $store->count_my_approval_requests($search, $this->approval_history_list_filters($search)); },
             function($search,$length,$start,$order,$direction) use ($store) {
-                return $store->my_approval_requests($search,$length,$start,$order,$direction);
+                return $store->my_approval_requests($search,$length,$start,$order,$direction, $this->approval_history_list_filters($search));
             },
             array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
         );
@@ -128,6 +201,7 @@ class Admin_approval extends Admin
             'approval_error_available'=>$available,
             'approval_error_count'=>$available?$store->count_approval_errors():0,
             'approval_error_status'=>(string)$this->session->flashdata('admin_approval_error_status'),
+            'approval_error_filter_config'=>$this->approval_error_filter_config(),
         ));
     }
 
@@ -145,10 +219,10 @@ class Admin_approval extends Admin
         if (!$store->available()) { $this->datatable_server->error(503); return; }
         $this->datatable_server->respond(
             array(0=>'subject',4=>'error_code',5=>'create_on'),
-            function() use ($store) { return $store->count_approval_errors(''); },
-            function($search) use ($store) { return $store->count_approval_errors($search); },
+            function() use ($store) { return $store->count_approval_errors('', $this->approval_error_list_filters('')); },
+            function($search) use ($store) { return $store->count_approval_errors($search, $this->approval_error_list_filters($search)); },
             function($search,$length,$start,$order,$direction) use ($store) {
-                return $store->approval_errors($search,$length,$start,$order,$direction);
+                return $store->approval_errors($search,$length,$start,$order,$direction, $this->approval_error_list_filters($search));
             },
             array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
         );

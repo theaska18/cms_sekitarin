@@ -164,7 +164,7 @@ console.log(JSON.stringify(results));
         view = (APP / "views/admin/tenant/index.php").read_text(encoding="utf-8")
         controller = (APP / "controllers/Admin_tenant.php").read_text(encoding="utf-8")
         datatable_server = (APP / "libraries/Datatable_server.php").read_text(encoding="utf-8")
-        self.assertIn('id="tenant-data-table"', view)
+        self.assertIn("finance_list_table->open('tenant-data-table')", view)
         self.assertIn("processing: true", view)
         self.assertIn("serverSide: true", view)
         self.assertIn("deferRender: true", view)

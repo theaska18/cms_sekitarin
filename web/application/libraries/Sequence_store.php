@@ -240,7 +240,7 @@ class Sequence_store
         return $result === TRUE;
     }
 
-    public function count($search = '')
+    public function count($search = '', $filters = array())
     {
         if (!$this->has_expected_schema()) {
             return FALSE;
@@ -249,6 +249,7 @@ class Sequence_store
         $this->db->select('COUNT(*) AS total', FALSE);
         $this->from_sequence();
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $query = $this->db->get();
         if ($query === FALSE) {
             return FALSE;
@@ -258,7 +259,7 @@ class Sequence_store
         return $row === NULL ? FALSE : (int) $row['total'];
     }
 
-    public function page($search, $length, $start, $sort, $direction)
+    public function page($search, $length, $start, $sort, $direction, $filters = array())
     {
         if (!$this->has_expected_schema()) {
             return FALSE;
@@ -277,6 +278,7 @@ class Sequence_store
         );
         $this->from_sequence();
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $this->db->order_by($this->sort_columns[$sort], $direction, FALSE);
         $this->db->limit($length, $offset);
         $query = $this->db->get();
@@ -323,6 +325,25 @@ class Sequence_store
         }
         $this->db->or_like('s.format', $search);
         $this->db->group_end();
+    }
+
+    private function apply_field_filters($filters)
+    {
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array(
+            'sequence_code' => 's.sequence_code',
+            'sequence_name' => 's.sequence_name',
+            'description' => 's.description',
+            'format' => 's.format',
+            'menu_codes' => 'sm.menu_codes',
+        ) as $name => $column) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($column, $fields[$name]);
+            }
+        }
+        if (isset($fields['repeat_type']) && $fields['repeat_type'] !== '') {
+            $this->db->where('s.repeat_type', $fields['repeat_type']);
+        }
     }
 
     private function has_expected_schema()

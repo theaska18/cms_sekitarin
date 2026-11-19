@@ -206,7 +206,7 @@ class Application_sequence_store
             && $this->db->affected_rows() === 1;
     }
 
-    public function count($tenant_id, $menu_codes, $search = '')
+    public function count($tenant_id, $menu_codes, $search = '', $filters = array())
     {
         if (!$this->schema_available() || (int) $tenant_id < 1 || !is_array($menu_codes)) {
             return FALSE;
@@ -216,6 +216,7 @@ class Application_sequence_store
         }
         $this->sequence_query($tenant_id, $menu_codes);
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $query = $this->db->select('COUNT(DISTINCT s.sequence_code) AS total', FALSE)->get();
         if ($query === FALSE) {
             return FALSE;
@@ -223,7 +224,7 @@ class Application_sequence_store
         return (int) $query->row()->total;
     }
 
-    public function page($tenant_id, $menu_codes, $search, $length, $start, $sort, $direction)
+    public function page($tenant_id, $menu_codes, $search, $length, $start, $sort, $direction, $filters = array())
     {
         if (!$this->schema_available() || (int) $tenant_id < 1 || !is_array($menu_codes)) {
             return FALSE;
@@ -246,6 +247,7 @@ class Application_sequence_store
             FALSE
         );
         $this->apply_search($search);
+        $this->apply_field_filters($filters);
         $this->db->order_by($this->sort_columns[$sort], $direction, FALSE);
         if ($sort !== 'sequence_code') {
             $this->db->order_by('s.sequence_code', 'ASC');
@@ -351,6 +353,40 @@ class Application_sequence_store
         $error = $this->db->error();
         $this->db->db_debug = $previous_db_debug;
         return $result === TRUE && (!is_array($error) || empty($error['code']));
+    }
+
+    private function apply_field_filters($filters)
+    {
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array('sequence_code' => 's.sequence_code', 'sequence_name' => 's.sequence_name') as $name => $column) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($column, $fields[$name]);
+            }
+        }
+        if (isset($fields['format']) && $fields['format'] !== '') {
+            $this->db->like('COALESCE(a.format, s.format)', $fields['format'], 'both', FALSE);
+        }
+        if (isset($fields['repeat_type']) && $fields['repeat_type'] !== '') {
+            $this->db->where('COALESCE(a.repeat_type, s.repeat_type)', $fields['repeat_type'], FALSE);
+        }
+        if (isset($fields['last_value']) && is_array($fields['last_value'])) {
+            if (isset($fields['last_value']['min']) && $fields['last_value']['min'] !== '') {
+                $this->db->where('COALESCE(a.last_value, 0) >=', $fields['last_value']['min'], FALSE);
+            }
+            if (isset($fields['last_value']['max']) && $fields['last_value']['max'] !== '') {
+                $this->db->where('COALESCE(a.last_value, 0) <=', $fields['last_value']['max'], FALSE);
+            }
+        }
+        if (isset($fields['use_flag']) && $fields['use_flag'] !== '') {
+            if ((string) $fields['use_flag'] === '1') {
+                $this->db->where('a.use_flag', 1);
+            } else {
+                $this->db->group_start()
+                    ->where('a.sequence_id IS NULL', NULL, FALSE)
+                    ->or_where('a.use_flag', 0)
+                    ->group_end();
+            }
+        }
     }
 
     private function sequence_query($tenant_id, $menu_codes)

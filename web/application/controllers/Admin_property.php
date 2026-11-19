@@ -6,6 +6,13 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Property menu controller; inherits the authenticated admin shell. */
 class Admin_property extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function property_index()
     {
         if (!$this->has_admin_menu_code('sys_property')) {
@@ -64,7 +71,34 @@ class Admin_property extends Admin
                 'can_update' => $can_update,
                 'can_delete' => $can_delete,
                 'status_key' => is_string($status) ? $status : '',
+                'finance_filter_config' => $this->property_filter_config(),
             )
+        );
+    }
+
+    private function property_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => FALSE,
+            'date_preset' => 'none',
+            'status_preset' => 'none',
+            'target' => '#property-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'property_code', 'label' => isset($labels['property_code_label']) ? $labels['property_code_label'] : 'Code'),
+                array('type' => 'text', 'name' => 'property_name', 'label' => isset($labels['property_name_label']) ? $labels['property_name_label'] : 'Name'),
+                array('type' => 'text', 'name' => 'description', 'label' => isset($labels['property_description_label']) ? $labels['property_description_label'] : 'Description'),
+                array('type' => 'text', 'name' => 'value', 'label' => isset($labels['property_value_label']) ? $labels['property_value_label'] : 'Value'),
+            ),
+        ));
+    }
+
+    private function property_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->property_filter_config());
+        return array(
+            'search' => $this->property_filter($search),
+            'fields' => $panel['fields'],
         );
     }
 
@@ -86,14 +120,14 @@ class Admin_property extends Admin
         $this->datatable_server->respond(
             array(1 => 'property_code', 2 => 'property_name'),
             function () use ($store) {
-                return $store->count(array('search' => ''));
+                return $store->count($this->property_list_filters(''));
             },
             function ($search) use ($store) {
-                return $store->count(array('search' => $this->property_filter($search)));
+                return $store->count($this->property_list_filters($search));
             },
             function ($search, $length, $start, $order, $direction) use ($store) {
                 return $store->page(
-                    array('search' => $this->property_filter($search)),
+                    $this->property_list_filters($search),
                     $length,
                     $start,
                     $this->property_sort_field($order),

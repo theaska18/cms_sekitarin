@@ -125,7 +125,7 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertIn(r"preg_match('/[\x00-\x1F\x7F]/', $property_code)", self.property_controller)
 
     def test_property_datatable_uses_server_side_search_and_bounded_paging(self):
-        self.assertIn('id="property-data-table"', self.view)
+        self.assertIn("finance_list_table->open('property-data-table')", self.view)
         self.assertIn('serverSide: true', self.view)
         self.assertIn("url: '/admin/system/property/data'", self.view)
         self.assertIn('lengthMenu: [[10, 25, 50], [10, 25, 50]]', self.view)
@@ -176,7 +176,8 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertNotIn('id="property-page-size"', self.view)
         self.assertNotIn('property_sort_url', self.view)
         self.assertNotIn('http_build_query($page_params)', self.view)
-        self.assertIn('id="property-list-heading"', self.view)
+        self.assertIn('finance_filter_panel->render', self.view)
+        self.assertIn("finance_list_table->open('property-data-table')", self.view)
 
     def test_row_actions_use_three_dot_dropdown_with_update_and_delete(self):
         self.assertIn('data-property-actions-toggle', self.view)
@@ -200,7 +201,7 @@ class AdminPropertyContractTests(unittest.TestCase):
                     "property_confirm_body", "property_cancel", "property_dt_search", "property_dt_info"):
             with self.subTest(key=key):
                 self.assertIn(f"$labels['{key}']", self.view)
-        self.assertIn('id="property-data-table"', self.view)
+        self.assertIn("finance_list_table->open('property-data-table')", self.view)
         self.assertIn('serverSide: true', self.view)
         self.assertIn("search: {search:", self.view)
         self.assertNotIn('name="code"', self.view)
@@ -208,7 +209,7 @@ class AdminPropertyContractTests(unittest.TestCase):
         self.assertNotIn('id="property-page-size"', self.view)
         self.assertIn("'property_code'", self.view)
         self.assertIn("'property_name'", self.view)
-        self.assertIn('overflow-x-auto', self.view)
+        self.assertIn('finance_filter_panel->render', self.view)
         self.assertIn('role="dialog"', self.view)
         self.assertIn('data-property-edit-icon', self.view)
         self.assertIn('data-property-delete-icon', self.view)

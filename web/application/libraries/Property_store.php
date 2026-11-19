@@ -238,5 +238,12 @@ class Property_store
                 ->or_like('property_name', $filters['search'])
                 ->group_end();
         }
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array('property_code', 'property_name', 'description', 'value') as $name) {
+            if (!isset($this->columns[$name]) || !isset($fields[$name]) || $fields[$name] === '') {
+                continue;
+            }
+            $this->db->like($name, $fields[$name]);
+        }
     }
 }

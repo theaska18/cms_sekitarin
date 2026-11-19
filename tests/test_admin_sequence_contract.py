@@ -40,13 +40,12 @@ class AdminSequenceContractTests(unittest.TestCase):
         view_path = APP / "views" / "admin" / "sequence" / "index.php"
         self.assertTrue(view_path.is_file(), "The sequence list view must exist")
         view = view_path.read_text()
-        self.assertIn("<table", view)
+        self.assertIn("finance_list_table->open('sequence-data-table')", view)
         self.assertIn("<thead", view)
         self.assertIn("<tbody", view)
-        self.assertIn("min-w-full divide-y divide-slate-200 text-left text-sm", view)
         self.assertIn("bg-slate-50", view)
         self.assertIn("divide-y divide-slate-100", view)
-        self.assertIn("overflow-x-auto", view)
+        self.assertIn("finance_filter_panel->render", view)
         self.assertIn("aria-label", view)
         self.assertIn("focus:ring-2", view)
         for column in (
@@ -64,8 +63,8 @@ class AdminSequenceContractTests(unittest.TestCase):
         for token in (
             '<main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">',
             'aria-label="Breadcrumb"',
-            'rounded-tl-none rounded-tr-none rounded-bl-2xl rounded-br-2xl border border-slate-200 bg-white shadow-sm',
-            'id="sequence-data-table"',
+            "finance_list_table->open('sequence-data-table')",
+            'finance_filter_panel->render',
             '/assets/css/vendor/datatables.min.css',
             '/assets/js/vendor/datatables.min.js',
         ):
@@ -79,8 +78,8 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("serverSide: true", view)
         self.assertIn("searchDelay: 350", view)
         self.assertIn("sequence_data", controller)
-        self.assertIn("$store->count($search)", controller)
-        self.assertIn("$store->page($search, $length, $start, $order, $direction)", controller)
+        self.assertIn("$store->count($search, $this->sequence_list_filters($search))", controller)
+        self.assertIn("$store->page($search, $length, $start, $order, $direction, $this->sequence_list_filters($search))", controller)
         self.assertIn("max_length' => 50", controller)
         self.assertIn("max_search_length' => 120", controller)
         self.assertIn("$this->datatable_server->respond(", controller)
@@ -339,7 +338,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         controller = (APP / "controllers" / "Admin_sequence.php").read_text()
         routes = (APP / "config" / "routes.php").read_text()
         store = (APP / "libraries" / "Sequence_store.php").read_text()
-        for token in ("sequence_add", 'href="/admin/system/sequence/new"', "sequence_actions", "sequence_edit", "sequence_delete", 'method="post"'):
+        for token in ("sequence_add", "add_action", "/new", "sequence_actions", "sequence_edit", "sequence_delete", 'method="post"'):
             with self.subTest(token=token):
                 self.assertIn(token, view)
         self.assertIn("$route['admin/(:any)/(:any)/(:any)']", routes)
@@ -399,7 +398,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("$sequence_add_allowed", view)
         self.assertIn("$sequence_update_allowed", view)
         self.assertIn("$sequence_delete_allowed", view)
-        self.assertIn("<?php if ($sequence_add_allowed): ?>", view)
+        self.assertIn("if ($sequence_add_allowed && $write_available)", view)
         self.assertIn("$sequence_update_allowed ? 'true' : 'false'", view)
         self.assertIn("$sequence_delete_allowed ? 'true' : 'false'", view)
 

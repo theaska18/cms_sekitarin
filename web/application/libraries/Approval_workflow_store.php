@@ -482,18 +482,19 @@ class Approval_workflow_store
         return $pending;
     }
 
-    public function count_my_approval_requests($search = '')
+    public function count_my_approval_requests($search = '', $filters = array())
     {
         if (!$this->available()) { return FALSE; }
         $this->db->from('app_approval_request r')
             ->join('sys_approval_flow f','f.flow_code=r.flow_code','left')
             ->where(array('r.tenant_id'=>$this->tenant,'r.requester_user_id'=>$this->user));
         $this->apply_my_approval_search($search);
+        $this->apply_my_approval_filters($filters);
         return (int)$this->db->count_all_results();
     }
 
     /** Page this user's requests and include the ordered outcome of every flow step. */
-    public function my_approval_requests($search = '', $limit = 10, $offset = 0, $sort = 'create_on', $direction = 'DESC')
+    public function my_approval_requests($search = '', $limit = 10, $offset = 0, $sort = 'create_on', $direction = 'DESC', $filters = array())
     {
         if (!$this->available()) { return array(); }
         $sort=in_array($sort,array('subject','flow_code','status','create_on'),TRUE)?$sort:'create_on';
@@ -506,6 +507,7 @@ class Approval_workflow_store
             ->select("COALESCE(NULLIF(ca.full_name,''),ca.username) AS current_approver_name",FALSE)
             ->where(array('r.tenant_id'=>$this->tenant,'r.requester_user_id'=>$this->user));
         $this->apply_my_approval_search($search);
+        $this->apply_my_approval_filters($filters);
         $requests=$this->db->order_by($sort,$direction)->order_by('r.request_id','DESC')
             ->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset))->get()->result_array();
         if (!$requests) { return array(); }
@@ -595,6 +597,38 @@ class Approval_workflow_store
         }
     }
 
+    private function apply_my_approval_filters($filters)
+    {
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        if (isset($fields['subject']) && $fields['subject'] !== '') {
+            $this->db->like('r.subject', $fields['subject']);
+        }
+        if (isset($fields['flow_code']) && $fields['flow_code'] !== '') {
+            $this->db->like('r.flow_code', $fields['flow_code']);
+        }
+        if (isset($fields['status']) && $fields['status'] !== '') {
+            $this->db->where('r.status', $fields['status']);
+        }
+        if (isset($fields['step_status']) && $fields['step_status'] !== '') {
+            $step_status = (string) $fields['step_status'];
+            if (in_array($step_status, array('approved', 'rejected', 'revise'), TRUE)) {
+                $literal = $this->db->escape($step_status);
+                $this->db->where(
+                    "EXISTS (SELECT 1 FROM app_approval_action a WHERE a.tenant_id = r.tenant_id AND a.request_id = r.request_id AND a.decision = " . $literal . ")",
+                    NULL,
+                    FALSE
+                );
+            } else {
+                $this->db->where('r.status', $step_status);
+            }
+        }
+        if (!empty($filters['date_ranges']['create_on'])) {
+            $range = $filters['date_ranges']['create_on'];
+            if (!empty($range['start'])) { $this->db->where('r.create_on >=', $range['start']); }
+            if (!empty($range['end'])) { $this->db->where('r.create_on <=', $range['end'] . ' 23:59:59'); }
+        }
+    }
+
     public function active_flows()
     {
         if (!$this->available()) { return array(); }
@@ -657,21 +691,24 @@ class Approval_workflow_store
         },$rows);
     }
 
-    public function count_approval_errors($search = '')
+    public function count_approval_errors($search = '', $filters = array())
     {
         if (!$this->available()) { return FALSE; }
         $search=substr(trim((string)$search),0,120);
         $this->db->from('app_approval_error x')
             ->join('app_approval_request r','r.request_id=x.request_id AND r.tenant_id=x.tenant_id','inner')
+            ->join('app_user u','u.user_id=r.requester_user_id AND u.tenant_id=r.tenant_id','left')
+            ->join('hr_org o','o.org_id=x.org_id AND o.tenant_id=x.tenant_id','left')
             ->where(array('x.tenant_id'=>$this->tenant,'x.status'=>'open'));
         if ($search!=='') {
             $this->db->group_start()->like('r.subject',$search)->or_like('r.flow_code',$search)
                 ->or_like('x.error_code',$search)->or_like('x.error_message',$search)->group_end();
         }
+        $this->apply_approval_error_filters($filters);
         return (int)$this->db->count_all_results();
     }
 
-    public function approval_errors($search = '', $limit = NULL, $offset = 0, $sort = 'create_on', $direction = 'DESC')
+    public function approval_errors($search = '', $limit = NULL, $offset = 0, $sort = 'create_on', $direction = 'DESC', $filters = array())
     {
         if (!$this->available()) { return array(); }
         $search=substr(trim((string)$search),0,120);
@@ -686,11 +723,38 @@ class Approval_workflow_store
             $this->db->group_start()->like('r.subject',$search)->or_like('r.flow_code',$search)
                 ->or_like('x.error_code',$search)->or_like('x.error_message',$search)->group_end();
         }
+        $this->apply_approval_error_filters($filters);
         $sort=in_array($sort,array('subject','flow_code','error_code','create_on'),TRUE)?$sort:'create_on';
         $sort=$sort==='subject'?'r.subject':($sort==='flow_code'?'r.flow_code':($sort==='error_code'?'x.error_code':'x.create_on'));
         $this->db->order_by($sort,strtoupper($direction)==='ASC'?'ASC':'DESC');
         if ($limit!==NULL) { $this->db->limit(min(50,max(1,(int)$limit)),max(0,(int)$offset)); }
         return $this->db->get()->result_array();
+    }
+
+    private function apply_approval_error_filters($filters)
+    {
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array(
+            'subject' => 'r.subject',
+            'requester_name' => 'u.username',
+            'flow_code' => 'r.flow_code',
+            'error_code' => 'x.error_code',
+        ) as $name => $column) {
+            if (isset($fields[$name]) && $fields[$name] !== '') {
+                $this->db->like($column, $fields[$name]);
+            }
+        }
+        if (isset($fields['org']) && $fields['org'] !== '') {
+            $this->db->group_start()
+                ->like('o.org_code', $fields['org'])
+                ->or_like('o.org_name', $fields['org'])
+                ->group_end();
+        }
+        if (!empty($filters['date_ranges']['create_on'])) {
+            $range = $filters['date_ranges']['create_on'];
+            if (!empty($range['start'])) { $this->db->where('x.create_on >=', $range['start']); }
+            if (!empty($range['end'])) { $this->db->where('x.create_on <=', $range['end'] . ' 23:59:59'); }
+        }
     }
 
     public function assign_approval_error($error_id, $employee_id)

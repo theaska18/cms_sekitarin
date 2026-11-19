@@ -6,6 +6,13 @@ require_once APPPATH . 'controllers/Admin.php';
 /** Tenant menu controller; inherits the authenticated admin shell. */
 class Admin_tenant extends Admin
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->library('finance_filter_panel');
+        $this->load->library('finance_list_table');
+    }
+
     public function tenant_index()
     {
         $menu_access = $this->has_admin_menu_code('sys_tenant');
@@ -69,7 +76,38 @@ class Admin_tenant extends Admin
                 'tenant_menu_access_authorized' => $menu_access_allowed,
                 'tenant_has_actions' => $actions_available,
                 'status_key' => is_string($status) ? $status : '',
+                'finance_filter_config' => $this->tenant_filter_config(),
             )
+        );
+    }
+
+    private function tenant_filter_config()
+    {
+        $labels = $this->lang->language;
+        return $this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'date_preset' => 'none',
+            'date_fields' => array(
+                array('key' => 'due_on', 'label_key' => 'tenant_due_on_label', 'default' => FALSE),
+            ),
+            'status_preset' => 'none',
+            'target' => '#tenant-data-table',
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'tenant_code', 'label' => isset($labels['tenant_code_label']) ? $labels['tenant_code_label'] : 'Code'),
+                array('type' => 'text', 'name' => 'tenant_name', 'label' => isset($labels['tenant_name_label']) ? $labels['tenant_name_label'] : 'Name'),
+                array('type' => 'text', 'name' => 'email_address', 'label' => isset($labels['tenant_email_label']) ? $labels['tenant_email_label'] : 'Email'),
+                array('type' => 'text', 'name' => 'phone_number', 'label' => isset($labels['tenant_phone_label']) ? $labels['tenant_phone_label'] : 'Phone'),
+            ),
+        ));
+    }
+
+    private function tenant_list_filters($search = '')
+    {
+        $panel = $this->finance_filter_panel->filters($this->tenant_filter_config());
+        return array(
+            'search' => $this->tenant_filter($search),
+            'date_ranges' => $panel['date_ranges'],
+            'fields' => $panel['fields'],
         );
     }
 
@@ -91,14 +129,14 @@ class Admin_tenant extends Admin
         $this->datatable_server->respond(
             array(1 => 'tenant_code', 2 => 'tenant_name'),
             function () use ($store) {
-                return $store->count(array('search' => ''));
+                return $store->count($this->tenant_list_filters(''));
             },
             function ($search) use ($store) {
-                return $store->count(array('search' => $this->tenant_filter($search)));
+                return $store->count($this->tenant_list_filters($search));
             },
             function ($search, $length, $start, $order, $direction) use ($store) {
                 return $store->page(
-                    array('search' => $this->tenant_filter($search)),
+                    $this->tenant_list_filters($search),
                     $length,
                     $start,
                     $this->tenant_sort_field($order),
@@ -393,16 +431,17 @@ class Admin_tenant extends Admin
         $catalog = $this->menu_access_catalog;
         $rows = $catalog->rows($menu_groups, $state);
         $write_available = $this->tenant_write_available($tenant_store);
+        $menu_filters = $this->menu_access_filters();
         $this->datatable_server->respond(
             array(0 => 'group', 1 => 'menu'),
-            function () use ($rows) {
-                return count($rows);
+            function () use ($rows, $catalog, $menu_filters) {
+                return count($catalog->filter($rows, '', $menu_filters));
             },
-            function ($search) use ($rows, $catalog) {
-                return count($catalog->filter($rows, $search));
+            function ($search) use ($rows, $catalog, $menu_filters) {
+                return count($catalog->filter($rows, $search, $menu_filters));
             },
-            function ($search, $length, $start, $order, $direction) use ($rows, $catalog, $write_available) {
-                $filtered = $catalog->filter($rows, $search);
+            function ($search, $length, $start, $order, $direction) use ($rows, $catalog, $write_available, $menu_filters) {
+                $filtered = $catalog->filter($rows, $search, $menu_filters);
                 $sorted = $catalog->sort($filtered, $order, $direction);
                 $page = $catalog->slice($sorted, $length, $start);
 
@@ -410,6 +449,16 @@ class Admin_tenant extends Admin
             },
             array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
         );
+    }
+
+    private function menu_access_filters()
+    {
+        $filters = array();
+        foreach (array('group', 'menu', 'access') as $name) {
+            $value = $this->input->get($name, TRUE);
+            $filters[$name] = is_string($value) ? substr(trim($value), 0, 120) : '';
+        }
+        return $filters;
     }
 
     /** Toggle one tenant menu or access checkbox and answer with a fresh CSRF hash. */
