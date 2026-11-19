@@ -1,0 +1,156 @@
+{
+  "version": "1.0.18",
+  "from_version": "1.0.17",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.17",
+  "changelog": "Rilis 1.0.18: header aksi tanpa label, export tanpa kolom aksi, fade scroll tabel kiri/kanan, padding sel dan kepadatan baris seragam.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "d81ae359a9355f59335d9f28e72723b72551a0ed8b8cba0f47fbc730da9729ee",
+      "size": 449
+    },
+    {
+      "path": "application/libraries/Finance_list_table.php",
+      "sha256": "915b7517497453e8deff2cda2591de862aea2e1a846c8d2b80eeeb9e426f8a99",
+      "size": 1864
+    },
+    {
+      "path": "application/views/admin/approval/index.php",
+      "sha256": "feaa3d5b13c5d8e7ff80c2f62b7137587e18bfcb362e4bd3394f16049c3b2e99",
+      "size": 18686
+    },
+    {
+      "path": "application/views/admin/approval_flow/index.php",
+      "sha256": "8538085a056d3a7b93ddc8fec6cac0af2d4c5418071325cd21821da823d2e8bd",
+      "size": 8959
+    },
+    {
+      "path": "application/views/admin/approval_flow_template/index.php",
+      "sha256": "6d16c5ae5a305d43f204ec36c9f68f37b5f202116579c0e0a5afa9879a3ff1f1",
+      "size": 16223
+    },
+    {
+      "path": "application/views/admin/employee/index.php",
+      "sha256": "b807133dcedbfa8c5af14f0784415ab0cfc8f98d876ed2d776a17dd3d4bc5540",
+      "size": 11410
+    },
+    {
+      "path": "application/views/admin/finance/chart_of_accounts_index.php",
+      "sha256": "a9c39a71c9ca7a6ce489997a555a49983084f0d1126529330b4b48b9bff3f9bd",
+      "size": 16909
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "9432b1de4b6bfd85f6c74cfdd676b85c1e066e1b80aa0031d34184f591c1b58c",
+      "size": 14611
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "ecf80106f756636c851dde0cd655a6fe0a71f6f9f6710ea0647ac2ecff88a921",
+      "size": 10055
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "c01c3e2a611a500d34fdfbcb05e20a221f88898e67dcc8259ddbf29eba7ba3a7",
+      "size": 20018
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "9189201ea52dc6cff6aacee0276f25dff3d030cdc5f1829514075676f530b11f",
+      "size": 11585
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "ed7f4e394bb0f74f4c0e846fbfda7eaeeac4135c0cd7d8f3f21a9382169a2b92",
+      "size": 10646
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "0da3c5e9ed328d99a82028090b107f46b091e84ad1d909b8208e3b797575c9f4",
+      "size": 20693
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "22fcfba8d1108e19ae9c944e9a7afb6e286e129c19542cdaa4b6bb7c7a49c7b8",
+      "size": 21472
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "de9b7aa0555703fc4d0082e4cf87c01f81039036e2433f2c2ba33446c7b44ff9",
+      "size": 15676
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "54c534f1b6da50f62bae3d21883e312bd1d09ad608028a395570475e2c293830",
+      "size": 34885
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "4fee85a4051f249d74545b1f709dabe691069cc674d02edb597d67dff0cfef5a",
+      "size": 34884
+    },
+    {
+      "path": "application/views/admin/parameter/index.php",
+      "sha256": "7f26b7ea7f685b3e62c8b1a8b151017298941bcfd77d96a2ad4246a48ab46e6e",
+      "size": 11444
+    },
+    {
+      "path": "application/views/admin/property/index.php",
+      "sha256": "fc88020385e1b9cfafb2ab7474d884bc74f744653a1d877891283e665f35484c",
+      "size": 26151
+    },
+    {
+      "path": "application/views/admin/role/index.php",
+      "sha256": "7a34b8b142e83b76586fab7593d4edae7e193e16e9fe87d1dcd0185ee3e9e9e9",
+      "size": 15744
+    },
+    {
+      "path": "application/views/admin/sequence/application_index.php",
+      "sha256": "694ded4973844205be98b3f696e56016e49f383edafa1c3b024fe217a87f13e9",
+      "size": 15881
+    },
+    {
+      "path": "application/views/admin/sequence/index.php",
+      "sha256": "56ca0aa7f148461773ebc12f9b76e5fbda1a338c053d0351ca1cf205b120e3c2",
+      "size": 18772
+    },
+    {
+      "path": "application/views/admin/tenant/index.php",
+      "sha256": "fa16b43c0bd4238cd16daedd61c30656cc6cff700ae193817fd286dea62b1460",
+      "size": 27899
+    },
+    {
+      "path": "application/views/admin/user/index.php",
+      "sha256": "07a54ddb863c9450ff3cd6303f771010fb534eb156c1b5422387698ab9419416",
+      "size": 15365
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "adc74b1aa5b1a3c08a465e452a40cdf894e2495e23a203fc14575c0d06e10eb5",
+      "size": 53658
+    },
+    {
+      "path": "assets/js/admin-datatables.js",
+      "sha256": "77e2472b267b422ad0e812ec6a6e8ff9bba7dbb4f946ba8b2433393212b820b2",
+      "size": 5727
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "eae6c1f8376f317f90f36122f4d566ee33f72780e908060ec6a99d7a96465606",
+      "size": 10948
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.18.zip",
+    "sha256": "648f598f4bc6bdd8a329016a141fbaaa80e7bae906a6b0f339fff5e8b13cc7eb",
+    "size": 117540
+  },
+  "from_ref": "v1.0.17",
+  "generated_at": "2026-11-19T15:28:37+00:00"
+}
