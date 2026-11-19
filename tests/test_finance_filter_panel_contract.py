@@ -36,6 +36,9 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         self.assertIn("data-finance-filter=\"search\"", panel)
         self.assertIn("data-finance-filter=\"page_size\"", panel)
         self.assertIn("strtotime('-6 days')", panel)
+        self.assertIn("data-finance-filter-toggle", panel)
+        self.assertIn("data-finance-filter-details", panel)
+        self.assertIn("finance-filter-details-", panel)
 
     def test_shared_javascript_sends_filters_and_hides_default_toolbar(self):
         script = JS.read_text()
@@ -49,6 +52,10 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         self.assertIn(".has('.dt-search, .dt-length').hide()", script)
         self.assertIn("api.search(search.value).draw()", script)
         self.assertIn("api.ajax.reload()", script)
+        self.assertIn("data-finance-filter-details", script)
+        self.assertIn("data-finance-filter-toggle", script)
+        self.assertIn("data-finance-filter-indicator", script)
+        self.assertIn("setDetailsOpen", script)
 
     def test_finance_list_pages_use_the_filter_panel(self):
         for name in (

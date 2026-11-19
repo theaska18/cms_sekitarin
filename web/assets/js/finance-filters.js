@@ -72,6 +72,51 @@
             });
         }
 
+        var details = panel.querySelector('[data-finance-filter-details]');
+        var toggle = panel.querySelector('[data-finance-filter-toggle]');
+        var indicator = panel.querySelector('[data-finance-filter-indicator]');
+
+        function activeDetails() {
+            var start = value(panel, 'start_on');
+            var end = value(panel, 'end_on');
+            var status = value(panel, 'status');
+            var flag = value(panel, 'flag');
+            var pageSize = value(panel, 'page_size');
+            return status !== '' || flag !== '' || pageSize !== '10'
+                || (start !== '' && start !== defaults.start_on)
+                || (end !== '' && end !== defaults.end_on);
+        }
+
+        function updateIndicator() {
+            if (!indicator) return;
+            indicator.hidden = !activeDetails();
+        }
+
+        function setDetailsOpen(open) {
+            if (!details || !toggle) return;
+            details.hidden = !open;
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) {
+                var first = details.querySelector('input:not([type="hidden"]), select, button');
+                if (first) first.focus();
+            }
+        }
+
+        if (toggle && details) {
+            toggle.addEventListener('click', function () {
+                setDetailsOpen(details.hidden);
+            });
+            details.addEventListener('change', updateIndicator);
+            details.addEventListener('input', updateIndicator);
+            panel.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !details.hidden) {
+                    setDetailsOpen(false);
+                    toggle.focus();
+                }
+            });
+        }
+        updateIndicator();
+
         var apply = panel.querySelector('[data-finance-filter-apply]');
         if (apply) {
             apply.addEventListener('click', function () {
@@ -90,6 +135,7 @@
                 setValue(panel, 'page_size', '10');
                 api.search('');
                 api.page.len(10);
+                updateIndicator();
                 api.ajax.reload();
             });
         }
