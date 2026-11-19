@@ -27,7 +27,7 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
                 : (isset($labels['finance_report_range_intro']) ? $labels['finance_report_range_intro'] : 'Amounts are calculated from posted journal entries only and shown in the tenant base currency.') ?>
         </p>
     </header>
-<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-report-table','status_preset'=>'none','default_start'=>$finance_report_filters['start_on'],'default_end'=>$finance_report_filters['end_on']), $labels) ?>
+<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-report-table','status_preset'=>'none','date_preset'=>'report','default_start'=>$finance_report_filters['start_on'],'default_end'=>$finance_report_filters['end_on']), $labels) ?>
     <?php if (!$finance_report_errors && $finance_report_summary !== FALSE): ?>
     <section aria-label="<?= html_escape($title) ?>" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

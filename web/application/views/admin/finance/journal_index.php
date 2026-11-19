@@ -43,7 +43,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
         <div><h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1><p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_journal_intro']) ? $labels['finance_journal_intro'] : 'Only posted entries affect reports. A journal can be posted only when base-currency debits and credits balance and exactly one accounting period is open for its date.') ?></p></div>
         <?php if ($can_add): ?><a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700"><?= html_escape(isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft') ?></a><?php endif; ?>
     </header>
-<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-journal-table','status_preset'=>'journal'), $labels) ?>
+<?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-journal-table','status_preset'=>'journal','date_preset'=>'journal'), $labels) ?>
     <?php if ($finance_status !== ''): ?>
         <?php $ok = in_array($finance_status, $ok_statuses, TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($status_labels[$finance_status]) ? $status_labels[$finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : 'Action could not be completed (' . $finance_status . ').')) ?></div>

@@ -864,7 +864,7 @@ class Admin_finance extends Admin
             $columns[$index + $column_offset] = $column['name'];
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(FALSE);
+        $filters = $this->finance_list_filters(FALSE, 'none');
         $this->datatable_server->respond(
             $columns,
             function () use ($store, $resource, $tenant_id, $filters) {
@@ -1603,7 +1603,7 @@ class Admin_finance extends Admin
         }
         $type = $slug === 'income' ? 'income' : ($slug === 'expenses' ? 'expense' : 'all');
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE);
+        $filters = $this->finance_list_filters(TRUE, 'transaction');
         $columns = array(
             1 => 'transaction_number',
             2 => 'transaction_type',
@@ -1850,7 +1850,7 @@ class Admin_finance extends Admin
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
         $source_type = $slug === 'opening_balances' ? 'opening_balance' : 'manual';
-        $filters = $this->finance_list_filters(TRUE);
+        $filters = $this->finance_list_filters(TRUE, 'journal');
         $this->datatable_server->respond(
             array(1 => 'journal_number', 2 => 'journal_date', 3 => 'description', 4 => 'created_by_name', 5 => 'debit_total', 6 => 'status'),
             function () use ($store, $tenant_id, $source_type, $filters) {
@@ -2144,7 +2144,7 @@ class Admin_finance extends Admin
         $date_column = $spec[1];
         $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'currency_code', 8 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE);
+        $filters = $this->finance_list_filters(TRUE, 'document', $date_column);
         $this->datatable_server->respond(
             $columns,
             function () use ($store, $tenant_id, $kind, $filters) { return $store->count($tenant_id, $kind, '', $filters); },
@@ -2410,7 +2410,7 @@ class Admin_finance extends Admin
             return;
         }
         $tenant = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE);
+        $filters = $this->finance_list_filters(TRUE, 'payment');
         $this->datatable_server->respond(
             array(1 => 'payment_number', 2 => 'payment_date', 3 => 'amount', 4 => 'currency_code', 5 => 'reference', 6 => 'status'),
             function () use ($store, $tenant, $kind, $filters) { return $store->count($tenant, $kind, '', $filters); },
@@ -2573,7 +2573,7 @@ class Admin_finance extends Admin
         if(!$this->has_admin_menu_code('fin_cash_bank_transfer')){$this->datatable_server->error(403);return;}
         $this->load->library('finance_transfer_store');$store=$this->finance_transfer_store;
         if(!$store->available()){$this->datatable_server->error(503);return;}
-        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE);
+        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE, 'transfer');
         $this->datatable_server->respond(
             array(1=>'transfer_number',2=>'transfer_date',3=>'create_on',4=>'from_account_name',5=>'to_account_name',6=>'from_amount',7=>'created_by_name',8=>'status'),
             function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
@@ -2646,7 +2646,7 @@ class Admin_finance extends Admin
         if(!$this->has_admin_menu_code('fin_bank_reconciliation')){$this->datatable_server->error(403);return;}
         $this->load->library('finance_reconciliation_store');$store=$this->finance_reconciliation_store;
         if(!$store->available()){$this->datatable_server->error(503);return;}
-        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE);
+        $tenant=(int)$this->current_user['tenant_id'];$filters=$this->finance_list_filters(TRUE, 'reconciliation');
         $this->datatable_server->respond(
             array(1=>'reconciliation_number',2=>'statement_date',3=>'statement_reference',4=>'closing_balance',5=>'status'),
             function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
@@ -3363,10 +3363,12 @@ class Admin_finance extends Admin
         );
     }
 
-    private function finance_list_filters($with_date = TRUE)
+    private function finance_list_filters($with_date = TRUE, $date_preset = 'transaction', $primary_date = '')
     {
         return $this->finance_filter_panel->filters($this->finance_filter_panel->config(array(
             'date' => $with_date,
+            'date_preset' => $date_preset,
+            'primary_date' => $primary_date,
             'status_preset' => $with_date ? 'transaction' : 'active_flag',
             'flag' => !$with_date,
         )));

@@ -81,7 +81,7 @@ class Admin_finance_integration extends Admin
             return;
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->inbox_filters();
+        $filters = $this->inbox_filters($kind);
         $columns = array(
             1 => 'received_at',
             2 => $spec['date'],
@@ -231,10 +231,13 @@ class Admin_finance_integration extends Admin
         );
     }
 
-    private function inbox_filters()
+    private function inbox_filters($kind)
     {
+        $spec = $this->finance_integration_store->spec($kind);
         return $this->finance_filter_panel->filters($this->finance_filter_panel->config(array(
             'date' => TRUE,
+            'date_preset' => 'integration',
+            'primary_date' => $spec !== NULL ? $spec['date'] : 'invoice_date',
             'status_preset' => 'integration',
         )));
     }

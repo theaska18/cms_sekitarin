@@ -32,22 +32,34 @@
             start_on: panel.getAttribute('data-default-start') || '',
             end_on: panel.getAttribute('data-default-end') || ''
         };
+        var initialDetails = {};
+        var detailFields = panel.querySelectorAll('[data-finance-filter-details] [data-finance-filter]');
+        Array.prototype.forEach.call(detailFields, function (node) {
+            var name = node.getAttribute('data-finance-filter');
+            if (name !== 'search' && name !== 'page_size') {
+                initialDetails[name] = String(node.value || '');
+            }
+        });
 
         function filters() {
-            return {
-                start_on: value(panel, 'start_on'),
-                end_on: value(panel, 'end_on'),
+            var data = {
                 status: value(panel, 'status'),
                 flag: value(panel, 'flag')
             };
+            Array.prototype.forEach.call(detailFields, function (node) {
+                var name = node.getAttribute('data-finance-filter');
+                if (name !== 'search' && name !== 'page_size' && name !== 'status' && name !== 'flag') {
+                    data[name] = String(node.value || '').trim();
+                }
+            });
+            return data;
         }
 
         table.on('preXhr.dt', function (event, settings, data) {
             var current = filters();
-            data.start_on = current.start_on;
-            data.end_on = current.end_on;
-            data.status = current.status;
-            data.flag = current.flag;
+            Object.keys(current).forEach(function (key) {
+                data[key] = current[key];
+            });
         });
 
         var container = table.closest('.dt-container');
@@ -77,14 +89,15 @@
         var indicator = panel.querySelector('[data-finance-filter-indicator]');
 
         function activeDetails() {
-            var start = value(panel, 'start_on');
-            var end = value(panel, 'end_on');
-            var status = value(panel, 'status');
-            var flag = value(panel, 'flag');
             var pageSize = value(panel, 'page_size');
-            return status !== '' || flag !== '' || pageSize !== '10'
-                || (start !== '' && start !== defaults.start_on)
-                || (end !== '' && end !== defaults.end_on);
+            if (pageSize !== '10') return true;
+            var changed = false;
+            Array.prototype.forEach.call(detailFields, function (node) {
+                var name = node.getAttribute('data-finance-filter');
+                if (name === 'search' || name === 'page_size') return;
+                if (String(node.value || '') !== String(initialDetails[name] || '')) changed = true;
+            });
+            return changed;
         }
 
         function updateIndicator() {
@@ -127,10 +140,15 @@
         var reset = panel.querySelector('[data-finance-filter-reset]');
         if (reset) {
             reset.addEventListener('click', function () {
-                setValue(panel, 'start_on', defaults.start_on);
-                setValue(panel, 'end_on', defaults.end_on);
-                setValue(panel, 'status', '');
-                setValue(panel, 'flag', '');
+                Array.prototype.forEach.call(detailFields, function (node) {
+                    var name = node.getAttribute('data-finance-filter');
+                    if (name === 'search' || name === 'page_size') return;
+                    if (name === 'status' || name === 'flag') {
+                        node.value = '';
+                    } else if (Object.prototype.hasOwnProperty.call(initialDetails, name)) {
+                        node.value = initialDetails[name];
+                    }
+                });
                 setValue(panel, 'search', '');
                 setValue(panel, 'page_size', '10');
                 api.search('');

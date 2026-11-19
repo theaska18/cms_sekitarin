@@ -43,15 +43,22 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
     </div>
     <div id="<?= html_escape($filter_id) ?>" data-finance-filter-details hidden class="mt-4 border-t border-slate-100 pt-4">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <?php if ($filter_date): ?>
-                <label class="block text-xs font-semibold text-slate-600">
-                    <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_filter_from']) ? $labels['finance_filter_from'] : 'From') ?></span>
-                    <input type="date" data-finance-filter="start_on" value="<?= html_escape($filter_default_start) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900">
-                </label>
-                <label class="block text-xs font-semibold text-slate-600">
-                    <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_filter_to']) ? $labels['finance_filter_to'] : 'To') ?></span>
-                    <input type="date" data-finance-filter="end_on" value="<?= html_escape($filter_default_end) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900">
-                </label>
+            <?php if (!empty($finance_filter_date_fields)): ?>
+                <?php foreach ($finance_filter_date_fields as $date_field): ?>
+                    <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
+                        <p class="mb-2 text-xs font-bold text-slate-700"><?= html_escape($date_field['label']) ?></p>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <label class="block text-[11px] font-semibold text-slate-600">
+                                <span class="mb-1 block"><?= html_escape(isset($labels['finance_filter_from']) ? $labels['finance_filter_from'] : 'From') ?></span>
+                                <input type="date" data-finance-filter="<?= html_escape($date_field['start_name']) ?>" value="<?= html_escape($date_field['start_value']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900">
+                            </label>
+                            <label class="block text-[11px] font-semibold text-slate-600">
+                                <span class="mb-1 block"><?= html_escape(isset($labels['finance_filter_to']) ? $labels['finance_filter_to'] : 'To') ?></span>
+                                <input type="date" data-finance-filter="<?= html_escape($date_field['end_name']) ?>" value="<?= html_escape($date_field['end_value']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm text-slate-900">
+                            </label>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             <?php endif; ?>
             <?php if ($filter_status): ?>
                 <label class="block text-xs font-semibold text-slate-600">

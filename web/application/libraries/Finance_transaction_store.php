@@ -65,8 +65,15 @@ class Finance_transaction_store
                 $needle = '%' . $search . '%';
                 array_push($binds, $needle, $needle, $needle);
             }
-            if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
-            if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            if (!empty($filters['date_ranges'])) {
+                foreach ($filters['date_ranges'] as $column => $range) {
+                    if (!empty($range['start'])) { $where[] = $column . ' >= ?'; $binds[] = $range['start']; }
+                    if (!empty($range['end'])) { $where[] = $column . ' <= ?'; $binds[] = $range['end']; }
+                }
+            } else {
+                if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
+                if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            }
             if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
             $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
             $result = $this->db->query('SELECT COUNT(*) AS row_count FROM (' . $sql . ') finance_count', $binds);
@@ -109,8 +116,15 @@ class Finance_transaction_store
                 $needle = '%' . $search . '%';
                 array_push($binds, $needle, $needle, $needle);
             }
-            if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
-            if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            if (!empty($filters['date_ranges'])) {
+                foreach ($filters['date_ranges'] as $column => $range) {
+                    if (!empty($range['start'])) { $where[] = $column . ' >= ?'; $binds[] = $range['start']; }
+                    if (!empty($range['end'])) { $where[] = $column . ' <= ?'; $binds[] = $range['end']; }
+                }
+            } else {
+                if (!empty($filters['start_on'])) { $where[] = 'transaction_on >= ?'; $binds[] = $filters['start_on']; }
+                if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
+            }
             if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
             $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
             $sql .= ' ORDER BY ' . $order . ' ' . $direction . ', transaction_id DESC LIMIT '
@@ -632,11 +646,14 @@ class Finance_transaction_store
 
     private function apply_filters($alias, $filters)
     {
-        if (!empty($filters['start_on'])) {
-            $this->db->where($alias . 'transaction_on >=', $filters['start_on']);
-        }
-        if (!empty($filters['end_on'])) {
-            $this->db->where($alias . 'transaction_on <=', $filters['end_on']);
+        if (!empty($filters['date_ranges'])) {
+            foreach ($filters['date_ranges'] as $column => $range) {
+                if (!empty($range['start'])) $this->db->where($alias . $column . ' >=', $range['start']);
+                if (!empty($range['end'])) $this->db->where($alias . $column . ' <=', $range['end']);
+            }
+        } else {
+            if (!empty($filters['start_on'])) $this->db->where($alias . 'transaction_on >=', $filters['start_on']);
+            if (!empty($filters['end_on'])) $this->db->where($alias . 'transaction_on <=', $filters['end_on']);
         }
         if (!empty($filters['status'])) {
             $this->db->where($alias . 'status', $filters['status']);

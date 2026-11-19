@@ -25,7 +25,7 @@ $can_edit = $finance_can_update && $finance_write_available;
             </a>
         <?php endif; ?>
     </header>
-<?= $this->finance_filter_panel->render(array('date'=>FALSE,'target'=>'#finance-resource-table','status_preset'=>'none','flag'=>TRUE), $labels) ?>
+<?= $this->finance_filter_panel->render(array('date'=>FALSE,'target'=>'#finance-resource-table','status_preset'=>'none','flag'=>TRUE,'date_preset'=>'none'), $labels) ?>
     <?php if ($finance_resource['slug'] === 'categories'): ?>
     <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">

@@ -29,8 +29,9 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
     def test_shared_panel_has_date_range_status_and_search(self):
         panel = PARTIAL.read_text()
         self.assertIn("data-finance-filter-panel", panel)
-        self.assertIn("data-finance-filter=\"start_on\"", panel)
-        self.assertIn("data-finance-filter=\"end_on\"", panel)
+        self.assertIn("finance_filter_date_fields", panel)
+        self.assertIn("$date_field['start_name']", panel)
+        self.assertIn("$date_field['end_name']", panel)
         self.assertIn("data-finance-filter=\"status\"", panel)
         self.assertIn("data-finance-filter=\"flag\"", panel)
         self.assertIn("data-finance-filter=\"search\"", panel)
@@ -45,10 +46,10 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         footer = FOOTER.read_text()
         self.assertIn("finance-filters.js", footer)
         self.assertIn("table.on('preXhr.dt'", script)
-        self.assertIn("data.start_on = current.start_on", script)
-        self.assertIn("data.end_on = current.end_on", script)
-        self.assertIn("data.status = current.status", script)
-        self.assertIn("data.flag = current.flag", script)
+        self.assertIn("Object.keys(current).forEach", script)
+        self.assertIn("data[key] = current[key]", script)
+        self.assertIn("detailFields", script)
+        self.assertIn("date_ranges", (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text())
         self.assertIn(".has('.dt-search, .dt-length').hide()", script)
         self.assertIn("api.search(search.value).draw()", script)
         self.assertIn("api.ajax.reload()", script)
@@ -73,6 +74,17 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
                 view = (FINANCE / name).read_text()
                 self.assertIn("finance_filter_panel->render", view)
                 self.assertNotIn("load->view('admin/finance/partials/filter_panel'", view)
+
+    def test_multiple_date_columns_have_separate_ranges(self):
+        library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
+        self.assertIn("public function date_fields(", library)
+        self.assertIn("'transaction_on'", library)
+        self.assertIn("'create_on'", library)
+        self.assertIn("date_ranges", library)
+        transaction_view = (FINANCE / "transaction_index.php").read_text()
+        self.assertIn("'date_preset'=>'transaction'", transaction_view)
+        store = (STORES / "Finance_transaction_store.php").read_text()
+        self.assertIn("$filters['date_ranges']", store)
 
     def test_stores_accept_date_status_and_flag_filters(self):
         expected = {

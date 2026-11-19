@@ -22,6 +22,9 @@ class Finance_filter_panel
             'default_days' => 7,
             'default_start' => '',
             'default_end' => '',
+            'date_preset' => 'single',
+            'primary_date' => '',
+            'date_fields' => array(),
         );
         if (is_array($overrides)) {
             $config = array_merge($config, $overrides);
@@ -43,20 +46,45 @@ class Finance_filter_panel
     {
         $config = $this->config($config);
         $defaults = $this->defaults($config);
-        $start = '';
-        $end = '';
+        $date_ranges = array();
+        $legacy = array('start_on' => '', 'end_on' => '');
         if (!empty($config['date'])) {
-            $start = trim((string) $this->CI->input->get('start_on', TRUE));
-            $end = trim((string) $this->CI->input->get('end_on', TRUE));
-            if (!$this->valid_date($start)) {
-                $start = $defaults['start_on'];
+            $fields = $this->date_fields($config);
+            foreach ($fields as $index => $field) {
+                $start_name = !empty($field['start_name']) ? $field['start_name'] : $field['key'] . '_start';
+                $end_name = !empty($field['end_name']) ? $field['end_name'] : $field['key'] . '_end';
+                $start = trim((string) $this->CI->input->get($start_name, TRUE));
+                $end = trim((string) $this->CI->input->get($end_name, TRUE));
+                $is_default = !empty($field['default']);
+                if ($is_default && $start === '' && $end === '') {
+                    $legacy_start = trim((string) $this->CI->input->get('start_on', TRUE));
+                    $legacy_end = trim((string) $this->CI->input->get('end_on', TRUE));
+                    if ($this->valid_date($legacy_start)) $start = $legacy_start;
+                    if ($this->valid_date($legacy_end)) $end = $legacy_end;
+                }
+                if (!$this->valid_date($start)) $start = $is_default ? $defaults['start_on'] : '';
+                if (!$this->valid_date($end)) $end = $is_default ? $defaults['end_on'] : '';
+                if ($start !== '' && $end !== '' && $start > $end) {
+                    $start = $is_default ? $defaults['start_on'] : '';
+                    $end = $is_default ? $defaults['end_on'] : '';
+                }
+                if ($start === '' && $end === '') continue;
+                $date_ranges[$field['key']] = array('start' => $start, 'end' => $end);
+                if ($index === 0) {
+                    $legacy['start_on'] = $start;
+                    $legacy['end_on'] = $end;
+                }
             }
-            if (!$this->valid_date($end)) {
-                $end = $defaults['end_on'];
-            }
-            if ($start > $end) {
-                $start = $defaults['start_on'];
-                $end = $defaults['end_on'];
+            if (!empty($config['date_preset']) && $config['date_preset'] === 'report') {
+                $start_name = 'start_on';
+                $end_name = 'end_on';
+                $start = trim((string) $this->CI->input->get($start_name, TRUE));
+                $end = trim((string) $this->CI->input->get($end_name, TRUE));
+                if (!$this->valid_date($start)) $start = $defaults['start_on'];
+                if (!$this->valid_date($end)) $end = $defaults['end_on'];
+                if ($start > $end) { $start = $defaults['start_on']; $end = $defaults['end_on']; }
+                $legacy['start_on'] = $start;
+                $legacy['end_on'] = $end;
             }
         }
 
@@ -71,15 +99,66 @@ class Finance_filter_panel
             $flag = '';
         }
 
-        return array('start_on' => $start, 'end_on' => $end, 'status' => $status, 'flag' => $flag);
+        return array(
+            'start_on' => $legacy['start_on'],
+            'end_on' => $legacy['end_on'],
+            'date_ranges' => $date_ranges,
+            'status' => $status,
+            'flag' => $flag,
+        );
+    }
+
+    public function date_fields($config)
+    {
+        $config = $this->config($config);
+        if (!empty($config['date_fields']) && is_array($config['date_fields'])) {
+            return $config['date_fields'];
+        }
+        $primary = !empty($config['primary_date']) ? $config['primary_date'] : '';
+        switch ($config['date_preset']) {
+            case 'transaction':
+                return array(
+                    array('key' => 'transaction_on', 'label_key' => 'finance_transaction_date', 'default' => TRUE),
+                    array('key' => 'create_on', 'label_key' => 'finance_created_at'),
+                );
+            case 'transfer':
+                return array(array('key' => 'transfer_date', 'label_key' => 'finance_transfer_date', 'default' => TRUE));
+            case 'document':
+                return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_report_column_invoice_date', 'default' => TRUE));
+            case 'integration':
+                return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_integration_document_date', 'default' => TRUE));
+            case 'journal':
+                return array(array('key' => 'journal_date', 'label_key' => 'finance_journal_date', 'default' => TRUE));
+            case 'payment':
+                return array(array('key' => 'payment_date', 'label_key' => 'finance_payment_date', 'default' => TRUE));
+            case 'reconciliation':
+                return array(array('key' => 'statement_date', 'label_key' => 'finance_statement_date', 'default' => TRUE));
+            case 'report':
+                return array(array('key' => 'period', 'start_name' => 'start_on', 'end_name' => 'end_on', 'label_key' => 'finance_filter_period', 'default' => TRUE));
+            case 'none':
+                return array();
+            default:
+                return $primary !== '' ? array(array('key' => $primary, 'label_key' => 'finance_column_date', 'default' => TRUE)) : array();
+        }
     }
 
     public function render($config, $labels = array())
     {
         $config = $this->config($config);
         $defaults = $this->defaults($config);
+        $date_fields = !empty($config['date']) ? $this->date_fields($config) : array();
+        foreach ($date_fields as $index => $field) {
+            $label_key = isset($field['label_key']) ? $field['label_key'] : '';
+            $date_fields[$index]['label'] = $label_key !== '' && isset($labels[$label_key])
+                ? $labels[$label_key] : (isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date');
+            $date_fields[$index]['start_name'] = !empty($field['start_name']) ? $field['start_name'] : $field['key'] . '_start';
+            $date_fields[$index]['end_name'] = !empty($field['end_name']) ? $field['end_name'] : $field['key'] . '_end';
+            $date_fields[$index]['start_value'] = ($index === 0) ? $defaults['start_on'] : '';
+            $date_fields[$index]['end_value'] = ($index === 0) ? $defaults['end_on'] : '';
+        }
         $data = array(
             'finance_filter_date' => !empty($config['date']),
+            'finance_filter_date_fields' => $date_fields,
             'finance_filter_target' => (string) $config['target'],
             'finance_filter_default_start' => $defaults['start_on'],
             'finance_filter_default_end' => $defaults['end_on'],
