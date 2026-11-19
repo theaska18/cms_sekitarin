@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = '期初余额';
 $lang['admin_finance_accounting_periods'] = '会计期间';
 $lang['admin_finance_profit_loss'] = '利润表';
 $lang['admin_finance_balance_sheet'] = '资产负债表';
+$lang['admin_finance_cancellation_history'] = '取消历史';
 $lang['admin_finance_cash_flow'] = '现金流量表';
 $lang['admin_finance_bank_balance'] = '银行余额';
 $lang['admin_finance_trial_balance'] = '试算平衡表';

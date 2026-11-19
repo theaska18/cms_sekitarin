@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'Soldes d’ouverture';
 $lang['admin_finance_accounting_periods'] = 'Périodes comptables';
 $lang['admin_finance_profit_loss'] = 'Compte de résultat';
 $lang['admin_finance_balance_sheet'] = 'Bilan';
+$lang['admin_finance_cancellation_history'] = 'Historique des annulations';
 $lang['admin_finance_cash_flow'] = 'Flux de trésorerie';
 $lang['admin_finance_bank_balance'] = 'Solde bancaire';
 $lang['admin_finance_trial_balance'] = 'Balance générale';

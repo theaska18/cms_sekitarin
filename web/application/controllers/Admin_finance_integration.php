@@ -177,21 +177,50 @@ class Admin_finance_integration extends Admin
             $values['integration_party_name'] = (string) $inbox[$spec['party_name']];
             $values['integration_party_code'] = $inbox[$spec['party_code']] !== NULL ? (string) $inbox[$spec['party_code']] : '';
             $errors = $this->validate($values, $kind);
+            $inbox_tax_percent = round((float) $inbox['tax_percent'], 6);
+            if ($inbox_tax_percent > 0.000001 && empty($values['tax_id'])) {
+                $errors[] = 'tax_id_required';
+            }
+            if (!$errors && !empty($values['tax_id'])) {
+                $tax = $this->db->select('tax_id,rate_percent,active_flag')->from('fin_tax')
+                    ->where('tenant_id', $tenant_id)->where('tax_id', (int) $values['tax_id'])
+                    ->limit(1)->get()->row_array();
+                if (!$tax || (int) $tax['active_flag'] !== 1) {
+                    $errors[] = 'tax_id_invalid';
+                } else {
+                    $expected_total = round((float) $inbox['total_amount'], 6);
+                    $calculated_total = round(
+                        (float) $inbox['amount_before_tax'] * (1 + (float) $tax['rate_percent'] / 100),
+                        6
+                    );
+                    if (abs($expected_total - $calculated_total) > 0.01) {
+                        $errors[] = 'total_mismatch';
+                    }
+                }
+            }
             if (!$errors) {
                 $previous_debug = $this->db->db_debug;
                 $this->db->db_debug = FALSE;
+                $this->db->trans_begin();
                 $result = $store->save_draft($tenant_id, (int) $this->current_user['user_id'], $kind, NULL, $values);
                 $this->db->db_debug = $previous_debug;
                 if ($result === 'saved') {
                     $document_id = (int) $store->last_saved_id;
-                    if ($document_id > 0) {
-                        $this->finance_integration_store->mark_processed($kind, $tenant_id, $inbox_id, $document_id);
+                    if ($document_id > 0
+                        && $this->finance_integration_store->mark_processed($kind, $tenant_id, $inbox_id, $document_id)) {
+                        if ($this->db->trans_status() !== FALSE) {
+                            $this->db->trans_commit();
+                            $this->session->set_flashdata('finance_status', 'draft_saved');
+                            redirect('/admin/finance/' . $spec['slug'] . '/edit/' . $document_id, 'location', 303);
+                            return;
+                        }
                     }
-                    $this->session->set_flashdata('finance_status', 'draft_saved');
-                    redirect('/admin/finance/' . $spec['slug'] . '/edit/' . $document_id, 'location', 303);
-                    return;
+                    $this->db->trans_rollback();
+                    $errors[] = 'document_save_error';
+                } else {
+                    $this->db->trans_rollback();
+                    $errors[] = 'document_' . $result;
                 }
-                $errors[] = 'document_' . $result;
             }
             $record = array_merge($record, $values);
             $record['amount'] = $this->format_amount($inbox['amount_before_tax']);

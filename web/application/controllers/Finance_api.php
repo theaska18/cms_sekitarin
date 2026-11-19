@@ -46,6 +46,10 @@ class Finance_api extends CI_Controller
             return;
         }
         $raw = (string) $this->input->raw_input_stream;
+        if (strlen($raw) > 1048576) {
+            $this->json(array('status' => 'error', 'message' => 'Request body is too large.'), 413);
+            return;
+        }
         $payload = json_decode($raw, TRUE);
         if (!is_array($payload)) {
             $this->json(array('status' => 'error', 'message' => 'Invalid JSON body.'), 400);

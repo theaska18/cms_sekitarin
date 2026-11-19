@@ -243,6 +243,13 @@ class Finance_transaction_store
         if ($amount <= 0) {
             return 'amount_invalid';
         }
+        $previous_line = NULL;
+        if ($id !== NULL) {
+            $previous_line = $this->db->select('tax_id,tax_rate_snapshot')
+                ->where('tenant_id', (int) $tenant_id)
+                ->where('transaction_id', (int) $id)
+                ->limit(1)->get('fin_transaction_line')->row_array();
+        }
         $tax = NULL;
         $tax_rate = 0.0;
         if (!empty($values['tax_id'])) {
@@ -251,6 +258,10 @@ class Finance_transaction_store
                 return 'tax_invalid';
             }
             $tax_rate = (float) $tax['rate_percent'];
+            if ($previous_line && (int) $previous_line['tax_id'] === (int) $tax['tax_id']
+                && isset($previous_line['tax_rate_snapshot']) && is_numeric($previous_line['tax_rate_snapshot'])) {
+                $tax_rate = (float) $previous_line['tax_rate_snapshot'];
+            }
         }
         $tax_amount = round($amount * $tax_rate / 100, 6);
         $total = round($amount + $tax_amount, 6);
@@ -294,7 +305,7 @@ class Finance_transaction_store
             );
             $this->db->where('tenant_id', (int) $tenant_id)
                 ->where('transaction_id', (int) $id)
-                ->where('status', 'draft')
+                ->where_in('status', array('draft', 'revise'))
                 ->update('fin_transaction', $header);
             $transaction_id = (int) $id;
             $this->db->where('tenant_id', (int) $tenant_id)
@@ -423,6 +434,14 @@ class Finance_transaction_store
         $debit_total = $record['transaction_type'] === 'income' ? $base_total : $base_total;
         $credit_total = $base_total;
         $this->db->trans_begin();
+        $locked = $this->db->query(
+            'SELECT status FROM fin_transaction WHERE tenant_id = ? AND transaction_id = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant_id, (int) $id)
+        );
+        if ($locked === FALSE || !$locked->num_rows() || (string) $locked->row()->status !== 'approved') {
+            $this->db->trans_rollback();
+            return 'not_postable';
+        }
         $CI =& get_instance();
         if ($record['transaction_type'] === 'expense') {
             $CI->load->library('finance_balance_guard');
@@ -524,7 +543,7 @@ class Finance_transaction_store
                 'posted_on' => date('Y-m-d H:i:s'),
                 'posted_by' => (int) $user_id,
             ));
-        if ($this->db->trans_status() === FALSE) {
+        if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return 'post_error';
         }

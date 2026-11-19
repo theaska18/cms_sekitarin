@@ -132,6 +132,10 @@ class Finance_journal_store
                 || (($debit > 0) === ($credit > 0))) {
                 return 'line_invalid';
             }
+            if (!empty($line['department_id'])
+                && !$this->tenant_row('fin_department', 'department_id', $tenant_id, $line['department_id'])) {
+                return 'line_invalid';
+            }
             $base_debit = round($debit * $rate, 6);
             $base_credit = round($credit * $rate, 6);
             $debit_total += $base_debit;
@@ -149,6 +153,9 @@ class Finance_journal_store
             );
         }
 
+        if ($debit_total <= 0 || abs($debit_total - $credit_total) > 0.000001) {
+            return 'unbalanced';
+        }
         $this->db->trans_begin();
         if ($id !== NULL) {
             $existing = $this->find($tenant_id, $id, $source_type);

@@ -170,6 +170,14 @@ class Finance_transfer_store
         $debit=(float)$row['base_to_amount'];$credit=(float)$row['base_from_amount'];
         if(abs($debit-$credit)>0.000001)return 'fx_imbalance';
         $this->db->trans_begin();
+        $locked = $this->db->query(
+            'SELECT status FROM fin_cash_transfer WHERE tenant_id = ? AND cash_transfer_id = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant, (int) $id)
+        );
+        if ($locked === FALSE || !$locked->num_rows() || (string) $locked->row()->status !== 'approved') {
+            $this->db->trans_rollback();
+            return 'not_postable';
+        }
         $CI =& get_instance();
         $CI->load->library('finance_balance_guard');
         $balance_check = $CI->finance_balance_guard->can_debit(
@@ -215,7 +223,7 @@ class Finance_transfer_store
             'debit_base_amount'=>$line['base_debit'],'credit_base_amount'=>$line['base_credit']));
         $this->db->where('tenant_id',(int)$tenant)->where('cash_transfer_id',(int)$id)->where('status','approved')
             ->update('fin_cash_transfer',array('status'=>'posted','posted_on'=>date('Y-m-d H:i:s'),'posted_by'=>(int)$user));
-        if(!$journal||$this->db->trans_status()===FALSE){$this->db->trans_rollback();return 'post_error';}
+        if(!$journal||$this->db->trans_status()===FALSE||(int)$this->db->affected_rows()!==1){$this->db->trans_rollback();return 'post_error';}
         $this->db->trans_commit();return 'posted';
     }
 

@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'الأرصدة الافتتاحية';
 $lang['admin_finance_accounting_periods'] = 'الفترات المحاسبية';
 $lang['admin_finance_profit_loss'] = 'الأرباح والخسائر';
 $lang['admin_finance_balance_sheet'] = 'الميزانية العمومية';
+$lang['admin_finance_cancellation_history'] = 'سجل الإلغاء';
 $lang['admin_finance_cash_flow'] = 'التدفق النقدي';
 $lang['admin_finance_bank_balance'] = 'رصيد البنك';
 $lang['admin_finance_trial_balance'] = 'ميزان المراجعة';

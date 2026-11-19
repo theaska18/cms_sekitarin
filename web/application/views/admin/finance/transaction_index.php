@@ -158,6 +158,7 @@ if ($can_add) {
         approved: {badge: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500'},
         revise: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         rejected: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'},
+        cancel_pending: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'},
         cancelled: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'}
     };
@@ -209,6 +210,7 @@ if ($can_add) {
                     approved: txLabels.stateApproved,
                     revise: txLabels.stateRevise,
                     rejected: txLabels.stateRejected,
+                    cancel_pending: <?= json_encode(isset($labels['finance_tx_state_cancel_pending']) ? $labels['finance_tx_state_cancel_pending'] : 'Cancellation pending', $js_flags) ?>,
                     posted: txLabels.statePosted,
                     cancelled: <?= json_encode(isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled', $js_flags) ?>
                 };

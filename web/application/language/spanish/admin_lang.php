@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'Saldos iniciales';
 $lang['admin_finance_accounting_periods'] = 'Períodos contables';
 $lang['admin_finance_profit_loss'] = 'Pérdidas y ganancias';
 $lang['admin_finance_balance_sheet'] = 'Balance general';
+$lang['admin_finance_cancellation_history'] = 'Historial de cancelaciones';
 $lang['admin_finance_cash_flow'] = 'Flujo de caja';
 $lang['admin_finance_bank_balance'] = 'Saldo bancario';
 $lang['admin_finance_trial_balance'] = 'Balance de comprobación';

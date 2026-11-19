@@ -56,6 +56,7 @@ class Finance_document_store
         if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
         if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
         if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
+        $this->apply_document_filters($spec, isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array());
         $this->apply_payment_status_filter($spec, isset($filters['payment_status']) ? (string) $filters['payment_status'] : '');
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
@@ -81,7 +82,8 @@ class Finance_document_store
             . ' FROM `' . $spec['allocation'] . '` a'
             . ' INNER JOIN `' . $spec['payment_table'] . '` pay'
             . ' ON pay.' . $spec['payment_id'] . '=a.' . $spec['payment_id'] . ' AND pay.tenant_id=a.tenant_id'
-            . " WHERE pay.status='posted' GROUP BY a.tenant_id, a." . $spec['id'] . ') pd';
+            . " WHERE pay.status='posted' AND a.tenant_id=" . (int) $tenant_id
+            . ' GROUP BY a.tenant_id, a.' . $spec['id'] . ') pd';
         $this->db->select('d.' . $spec['id'] . ',d.' . $spec['number'] . ',d.integration_number,d.' . $spec['date'] . ',d.due_date,d.total_amount,d.currency_code,d.status,d.memo,d.approval_request_id,'
             . 'p.' . $spec['person_code'] . ' AS person_code,p.' . $spec['person_name'] . ' AS person_name,'
             . 'COALESCE(pd.allocated,0) AS paid_amount,(d.total_amount - COALESCE(pd.allocated,0)) AS outstanding_amount,'
@@ -98,6 +100,7 @@ class Finance_document_store
         if (!empty($filters['start_on'])) $this->db->where('d.' . $spec['date'] . ' >=', $filters['start_on']);
         if (!empty($filters['end_on'])) $this->db->where('d.' . $spec['date'] . ' <=', $filters['end_on']);
         if (!empty($filters['status'])) $this->db->where('d.status', $filters['status']);
+        $this->apply_document_filters($spec, isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array());
         $this->apply_payment_status_filter($spec, isset($filters['payment_status']) ? (string) $filters['payment_status'] : '');
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('d.' . $spec['number'], $search)
@@ -150,6 +153,10 @@ class Finance_document_store
         if (!$account || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1 || $account['account_type'] !== $expected_type) {
             return 'account_invalid';
         }
+        if (!empty($values['department_id'])
+            && !$this->tenant_row('fin_department', 'department_id', $tenant_id, $values['department_id'])) {
+            return 'department_invalid';
+        }
         $settings = $this->db->where('tenant_id', (int) $tenant_id)->limit(1)->get('fin_settings');
         if ($settings === FALSE || !$settings->num_rows()) {
             return 'settings_missing';
@@ -166,6 +173,13 @@ class Finance_document_store
             return 'exchange_rate_invalid';
         }
         $subtotal = round((float) $values['amount'], 6);
+        $previous_line = NULL;
+        if ($id !== NULL) {
+            $previous_line = $this->db->select('tax_id,tax_rate_snapshot')
+                ->where('tenant_id', (int) $tenant_id)
+                ->where($spec['id'], (int) $id)
+                ->limit(1)->get($spec['line_table'])->row_array();
+        }
         $tax = NULL;
         $tax_rate = 0.0;
         if (!empty($values['tax_id'])) {
@@ -174,6 +188,11 @@ class Finance_document_store
                 return 'tax_invalid';
             }
             $tax_rate = (float) $tax['rate_percent'];
+            // Keep the original draft tax snapshot when the tax selection has not changed.
+            if ($previous_line && (int) $previous_line['tax_id'] === (int) $tax['tax_id']
+                && isset($previous_line['tax_rate_snapshot']) && is_numeric($previous_line['tax_rate_snapshot'])) {
+                $tax_rate = (float) $previous_line['tax_rate_snapshot'];
+            }
         }
         $tax_amount = round($subtotal * $tax_rate / 100, 6);
         $total = round($subtotal + $tax_amount, 6);
@@ -305,6 +324,15 @@ class Finance_document_store
         $base_tax = isset($line['base_tax_amount']) ? (float) $line['base_tax_amount'] : round((float) $line['tax_amount'] * (float) $doc['exchange_rate'], 6);
         $base_subtotal = round($base_total - $base_tax, 6);
         $this->db->trans_begin();
+        $locked = $this->db->query(
+            'SELECT status FROM `' . $spec['header'] . '` WHERE tenant_id = ? AND '
+            . $spec['id'] . ' = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant_id, (int) $id)
+        );
+        if ($locked === FALSE || !$locked->num_rows() || (string) $locked->row()->status !== 'approved') {
+            $this->db->trans_rollback();
+            return 'not_postable';
+        }
         $duplicate = $this->db->where('tenant_id', (int) $tenant_id)->where('source_type', $spec['source_type'])
             ->where('source_id', (int) $id)->limit(1)->get('fin_journal_entry');
         if ($duplicate === FALSE || $duplicate->num_rows()) {
@@ -374,7 +402,7 @@ class Finance_document_store
         }
         $this->db->where('tenant_id', (int) $tenant_id)->where($spec['id'], (int) $id)->where('status', 'approved')
             ->update($spec['header'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user_id));
-        if ($this->db->trans_status() === FALSE) {
+        if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return 'post_error';
         }
@@ -481,6 +509,34 @@ class Finance_document_store
             . ' ON pay.' . $spec['payment_id'] . '=a.' . $spec['payment_id'] . ' AND pay.tenant_id=a.tenant_id'
             . ' WHERE a.tenant_id=d.tenant_id AND a.' . $spec['id'] . '=d.' . $spec['id']
             . " AND pay.status='posted')";
+    }
+
+    private function apply_document_filters($spec, $fields)
+    {
+        if (!empty($fields['integration_number'])) {
+            $this->db->like('d.integration_number', $fields['integration_number']);
+        }
+        if (!empty($fields['person_name'])) {
+            $this->db->like('p.' . $spec['person_name'], $fields['person_name']);
+        }
+        if (!empty($fields['currency_code'])) {
+            $this->db->where('d.currency_code', strtoupper((string) $fields['currency_code']));
+        }
+        if (!empty($fields['total_amount']['min'])) {
+            $this->db->where('d.total_amount >=', $fields['total_amount']['min']);
+        }
+        if (!empty($fields['total_amount']['max'])) {
+            $this->db->where('d.total_amount <=', $fields['total_amount']['max']);
+        }
+        if (!empty($fields['outstanding_amount']['min']) || !empty($fields['outstanding_amount']['max'])) {
+            $paid = $this->paid_sql($spec);
+            if (!empty($fields['outstanding_amount']['min'])) {
+                $this->db->where('d.total_amount - ' . $paid . ' >=', $fields['outstanding_amount']['min'], FALSE);
+            }
+            if (!empty($fields['outstanding_amount']['max'])) {
+                $this->db->where('d.total_amount - ' . $paid . ' <=', $fields['outstanding_amount']['max'], FALSE);
+            }
+        }
     }
 
     private function apply_payment_status_filter($spec, $status)

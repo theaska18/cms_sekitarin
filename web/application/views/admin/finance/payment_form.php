@@ -44,6 +44,7 @@ $summary_amount = function ($value) use ($summary_currency) {
                 data-payment-summary-paid="<?= is_array($summary) ? html_escape((string) $summary['paid_amount']) : '' ?>"
                 data-payment-summary-pending="<?= is_array($summary) ? html_escape((string) $summary['pending_amount']) : '' ?>"
                 data-payment-summary-outstanding="<?= is_array($summary) ? html_escape((string) $summary['outstanding_amount']) : '' ?>"
+                data-payment-summary-available="<?= is_array($summary) && isset($summary['available_amount']) ? html_escape((string) $summary['available_amount']) : '' ?>"
                 class="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
                 <dl class="grid gap-4 sm:grid-cols-4">
                     <div>
@@ -77,6 +78,7 @@ $summary_amount = function ($value) use ($summary_currency) {
     var payAll=document.getElementById('pay-all');
     var amountInput=document.getElementById('amount');
     var currentOutstanding=<?= is_array($summary) ? json_encode((float) $summary['outstanding_amount']) : 'null' ?>;
+    var currentAvailable=<?= is_array($summary) && isset($summary['available_amount']) ? json_encode((float) $summary['available_amount']) : 'null' ?>;
     var isNewPayment=<?= $is_edit ? 'false' : 'true' ?>;
     var amountFormatter=null;
     try{amountFormatter=new Intl.NumberFormat((document.documentElement.getAttribute('lang')||'id-ID').trim()||'id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});}catch(error){amountFormatter=null;}
@@ -103,7 +105,7 @@ $summary_amount = function ($value) use ($summary_currency) {
         if(!payAll||!amountInput)return;
         var checked=!!payAll.checked;
         amountInput.disabled=checked;
-        if(checked)setAmount(currentOutstanding);
+        if(checked)setAmount(currentAvailable);
     }
     function updateSummary(item){
         if(!summary)return;
@@ -117,7 +119,8 @@ $summary_amount = function ($value) use ($summary_currency) {
         var pendingRow=summary.querySelector('[data-payment-pending-row]');if(pendingRow)pendingRow.hidden=Number(item.pending_amount||0)<=0.000001;
         var outstanding=summary.querySelector('[data-payment-outstanding]');if(outstanding)outstanding.textContent=text(item.outstanding_amount);
         currentOutstanding=Number(item.outstanding_amount||0);
-        if(shouldAutoFill())setAmount(currentOutstanding);
+        currentAvailable=Number(item.available_amount!=null?item.available_amount:item.outstanding_amount||0);
+        if(shouldAutoFill())setAmount(currentAvailable);
     }
     if(payAll)payAll.addEventListener('change',applyPayAll);
     applyPayAll();
@@ -131,7 +134,8 @@ $summary_amount = function ($value) use ($summary_currency) {
             total_amount:summary.getAttribute('data-payment-summary-total')||0,
             paid_amount:summary.getAttribute('data-payment-summary-paid')||0,
             pending_amount:summary.getAttribute('data-payment-summary-pending')||0,
-            outstanding_amount:summary.getAttribute('data-payment-summary-outstanding')||0
+            outstanding_amount:summary.getAttribute('data-payment-summary-outstanding')||0,
+            available_amount:summary.getAttribute('data-payment-summary-available')||0
         });
     })();
     $('[data-payment-lookup]').each(function(){

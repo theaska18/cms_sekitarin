@@ -217,6 +217,7 @@ class Finance_filter_panel
             'approved' => isset($labels['finance_tx_state_approved']) ? $labels['finance_tx_state_approved'] : 'Approved',
             'revise' => isset($labels['finance_tx_state_revise']) ? $labels['finance_tx_state_revise'] : 'Revise',
             'rejected' => isset($labels['finance_tx_state_rejected']) ? $labels['finance_tx_state_rejected'] : 'Rejected',
+            'cancel_pending' => isset($labels['finance_tx_state_cancel_pending']) ? $labels['finance_tx_state_cancel_pending'] : 'Cancellation pending',
             'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
             'completed' => isset($labels['finance_status_completed']) ? $labels['finance_status_completed'] : 'Completed',
             'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',

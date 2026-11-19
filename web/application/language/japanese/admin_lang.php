@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = '期首残高';
 $lang['admin_finance_accounting_periods'] = '会計期間';
 $lang['admin_finance_profit_loss'] = '損益計算書';
 $lang['admin_finance_balance_sheet'] = '貸借対照表';
+$lang['admin_finance_cancellation_history'] = 'キャンセル履歴';
 $lang['admin_finance_cash_flow'] = 'キャッシュフロー';
 $lang['admin_finance_bank_balance'] = '銀行残高';
 $lang['admin_finance_trial_balance'] = '試算表';

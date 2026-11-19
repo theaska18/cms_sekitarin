@@ -626,3 +626,8 @@ $lang['finance_field_default_input_tax_id_hint'] = 'Dipakai otomatis pada form b
 $lang['finance_resource_field_default_input_tax_id'] = 'Pajak default beban/pembelian';
 $lang['finance_resource_column_default_input_tax_id'] = 'Pajak default beban/pembelian';$lang['finance_sales_invoice_inbox'] = 'Integrasi Faktur Penjualan';
 $lang['finance_purchase_bill_inbox'] = 'Integrasi Tagihan Pembelian';
+$lang['finance_tx_state_cancel_pending'] = 'Menunggu pembatalan';
+$lang['finance_status_draft_deleted'] = 'Draft berhasil dihapus.';
+$lang['finance_filter_total_amount'] = 'Jumlah total';
+$lang['finance_filter_outstanding_amount'] = 'Sisa tagihan';
+$lang['finance_journal_error_unbalanced'] = 'Total debit harus sama dengan total kredit.';

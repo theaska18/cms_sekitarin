@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'Opening Balances';
 $lang['admin_finance_accounting_periods'] = 'Accounting Periods';
 $lang['admin_finance_profit_loss'] = 'Profit & Loss';
 $lang['admin_finance_balance_sheet'] = 'Balance Sheet';
+$lang['admin_finance_cancellation_history'] = 'Cancellation History';
 $lang['admin_finance_cash_flow'] = 'Cash Flow';
 $lang['admin_finance_bank_balance'] = 'Bank Balance';
 $lang['admin_finance_trial_balance'] = 'Trial Balance';

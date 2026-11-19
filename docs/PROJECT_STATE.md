@@ -14,10 +14,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
 - Katalog update terakhir: `1.0.23` (tag `v1.0.23`, commit `c0b0c65`).
-  Seluruh perbaikan Finance pada audit 2026-11-19 sudah termasuk dalam rilis ini.
-- Migration terbaru: `20261119001400_allow_repeated_finance_cancellations.sql`
-  (menghapus unique key sumber pembatalan agar pengajuan ulang dapat disimpan
-  sebagai riwayat).
+  Audit lanjutan 2026-11-19 (draft delete, concurrency, cancel_pending,
+  cancellation history, fiscal validation, integrasi, dan hardening) menjadi
+  kandidat rilis `1.0.24`.
+- Migration terbaru: `20261119001600_unique_api_secret.sql`,
+  `20261119001500_unique_reconciliation_journal_line.sql`, dan
+  `20261119001400_allow_repeated_finance_cancellations.sql`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -92,13 +94,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-128 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+140 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-541 tests
+553 tests
 43 failure
 6 error
 ```

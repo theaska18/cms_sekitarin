@@ -230,9 +230,9 @@ class Admin_finance extends Admin
             ->join('fin_account a', 'a.account_id = t.account_id AND a.tenant_id = t.tenant_id', 'left')
             ->where('t.tenant_id', $tenant_id)->order_by('t.tax_code', 'ASC')->get()->result_array();
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('tax_code', 'tax_name', 'rate_percent', 'account_code', 'active_flag'));
+        $this->finance_csv_row($stream, array('tax_code', 'tax_name', 'rate_percent', 'account_code', 'active_flag'));
         foreach ($rows as $row) {
-            fputcsv($stream, array($row['tax_code'], $row['tax_name'], $row['rate_percent'], (string) $row['account_code'], (int) $row['active_flag']));
+            $this->finance_csv_row($stream, array($row['tax_code'], $row['tax_name'], $row['rate_percent'], (string) $row['account_code'], (int) $row['active_flag']));
         }
         rewind($stream);
         $csv = stream_get_contents($stream);
@@ -433,9 +433,9 @@ class Admin_finance extends Admin
             ->from('fin_category')->where('tenant_id', $tenant_id)
             ->order_by('category_type', 'ASC')->order_by('category_code', 'ASC')->get()->result_array();
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('category_type', 'category_code', 'category_name', 'active_flag'));
+        $this->finance_csv_row($stream, array('category_type', 'category_code', 'category_name', 'active_flag'));
         foreach ($rows as $row) {
-            fputcsv($stream, array($row['category_type'], $row['category_code'], $row['category_name'], (int) $row['active_flag']));
+            $this->finance_csv_row($stream, array($row['category_type'], $row['category_code'], $row['category_name'], (int) $row['active_flag']));
         }
         rewind($stream);
         $csv = stream_get_contents($stream);
@@ -603,11 +603,11 @@ class Admin_finance extends Admin
             $codes[(int) $row['account_id']] = (string) $row['account_code'];
         }
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('account_code', 'account_name', 'account_type', 'normal_balance', 'parent_code', 'posting_flag', 'active_flag', 'description'));
+        $this->finance_csv_row($stream, array('account_code', 'account_name', 'account_type', 'normal_balance', 'parent_code', 'posting_flag', 'active_flag', 'description'));
         foreach ($rows as $row) {
             $parent_code = !empty($row['parent_account_id']) && isset($codes[(int) $row['parent_account_id']])
                 ? $codes[(int) $row['parent_account_id']] : '';
-            fputcsv($stream, array(
+            $this->finance_csv_row($stream, array(
                 $row['account_code'],
                 $row['account_name'],
                 $row['account_type'],
@@ -826,6 +826,73 @@ class Admin_finance extends Admin
     }
 
     /** Create an approval-backed cancellation request for a Finance record. */
+    public function delete_draft($slug = '', $id = 0)
+    {
+        if ($this->input->method(TRUE) !== 'POST' || !is_numeric($id) || (int) $id < 1) {
+            show_404();
+            return;
+        }
+        $map = array(
+            'income' => array('table' => 'fin_transaction', 'id' => 'transaction_id', 'child' => 'fin_transaction_line', 'menu' => 'fin_income'),
+            'expenses' => array('table' => 'fin_transaction', 'id' => 'transaction_id', 'child' => 'fin_transaction_line', 'menu' => 'fin_expenses'),
+            'sales_invoices' => array('table' => 'fin_sales_invoice', 'id' => 'sales_invoice_id', 'child' => 'fin_sales_invoice_line', 'menu' => 'fin_sales_invoices'),
+            'purchase_bills' => array('table' => 'fin_purchase_bill', 'id' => 'purchase_bill_id', 'child' => 'fin_purchase_bill_line', 'menu' => 'fin_purchase_bills'),
+            'customer_payments' => array('table' => 'fin_customer_payment', 'id' => 'customer_payment_id', 'child' => 'fin_customer_payment_allocation', 'menu' => 'fin_customer_payments'),
+            'supplier_payments' => array('table' => 'fin_supplier_payment', 'id' => 'supplier_payment_id', 'child' => 'fin_supplier_payment_allocation', 'menu' => 'fin_supplier_payments'),
+            'journal_entries' => array('table' => 'fin_journal_entry', 'id' => 'journal_entry_id', 'child' => 'fin_journal_line', 'menu' => 'fin_journal_entries'),
+            'opening_balances' => array('table' => 'fin_journal_entry', 'id' => 'journal_entry_id', 'child' => 'fin_journal_line', 'menu' => 'fin_opening_balances'),
+            'cash_bank_transfer' => array('table' => 'fin_cash_transfer', 'id' => 'cash_transfer_id', 'child' => '', 'menu' => 'fin_cash_bank_transfer'),
+            'bank_reconciliation' => array('table' => 'fin_bank_reconciliation', 'id' => 'reconciliation_id', 'child' => 'fin_bank_reconciliation_line', 'menu' => 'fin_bank_reconciliation'),
+        );
+        if (!isset($map[$slug])) {
+            show_404();
+            return;
+        }
+        $spec = $map[$slug];
+        if (!$this->has_admin_menu_code($spec['menu'])
+            || !$this->has_admin_access_code($spec['menu'] . '_update')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $row = $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)
+            ->limit(1)->get($spec['table'])->row_array();
+        if (!$row || !in_array((string) $row['status'], array('draft', 'revise'), TRUE)) {
+            $this->session->set_flashdata('finance_status', 'not_editable');
+            redirect('/admin/finance/' . $slug, 'location', 303);
+            return;
+        }
+        if ($slug === 'journal_entries' || $slug === 'opening_balances') {
+            $expected = $slug === 'opening_balances' ? 'opening_balance' : 'manual';
+            if ((string) $row['source_type'] !== $expected) {
+                $this->session->set_flashdata('finance_status', 'not_editable');
+                redirect('/admin/finance/' . $slug, 'location', 303);
+                return;
+            }
+        }
+        $this->db->trans_begin();
+        if (in_array($slug, array('sales_invoices', 'purchase_bills'), TRUE)) {
+            $inbox = $slug === 'sales_invoices' ? 'fin_sales_invoice_inbox' : 'fin_purchase_bill_inbox';
+            $inbox_id = $slug === 'sales_invoices' ? 'sales_invoice_id' : 'purchase_bill_id';
+            if ($this->db->table_exists($inbox) && $this->db->field_exists('processed_at', $inbox)) {
+                $this->db->where('tenant_id', $tenant_id)->where($inbox_id, (int) $id)
+                    ->update($inbox, array('status' => 'received', 'processed_at' => NULL));
+            }
+        }
+        if ($spec['child'] !== '') {
+            $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)->delete($spec['child']);
+        }
+        $this->db->where('tenant_id', $tenant_id)->where($spec['id'], (int) $id)->delete($spec['table']);
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            $this->session->set_flashdata('finance_status', 'save_error');
+        } else {
+            $this->db->trans_commit();
+            $this->session->set_flashdata('finance_status', 'draft_deleted');
+        }
+        redirect('/admin/finance/' . $slug, 'location', 303);
+    }
+
     public function cancel_request()
     {
         if ($this->input->method(TRUE) !== 'POST') {
@@ -2270,9 +2337,14 @@ class Admin_finance extends Admin
             : array('bill_number', 'bill_date', 'due_date');
         $number_column = $spec[0];
         $date_column = $spec[1];
-        $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'currency_code', 8 => 'status');
+        $columns = array(1 => $number_column, 2 => 'integration_number', 3 => 'person_name', 4 => $date_column, 5 => 'due_date', 6 => 'total_amount', 7 => 'outstanding_amount', 8 => 'currency_code', 9 => 'status');
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE, 'document', $date_column, $this->finance_document_payment_filter_config());
+        $filters = $this->finance_list_filters(
+            TRUE,
+            'document',
+            $date_column,
+            array_merge($this->finance_document_payment_filter_config(), $this->finance_document_filter_config($kind))
+        );
         $this->datatable_server->respond(
             $columns,
             function () use ($store, $tenant_id, $kind, $filters) { return $store->count($tenant_id, $kind, '', $filters); },
@@ -2683,10 +2755,18 @@ class Admin_finance extends Admin
             $values['cash_account_id'] = (int) $values['cash_account_id'];
             $values['pay_all'] = $this->input->post('pay_all', TRUE) ? 1 : 0;
             if ($values['pay_all'] && $values['document_id'] > 0) {
-                $pay_summary = $store->document_financials($tenant, $kind, $values['document_id']);
+                $pay_summary = $store->document_financials(
+                    $tenant,
+                    $kind,
+                    $values['document_id'],
+                    $is_new ? NULL : (int) $id
+                );
                 if (is_array($pay_summary)) {
-                    $pay_amount = round((float) $pay_summary['outstanding_amount'], 2);
-                    if ($pay_amount <= 0 && (float) $pay_summary['outstanding_amount'] > 0) {
+                    $available = isset($pay_summary['available_amount'])
+                        ? (float) $pay_summary['available_amount']
+                        : (float) $pay_summary['outstanding_amount'];
+                    $pay_amount = round($available, 2);
+                    if ($pay_amount <= 0 && $available > 0) {
                         $pay_amount = 0.01;
                     }
                     $values['amount'] = number_format($pay_amount, 2, '.', '');
@@ -2711,7 +2791,7 @@ class Admin_finance extends Admin
             $labels['cash_account_id'] = !empty($record['cash_account_id']) ? $store->lookup_label($tenant, 'cash_account', $record['cash_account_id']) : '';
         }
         $document_summary = !empty($record['document_id'])
-            ? $store->document_financials($tenant, $kind, (int) $record['document_id'])
+            ? $store->document_financials($tenant, $kind, (int) $record['document_id'], $is_new ? NULL : (int) $id)
             : NULL;
         $this->render_admin('admin/finance/payment_form', 'finance_' . $slug,
             '/admin/finance/' . $slug . ($is_new ? '/new' : '/edit/' . (int) $id), array(
@@ -3002,19 +3082,19 @@ class Admin_finance extends Admin
             }
         }
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('Report Name', $title));
-        fputcsv($stream, array('Report Code', $slug));
-        fputcsv($stream, array('Tenant', $tenant_name));
+        $this->finance_csv_row($stream, array('Report Name', $title));
+        $this->finance_csv_row($stream, array('Report Code', $slug));
+        $this->finance_csv_row($stream, array('Tenant', $tenant_name));
         $as_of_report = in_array($slug, array('balance_sheet', 'ar_report', 'ap_report'), TRUE);
-        fputcsv($stream, array($as_of_report ? 'As of' : 'Period',
+        $this->finance_csv_row($stream, array($as_of_report ? 'As of' : 'Period',
             $as_of_report ? $filters['end_on'] : $filters['start_on'] . ' s/d ' . $filters['end_on']));
-        fputcsv($stream, array('Base Currency', $base_currency));
-        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
-        fputcsv($stream, array('Prepared By', $prepared_by));
-        fputcsv($stream, array('Source', 'Posted journals'));
-        fputcsv($stream, array('Rows', count($rows)));
-        fputcsv($stream, array());
-        fputcsv($stream, array_merge(array('No'), $column_labels));
+        $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
+        $this->finance_csv_row($stream, array('Source', 'Posted journals'));
+        $this->finance_csv_row($stream, array('Rows', count($rows)));
+        $this->finance_csv_row($stream, array());
+        $this->finance_csv_row($stream, array_merge(array('No'), $column_labels));
         $row_number = 0;
         foreach ($rows as $row) {
             $line = array(++$row_number);
@@ -3025,7 +3105,7 @@ class Admin_finance extends Admin
                 }
                 $line[] = $value;
             }
-            fputcsv($stream, $line);
+            $this->finance_csv_row($stream, $line);
         }
         if ($totals) {
             $line = array();
@@ -3040,7 +3120,7 @@ class Admin_finance extends Admin
                     $line[] = '';
                 }
             }
-            fputcsv($stream, $line);
+            $this->finance_csv_row($stream, $line);
         }
         rewind($stream);
         $csv = stream_get_contents($stream);
@@ -3136,49 +3216,49 @@ class Admin_finance extends Admin
             ? (string) $this->current_user['full_name']
             : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('Report Name', $title));
-        fputcsv($stream, array('Report Code', 'cash_flow'));
-        fputcsv($stream, array('Tenant', $tenant_name));
-        fputcsv($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
-        fputcsv($stream, array('Method', $method_label));
-        fputcsv($stream, array('Base Currency', $base_currency));
-        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
-        fputcsv($stream, array('Prepared By', $prepared_by));
-        fputcsv($stream, array('Source', 'Posted journals'));
-        fputcsv($stream, array());
-        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $this->finance_csv_row($stream, array('Report Name', $title));
+        $this->finance_csv_row($stream, array('Report Code', 'cash_flow'));
+        $this->finance_csv_row($stream, array('Tenant', $tenant_name));
+        $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
+        $this->finance_csv_row($stream, array('Method', $method_label));
+        $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
+        $this->finance_csv_row($stream, array('Source', 'Posted journals'));
+        $this->finance_csv_row($stream, array());
+        $this->finance_csv_row($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
         $row_number = 0;
         if ($method === 'direct') {
             foreach ($statement['sections'] as $section_key => $section) {
                 foreach ($section['items'] as $item) {
-                    fputcsv($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
+                    $this->finance_csv_row($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
                 }
-                fputcsv($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
-                fputcsv($stream, array());
+                $this->finance_csv_row($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
+                $this->finance_csv_row($stream, array());
             }
         } else {
-            fputcsv($stream, array(++$row_number, $section_labels['operating'], '', '', $this->finance_report_text('finance_cf_net_profit', 'Profit before tax'), number_format((float) $statement['net_profit'], 2, '.', '')));
-            fputcsv($stream, array('', $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), '', '', ''));
+            $this->finance_csv_row($stream, array(++$row_number, $section_labels['operating'], '', '', $this->finance_report_text('finance_cf_net_profit', 'Profit before tax'), number_format((float) $statement['net_profit'], 2, '.', '')));
+            $this->finance_csv_row($stream, array('', $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), '', '', ''));
             foreach ($statement['non_cash'] as $item) {
-                fputcsv($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), $item['code'], $item['name'], number_format((float) $item['amount'], 2, '.', '')));
+                $this->finance_csv_row($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_adjustments', 'Adjustments for:'), $item['code'], $item['name'], number_format((float) $item['amount'], 2, '.', '')));
             }
             foreach ($statement['working_capital'] as $item) {
-                fputcsv($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_working_capital', 'Changes in working capital'), $item['code'], $this->finance_cash_flow_item_label($item, 'working_capital'), number_format((float) $item['amount'], 2, '.', '')));
+                $this->finance_csv_row($stream, array(++$row_number, $section_labels['operating'], $this->finance_report_text('finance_cf_working_capital', 'Changes in working capital'), $item['code'], $this->finance_cash_flow_item_label($item, 'working_capital'), number_format((float) $item['amount'], 2, '.', '')));
             }
-            fputcsv($stream, array('', $section_labels['operating'], '', '', $total_labels['operating'], number_format((float) $statement['indirect_total'], 2, '.', '')));
-            fputcsv($stream, array());
+            $this->finance_csv_row($stream, array('', $section_labels['operating'], '', '', $total_labels['operating'], number_format((float) $statement['indirect_total'], 2, '.', '')));
+            $this->finance_csv_row($stream, array());
             foreach (array('investing', 'financing') as $section_key) {
                 $section = $statement['sections'][$section_key];
                 foreach ($section['items'] as $item) {
-                    fputcsv($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
+                    $this->finance_csv_row($stream, array(++$row_number, $section_labels[$section_key], '', $item['code'], $this->finance_cash_flow_item_label($item), number_format((float) $item['amount'], 2, '.', '')));
                 }
-                fputcsv($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
-                fputcsv($stream, array());
+                $this->finance_csv_row($stream, array('', $section_labels[$section_key], '', '', $total_labels[$section_key], number_format((float) $section['total'], 2, '.', '')));
+                $this->finance_csv_row($stream, array());
             }
         }
-        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_net_change', 'Net increase (decrease) in cash and cash equivalents'), number_format((float) $statement['net_change'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_beginning_cash', 'Cash and cash equivalents at beginning of period'), number_format((float) $statement['beginning_cash'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $this->finance_report_text('finance_cf_ending_cash', 'Cash and cash equivalents at end of period'), number_format((float) $statement['ending_cash'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $this->finance_report_text('finance_cf_net_change', 'Net increase (decrease) in cash and cash equivalents'), number_format((float) $statement['net_change'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $this->finance_report_text('finance_cf_beginning_cash', 'Cash and cash equivalents at beginning of period'), number_format((float) $statement['beginning_cash'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $this->finance_report_text('finance_cf_ending_cash', 'Cash and cash equivalents at end of period'), number_format((float) $statement['ending_cash'], 2, '.', '')));
         rewind($stream);
         $csv = stream_get_contents($stream);
         fclose($stream);
@@ -3311,37 +3391,37 @@ class Admin_finance extends Admin
             'subtotal' => $this->finance_report_text('finance_pl_subtotal', 'Subtotal'),
         );
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('Report Name', $title));
-        fputcsv($stream, array('Report Code', 'profit_loss'));
-        fputcsv($stream, array('Tenant', $tenant_name));
-        fputcsv($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
-        fputcsv($stream, array('Base Currency', $base_currency));
-        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
-        fputcsv($stream, array('Prepared By', $prepared_by));
-        fputcsv($stream, array('Source', 'Posted journals'));
-        fputcsv($stream, array());
-        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $this->finance_csv_row($stream, array('Report Name', $title));
+        $this->finance_csv_row($stream, array('Report Code', 'profit_loss'));
+        $this->finance_csv_row($stream, array('Tenant', $tenant_name));
+        $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
+        $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
+        $this->finance_csv_row($stream, array('Source', 'Posted journals'));
+        $this->finance_csv_row($stream, array());
+        $this->finance_csv_row($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
         $row_number = 0;
         foreach ($statement['revenue']['accounts'] as $line) {
-            fputcsv($stream, array(++$row_number, $labels['revenue'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+            $this->finance_csv_row($stream, array(++$row_number, $labels['revenue'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
         }
-        fputcsv($stream, array('', $labels['revenue'], '', '', $labels['total_revenue'], number_format((float) $statement['revenue']['total'], 2, '.', '')));
-        fputcsv($stream, array());
+        $this->finance_csv_row($stream, array('', $labels['revenue'], '', '', $labels['total_revenue'], number_format((float) $statement['revenue']['total'], 2, '.', '')));
+        $this->finance_csv_row($stream, array());
         foreach ($statement['cogs']['accounts'] as $line) {
-            fputcsv($stream, array(++$row_number, $labels['cogs'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+            $this->finance_csv_row($stream, array(++$row_number, $labels['cogs'], '', $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
         }
-        fputcsv($stream, array('', $labels['cogs'], '', '', $labels['total_cogs'], number_format((float) $statement['cogs']['total'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $labels['gross'], number_format((float) $statement['gross_profit'], 2, '.', '')));
-        fputcsv($stream, array());
+        $this->finance_csv_row($stream, array('', $labels['cogs'], '', '', $labels['total_cogs'], number_format((float) $statement['cogs']['total'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $labels['gross'], number_format((float) $statement['gross_profit'], 2, '.', '')));
+        $this->finance_csv_row($stream, array());
         foreach ($statement['operating']['groups'] as $group) {
             foreach ($group['accounts'] as $line) {
-                fputcsv($stream, array(++$row_number, $labels['operating'], $group['name'], $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+                $this->finance_csv_row($stream, array(++$row_number, $labels['operating'], $group['name'], $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
             }
-            fputcsv($stream, array('', $labels['operating'], $group['name'], '', $labels['subtotal'], number_format((float) $group['total'], 2, '.', '')));
+            $this->finance_csv_row($stream, array('', $labels['operating'], $group['name'], '', $labels['subtotal'], number_format((float) $group['total'], 2, '.', '')));
         }
-        fputcsv($stream, array('', $labels['operating'], '', '', $labels['total_operating'], number_format((float) $statement['operating']['total'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $labels['total_expenses'], number_format((float) $statement['total_expenses'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $labels['net'], number_format((float) $statement['net_profit'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', $labels['operating'], '', '', $labels['total_operating'], number_format((float) $statement['operating']['total'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $labels['total_expenses'], number_format((float) $statement['total_expenses'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $labels['net'], number_format((float) $statement['net_profit'], 2, '.', '')));
         rewind($stream);
         $csv = stream_get_contents($stream);
         fclose($stream);
@@ -3428,16 +3508,16 @@ class Admin_finance extends Admin
             ? (string) $this->current_user['full_name']
             : (isset($this->current_user['username']) ? (string) $this->current_user['username'] : '');
         $stream = fopen('php://temp', 'r+');
-        fputcsv($stream, array('Report Name', $title));
-        fputcsv($stream, array('Report Code', 'balance_sheet_skontro'));
-        fputcsv($stream, array('Tenant', $tenant_name));
-        fputcsv($stream, array('As of', $filters['end_on']));
-        fputcsv($stream, array('Base Currency', $base_currency));
-        fputcsv($stream, array('Generated', date('Y-m-d H:i:s')));
-        fputcsv($stream, array('Prepared By', $prepared_by));
-        fputcsv($stream, array('Source', 'Posted journals'));
-        fputcsv($stream, array());
-        fputcsv($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
+        $this->finance_csv_row($stream, array('Report Name', $title));
+        $this->finance_csv_row($stream, array('Report Code', 'balance_sheet_skontro'));
+        $this->finance_csv_row($stream, array('Tenant', $tenant_name));
+        $this->finance_csv_row($stream, array('As of', $filters['end_on']));
+        $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Generated', date('Y-m-d H:i:s')));
+        $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
+        $this->finance_csv_row($stream, array('Source', 'Posted journals'));
+        $this->finance_csv_row($stream, array());
+        $this->finance_csv_row($stream, array('No', 'Section', 'Group', 'Code', 'Account', 'Amount'));
         $row_number = 0;
         foreach ($section_labels as $type => $section_label) {
             foreach ($report['sections'][$type]['groups'] as $group) {
@@ -3445,24 +3525,24 @@ class Admin_finance extends Admin
                     ? $this->finance_skontro_label($group['name_key'], $section_label)
                     : $group['name'];
                 foreach ($group['accounts'] as $line) {
-                    fputcsv($stream, array(++$row_number, $section_label, $group_label, $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
+                    $this->finance_csv_row($stream, array(++$row_number, $section_label, $group_label, $line['code'], $line['name'], number_format((float) $line['amount'], 2, '.', '')));
                 }
-                fputcsv($stream, array('', $section_label, $group_label, '', $this->finance_skontro_label('finance_skontro_subtotal', 'Subtotal'), number_format((float) $group['total'], 2, '.', '')));
+                $this->finance_csv_row($stream, array('', $section_label, $group_label, '', $this->finance_skontro_label('finance_skontro_subtotal', 'Subtotal'), number_format((float) $group['total'], 2, '.', '')));
             }
-            fputcsv($stream, array('', $section_label, '', '', $type === 'asset'
+            $this->finance_csv_row($stream, array('', $section_label, '', '', $type === 'asset'
                 ? $this->finance_skontro_label('finance_skontro_total_assets', 'Total assets')
                 : ($type === 'liability'
                     ? $this->finance_skontro_label('finance_skontro_total_liabilities', 'Total liabilities')
                     : $this->finance_skontro_label('finance_skontro_total_equity', 'Total equity')),
                 number_format((float) $report['sections'][$type]['total'], 2, '.', '')));
-            fputcsv($stream, array());
+            $this->finance_csv_row($stream, array());
         }
-        fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_total_liabilities_equity', 'Total liabilities and equity'), number_format((float) $report['total_liabilities_equity'], 2, '.', '')));
-        fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_balance_check', 'Balance check'), $report['balanced']
+        $this->finance_csv_row($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_total_liabilities_equity', 'Total liabilities and equity'), number_format((float) $report['total_liabilities_equity'], 2, '.', '')));
+        $this->finance_csv_row($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_balance_check', 'Balance check'), $report['balanced']
             ? $this->finance_skontro_label('finance_skontro_balanced', 'Balanced')
             : $this->finance_skontro_label('finance_skontro_not_balanced', 'Not balanced')));
         if (!$report['balanced']) {
-            fputcsv($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_difference', 'Difference'), number_format((float) $report['difference'], 2, '.', '')));
+            $this->finance_csv_row($stream, array('', '', '', '', $this->finance_skontro_label('finance_skontro_difference', 'Difference'), number_format((float) $report['difference'], 2, '.', '')));
         }
         rewind($stream);
         $csv = stream_get_contents($stream);
@@ -3605,6 +3685,23 @@ class Admin_finance extends Admin
             array('type' => 'text', 'name' => 'document_number', 'label' => $text('finance_filter_document_number', 'Document number')),
             array('type' => 'text', 'name' => 'document_integration', 'label' => $text('finance_filter_document_integration', 'Integration number')),
             array('type' => 'text', 'name' => 'person_name', 'label' => $text('finance_filter_person_name', 'Customer / supplier')),
+            array('type' => 'text', 'name' => 'currency_code', 'label' => $text('finance_column_currency', 'Currency')),
+            array('type' => 'range', 'name' => 'amount', 'label' => $text('finance_filter_total_amount', 'Amount')),
+        );
+    }
+
+    private function finance_document_filter_config($kind)
+    {
+        $labels = isset($this->lang->language) && is_array($this->lang->language) ? $this->lang->language : array();
+        $text = function ($key, $fallback) use ($labels) {
+            return isset($labels[$key]) ? $labels[$key] : $fallback;
+        };
+        return array(
+            array('type' => 'text', 'name' => 'integration_number', 'label' => $text('finance_filter_document_integration', 'Integration number')),
+            array('type' => 'text', 'name' => 'person_name', 'label' => $text('finance_filter_person_name', 'Customer / supplier')),
+            array('type' => 'text', 'name' => 'currency_code', 'label' => $text('finance_column_currency', 'Currency')),
+            array('type' => 'range', 'name' => 'total_amount', 'label' => $text('finance_filter_total_amount', 'Total amount')),
+            array('type' => 'range', 'name' => 'outstanding_amount', 'label' => $text('finance_filter_outstanding_amount', 'Outstanding amount')),
         );
     }
 
@@ -3660,6 +3757,7 @@ class Admin_finance extends Admin
             'cash_flow_detail' => 'fin_cash_flow',
             'trial_balance' => 'fin_trial_balance',
             'bank_balance' => 'fin_bank_balance',
+            'cancellation_history' => 'fin_cancellation_history',
             'ar_report' => 'fin_ar_report',
             'ap_report' => 'fin_ap_report',
             'general_ledger' => 'fin_general_ledger',
@@ -3689,6 +3787,17 @@ class Admin_finance extends Admin
                 array('name' => 'account_name', 'label' => 'Cash/bank account'),
                 array('name' => 'cash_in', 'label' => 'Cash in (base)'),
                 array('name' => 'cash_out', 'label' => 'Cash out (base)'),
+            ),
+            'cancellation_history' => array(
+                array('name' => 'requested_on', 'label' => 'Requested at'),
+                array('name' => 'source_type', 'label' => 'Source'),
+                array('name' => 'source_id', 'label' => 'Source ID'),
+                array('name' => 'previous_status', 'label' => 'Previous status'),
+                array('name' => 'status', 'label' => 'Cancellation status'),
+                array('name' => 'reason', 'label' => 'Reason'),
+                array('name' => 'requested_by_name', 'label' => 'Requested by'),
+                array('name' => 'decided_on', 'label' => 'Decided at'),
+                array('name' => 'reversal_number', 'label' => 'Reversal journal'),
             ),
             'bank_balance' => array(
                 array('name' => 'account_code', 'label' => 'Cash/bank code'),
@@ -4038,6 +4147,33 @@ class Admin_finance extends Admin
                 $errors[] = $name . '_invalid';
             }
         }
+        if ($resource['slug'] === 'fiscal_year') {
+            $start = isset($values['start_on']) ? (string) $values['start_on'] : '';
+            $end = isset($values['end_on']) ? (string) $values['end_on'] : '';
+            if ($start !== '' && $end !== '' && $start > $end) {
+                $errors[] = 'end_on_invalid';
+            }
+            if ($start !== '' && $end !== '') {
+                $this->db->from('fin_fiscal_year')->where('tenant_id', (int) $tenant_id)
+                    ->where('start_on <=', $end)->where('end_on >=', $start);
+                if ($id !== NULL) {
+                    $this->db->where('fiscal_year_id !=', (int) $id);
+                }
+                if ($this->db->count_all_results() > 0) {
+                    $errors[] = 'fiscal_year_overlap';
+                }
+            }
+            if (isset($values['status']) && $values['status'] === 'closed' && $id !== NULL) {
+                $open_periods = $this->db->from('fin_accounting_period')
+                    ->where('tenant_id', (int) $tenant_id)
+                    ->where('fiscal_year_id', (int) $id)
+                    ->where('status', 'open')
+                    ->count_all_results();
+                if ($open_periods > 0) {
+                    $errors[] = 'fiscal_year_has_open_periods';
+                }
+            }
+        }
         if ($resource['slug'] === 'accounting_periods') {
             $start = isset($values['start_on']) ? (string) $values['start_on'] : '';
             $end = isset($values['end_on']) ? (string) $values['end_on'] : '';
@@ -4065,7 +4201,7 @@ class Admin_finance extends Admin
             }
             if (isset($values['status']) && $values['status'] === 'closed'
                 && $start !== '' && $end !== '') {
-                $active_statuses = array('draft', 'revise', 'pending_approval', 'approved');
+                $active_statuses = array('draft', 'revise', 'pending_approval', 'approved', 'cancel_pending');
                 $sources = array(
                     array('fin_transaction', 'transaction_on'),
                     array('fin_journal_entry', 'journal_date'),
@@ -4089,6 +4225,57 @@ class Admin_finance extends Admin
                         $errors[] = 'period_has_active_records';
                         break;
                     }
+                }
+            }
+        }
+        if ($resource['slug'] === 'cash_accounts' && !empty($values['account_id'])) {
+            $gl = $this->db->select('account_id,account_type,active_flag,posting_flag')
+                ->where('tenant_id', (int) $tenant_id)
+                ->where('account_id', (int) $values['account_id'])->limit(1)
+                ->get('fin_account')->row_array();
+            if (!$gl || $gl['account_type'] !== 'asset'
+                || (int) $gl['active_flag'] !== 1 || (int) $gl['posting_flag'] !== 1) {
+                $errors[] = 'account_id_invalid';
+            }
+            $this->db->from('fin_cash_account')->where('tenant_id', (int) $tenant_id)
+                ->where('account_id', (int) $values['account_id']);
+            if ($id !== NULL) {
+                $this->db->where('cash_account_id !=', (int) $id);
+            }
+            if ($this->db->count_all_results() > 0) {
+                $errors[] = 'account_id_duplicate';
+            }
+        }
+        if ($resource['slug'] === 'tax_configuration' && !empty($values['account_id'])) {
+            $tax_account = $this->db->select('account_type,active_flag,posting_flag')
+                ->where('tenant_id', (int) $tenant_id)
+                ->where('account_id', (int) $values['account_id'])->limit(1)
+                ->get('fin_account')->row_array();
+            if (!$tax_account || !in_array($tax_account['account_type'], array('asset', 'liability'), TRUE)
+                || (int) $tax_account['active_flag'] !== 1 || (int) $tax_account['posting_flag'] !== 1) {
+                $errors[] = 'account_id_invalid';
+            }
+        }
+        if ($resource['slug'] === 'financial_settings') {
+            $expected = array(
+                'receivable_account_id' => 'asset',
+                'payable_account_id' => 'liability',
+                'fx_gain_account_id' => 'revenue',
+                'fx_loss_account_id' => 'expense',
+                'rounding_gain_account_id' => 'revenue',
+                'rounding_loss_account_id' => 'expense',
+            );
+            foreach ($expected as $field => $type) {
+                if (empty($values[$field])) {
+                    continue;
+                }
+                $account = $this->db->select('account_type,active_flag,posting_flag')
+                    ->where('tenant_id', (int) $tenant_id)
+                    ->where('account_id', (int) $values[$field])->limit(1)
+                    ->get('fin_account')->row_array();
+                if (!$account || $account['account_type'] !== $type
+                    || (int) $account['active_flag'] !== 1 || (int) $account['posting_flag'] !== 1) {
+                    $errors[] = $field . '_invalid';
                 }
             }
         }
@@ -4118,6 +4305,25 @@ class Admin_finance extends Admin
                 : strtoupper($match[2]);
             return $match[1] . $first;
         }, $value);
+    }
+
+    /** Prevent spreadsheet formula execution in exported CSV cells. */
+    private function finance_csv_cell($value)
+    {
+        $value = (string) $value;
+        if ($value !== '' && preg_match('/^[=+\-@\t\r]/', $value)) {
+            return "'" . $value;
+        }
+        return $value;
+    }
+
+    private function finance_csv_row($stream, $row)
+    {
+        $safe = array();
+        foreach ((array) $row as $value) {
+            $safe[] = $this->finance_csv_cell($value);
+        }
+        return fputcsv($stream, $safe);
     }
 
     private function finance_menu_allowed($resource)

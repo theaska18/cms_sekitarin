@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'Eröffnungssalden';
 $lang['admin_finance_accounting_periods'] = 'Buchungsperioden';
 $lang['admin_finance_profit_loss'] = 'Gewinn und Verlust';
 $lang['admin_finance_balance_sheet'] = 'Bilanz';
+$lang['admin_finance_cancellation_history'] = 'Stornierungsverlauf';
 $lang['admin_finance_cash_flow'] = 'Kapitalflussrechnung';
 $lang['admin_finance_bank_balance'] = 'Banksaldo';
 $lang['admin_finance_trial_balance'] = 'Summen- und Saldenliste';

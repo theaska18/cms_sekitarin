@@ -180,27 +180,55 @@
     function configFor(tableId) {
         var path = String(window.location.pathname || '').replace(/\/+$/, '');
         if (tableId === 'finance-transaction-table') {
-            if (path.indexOf('/admin/finance/income') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_income'};
-            if (path.indexOf('/admin/finance/expenses') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_expenses'};
+            if (path.indexOf('/admin/finance/income') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_income', slug: 'income'};
+            if (path.indexOf('/admin/finance/expenses') === 0) return {source: 'fin_transaction', id: 'transaction_id', menu: 'fin_expenses', slug: 'expenses'};
             return null;
         }
         if (tableId === 'finance-document-table') {
-            if (path.indexOf('/admin/finance/sales_invoices') === 0) return {source: 'fin_sales_invoice', id: 'sales_invoice_id', menu: 'fin_sales_invoices'};
-            if (path.indexOf('/admin/finance/purchase_bills') === 0) return {source: 'fin_purchase_bill', id: 'purchase_bill_id', menu: 'fin_purchase_bills'};
+            if (path.indexOf('/admin/finance/sales_invoices') === 0) return {source: 'fin_sales_invoice', id: 'sales_invoice_id', menu: 'fin_sales_invoices', slug: 'sales_invoices'};
+            if (path.indexOf('/admin/finance/purchase_bills') === 0) return {source: 'fin_purchase_bill', id: 'purchase_bill_id', menu: 'fin_purchase_bills', slug: 'purchase_bills'};
             return null;
         }
         if (tableId === 'finance-payment-table') {
-            if (path.indexOf('/admin/finance/customer_payments') === 0) return {source: 'fin_customer_payment', id: 'customer_payment_id', menu: 'fin_customer_payments'};
-            if (path.indexOf('/admin/finance/supplier_payments') === 0) return {source: 'fin_supplier_payment', id: 'supplier_payment_id', menu: 'fin_supplier_payments'};
+            if (path.indexOf('/admin/finance/customer_payments') === 0) return {source: 'fin_customer_payment', id: 'customer_payment_id', menu: 'fin_customer_payments', slug: 'customer_payments'};
+            if (path.indexOf('/admin/finance/supplier_payments') === 0) return {source: 'fin_supplier_payment', id: 'supplier_payment_id', menu: 'fin_supplier_payments', slug: 'supplier_payments'};
             return null;
         }
-        if (tableId === 'finance-transfer-table') return {source: 'fin_cash_transfer', id: 'cash_transfer_id', menu: 'fin_cash_bank_transfer'};
-        if (tableId === 'finance-reconciliation-table') return {source: 'fin_bank_reconciliation', id: 'reconciliation_id', menu: 'fin_bank_reconciliation'};
+        if (tableId === 'finance-transfer-table') return {source: 'fin_cash_transfer', id: 'cash_transfer_id', menu: 'fin_cash_bank_transfer', slug: 'cash_bank_transfer'};
+        if (tableId === 'finance-reconciliation-table') return {source: 'fin_bank_reconciliation', id: 'reconciliation_id', menu: 'fin_bank_reconciliation', slug: 'bank_reconciliation'};
         if (tableId === 'finance-journal-table') {
-            if (path.indexOf('/admin/finance/opening_balances') === 0) return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_opening_balances'};
-            return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_journal_entries'};
+            if (path.indexOf('/admin/finance/opening_balances') === 0) return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_opening_balances', slug: 'opening_balances'};
+            return {source: 'fin_journal_entry', id: 'journal_entry_id', menu: 'fin_journal_entries', slug: 'journal_entries'};
         }
         return null;
+    }
+
+    function ensureMenu(actionCell, source, sourceId) {
+        var menu = actionCell.querySelector('[role="menu"]');
+        if (menu) return menu;
+        actionCell.textContent = '';
+        var wrap = document.createElement('div');
+        wrap.className = 'relative inline-flex';
+        var toggleId = 'finance-cancel-menu-' + source + '-' + sourceId;
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.setAttribute('data-finance-cancel-toggle', '1');
+        toggle.setAttribute('aria-haspopup', 'menu');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', toggleId);
+        toggle.setAttribute('aria-label', 'Tindakan');
+        toggle.className = 'inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
+        toggle.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>';
+        menu = document.createElement('div');
+        menu.id = toggleId;
+        menu.setAttribute('data-finance-menu', '1');
+        menu.setAttribute('role', 'menu');
+        menu.hidden = true;
+        menu.className = 'fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg';
+        wrap.appendChild(toggle);
+        wrap.appendChild(menu);
+        actionCell.appendChild(wrap);
+        return menu;
     }
 
     function inject(table) {
@@ -211,48 +239,39 @@
         api.rows().every(function () {
             var row = this.data();
             var node = this.node();
-            if (!row || !node || ['approved', 'posted', 'completed'].indexOf(String(row.status || '')) === -1) return;
+            if (!row || !node) return;
+            var status = String(row.status || '');
+            var cancellable = ['approved', 'posted', 'completed'].indexOf(status) !== -1;
+            var deletable = status === 'draft' || status === 'revise';
+            if (!cancellable && !deletable) return;
             var sourceId = parseInt(row[cfg.id], 10) || 0;
             if (!sourceId) return;
             var actionCell = node.querySelector('td');
             if (!actionCell) return;
-            var menu = actionCell.querySelector('[role="menu"]');
-            if (menu && menu.querySelector('[data-finance-cancel-open]')) return;
-            if (!menu) {
-                actionCell.textContent = '';
-                var wrap = document.createElement('div');
-                wrap.className = 'relative inline-flex';
-                var toggleId = 'finance-cancel-menu-' + cfg.source + '-' + sourceId;
-                var toggle = document.createElement('button');
-                toggle.type = 'button';
-                toggle.setAttribute('data-finance-cancel-toggle', '1');
-                toggle.setAttribute('aria-haspopup', 'menu');
-                toggle.setAttribute('aria-expanded', 'false');
-                toggle.setAttribute('aria-controls', toggleId);
-                toggle.setAttribute('aria-label', 'Tindakan');
-                toggle.className = 'inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
-                toggle.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>';
-                menu = document.createElement('div');
-                menu.id = toggleId;
-                menu.setAttribute('data-finance-menu', '1');
-                menu.setAttribute('role', 'menu');
-                menu.hidden = true;
-                menu.className = 'fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg';
-                wrap.appendChild(toggle);
-                wrap.appendChild(menu);
-                actionCell.appendChild(wrap);
+            var menu = ensureMenu(actionCell, cfg.source, sourceId);
+            if (deletable && !menu.querySelector('[data-finance-draft-delete]')) {
+                var del = document.createElement('button');
+                del.type = 'button';
+                del.setAttribute('role', 'menuitem');
+                del.setAttribute('data-finance-draft-delete', '1');
+                del.setAttribute('data-delete-url', '/admin/finance/' + cfg.slug + '/delete_draft/' + sourceId);
+                del.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none';
+                del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>Hapus draft';
+                menu.appendChild(del);
             }
-            var button = document.createElement('button');
-            button.type = 'button';
-            button.setAttribute('role', 'menuitem');
-            button.setAttribute('data-finance-cancel-open', '1');
-            button.setAttribute('data-source-type', cfg.source);
-            button.setAttribute('data-source-id', String(sourceId));
-            button.setAttribute('data-menu-code', cfg.menu);
-            button.setAttribute('data-cancel-label', String(row.transaction_number || row.invoice_number || row.bill_number || row.payment_number || row.transfer_number || row.reconciliation_number || row.journal_number || ('#' + sourceId)));
-            button.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none';
-            button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>Batalkan';
-            menu.appendChild(button);
+            if (cancellable && !menu.querySelector('[data-finance-cancel-open]')) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.setAttribute('role', 'menuitem');
+                button.setAttribute('data-finance-cancel-open', '1');
+                button.setAttribute('data-source-type', cfg.source);
+                button.setAttribute('data-source-id', String(sourceId));
+                button.setAttribute('data-menu-code', cfg.menu);
+                button.setAttribute('data-cancel-label', String(row.transaction_number || row.invoice_number || row.bill_number || row.payment_number || row.transfer_number || row.reconciliation_number || row.journal_number || ('#' + sourceId)));
+                button.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none';
+                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>Batalkan';
+                menu.appendChild(button);
+            }
         });
     }
 
@@ -292,6 +311,16 @@
         dialog.showModal();
         var reason = dialog.querySelector('[name="reason"]');
         if (reason) setTimeout(function () { reason.focus(); }, 30);
+    });
+    document.addEventListener('click', function (event) {
+        var deleteButton = event.target.closest('[data-finance-draft-delete]');
+        if (!deleteButton) return;
+        event.preventDefault();
+        if (!window.confirm('Hapus draft ini? Tindakan ini tidak dapat dibatalkan.')) return;
+        var form = document.getElementById('finance-draft-delete-form');
+        if (!form) return;
+        form.action = deleteButton.getAttribute('data-delete-url') || '';
+        form.submit();
     });
     document.addEventListener('click', function (event) {
         if (event.target.closest('[data-finance-cancel-close]')) {

@@ -80,11 +80,19 @@ class Finance_integration_store
         $this->apply_search($spec, $search);
         $this->apply_filters($spec, $filters);
         $document_table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
-        $draft_status = '(SELECT d.status FROM `' . $document_table . '` d'
-            . ' WHERE d.' . $spec['document_id'] . '=t.' . $spec['document_id']
-            . ' AND d.tenant_id=t.tenant_id LIMIT 1)';
-        $query = $this->db->select('t.*,' . $draft_status . ' AS draft_status', FALSE)
+        $selected = array(
+            $spec['id'], 'tenant_id', 'created_by', $spec['number'], $spec['date'],
+            'due_date', $spec['party_name'], $spec['party_code'], 'amount_before_tax',
+            'tax_percent', 'tax_amount', 'total_amount', 'description', 'status',
+            'received_at', 'processed_at', $spec['document_id'],
+        );
+        if ($this->db->field_exists('cancelled_at', $spec['table'])) {
+            $selected[] = 'cancelled_at';
+        }
+        $select = 't.' . implode(',t.', $selected) . ',d.status AS draft_status';
+        $query = $this->db->select($select, FALSE)
             ->from($spec['table'] . ' t')
+            ->join($document_table . ' d', 'd.' . $spec['document_id'] . '=t.' . $spec['document_id'] . ' AND d.tenant_id=t.tenant_id', 'left')
             ->where('t.tenant_id', (int) $tenant_id)
             ->order_by($order_column, $direction)
             ->order_by('t.' . $spec['id'], 'DESC')

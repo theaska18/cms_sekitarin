@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = 'Saldo Awal';
 $lang['admin_finance_accounting_periods'] = 'Periode Akuntansi';
 $lang['admin_finance_profit_loss'] = 'Laba Rugi';
 $lang['admin_finance_balance_sheet'] = 'Neraca';
+$lang['admin_finance_cancellation_history'] = 'Riwayat Pembatalan';
 $lang['admin_finance_cash_flow'] = 'Arus Kas';
 $lang['admin_finance_trial_balance'] = 'Neraca Saldo';
 $lang['admin_finance_bank_balance'] = 'Saldo Bank';

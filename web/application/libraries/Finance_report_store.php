@@ -37,6 +37,9 @@ class Finance_report_store
             $required['fin_supplier_payment'] = array('tenant_id', 'supplier_payment_id', 'status');
         } elseif (in_array($report, array('cash_flow', 'cash_flow_detail', 'bank_balance'), TRUE)) {
             $required['fin_cash_account'] = array('tenant_id', 'cash_account_id', 'account_id', 'account_code', 'account_name', 'currency_code', 'active_flag');
+        } elseif ($report === 'cancellation_history') {
+            $required['fin_cancellation'] = array('tenant_id', 'source_type', 'source_id', 'previous_status', 'status', 'reason', 'requested_by', 'requested_on', 'decided_on', 'reversal_journal_id');
+            $required['app_user'] = array('tenant_id', 'user_id', 'full_name', 'username');
         }
         foreach ($required as $table => $columns) {
             if (!$this->db->table_exists($table)) {
@@ -132,20 +135,45 @@ class Finance_report_store
 
     public function summary($report, $tenant_id, $start, $end)
     {
-        $rows = $this->rows($report, $tenant_id, $start, $end);
-        if ($rows === FALSE) {
+        if (!$this->available($report)) {
             return FALSE;
         }
-        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance');
-        $totals = array_fill_keys($numeric, 0.0);
-        foreach ($rows as $row) {
-            foreach ($numeric as $field) {
-                if (isset($row[$field])) {
-                    $totals[$field] += (float) $row[$field];
-                }
-            }
+        $base = $report;
+        if ($base === 'profit_loss_detail') {
+            $base = 'profit_loss';
+        } elseif ($base === 'cash_flow_detail') {
+            $base = 'cash_flow';
         }
-        $totals['row_count'] = count($rows);
+        $fields_by_report = array(
+            'general_ledger' => array('debit_base_amount', 'credit_base_amount'),
+            'cash_flow' => array('cash_in', 'cash_out'),
+            'ar_report' => array('billed', 'paid', 'outstanding'),
+            'ap_report' => array('billed', 'paid', 'outstanding'),
+            'bank_balance' => array('opening_balance', 'cash_in', 'cash_out', 'ending_balance'),
+            'profit_loss' => array('debit_total', 'credit_total', 'net_debit'),
+            'balance_sheet' => array('debit_total', 'credit_total', 'net_debit'),
+            'trial_balance' => array('debit_total', 'credit_total', 'net_debit'),
+        );
+        $numeric = array('debit_base_amount','credit_base_amount','debit_total','credit_total','net_debit','cash_in','cash_out','billed','paid','outstanding','opening_balance','ending_balance');
+        $fields = isset($fields_by_report[$base]) ? $fields_by_report[$base] : array();
+        list($sql, $binds) = $this->query($report, $tenant_id, $start, $end, '');
+        $select = array('COUNT(*) AS row_count');
+        foreach ($fields as $field) {
+            $select[] = 'COALESCE(SUM(`' . $field . '`),0) AS `' . $field . '`';
+        }
+        $result = $this->db->query(
+            'SELECT ' . implode(',', $select) . ' FROM (' . $sql . ') finance_summary',
+            $binds
+        );
+        if ($result === FALSE) {
+            return FALSE;
+        }
+        $row = $result->row_array();
+        $totals = array_fill_keys($numeric, 0.0);
+        foreach ($fields as $field) {
+            $totals[$field] = (float) $row[$field];
+        }
+        $totals['row_count'] = (int) $row['row_count'];
         return $totals;
     }
 
@@ -795,6 +823,26 @@ class Finance_report_store
             return array($sql, $binds, array('period' => 'period', 'account_code' => 'account_code', 'cash_in' => 'cash_in', 'cash_out' => 'cash_out'));
         }
 
+        if ($report === 'cancellation_history') {
+            $sql = 'SELECT c.requested_on,c.source_type,c.source_id,c.previous_status,c.status,c.reason,c.decided_on,'
+                . "COALESCE(NULLIF(u.full_name,''),u.username) AS requested_by_name,"
+                . 'je.journal_number AS reversal_number '
+                . 'FROM fin_cancellation c '
+                . 'LEFT JOIN app_user u ON u.user_id=c.requested_by AND u.tenant_id=c.tenant_id '
+                . 'LEFT JOIN fin_journal_entry je ON je.journal_entry_id=c.reversal_journal_id AND je.tenant_id=c.tenant_id '
+                . 'WHERE c.tenant_id=?';
+            $sql .= $this->date_filter('c.requested_on', $start, $end, $binds);
+            if ($search !== '') {
+                $sql .= ' AND (c.source_type LIKE ? OR c.reason LIKE ? OR u.full_name LIKE ? OR u.username LIKE ? OR je.journal_number LIKE ?)';
+                array_push($binds, $like, $like, $like, $like, $like);
+            }
+            return array($sql, $binds, array(
+                'requested_on' => 'requested_on', 'source_type' => 'source_type',
+                'source_id' => 'source_id', 'status' => 'status',
+                'requested_by_name' => 'requested_by_name', 'decided_on' => 'decided_on',
+            ));
+        }
+
         if ($report === 'bank_balance') {
             $sql = 'SELECT ca.account_code,ca.account_name,ca.currency_code,'
                 . 'COALESCE(SUM(CASE WHEN je.journal_date < ? THEN jl.debit_base_amount-jl.credit_base_amount ELSE 0 END),0) AS opening_balance,'
@@ -805,7 +853,7 @@ class Finance_report_store
                 . 'INNER JOIN fin_account a ON a.account_id=ca.account_id AND a.tenant_id=ca.tenant_id '
                 . 'LEFT JOIN fin_journal_line jl ON jl.account_id=a.account_id AND jl.tenant_id=ca.tenant_id '
                 . 'LEFT JOIN fin_journal_entry je ON je.journal_entry_id=jl.journal_entry_id AND je.tenant_id=jl.tenant_id AND je.status="posted" '
-                . 'WHERE ca.tenant_id=? AND ca.active_flag=1';
+                . 'WHERE ca.tenant_id=?';
             $binds = array($start, $start, $end, $start, $end, $end, (int) $tenant_id);
             if ($search !== '') {
                 $sql .= ' AND (ca.account_code LIKE ? OR ca.account_name LIKE ? OR ca.currency_code LIKE ?)';

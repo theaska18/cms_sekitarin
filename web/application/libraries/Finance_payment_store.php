@@ -51,6 +51,9 @@ class Finance_payment_store
         if (!empty($fields['document_number'])) $this->db->like('doc.' . $spec['document_number'], $fields['document_number']);
         if (!empty($fields['document_integration'])) $this->db->like('doc.integration_number', $fields['document_integration']);
         if (!empty($fields['person_name'])) $this->db->like('dp.' . $spec['person_name'], $fields['person_name']);
+        if (!empty($fields['currency_code'])) $this->db->where('p.currency_code', strtoupper((string) $fields['currency_code']));
+        if (!empty($fields['amount']['min'])) $this->db->where('p.amount >=', $fields['amount']['min']);
+        if (!empty($fields['amount']['max'])) $this->db->where('p.amount <=', $fields['amount']['max']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)
                 ->or_like('doc.' . $spec['document_number'], $search)->or_like('dp.' . $spec['person_name'], $search)
@@ -65,7 +68,7 @@ class Finance_payment_store
         if (!$this->available($kind)) return FALSE;
         $spec = $this->spec($kind);
         $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
-        $allowed = array('payment_number', 'payment_date', 'amount', 'currency_code', 'status', 'document_number', 'integration_number', 'person_name');
+        $allowed = array('payment_number', 'payment_date', 'amount', 'currency_code', 'status', 'document_number', 'integration_number', 'document_integration_number', 'person_name');
         $order = in_array($order, $allowed, TRUE) ? $order : 'payment_date';
         $this->db->select('p.' . $spec['id'] . ',p.payment_number,p.payment_date,p.amount,p.currency_code,p.status,p.reference,p.approval_request_id,'
             . 'doc.' . $spec['document_number'] . ' AS document_number,doc.integration_number AS document_integration_number,'
@@ -87,6 +90,9 @@ class Finance_payment_store
         if (!empty($fields['document_number'])) $this->db->like('doc.' . $spec['document_number'], $fields['document_number']);
         if (!empty($fields['document_integration'])) $this->db->like('doc.integration_number', $fields['document_integration']);
         if (!empty($fields['person_name'])) $this->db->like('dp.' . $spec['person_name'], $fields['person_name']);
+        if (!empty($fields['currency_code'])) $this->db->where('p.currency_code', strtoupper((string) $fields['currency_code']));
+        if (!empty($fields['amount']['min'])) $this->db->where('p.amount >=', $fields['amount']['min']);
+        if (!empty($fields['amount']['max'])) $this->db->where('p.amount <=', $fields['amount']['max']);
         if (trim((string) $search) !== '') {
             $this->db->group_start()->like('p.payment_number', $search)->or_like('p.reference', $search)
                 ->or_like('doc.' . $spec['document_number'], $search)->or_like('dp.' . $spec['person_name'], $search)
@@ -94,7 +100,7 @@ class Finance_payment_store
         }
         $order_column = in_array($order, array('created_by_name'), TRUE) ? $order
             : ($order === 'document_number' ? 'doc.' . $spec['document_number']
-                : ($order === 'integration_number' ? 'doc.integration_number'
+                : (in_array($order, array('integration_number', 'document_integration_number'), TRUE) ? 'doc.integration_number'
                     : ($order === 'person_name' ? 'dp.' . $spec['person_name'] : 'p.' . $order)));
         $query = $this->db->order_by($order_column, strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC')
             ->order_by('p.' . $spec['id'], 'DESC')->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))->get();
@@ -127,13 +133,35 @@ class Finance_payment_store
         $amount = round((float) $values['amount'], 6);
         $rate = (float) $values['exchange_rate'];
         if ($amount <= 0 || $rate <= 0) return 'amount_invalid';
+        $settings = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
+        if ($settings === FALSE || !$settings->num_rows()) return 'settings_missing';
+        $settings_row = $settings->row_array();
+        $tolerance = max(0, round((float) $settings_row['rounding_tolerance'], 6));
+        $base_currency = strtoupper((string) $settings_row['base_currency']);
+        if ($doc['currency_code'] === $base_currency && abs($rate - 1) > 0.0000001) return 'exchange_rate_invalid';
+
+        $this->db->trans_begin();
+        // Lock the document so two concurrent drafts cannot reserve the same balance.
+        $locked = $this->db->query(
+            'SELECT * FROM `' . $spec['document_table'] . '` WHERE tenant_id = ? AND '
+            . $spec['document_id'] . ' = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant, (int) $values['document_id'])
+        );
+        if ($locked === FALSE || !$locked->num_rows()) {
+            $this->db->trans_rollback();
+            return 'document_invalid';
+        }
+        $doc = $locked->row_array();
+        if ($doc['status'] !== 'posted') {
+            $this->db->trans_rollback();
+            return 'document_invalid';
+        }
         $posted = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
             ->from($spec['allocation'] . ' a')
             ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
             ->where('a.tenant_id', (int) $tenant)
             ->where('a.' . $spec['document_id'], (int) $values['document_id'])
             ->where('p.status', 'posted')->get();
-        if ($posted === FALSE) return 'unavailable';
         // Draft, revise, pending, and approved payments reserve the document balance
         // so two unposted payments cannot be allocated to the same outstanding amount.
         $reserved = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
@@ -146,26 +174,31 @@ class Finance_payment_store
             $reserved->where('p.' . $spec['id'] . ' !=', (int) $id);
         }
         $reserved = $reserved->get();
-        if ($reserved === FALSE) return 'unavailable';
+        if ($posted === FALSE || $reserved === FALSE) {
+            $this->db->trans_rollback();
+            return 'unavailable';
+        }
         $outstanding = round((float) $doc['total_amount'] - (float) $posted->row()->allocated - (float) $reserved->row()->allocated, 6);
-        if ($outstanding <= 0.000001) return 'overpayment';
-        $settings = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
-        if ($settings === FALSE || !$settings->num_rows()) return 'settings_missing';
-        $settings_row = $settings->row_array();
-        $tolerance = max(0, round((float) $settings_row['rounding_tolerance'], 6));
-        if ($amount > $outstanding + $tolerance + 0.000001) return 'overpayment';
+        if ($outstanding <= 0.000001) {
+            $this->db->trans_rollback();
+            return 'overpayment';
+        }
+        if ($amount > $outstanding + $tolerance + 0.000001) {
+            $this->db->trans_rollback();
+            return 'overpayment';
+        }
         $applied = $amount > $outstanding ? $outstanding : $amount;
         $rounding = round($amount - $applied, 6);
-        $base_currency = strtoupper((string) $settings_row['base_currency']);
-        if ($doc['currency_code'] === $base_currency && abs($rate - 1) > 0.0000001) return 'exchange_rate_invalid';
         if ($rounding > 0.000001) {
             $rounding_account = $kind === 'customer' ? 'rounding_gain_account_id' : 'rounding_loss_account_id';
-            if (empty($settings_row[$rounding_account])) return 'rounding_account_missing';
+            if (empty($settings_row[$rounding_account])) {
+                $this->db->trans_rollback();
+                return 'rounding_account_missing';
+            }
         }
         $payment_base = round($amount * $rate, 6);
         $allocation_base = round($applied * (float) $doc['exchange_rate'], 6);
 
-        $this->db->trans_begin();
         if ($id !== NULL) {
             $existing = $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->limit(1)->get($spec['table']);
             if ($existing === FALSE || !$existing->num_rows() || !in_array((string) $existing->row()->status, array('draft', 'revise'), TRUE)) {
@@ -254,19 +287,6 @@ class Finance_payment_store
         $doc = $this->tenant_row($spec['document_table'], $spec['document_id'], $tenant, $alloc[$spec['document_id']]);
         if (!$doc || $doc['status'] !== 'posted' || $doc['currency_code'] !== $payment['currency_code']
             || (int) $doc[$spec['person_id']] !== (int) $payment[$spec['person_id']]) return 'document_invalid';
-        $posted_allocations = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
-            ->from($spec['allocation'] . ' a')
-            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
-            ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
-            ->where('p.status', 'posted')->get();
-        $active_reserved = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
-            ->from($spec['allocation'] . ' a')
-            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
-            ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
-            ->where_in('p.status', array('draft', 'revise', 'pending_approval', 'approved'))
-            ->where('p.' . $spec['id'] . ' !=', (int) $id)->get();
-        if ($posted_allocations === FALSE || $active_reserved === FALSE
-            || (float) $alloc['amount'] > (float) $doc['total_amount'] - (float) $posted_allocations->row()->allocated - (float) $active_reserved->row()->allocated + 0.000001) return 'overpayment';
         $settings_q = $this->db->where('tenant_id', (int) $tenant)->limit(1)->get('fin_settings');
         if ($settings_q === FALSE || !$settings_q->num_rows()) return 'settings_missing';
         $settings = $settings_q->row_array();
@@ -324,6 +344,36 @@ class Finance_payment_store
             if ($kind === 'customer') $credit += abs($rounding_base); else $debit += abs($rounding_base);
         }
         $this->db->trans_begin();
+        $locked = $this->db->query(
+            'SELECT * FROM `' . $spec['document_table'] . '` WHERE tenant_id = ? AND '
+            . $spec['document_id'] . ' = ? LIMIT 1 FOR UPDATE',
+            array((int) $tenant, (int) $doc[$spec['document_id']])
+        );
+        if ($locked === FALSE || !$locked->num_rows()) {
+            $this->db->trans_rollback();
+            return 'document_invalid';
+        }
+        $doc = $locked->row_array();
+        if ($doc['status'] !== 'posted' || $doc['currency_code'] !== $payment['currency_code']) {
+            $this->db->trans_rollback();
+            return 'document_invalid';
+        }
+        $posted_allocations = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
+            ->from($spec['allocation'] . ' a')
+            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
+            ->where('p.status', 'posted')->get();
+        $active_reserved = $this->db->select('COALESCE(SUM(a.amount),0) AS allocated', FALSE)
+            ->from($spec['allocation'] . ' a')
+            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant)->where('a.' . $spec['document_id'], (int) $doc[$spec['document_id']])
+            ->where_in('p.status', array('draft', 'revise', 'pending_approval', 'approved'))
+            ->where('p.' . $spec['id'] . ' !=', (int) $id)->get();
+        if ($posted_allocations === FALSE || $active_reserved === FALSE
+            || (float) $alloc['amount'] > (float) $doc['total_amount'] - (float) $posted_allocations->row()->allocated - (float) $active_reserved->row()->allocated + 0.000001) {
+            $this->db->trans_rollback();
+            return 'overpayment';
+        }
         if ($kind === 'supplier') {
             $CI =& get_instance();
             $CI->load->library('finance_balance_guard');
@@ -378,7 +428,7 @@ class Finance_payment_store
         }
         $this->db->where('tenant_id', (int) $tenant)->where($spec['id'], (int) $id)->where('status', 'approved')
             ->update($spec['table'], array('status' => 'posted', 'posted_on' => date('Y-m-d H:i:s'), 'posted_by' => (int) $user));
-        if ($journal_id < 1 || $this->db->trans_status() === FALSE) {
+        if ($journal_id < 1 || $this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return 'post_error';
         }
@@ -387,7 +437,7 @@ class Finance_payment_store
     }
 
     /** Posted, in-process, and outstanding amounts for one invoice/bill. */
-    public function document_financials($tenant, $kind, $document_id)
+    public function document_financials($tenant, $kind, $document_id, $exclude_payment_id = NULL)
     {
         $spec = $this->spec($kind);
         if ($spec === NULL || !$this->available($kind) || (int) $document_id < 1) {
@@ -397,7 +447,7 @@ class Finance_payment_store
         if (!$document) {
             return NULL;
         }
-        $totals = $this->allocation_totals($tenant, $kind, array((int) $document_id));
+        $totals = $this->allocation_totals($tenant, $kind, array((int) $document_id), $exclude_payment_id);
         $by_status = isset($totals[(int) $document_id]) ? $totals[(int) $document_id] : array();
         $paid = 0.0;
         $pending = 0.0;
@@ -416,11 +466,12 @@ class Finance_payment_store
             'paid_amount' => round($paid, 6),
             'pending_amount' => round($pending, 6),
             'outstanding_amount' => round($total - $paid, 6),
+            'available_amount' => round($total - $paid - $pending, 6),
         );
     }
 
     /** Allocation totals grouped by document and payment status. */
-    private function allocation_totals($tenant, $kind, $document_ids)
+    private function allocation_totals($tenant, $kind, $document_ids, $exclude_payment_id = NULL)
     {
         $spec = $this->spec($kind);
         $totals = array();
@@ -435,8 +486,11 @@ class Finance_payment_store
             ->from($spec['allocation'] . ' a')
             ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
             ->where('a.tenant_id', (int) $tenant)
-            ->where_in('a.' . $spec['document_id'], $document_ids)
-            ->group_by(array('a.' . $spec['document_id'], 'p.status'))
+            ->where_in('a.' . $spec['document_id'], $document_ids);
+        if ($exclude_payment_id !== NULL && (int) $exclude_payment_id > 0) {
+            $this->db->where('p.' . $spec['id'] . ' !=', (int) $exclude_payment_id);
+        }
+        $query = $this->db->group_by(array('a.' . $spec['document_id'], 'p.status'))
             ->get();
         if ($query === FALSE) {
             return $totals;
@@ -527,6 +581,7 @@ class Finance_payment_store
                 'paid_amount' => round($paid, 6),
                 'pending_amount' => round($pending, 6),
                 'outstanding_amount' => $outstanding,
+                'available_amount' => round($outstanding - $pending, 6),
             );
         }
         return $results;

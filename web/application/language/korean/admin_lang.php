@@ -40,6 +40,7 @@ $lang['admin_finance_opening_balances'] = '기초 잔액';
 $lang['admin_finance_accounting_periods'] = '회계 기간';
 $lang['admin_finance_profit_loss'] = '손익계산서';
 $lang['admin_finance_balance_sheet'] = '재무상태표';
+$lang['admin_finance_cancellation_history'] = '취소 기록';
 $lang['admin_finance_cash_flow'] = '현금흐름표';
 $lang['admin_finance_bank_balance'] = '은행 잔액';
 $lang['admin_finance_trial_balance'] = '시산표';

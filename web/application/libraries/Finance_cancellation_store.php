@@ -78,6 +78,7 @@ class Finance_cancellation_store
         }
         $CI =& get_instance();
         $CI->load->library('approval_workflow_store');
+        $this->db->trans_begin();
         $inserted = $this->db->insert('fin_cancellation', array(
             'tenant_id' => (int) $tenant_id,
             'source_type' => $source_type,
@@ -89,10 +90,11 @@ class Finance_cancellation_store
             'requested_by' => (int) $user_id,
             'requested_on' => date('Y-m-d H:i:s'),
         ));
-        if ($inserted !== TRUE) {
+        $cancellation_id = (int) $this->db->insert_id();
+        if ($inserted !== TRUE || $cancellation_id < 1) {
+            $this->db->trans_rollback();
             return array('ok' => FALSE, 'error' => 'save');
         }
-        $cancellation_id = (int) $this->db->insert_id();
         $result = $CI->approval_workflow_store->submit(
             $flow_code,
             'Pembatalan ' . $this->label($source_type, $row),
@@ -103,7 +105,7 @@ class Finance_cancellation_store
             'cancel'
         );
         if (!is_array($result) || empty($result['request_id'])) {
-            $this->db->where('cancellation_id', $cancellation_id)->delete('fin_cancellation');
+            $this->db->trans_rollback();
             return array('ok' => FALSE, 'error' => 'approval');
         }
         $request_id = (int) $result['request_id'];
@@ -114,20 +116,25 @@ class Finance_cancellation_store
         // because the cancellation row is linked to the request only after submit().
         if (isset($result['status']) && $result['status'] === 'auto_approved') {
             if ($this->finalize_for_request($request_id, 'approved') === FALSE) {
-                $this->db->where(array('tenant_id' => (int) $tenant_id, $spec['id'] => (int) $source_id))
-                    ->where('status', 'cancel_pending')
-                    ->update($spec['table'], array('status' => $status));
-                $this->db->where('cancellation_id', $cancellation_id)->update('fin_cancellation', array(
-                    'status' => 'failed',
-                    'decided_on' => date('Y-m-d H:i:s'),
-                ));
                 $balance_check = $this->validate_reversal_balance($tenant_id, $source_type, (int) $source_id, $status);
+                $this->db->trans_rollback();
                 return array('ok' => FALSE, 'error' => $balance_check !== 'ok' ? $balance_check : 'approval');
             }
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+                return array('ok' => FALSE, 'error' => 'approval');
+            }
+            $this->db->trans_commit();
             return array('ok' => TRUE, 'error' => '', 'request_id' => $request_id, 'auto_approved' => TRUE);
         }
         $this->db->where(array('tenant_id' => (int) $tenant_id, $spec['id'] => (int) $source_id))
+            ->where('status', $status)
             ->update($spec['table'], array('status' => 'cancel_pending'));
+        if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
+            $this->db->trans_rollback();
+            return array('ok' => FALSE, 'error' => 'pending');
+        }
+        $this->db->trans_commit();
         return array('ok' => TRUE, 'error' => '', 'request_id' => $request_id);
     }
 
@@ -273,6 +280,39 @@ class Finance_cancellation_store
         return $count === FALSE ? TRUE : $count > 0;
     }
 
+    /**
+     * Reversal journals post in the current open period. If no period covers
+     * today, fall back to the original journal date when that period is open.
+     * This allows correcting prior periods without reopening them.
+     */
+    private function reversal_target($tenant_id, $original_date)
+    {
+        $tenant_id = (int) $tenant_id;
+        $original_date = (string) $original_date;
+        foreach (array(date('Y-m-d'), $original_date) as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+            $periods = $this->db->select('period_id,start_on,end_on')
+                ->from('fin_accounting_period')
+                ->where('tenant_id', $tenant_id)
+                ->where('start_on <=', $candidate)
+                ->where('end_on >=', $candidate)
+                ->where('status', 'open')
+                ->order_by('period_id', 'ASC')->get();
+            if ($periods === FALSE) {
+                continue;
+            }
+            if ($periods->num_rows() === 1) {
+                return array('status' => 'ok', 'date' => $candidate, 'period_id' => (int) $periods->row()->period_id);
+            }
+            if ($periods->num_rows() > 1 && $candidate === date('Y-m-d')) {
+                return array('status' => 'period_ambiguous', 'date' => $candidate, 'period_id' => 0);
+            }
+        }
+        return array('status' => 'period_closed', 'date' => '', 'period_id' => 0);
+    }
+
     /** Reversal journals must land in exactly one open accounting period. */
     private function reversal_period_status($tenant_id, $source_type, $source_id, $previous_status)
     {
@@ -280,17 +320,8 @@ class Finance_cancellation_store
         if (empty($context['needed']) || empty($context['original']['journal_date'])) {
             return 'ok';
         }
-        $date = (string) $context['original']['journal_date'];
-        $count = $this->db->from('fin_accounting_period')
-            ->where('tenant_id', (int) $tenant_id)
-            ->where('start_on <=', $date)
-            ->where('end_on >=', $date)
-            ->where('status', 'open')
-            ->count_all_results();
-        if ($count === FALSE) {
-            return 'period_closed';
-        }
-        return $count === 1 ? 'ok' : ($count > 1 ? 'period_ambiguous' : 'period_closed');
+        $target = $this->reversal_target($tenant_id, (string) $context['original']['journal_date']);
+        return $target['status'];
     }
 
     /** Validate that posting the reversal would not take a cash/bank account below zero. */
@@ -364,6 +395,10 @@ class Finance_cancellation_store
             return isset($context['existing_id']) ? (int) $context['existing_id'] : NULL;
         }
         $original = $context['original'];
+        $target = $this->reversal_target($tenant_id, (string) $original['journal_date']);
+        if ($target['status'] !== 'ok') {
+            return FALSE;
+        }
         $original_id = (int) $original['journal_entry_id'];
         $number = 'CNL-' . substr((string) $original['journal_number'], 0, 40);
         $suffix = 1;
@@ -374,9 +409,9 @@ class Finance_cancellation_store
         $now = date('Y-m-d H:i:s');
         $inserted = $this->db->insert('fin_journal_entry', array(
             'tenant_id' => $tenant_id,
-            'period_id' => isset($original['period_id']) ? $original['period_id'] : NULL,
+            'period_id' => (int) $target['period_id'],
             'journal_number' => $number,
-            'journal_date' => (string) $original['journal_date'],
+            'journal_date' => (string) $target['date'],
             'source_type' => 'reversal',
             'source_id' => $original_id,
             'description' => 'Reversal ' . (string) $original['journal_number'],

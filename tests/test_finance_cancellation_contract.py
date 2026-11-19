@@ -79,7 +79,7 @@ class FinanceCancellationContractTests(unittest.TestCase):
         self.assertIn("admin/finance/cancel_request", routes)
         self.assertIn("data-finance-cancel-open", script)
         self.assertIn("data-finance-cancel-toggle", script)
-        self.assertIn("if (!menu)", script)
+        self.assertIn("function ensureMenu", script)
         self.assertIn("finance-cancel-dialog", footer)
         self.assertIn('name="reason"', footer)
 

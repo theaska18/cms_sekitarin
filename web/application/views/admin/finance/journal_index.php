@@ -12,6 +12,7 @@ $state_labels = array(
     'approved' => isset($labels['finance_tx_state_approved']) ? $labels['finance_tx_state_approved'] : 'Approved',
     'revise' => isset($labels['finance_tx_state_revise']) ? $labels['finance_tx_state_revise'] : 'Revise',
     'rejected' => isset($labels['finance_tx_state_rejected']) ? $labels['finance_tx_state_rejected'] : 'Rejected',
+    'cancel_pending' => isset($labels['finance_tx_state_cancel_pending']) ? $labels['finance_tx_state_cancel_pending'] : 'Cancellation pending',
     'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
     'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',
 );
@@ -97,6 +98,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
         approved: {badge: 'border-emerald-200 bg-emerald-50 text-emerald-800', dot: 'bg-emerald-500'},
         revise: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         rejected: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'},
+        cancel_pending: {badge: 'border-amber-200 bg-amber-50 text-amber-900', dot: 'bg-amber-500'},
         posted: {badge: 'border-slate-800 bg-slate-800 text-white', dot: 'bg-emerald-400'},
         cancelled: {badge: 'border-rose-200 bg-rose-50 text-rose-800', dot: 'bg-rose-500'}
     };

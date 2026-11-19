@@ -52,18 +52,19 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
         view = (APP / "views/admin/finance/payment_form.php").read_text(encoding="utf-8")
         for marker in (
             'id="pay-all"', 'name="pay_all"', 'finance_payment_pay_all',
-            'amountInput.disabled=checked', 'setAmount(currentOutstanding)',
+            'amountInput.disabled=checked', 'setAmount(currentAvailable)',
             "strpos($error, 'payment_') === 0", 'finance_payment_error_',
         ):
             self.assertIn(marker, view)
         for marker in (
             "data-payment-summary-outstanding", "Intl.NumberFormat", "function shouldAutoFill",
-            "isNewPayment", "function roundAmount", "setAmount(currentOutstanding)",
+            "isNewPayment", "function roundAmount", "setAmount(currentAvailable)",
         ):
             self.assertIn(marker, view)
         controller = CONTROLLER.read_text(encoding="utf-8")
         self.assertIn("$values['pay_all'] = $this->input->post('pay_all', TRUE) ? 1 : 0;", controller)
-        self.assertIn("$store->document_financials($tenant, $kind, $values['document_id'])", controller)
+        self.assertIn("$store->document_financials(", controller)
+        self.assertIn("$pay_summary['available_amount']", controller)
         store = STORE.read_text(encoding="utf-8")
         self.assertIn("if ($outstanding <= 0.000001)", store)
         self.assertIn("continue;", store)

@@ -660,6 +660,9 @@
     updateContentFade();
 }());
 </script>
+<form id="finance-draft-delete-form" method="post" hidden>
+    <input type="hidden" name="<?= html_escape(isset($csrf_token_name) ? $csrf_token_name : $this->security->get_csrf_token_name()) ?>" value="<?= html_escape(isset($csrf_hash) ? $csrf_hash : $this->security->get_csrf_hash()) ?>">
+</form>
 <dialog id="finance-cancel-dialog" aria-labelledby="finance-cancel-title" class="w-[min(92vw,32rem)] rounded-2xl border border-slate-200 p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/50">
     <form method="post" action="/admin/finance/cancel_request" class="p-6">
         <input type="hidden" name="<?= html_escape(isset($csrf_token_name) ? $csrf_token_name : $this->security->get_csrf_token_name()) ?>" value="<?= html_escape(isset($csrf_hash) ? $csrf_hash : $this->security->get_csrf_hash()) ?>">
