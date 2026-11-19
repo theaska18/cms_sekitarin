@@ -13,6 +13,9 @@ class DataTableLayoutContractTests(unittest.TestCase):
         self.assertIn("margin-top: 0;", rule)
         self.assertIn("margin-bottom: 0;", rule)
         self.assertIn("overflow-x: auto;", rule)
+        self.assertIn("@media (max-width: 767px)", css)
+        self.assertIn("max-height: 60dvh;", css)
+        self.assertIn("overflow-y: auto;", css)
 
     def test_datatable_scrolls_instead_of_the_page(self):
         css = THEME.read_text(encoding="utf-8")

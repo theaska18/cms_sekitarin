@@ -636,6 +636,15 @@ html[data-theme="dark"] #admin-app-shell .finance-data-exchange-file:hover {
     -webkit-overflow-scrolling: touch;
 }
 
+@media (max-width: 767px) {
+    .dt-container div.dt-layout-row.dt-layout-table {
+        max-height: 60dvh;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 #admin-content-shell,
 #admin-main {
     min-width: 0;
