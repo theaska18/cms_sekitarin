@@ -14,6 +14,7 @@ $extra_status_messages = array(
     'approval_submitted' => 'Transaksi diajukan untuk persetujuan.',
     'approval_auto_approved' => 'Alur tidak memiliki tahapan; transaksi otomatis disetujui dan siap diposting.',
     'approval_error' => 'Pengajuan persetujuan gagal diproses.',
+    'approval_steps_missing' => isset($labels['finance_status_approval_steps_missing']) ? $labels['finance_status_approval_steps_missing'] : 'The approval flow has no approver steps.',
     'approval_unavailable' => 'Penyimpanan persetujuan belum tersedia.',
     'not_submittable' => 'Transaksi ini tidak dapat diajukan untuk persetujuan.',
     'sequence_unavailable' => 'Nomor transaksi tidak dapat dibuat dari sequence.',

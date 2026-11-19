@@ -13,6 +13,13 @@ $statuses = array(
     'tax_account_missing' => isset($labels['finance_doc_status_tax_account_missing']) ? $labels['finance_doc_status_tax_account_missing'] : 'The tax code needs an active linked tax account before posting.',
     'period_closed' => isset($labels['finance_doc_status_period_closed']) ? $labels['finance_doc_status_period_closed'] : 'No open accounting period includes the document date.',
     'period_ambiguous' => isset($labels['finance_doc_status_period_ambiguous']) ? $labels['finance_doc_status_period_ambiguous'] : 'More than one open accounting period includes the document date.',
+    'approval_submitted' => isset($labels['finance_status_approval_submitted']) ? $labels['finance_status_approval_submitted'] : 'Submitted for approval.',
+    'approval_auto_approved' => isset($labels['finance_status_approval_auto_approved']) ? $labels['finance_status_approval_auto_approved'] : 'Approved automatically.',
+    'approval_steps_missing' => isset($labels['finance_status_approval_steps_missing']) ? $labels['finance_status_approval_steps_missing'] : 'The approval flow has no approver steps.',
+    'approval_unavailable' => isset($labels['finance_status_approval_unavailable']) ? $labels['finance_status_approval_unavailable'] : 'Approval is unavailable.',
+    'approval_error' => isset($labels['finance_status_approval_error']) ? $labels['finance_status_approval_error'] : 'Approval could not be submitted.',
+    'not_submittable' => isset($labels['finance_status_not_submittable']) ? $labels['finance_status_not_submittable'] : 'This record cannot be submitted for approval.',
+    'not_postable' => isset($labels['finance_status_not_postable']) ? $labels['finance_status_not_postable'] : 'Only approved records can be posted.',
 );
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">

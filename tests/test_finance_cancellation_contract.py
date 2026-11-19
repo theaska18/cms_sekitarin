@@ -41,6 +41,24 @@ class FinanceCancellationContractTests(unittest.TestCase):
         submit = controller.split("public function submit_approval", 1)[1].split("private function", 1)[0]
         self.assertIn("$slug === 'income' || $slug === 'expenses' ? 'fin_' . $slug", submit)
 
+    def test_missing_steps_message_is_generic_and_shown_on_all_finance_lists(self):
+        locales = sorted(p.name for p in (APP / "language").iterdir() if p.is_dir())
+        for locale in locales:
+            path = APP / "language" / locale / "finance_lang.php"
+            if not path.is_file():
+                continue
+            content = path.read_text(encoding="utf-8")
+            with self.subTest(locale=locale):
+                self.assertIn("$lang['finance_status_approval_steps_missing']", content)
+                self.assertNotIn("Saldo Awal approval flow", content)
+                self.assertNotIn("persetujuan Saldo Awal", content)
+        transaction_view = (APP / "views" / "admin" / "finance" / "transaction_index.php").read_text(encoding="utf-8")
+        document_view = (APP / "views" / "admin" / "finance" / "document_index.php").read_text(encoding="utf-8")
+        self.assertIn("'approval_steps_missing' =>", transaction_view)
+        self.assertIn("'approval_steps_missing' =>", document_view)
+        self.assertIn("finance_status_approval_steps_missing", transaction_view)
+        self.assertIn("finance_status_approval_steps_missing", document_view)
+
     def test_cancellation_migration_and_default_flow_exist(self):
         migration = (ROOT / "database" / "migrations" / "20261119000700_add_finance_cancellation.sql").read_text(encoding="utf-8")
         flow = (ROOT / "database" / "migrations" / "20261119000800_seed_finance_cancel_flow.sql").read_text(encoding="utf-8")
