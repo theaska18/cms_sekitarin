@@ -309,6 +309,71 @@ class Finance_payment_store
         return 'posted';
     }
 
+    /** Posted, in-process, and outstanding amounts for one invoice/bill. */
+    public function document_financials($tenant, $kind, $document_id)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || !$this->available($kind) || (int) $document_id < 1) {
+            return NULL;
+        }
+        $document = $this->tenant_row($spec['document_table'], $spec['document_id'], $tenant, $document_id);
+        if (!$document) {
+            return NULL;
+        }
+        $totals = $this->allocation_totals($tenant, $kind, array((int) $document_id));
+        $by_status = isset($totals[(int) $document_id]) ? $totals[(int) $document_id] : array();
+        $paid = 0.0;
+        $pending = 0.0;
+        foreach ($by_status as $status => $amount) {
+            if ($status === 'posted') {
+                $paid += (float) $amount;
+            } elseif (in_array($status, array('draft', 'pending_approval', 'approved', 'revise'), TRUE)) {
+                $pending += (float) $amount;
+            }
+        }
+        $total = (float) $document['total_amount'];
+        return array(
+            'document_id' => (int) $document_id,
+            'currency_code' => (string) $document['currency_code'],
+            'total_amount' => $total,
+            'paid_amount' => round($paid, 6),
+            'pending_amount' => round($pending, 6),
+            'outstanding_amount' => round($total - $paid, 6),
+        );
+    }
+
+    /** Allocation totals grouped by document and payment status. */
+    private function allocation_totals($tenant, $kind, $document_ids)
+    {
+        $spec = $this->spec($kind);
+        $totals = array();
+        if ($spec === NULL || !is_array($document_ids) || !$document_ids) {
+            return $totals;
+        }
+        $document_ids = array_values(array_unique(array_map('intval', $document_ids)));
+        $query = $this->db->select(
+            'a.' . $spec['document_id'] . ' AS document_id,p.status,COALESCE(SUM(a.amount),0) AS amount',
+            FALSE
+        )
+            ->from($spec['allocation'] . ' a')
+            ->join($spec['table'] . ' p', 'p.' . $spec['id'] . '=a.' . $spec['id'] . ' AND p.tenant_id=a.tenant_id')
+            ->where('a.tenant_id', (int) $tenant)
+            ->where_in('a.' . $spec['document_id'], $document_ids)
+            ->group_by(array('a.' . $spec['document_id'], 'p.status'))
+            ->get();
+        if ($query === FALSE) {
+            return $totals;
+        }
+        foreach ($query->result_array() as $row) {
+            $id = (int) $row['document_id'];
+            if (!isset($totals[$id])) {
+                $totals[$id] = array();
+            }
+            $totals[$id][(string) $row['status']] = (float) $row['amount'];
+        }
+        return $totals;
+    }
+
     public function lookup($tenant, $kind, $term)
     {
         if ($kind === 'cash_account') {
@@ -334,14 +399,42 @@ class Finance_payment_store
                 ->or_like('integration_number', $term)->group_end();
         }
         $query = $this->db->order_by($spec['document_number'], 'ASC')->limit(20)->get($spec['document_table']);
+        if ($query === FALSE) {
+            return array();
+        }
+        $rows = $query->result_array();
+        $document_ids = array();
+        foreach ($rows as $row) {
+            $document_ids[] = (int) $row[$spec['document_id']];
+        }
+        $totals = $this->allocation_totals($tenant, $kind, $document_ids);
         $results = array();
-        if ($query !== FALSE) foreach ($query->result_array() as $row) {
+        foreach ($rows as $row) {
             $label = $row[$spec['document_number']];
             if (!empty($row['integration_number'])) {
                 $label .= ' — ' . $row['integration_number'];
             }
             $label .= ' — ' . $row['currency_code'] . ' ' . number_format((float) $row['total_amount'], 2, '.', '');
-            $results[] = array('id' => (int) $row[$spec['document_id']], 'label' => $label, 'value' => $label, 'currency_code' => $row['currency_code']);
+            $paid = 0.0;
+            $pending = 0.0;
+            $by_status = isset($totals[(int) $row[$spec['document_id']]]) ? $totals[(int) $row[$spec['document_id']]] : array();
+            foreach ($by_status as $status => $amount) {
+                if ($status === 'posted') {
+                    $paid += (float) $amount;
+                } elseif (in_array($status, array('draft', 'pending_approval', 'approved', 'revise'), TRUE)) {
+                    $pending += (float) $amount;
+                }
+            }
+            $results[] = array(
+                'id' => (int) $row[$spec['document_id']],
+                'label' => $label,
+                'value' => $label,
+                'currency_code' => $row['currency_code'],
+                'total_amount' => (float) $row['total_amount'],
+                'paid_amount' => round($paid, 6),
+                'pending_amount' => round($pending, 6),
+                'outstanding_amount' => round((float) $row['total_amount'] - $paid, 6),
+            );
         }
         return $results;
     }

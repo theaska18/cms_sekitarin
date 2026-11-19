@@ -4,6 +4,11 @@ $is_edit=$finance_payment_id!==NULL;
 $title=isset($labels['finance_'.$finance_payment_slug])?$labels['finance_'.$finance_payment_slug]:ucfirst(str_replace('_',' ',$finance_payment_slug));
 $doc_label=$finance_payment_kind==='customer'?(isset($labels['finance_posted_sales_invoice'])?$labels['finance_posted_sales_invoice']:'Posted sales invoice'):(isset($labels['finance_posted_purchase_bill'])?$labels['finance_posted_purchase_bill']:'Posted purchase bill');
 $draft_label = $is_edit ? (isset($labels['finance_edit_draft']) ? $labels['finance_edit_draft'] : 'Edit draft') : (isset($labels['finance_new_draft']) ? $labels['finance_new_draft'] : 'New draft');
+$summary = isset($finance_payment_document_summary) ? $finance_payment_document_summary : NULL;
+$summary_currency = is_array($summary) && isset($summary['currency_code']) ? (string) $summary['currency_code'] : '';
+$summary_amount = function ($value) use ($summary_currency) {
+    return $summary_currency !== '' ? $summary_currency . ' ' . number_format((float) $value, 2, '.', ',') : '';
+};
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/jquery-ui.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/jquery-ui.min.css')?filemtime(FCPATH . 'assets/css/vendor/jquery-ui.min.css'):'1' ?>">
 <main class="mx-auto w-full max-w-4xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -23,6 +28,26 @@ $draft_label = $is_edit ? (isset($labels['finance_edit_draft']) ? $labels['finan
                 <div><label for="exchange-rate" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_exchange_rate_base']) ? $labels['finance_exchange_rate_base'] : 'Exchange rate to base') ?> *</label><input id="exchange-rate" name="exchange_rate" value="<?= html_escape($finance_payment_record['exchange_rate'] === '' ? '' : number_format((float) $finance_payment_record['exchange_rate'], 2, '.', '')) ?>" inputmode="decimal" data-decimal-limit="2" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"><p class="mt-1 text-xs text-slate-500"><?= html_escape(isset($labels['finance_payment_rate_hint']) ? $labels['finance_payment_rate_hint'] : 'Base currency units per payment currency unit.') ?></p></div>
                 <div><label for="reference" class="mb-1.5 block text-sm font-semibold text-slate-800"><?= html_escape(isset($labels['finance_reference']) ? $labels['finance_reference'] : 'Reference') ?></label><input id="reference" name="reference" maxlength="80" value="<?= html_escape($finance_payment_record['reference']) ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></div>
             </div>
+            <div data-payment-summary <?= is_array($summary) ? '' : 'hidden' ?> class="rounded-xl border border-slate-200 bg-slate-50 p-4" aria-live="polite">
+                <dl class="grid gap-4 sm:grid-cols-4">
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_total_document']) ? $labels['finance_payment_total_document'] : 'Document total') ?></dt>
+                        <dd class="mt-1 text-sm font-semibold text-slate-900" data-payment-total><?= is_array($summary) ? html_escape($summary_amount($summary['total_amount'])) : '' ?></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_paid']) ? $labels['finance_payment_paid'] : 'Paid') ?></dt>
+                        <dd class="mt-1 text-sm font-semibold text-emerald-800" data-payment-paid><?= is_array($summary) ? html_escape($summary_amount($summary['paid_amount'])) : '' ?></dd>
+                    </div>
+                    <div data-payment-pending-row <?= is_array($summary) && (float) $summary['pending_amount'] > 0.000001 ? '' : 'hidden' ?>>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_pending']) ? $labels['finance_payment_pending'] : 'In progress') ?></dt>
+                        <dd class="mt-1 text-sm font-semibold text-amber-800" data-payment-pending><?= is_array($summary) ? html_escape($summary_amount($summary['pending_amount'])) : '' ?></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500"><?= html_escape(isset($labels['finance_payment_outstanding']) ? $labels['finance_payment_outstanding'] : 'Outstanding') ?></dt>
+                        <dd class="mt-1 text-base font-bold text-slate-950" data-payment-outstanding><?= is_array($summary) ? html_escape($summary_amount($summary['outstanding_amount'])) : '' ?></dd>
+                    </div>
+                </dl>
+            </div>
             <p class="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900"><?= html_escape(isset($labels['finance_payment_fx_hint'])?$labels['finance_payment_fx_hint']:"Payment currency must match the selected document and cash account. An outstanding foreign-exchange difference is posted to the tenant's configured FX gain/loss account.") ?></p>
             <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end"><a href="/admin/finance/<?= html_escape($finance_payment_slug) ?>" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700"><?= html_escape(isset($labels['finance_cancel']) ? $labels['finance_cancel'] : 'Cancel') ?></a><button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-lg bg-indigo-600 px-5 text-sm font-semibold text-white"><?= html_escape(isset($labels['finance_tx_save_draft']) ? $labels['finance_tx_save_draft'] : 'Save draft') ?></button></div>
         </form>
@@ -31,5 +56,29 @@ $draft_label = $is_edit ? (isset($labels['finance_edit_draft']) ? $labels['finan
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js')?filemtime(FCPATH . 'assets/js/vendor/jquery.min.js'):'1' ?>"></script><script src="/assets/js/vendor/jquery-ui.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery-ui.min.js')?filemtime(FCPATH . 'assets/js/vendor/jquery-ui.min.js'):'1' ?>"></script>
 <script src="/assets/js/currency-input.js?v=<?= is_file(FCPATH . 'assets/js/currency-input.js')?filemtime(FCPATH . 'assets/js/currency-input.js'):'1' ?>"></script>
 <script>
-(function(){$('[data-payment-lookup]').each(function(){var input=$(this),hidden=input.attr('data-payment-lookup')==='document'?$('#document-id'):$('#cash-account-id');input.autocomplete({minLength:0,delay:250,source:function(req,res){$.getJSON('/admin/finance/<?= html_escape($finance_payment_slug) ?>/lookup/'+encodeURIComponent(input.attr('data-payment-lookup')),{term:req.term}).done(res).fail(function(){res([]);});},select:function(e,item){hidden.val(item.item.id);input.val(item.item.label);return false;},change:function(e,item){if(!item.item)hidden.val('');}}).on('focus',function(){if(input.val()==='')input.autocomplete('search','');}).on('input',function(){hidden.val('');});});})();
+(function(){
+    var summary=document.querySelector('[data-payment-summary]');
+    function money(value){var amount=Number(value);return isFinite(amount)?amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'0.00';}
+    function updateSummary(item){
+        if(!summary)return;
+        if(!item||!item.id){summary.hidden=true;return;}
+        var currency=String(item.currency_code||'');
+        function text(value){return currency!==''?currency+' '+money(value):money(value);}
+        summary.hidden=false;
+        var total=summary.querySelector('[data-payment-total]');if(total)total.textContent=text(item.total_amount);
+        var paid=summary.querySelector('[data-payment-paid]');if(paid)paid.textContent=text(item.paid_amount);
+        var pending=summary.querySelector('[data-payment-pending]');if(pending)pending.textContent=text(item.pending_amount);
+        var pendingRow=summary.querySelector('[data-payment-pending-row]');if(pendingRow)pendingRow.hidden=Number(item.pending_amount||0)<=0.000001;
+        var outstanding=summary.querySelector('[data-payment-outstanding]');if(outstanding)outstanding.textContent=text(item.outstanding_amount);
+    }
+    $('[data-payment-lookup]').each(function(){
+        var input=$(this),isDocument=input.attr('data-payment-lookup')==='document',hidden=isDocument?$('#document-id'):$('#cash-account-id');
+        input.autocomplete({
+            minLength:0,delay:250,
+            source:function(req,res){$.getJSON('/admin/finance/<?= html_escape($finance_payment_slug) ?>/lookup/'+encodeURIComponent(input.attr('data-payment-lookup')),{term:req.term}).done(res).fail(function(){res([]);});},
+            select:function(e,item){hidden.val(item.item.id);input.val(item.item.label);if(isDocument)updateSummary(item.item);return false;},
+            change:function(e,item){if(!item.item){hidden.val('');if(isDocument)updateSummary(null);}}
+        }).on('focus',function(){if(input.val()==='')input.autocomplete('search','');}).on('input',function(){hidden.val('');if(isDocument)updateSummary(null);});
+    });
+})();
 </script>

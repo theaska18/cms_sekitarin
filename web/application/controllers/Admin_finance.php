@@ -2670,6 +2670,9 @@ class Admin_finance extends Admin
             $labels['document_id'] = !empty($record['document_id']) ? $store->lookup_label($tenant, $kind, $record['document_id']) : '';
             $labels['cash_account_id'] = !empty($record['cash_account_id']) ? $store->lookup_label($tenant, 'cash_account', $record['cash_account_id']) : '';
         }
+        $document_summary = !empty($record['document_id'])
+            ? $store->document_financials($tenant, $kind, (int) $record['document_id'])
+            : NULL;
         $this->render_admin('admin/finance/payment_form', 'finance_' . $slug,
             '/admin/finance/' . $slug . ($is_new ? '/new' : '/edit/' . (int) $id), array(
                 'finance_payment_slug' => $slug,
@@ -2677,6 +2680,7 @@ class Admin_finance extends Admin
                 'finance_payment_record' => $record,
                 'finance_payment_id' => $is_new ? NULL : (int) $id,
                 'finance_payment_labels' => $labels,
+                'finance_payment_document_summary' => $document_summary,
                 'finance_payment_errors' => $errors,
                 'finance_payment_available' => $available,
                 'finance_payment_write_available' => $write_available,

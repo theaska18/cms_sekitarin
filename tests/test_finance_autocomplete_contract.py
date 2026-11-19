@@ -69,6 +69,26 @@ class FinanceAutocompleteContractTests(unittest.TestCase):
         labels = read(APP / "language" / "indonesian" / "finance_lang.php")
         self.assertIn("nomor invoice integrasi", labels)
 
+    def test_payment_form_shows_document_outstanding(self):
+        source = read(APP / "libraries" / "Finance_payment_store.php")
+        for marker in (
+            "function document_financials", "function allocation_totals",
+            "paid_amount", "pending_amount", "outstanding_amount", "total_amount",
+        ):
+            self.assertIn(marker, source)
+        controller = read(APP / "controllers" / "Admin_finance.php")
+        self.assertIn("finance_payment_document_summary", controller)
+        self.assertIn("$store->document_financials(", controller)
+        view = read(FINANCE_VIEWS / "payment_form.php")
+        for marker in (
+            "data-payment-summary", "data-payment-total", "data-payment-paid",
+            "data-payment-pending", "data-payment-outstanding",
+            "finance_payment_total_document", "finance_payment_outstanding",
+        ):
+            self.assertIn(marker, view)
+        labels = read(APP / "language" / "indonesian" / "finance_lang.php")
+        self.assertIn("Sisa pembayaran", labels)
+
     def test_lookup_stores_accept_an_empty_term(self):
         for name in LOOKUP_STORES:
             with self.subTest(store=name):
