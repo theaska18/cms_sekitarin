@@ -327,15 +327,20 @@ class Finance_payment_store
         }
         $spec = $this->spec($kind);
         if (!$spec) return array();
-        $this->db->select($spec['document_id'] . ',' . $spec['document_number'] . ',currency_code,total_amount')
+        $this->db->select($spec['document_id'] . ',' . $spec['document_number'] . ',integration_number,currency_code,total_amount')
             ->where('tenant_id', (int) $tenant)->where('status', 'posted');
         if ($term !== '') {
-            $this->db->group_start()->like($spec['document_number'], $term)->group_end();
+            $this->db->group_start()->like($spec['document_number'], $term)
+                ->or_like('integration_number', $term)->group_end();
         }
         $query = $this->db->order_by($spec['document_number'], 'ASC')->limit(20)->get($spec['document_table']);
         $results = array();
         if ($query !== FALSE) foreach ($query->result_array() as $row) {
-            $label = $row[$spec['document_number']] . ' — ' . $row['currency_code'] . ' ' . $row['total_amount'];
+            $label = $row[$spec['document_number']];
+            if (!empty($row['integration_number'])) {
+                $label .= ' — ' . $row['integration_number'];
+            }
+            $label .= ' — ' . $row['currency_code'] . ' ' . number_format((float) $row['total_amount'], 2, '.', '');
             $results[] = array('id' => (int) $row[$spec['document_id']], 'label' => $label, 'value' => $label, 'currency_code' => $row['currency_code']);
         }
         return $results;
@@ -349,11 +354,17 @@ class Finance_payment_store
         }
         $spec = $this->spec($kind);
         if (!$spec) return '';
-        $query = $this->db->select($spec['document_number'] . ',currency_code')->where('tenant_id', (int) $tenant)
+        $query = $this->db->select($spec['document_number'] . ',integration_number,currency_code')->where('tenant_id', (int) $tenant)
             ->where($spec['document_id'], (int) $id)->limit(1)->get($spec['document_table']);
-        return $query !== FALSE && $query->num_rows()
-            ? $query->row()->{$spec['document_number']} . ' — ' . $query->row()->currency_code
-            : '';
+        if ($query === FALSE || !$query->num_rows()) {
+            return '';
+        }
+        $row = $query->row_array();
+        $label = (string) $row[$spec['document_number']];
+        if (!empty($row['integration_number'])) {
+            $label .= ' — ' . (string) $row['integration_number'];
+        }
+        return $label . ' — ' . (string) $row['currency_code'];
     }
 
     private function payment_number_exists($tenant, $table, $number)

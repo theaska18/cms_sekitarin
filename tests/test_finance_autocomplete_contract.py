@@ -58,6 +58,17 @@ class FinanceAutocompleteContractTests(unittest.TestCase):
                 self.assertNotIn("at least 2 characters", source)
                 self.assertNotIn("minimal 2 karakter", source)
 
+    def test_payment_document_lookup_searches_integration_number(self):
+        source = read(APP / "libraries" / "Finance_payment_store.php")
+        self.assertIn("integration_number", source)
+        self.assertIn("or_like('integration_number', $term)", source)
+        self.assertIn("function lookup_label", source)
+        self.assertIn("integration_number,currency_code", source)
+        view = read(FINANCE_VIEWS / "payment_form.php")
+        self.assertIn("finance_payment_lookup_hint", view)
+        labels = read(APP / "language" / "indonesian" / "finance_lang.php")
+        self.assertIn("nomor invoice integrasi", labels)
+
     def test_lookup_stores_accept_an_empty_term(self):
         for name in LOOKUP_STORES:
             with self.subTest(store=name):
