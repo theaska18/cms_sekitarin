@@ -72,11 +72,17 @@ $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
             <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600"><?= html_escape($intro) ?></p>
         </div>
-        <?php if ($can_add): ?>
-            <a href="<?= html_escape($current_path . '/new') ?>" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"><?= html_escape(isset($labels['finance_tx_add_draft']) ? $labels['finance_tx_add_draft'] : 'Add draft') ?></a>
-        <?php endif; ?>
     </header>
-<?= $this->finance_filter_panel->render(array_merge($finance_filter_config, array('target'=>'#finance-transaction-table')), $labels) ?>
+<?php
+$transaction_filter_panel_config = array_merge($finance_filter_config, array('target' => '#finance-transaction-table'));
+if ($can_add) {
+    $transaction_filter_panel_config['add_action'] = array(
+        'url' => $current_path . '/new',
+        'label' => isset($labels['finance_tx_add_draft']) ? $labels['finance_tx_add_draft'] : 'Add draft',
+    );
+}
+?>
+<?= $this->finance_filter_panel->render($transaction_filter_panel_config, $labels) ?>
     <?php if ($status_message !== ''): ?>
         <?php $ok = in_array($finance_status, array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved'), TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>">

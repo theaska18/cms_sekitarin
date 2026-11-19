@@ -26,6 +26,12 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
          data-default-start="<?= html_escape($filter_default_start) ?>"
          data-default-end="<?= html_escape($filter_default_end) ?>">
     <div class="flex items-center justify-end gap-2">
+        <?php if (!empty($finance_filter_add_action['url'])): ?>
+            <a href="<?= html_escape($finance_filter_add_action['url']) ?>" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M10 4v12M4 10h12"/></svg>
+                <span class="hidden sm:inline"><?= html_escape(isset($finance_filter_add_action['label']) ? $finance_filter_add_action['label'] : 'Add') ?></span>
+            </a>
+        <?php endif; ?>
         <div class="relative w-full min-w-0 max-w-xs">
             <input type="search" data-finance-filter="search" autocomplete="off"
                    aria-label="<?= html_escape(isset($labels['finance_filter_search']) ? $labels['finance_filter_search'] : 'Search') ?>"
