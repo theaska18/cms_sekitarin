@@ -137,6 +137,63 @@
             });
         }
 
+        var exportWrap = panel.querySelector('[data-finance-export]');
+        var exportToggle = panel.querySelector('[data-finance-export-toggle]');
+        var exportMenu = panel.querySelector('[data-finance-export-menu]');
+        function closeExport() {
+            if (exportMenu) exportMenu.hidden = true;
+            if (exportToggle) exportToggle.setAttribute('aria-expanded', 'false');
+        }
+        function tableRows() {
+            var table = document.querySelector(target);
+            if (!table) return null;
+            return table;
+        }
+        function exportCsv() {
+            var table = tableRows();
+            if (!table) return;
+            var rows = [];
+            Array.prototype.forEach.call(table.querySelectorAll('tr'), function (row) {
+                var cells = [];
+                Array.prototype.forEach.call(row.querySelectorAll('th,td'), function (cell) {
+                    cells.push('"' + String(cell.innerText || '').replace(/"/g, '""') + '"');
+                });
+                if (cells.length) rows.push(cells.join(','));
+            });
+            var blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'finance-export.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+        function exportPdf() {
+            var table = tableRows();
+            if (!table) return;
+            var win = window.open('', '_blank');
+            if (!win) return;
+            win.document.write('<!doctype html><html><head><title>Finance Export</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;font-size:12px}th,td{border:1px solid #ccc;padding:6px;text-align:left}thead{background:#f2f2f2}</style></head><body>' + table.outerHTML + '</body></html>');
+            win.document.close();
+            win.focus();
+            win.print();
+        }
+        if (exportToggle && exportMenu) {
+            exportToggle.addEventListener('click', function () {
+                var open = exportMenu.hidden;
+                exportMenu.hidden = !open;
+                exportToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+            var pdf = panel.querySelector('[data-finance-export-pdf]');
+            var excel = panel.querySelector('[data-finance-export-excel]');
+            if (pdf) pdf.addEventListener('click', function () { closeExport(); exportPdf(); });
+            if (excel) excel.addEventListener('click', function () { closeExport(); exportCsv(); });
+            document.addEventListener('click', function (event) {
+                if (exportWrap && !exportWrap.contains(event.target)) closeExport();
+            });
+        }
+
         var reset = panel.querySelector('[data-finance-filter-reset]');
         if (reset) {
             reset.addEventListener('click', function () {

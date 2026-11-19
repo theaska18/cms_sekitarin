@@ -75,6 +75,23 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
                 self.assertIn("finance_filter_panel->render", view)
                 self.assertNotIn("load->view('admin/finance/partials/filter_panel'", view)
 
+    def test_column_filters_and_export_actions_exist(self):
+        library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
+        panel = PARTIAL.read_text()
+        script = JS.read_text()
+        controller = (ROOT / "web/application/controllers/Admin_finance.php").read_text()
+        store = (STORES / "Finance_transaction_store.php").read_text()
+        self.assertIn("'field_filters'", library)
+        self.assertIn("finance_filter_field_filters", panel)
+        self.assertIn("data-finance-export-toggle", panel)
+        self.assertIn("data-finance-export-pdf", panel)
+        self.assertIn("data-finance-export-excel", panel)
+        self.assertIn("exportPdf", script)
+        self.assertIn("exportCsv", script)
+        self.assertIn("finance_transaction_filter_config", controller)
+        self.assertIn("amount_min", store)
+        self.assertIn("currency_code", store)
+
     def test_multiple_date_columns_have_separate_ranges(self):
         library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
         self.assertIn("public function date_fields(", library)
@@ -82,7 +99,8 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         self.assertIn("'create_on'", library)
         self.assertIn("date_ranges", library)
         transaction_view = (FINANCE / "transaction_index.php").read_text()
-        self.assertIn("'date_preset'=>'transaction'", transaction_view)
+        self.assertIn("'date_preset' => 'transaction'", (ROOT / "web/application/controllers/Admin_finance.php").read_text())
+        self.assertIn("$finance_filter_config", transaction_view)
         store = (STORES / "Finance_transaction_store.php").read_text()
         self.assertIn("$filters['date_ranges']", store)
 

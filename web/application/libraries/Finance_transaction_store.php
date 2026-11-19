@@ -75,6 +75,12 @@ class Finance_transaction_store
                 if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
             }
             if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
+            $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+            if (!empty($fields['transaction_type'])) { $where[] = 'transaction_type = ?'; $binds[] = $fields['transaction_type']; }
+            if (!empty($fields['amount_min'])) { $where[] = 'total_amount >= ?'; $binds[] = $fields['amount_min']; }
+            if (!empty($fields['amount_max'])) { $where[] = 'total_amount <= ?'; $binds[] = $fields['amount_max']; }
+            if (!empty($fields['currency_code'])) { $where[] = 'currency_code = ?'; $binds[] = $fields['currency_code']; }
+            if (!empty($fields['created_by'])) { $where[] = 'created_by = ?'; $binds[] = (int) $fields['created_by']; }
             $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
             $result = $this->db->query('SELECT COUNT(*) AS row_count FROM (' . $sql . ') finance_count', $binds);
             return $result === FALSE ? FALSE : (int) $result->row()->row_count;
@@ -126,6 +132,12 @@ class Finance_transaction_store
                 if (!empty($filters['end_on'])) { $where[] = 'transaction_on <= ?'; $binds[] = $filters['end_on']; }
             }
             if (!empty($filters['status'])) { $where[] = 'status = ?'; $binds[] = $filters['status']; }
+            $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+            if (!empty($fields['transaction_type'])) { $where[] = 'transaction_type = ?'; $binds[] = $fields['transaction_type']; }
+            if (!empty($fields['amount_min'])) { $where[] = 'total_amount >= ?'; $binds[] = $fields['amount_min']; }
+            if (!empty($fields['amount_max'])) { $where[] = 'total_amount <= ?'; $binds[] = $fields['amount_max']; }
+            if (!empty($fields['currency_code'])) { $where[] = 'currency_code = ?'; $binds[] = $fields['currency_code']; }
+            if (!empty($fields['created_by'])) { $where[] = 'created_by = ?'; $binds[] = (int) $fields['created_by']; }
             $sql = 'SELECT * FROM (' . $sql . ') all_finance' . ($where ? ' WHERE ' . implode(' AND ', $where) : '');
             $sql .= ' ORDER BY ' . $order . ' ' . $direction . ', transaction_id DESC LIMIT '
                 . min(50, max(1, (int) $limit)) . ' OFFSET ' . max(0, (int) $offset);
@@ -658,6 +670,12 @@ class Finance_transaction_store
         if (!empty($filters['status'])) {
             $this->db->where($alias . 'status', $filters['status']);
         }
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        if (!empty($fields['transaction_type'])) $this->db->where($alias . 'transaction_type', $fields['transaction_type']);
+        if (!empty($fields['amount_min'])) $this->db->where($alias . 'total_amount >=', $fields['amount_min']);
+        if (!empty($fields['amount_max'])) $this->db->where($alias . 'total_amount <=', $fields['amount_max']);
+        if (!empty($fields['currency_code'])) $this->db->where($alias . 'currency_code', $fields['currency_code']);
+        if (!empty($fields['created_by'])) $this->db->where($alias . 'created_by', (int) $fields['created_by']);
     }
 
     private function all_transactions_sql($tenant_id)

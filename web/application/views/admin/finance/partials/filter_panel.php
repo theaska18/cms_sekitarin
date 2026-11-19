@@ -40,6 +40,23 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5h14M6 10h8m-5 5h2"/></svg>
             <span data-finance-filter-indicator hidden class="absolute end-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-600" aria-hidden="true"></span>
         </button>
+        <div class="relative shrink-0" data-finance-export>
+            <button type="button" data-finance-export-toggle aria-expanded="false" class="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3-3m-3 3L7 9M4 14v2h12v-2"/></svg>
+                Export
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-3.5 w-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4"/></svg>
+            </button>
+            <div data-finance-export-menu hidden class="absolute end-0 z-[140] mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                <button type="button" data-finance-export-pdf class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 8h6M7 14h4"/></svg>
+                    PDF
+                </button>
+                <button type="button" data-finance-export-excel class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3h7l3 3v11H5V3Zm2 7 2 3m0 0 2-3m-2 3 2 3m-2-3-2 3"/></svg>
+                    Excel
+                </button>
+            </div>
+        </div>
     </div>
     <div id="<?= html_escape($filter_id) ?>" data-finance-filter-details hidden class="mt-4 border-t border-slate-100 pt-4">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -81,6 +98,33 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                         <?php endforeach; ?>
                     </select>
                 </label>
+            <?php endif; ?>
+            <?php if (!empty($finance_filter_field_filters)): ?>
+                <?php foreach ($finance_filter_field_filters as $field): ?>
+                    <?php if ($field['type'] === 'range'): ?>
+                        <?php $min_name = !empty($field['min_name']) ? $field['min_name'] : $field['name'] . '_min'; $max_name = !empty($field['max_name']) ? $field['max_name'] : $field['name'] . '_max'; ?>
+                        <div class="rounded-lg border border-slate-200 bg-slate-50/60 p-3 md:col-span-2">
+                            <p class="mb-2 text-xs font-bold text-slate-700"><?= html_escape($field['label']) ?></p>
+                            <div class="grid gap-2 sm:grid-cols-2">
+                                <input type="number" step="0.01" data-finance-filter="<?= html_escape($min_name) ?>" placeholder="Min" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                                <input type="number" step="0.01" data-finance-filter="<?= html_escape($max_name) ?>" placeholder="Max" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                            </div>
+                        </div>
+                    <?php elseif ($field['type'] === 'select'): ?>
+                        <label class="block text-xs font-semibold text-slate-600">
+                            <span class="mb-1.5 block"><?= html_escape($field['label']) ?></span>
+                            <select data-finance-filter="<?= html_escape($field['name']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm">
+                                <option value=""><?= html_escape(isset($labels['finance_filter_all']) ? $labels['finance_filter_all'] : 'All') ?></option>
+                                <?php foreach ((array) $field['options'] as $value => $label): ?><option value="<?= html_escape($value) ?>"><?= html_escape($label) ?></option><?php endforeach; ?>
+                            </select>
+                        </label>
+                    <?php else: ?>
+                        <label class="block text-xs font-semibold text-slate-600">
+                            <span class="mb-1.5 block"><?= html_escape($field['label']) ?></span>
+                            <input type="text" data-finance-filter="<?= html_escape($field['name']) ?>" class="min-h-10 w-full rounded-lg border border-slate-300 px-3 text-sm">
+                        </label>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             <?php endif; ?>
             <label class="block text-xs font-semibold text-slate-600">
                 <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_filter_page_size']) ? $labels['finance_filter_page_size'] : 'Rows') ?></span>

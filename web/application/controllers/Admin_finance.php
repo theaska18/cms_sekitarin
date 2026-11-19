@@ -1569,6 +1569,7 @@ class Admin_finance extends Admin
         }
         $this->load->library('finance_transaction_store');
         $store = $this->finance_transaction_store;
+        $filter_type = $slug === 'income' ? 'income' : ($slug === 'expenses' ? 'expense' : 'all');
         $this->render_admin(
             'admin/finance/transaction_index',
             'finance_' . $slug,
@@ -1583,8 +1584,54 @@ class Admin_finance extends Admin
                     && $this->has_admin_access_code($menu_code . '_update'),
                 'finance_transaction_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
+                'finance_filter_config' => $this->finance_transaction_filter_config($filter_type),
             )
         );
+    }
+
+    private function finance_transaction_filter_config($type = 'all')
+    {
+        $tenant = (int) $this->current_user['tenant_id'];
+        $currencies = $this->db->distinct()->select('currency_code')->from('fin_transaction')
+            ->where('tenant_id', $tenant)->order_by('currency_code', 'ASC')->get();
+        $currency_options = array();
+        if ($currencies !== FALSE) {
+            foreach ($currencies->result_array() as $row) {
+                $code = strtoupper((string) $row['currency_code']);
+                if ($code !== '') $currency_options[$code] = $code;
+            }
+        }
+        $users = $this->db->select('user_id, full_name, username')->from('app_user')
+            ->where('tenant_id', $tenant)->order_by('full_name', 'ASC')->get();
+        $user_options = array();
+        if ($users !== FALSE) {
+            foreach ($users->result_array() as $row) {
+                $name = !empty($row['full_name']) ? $row['full_name'] : $row['username'];
+                $user_options[(string) $row['user_id']] = $name;
+            }
+        }
+        $type_options = array(
+            'income' => isset($this->lang->language['finance_tx_type_income']) ? $this->lang->language['finance_tx_type_income'] : 'Income',
+            'expense' => isset($this->lang->language['finance_tx_type_expense']) ? $this->lang->language['finance_tx_type_expense'] : 'Expense',
+            'sales_invoice' => 'Sales Invoice',
+            'purchase_bill' => 'Purchase Bill',
+            'customer_payment' => 'Customer Payment',
+            'supplier_payment' => 'Supplier Payment',
+            'cash_transfer' => 'Cash Transfer',
+            'manual' => 'Manual Journal',
+            'opening_balance' => 'Opening Balance',
+        );
+        return $this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'date_preset' => 'transaction',
+            'status_preset' => 'transaction',
+            'field_filters' => array(
+                array('type' => 'select', 'name' => 'transaction_type', 'label' => isset($this->lang->language['finance_tx_column_type']) ? $this->lang->language['finance_tx_column_type'] : 'Type', 'options' => $type_options),
+                array('type' => 'range', 'name' => 'total_amount', 'label' => isset($this->lang->language['finance_column_total']) ? $this->lang->language['finance_column_total'] : 'Total', 'min_name' => 'amount_min', 'max_name' => 'amount_max'),
+                array('type' => 'select', 'name' => 'currency_code', 'label' => isset($this->lang->language['finance_column_currency']) ? $this->lang->language['finance_column_currency'] : 'Currency', 'options' => $currency_options),
+                array('type' => 'select', 'name' => 'created_by', 'label' => isset($this->lang->language['finance_created_by']) ? $this->lang->language['finance_created_by'] : 'Created by', 'options' => $user_options),
+            ),
+        ));
     }
 
     private function finance_transaction_data($slug)
@@ -1603,7 +1650,7 @@ class Admin_finance extends Admin
         }
         $type = $slug === 'income' ? 'income' : ($slug === 'expenses' ? 'expense' : 'all');
         $tenant_id = (int) $this->current_user['tenant_id'];
-        $filters = $this->finance_list_filters(TRUE, 'transaction');
+        $filters = $this->finance_filter_panel->filters($this->finance_transaction_filter_config($type));
         $columns = array(
             1 => 'transaction_number',
             2 => 'transaction_type',

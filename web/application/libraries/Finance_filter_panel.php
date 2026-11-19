@@ -25,6 +25,7 @@ class Finance_filter_panel
             'date_preset' => 'single',
             'primary_date' => '',
             'date_fields' => array(),
+            'field_filters' => array(),
         );
         if (is_array($overrides)) {
             $config = array_merge($config, $overrides);
@@ -99,12 +100,32 @@ class Finance_filter_panel
             $flag = '';
         }
 
+        $fields = array();
+        foreach ((array) $config['field_filters'] as $field) {
+            if (empty($field['name']) || empty($field['type'])) continue;
+            if ($field['type'] === 'range') {
+                $min_name = !empty($field['min_name']) ? $field['min_name'] : $field['name'] . '_min';
+                $max_name = !empty($field['max_name']) ? $field['max_name'] : $field['name'] . '_max';
+                $min = trim((string) $this->CI->input->get($min_name, TRUE));
+                $max = trim((string) $this->CI->input->get($max_name, TRUE));
+                if ($min !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,6})?$/', $min)) $min = '';
+                if ($max !== '' && !preg_match('/^-?\d{1,20}(?:\.\d{1,6})?$/', $max)) $max = '';
+                $fields[$field['name']] = array('min' => $min, 'max' => $max);
+            } else {
+                $value = trim((string) $this->CI->input->get($field['name'], TRUE));
+                if (isset($field['options']) && is_array($field['options']) && !array_key_exists($value, $field['options'])) $value = '';
+                if (!isset($field['options']) && strlen($value) > 160) $value = '';
+                $fields[$field['name']] = $value;
+            }
+        }
+
         return array(
             'start_on' => $legacy['start_on'],
             'end_on' => $legacy['end_on'],
             'date_ranges' => $date_ranges,
             'status' => $status,
             'flag' => $flag,
+            'fields' => $fields,
         );
     }
 
@@ -159,6 +180,7 @@ class Finance_filter_panel
         $data = array(
             'finance_filter_date' => !empty($config['date']),
             'finance_filter_date_fields' => $date_fields,
+            'finance_filter_field_filters' => (array) $config['field_filters'],
             'finance_filter_target' => (string) $config['target'],
             'finance_filter_default_start' => $defaults['start_on'],
             'finance_filter_default_end' => $defaults['end_on'],
