@@ -2,7 +2,15 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $role_title = $labels['role_heading'];
 $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
-$role_status_messages = array('created' => $labels['role_created'], 'saved' => $labels['role_saved'], 'deleted' => $labels['role_deleted'], 'not_found' => $labels['role_not_found'], 'save_error' => $labels['role_save_error'], 'delete_error' => $labels['role_delete_error'], 'invalid' => $labels['role_invalid']);
+$role_status_messages = array(
+    'created' => isset($labels['role_created']) ? $labels['role_created'] : 'Created.',
+    'saved' => isset($labels['role_saved']) ? $labels['role_saved'] : 'Saved.',
+    'deleted' => isset($labels['role_deleted']) ? $labels['role_deleted'] : 'Deleted.',
+    'not_found' => isset($labels['role_not_found']) ? $labels['role_not_found'] : 'Not found.',
+    'save_error' => isset($labels['role_save_error']) ? $labels['role_save_error'] : 'Save failed.',
+    'delete_error' => isset($labels['role_delete_error']) ? $labels['role_delete_error'] : 'Delete failed.',
+    'invalid' => isset($labels['role_invalid']) ? $labels['role_invalid'] : 'Invalid request.',
+);
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">

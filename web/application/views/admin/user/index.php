@@ -2,7 +2,15 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $title = $labels['user_heading'];
 $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
-$status_messages = array('created' => $labels['user_created'], 'saved' => $labels['user_saved'], 'deleted' => $labels['user_deleted'], 'blocked' => $labels['user_blocked'], 'unblocked' => $labels['user_unblocked'], 'error' => $labels['user_error'], 'invalid' => $labels['user_invalid']);
+$status_messages = array(
+    'created' => isset($labels['user_created']) ? $labels['user_created'] : 'Created.',
+    'saved' => isset($labels['user_saved']) ? $labels['user_saved'] : 'Saved.',
+    'deleted' => isset($labels['user_deleted']) ? $labels['user_deleted'] : 'Deleted.',
+    'blocked' => isset($labels['user_blocked']) ? $labels['user_blocked'] : 'Blocked.',
+    'unblocked' => isset($labels['user_unblocked']) ? $labels['user_unblocked'] : 'Unblocked.',
+    'error' => isset($labels['user_error']) ? $labels['user_error'] : 'Action failed.',
+    'invalid' => isset($labels['user_invalid']) ? $labels['user_invalid'] : 'Invalid request.',
+);
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">

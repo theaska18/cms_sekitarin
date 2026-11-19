@@ -2,7 +2,13 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $title = $labels['employee_heading'];
 $js_flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
-$status_messages = array('created' => $labels['employee_created'], 'saved' => $labels['employee_saved'], 'deleted' => $labels['employee_deleted'], 'delete_error' => $labels['employee_delete_error'], 'error' => $labels['employee_save_error']);
+$status_messages = array(
+    'created' => isset($labels['employee_created']) ? $labels['employee_created'] : 'Created.',
+    'saved' => isset($labels['employee_saved']) ? $labels['employee_saved'] : 'Saved.',
+    'deleted' => isset($labels['employee_deleted']) ? $labels['employee_deleted'] : 'Deleted.',
+    'delete_error' => isset($labels['employee_delete_error']) ? $labels['employee_delete_error'] : 'Delete failed.',
+    'error' => isset($labels['employee_save_error']) ? $labels['employee_save_error'] : 'Save failed.',
+);
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">
