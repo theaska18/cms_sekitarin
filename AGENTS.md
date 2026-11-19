@@ -40,15 +40,9 @@ admin-contract locale expectation that omits `hr` resources.
 
 ## Time zone rule (absolute)
 
-- **Changing `TIME_ZONE` requires a planned data migration.** Existing
-  `DATETIME` values were written in the previous storage zone; converting only
-  the application setting shifts every stored timestamp. Freeze writes, migrate
-  all DATETIME columns, and record the new zone before serving traffic.
-- `TIME_ZONE` must be an IANA identifier such as `UTC` or `Asia/Jakarta`, not an
-  abbreviation such as `WIB`. Invalid values fall back to UTC.
-- **Storage time zone is the configured server `TIME_ZONE`.** Use
-  `App_time` / `app_now()` / `app_to_storage()` for timestamps. Do not add new
-  raw `date('Y-m-d H:i:s')` calls for stored timestamps.
+- **Storage time zone is fixed to UTC.** Do not configure a separate storage
+  time zone. Use `App_time` / `app_now()` / `app_to_storage()` for timestamps.
+  Do not add new raw `date('Y-m-d H:i:s')` calls for stored timestamps.
 - **Display time zone is the browser local zone.** Server-time values must be
   rendered through UTC ISO (`app_utc_iso()` or `<time data-local-datetime>`)
   and formatted by `web/assets/js/app-time.js`. Never render raw database

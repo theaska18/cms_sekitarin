@@ -350,7 +350,7 @@ class Finance_api extends CI_Controller
             'status' => 'cancelled',
             'review_status' => 'cancelled',
             'inbox_id' => $inbox_id,
-            'cancelled_at' => $cancelled_at,
+            'cancelled_at' => app_utc_iso($cancelled_at),
         ), 200);
     }
 

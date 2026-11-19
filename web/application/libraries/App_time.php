@@ -4,8 +4,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /**
  * Central time conversion.
  *
- * Storage uses the configured server timezone. Browser-facing values are
- * converted to UTC ISO and formatted to the browser local zone by app-time.js.
+ * Storage is fixed to UTC. Browser-facing values are emitted as UTC ISO and
+ * formatted to the browser local zone by app-time.js.
  */
 class App_time
 {
@@ -13,7 +13,7 @@ class App_time
 
     public function __construct()
     {
-        $this->storage = new DateTimeZone(date_default_timezone_get());
+        $this->storage = new DateTimeZone('UTC');
     }
 
     public function storage_timezone()

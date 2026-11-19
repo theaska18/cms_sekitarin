@@ -3044,6 +3044,7 @@ class Admin_finance extends Admin
         }
         $tenant_id = (int) $this->current_user['tenant_id'];
         $client_timezone = $this->input->get('client_timezone', TRUE);
+        $client_timezone_name = $this->app_time->client_timezone($client_timezone)->getName();
         $rows = $store->rows($slug, $tenant_id, $filters['start_on'], $filters['end_on']);
         if ($rows === FALSE) {
             $this->session->set_flashdata('finance_status', 'unavailable');
@@ -3090,6 +3091,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array($as_of_report ? 'As of' : 'Period',
             $as_of_report ? $filters['end_on'] : $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Time Zone', $client_timezone_name));
         $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
@@ -3183,6 +3185,7 @@ class Admin_finance extends Admin
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
         $client_timezone = $this->input->get('client_timezone', TRUE);
+        $client_timezone_name = $this->app_time->client_timezone($client_timezone)->getName();
         $filters = $this->finance_report_dates();
         $method = strtolower((string) $this->input->get('method', TRUE)) === 'indirect' ? 'indirect' : 'direct';
         if (!empty($filters['errors'])) {
@@ -3226,6 +3229,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Method', $method_label));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Time Zone', $client_timezone_name));
         $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
@@ -3361,6 +3365,7 @@ class Admin_finance extends Admin
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
         $client_timezone = $this->input->get('client_timezone', TRUE);
+        $client_timezone_name = $this->app_time->client_timezone($client_timezone)->getName();
         $filters = $this->finance_report_dates();
         if (!empty($filters['errors'])) {
             $this->session->set_flashdata('finance_status', 'invalid_range');
@@ -3401,6 +3406,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Tenant', $tenant_name));
         $this->finance_csv_row($stream, array('Period', $filters['start_on'] . ' s/d ' . $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Time Zone', $client_timezone_name));
         $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));
@@ -3483,6 +3489,7 @@ class Admin_finance extends Admin
     {
         $this->lang->load('finance', $this->resolve_admin_locale());
         $client_timezone = $this->input->get('client_timezone', TRUE);
+        $client_timezone_name = $this->app_time->client_timezone($client_timezone)->getName();
         $filters = $this->finance_report_dates();
         if (!empty($filters['errors'])) {
             $this->session->set_flashdata('finance_status', 'invalid_range');
@@ -3519,6 +3526,7 @@ class Admin_finance extends Admin
         $this->finance_csv_row($stream, array('Tenant', $tenant_name));
         $this->finance_csv_row($stream, array('As of', $filters['end_on']));
         $this->finance_csv_row($stream, array('Base Currency', $base_currency));
+        $this->finance_csv_row($stream, array('Time Zone', $client_timezone_name));
         $this->finance_csv_row($stream, array('Generated', $this->app_time->localize(app_now(), $client_timezone)));
         $this->finance_csv_row($stream, array('Prepared By', $prepared_by));
         $this->finance_csv_row($stream, array('Source', 'Posted journals'));

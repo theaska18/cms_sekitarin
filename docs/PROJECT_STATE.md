@@ -59,16 +59,14 @@ Dokumentasi lengkap: [`web/updates/README.md`](../web/updates/README.md).
 
 ## Aturan waktu
 
-- Penyimpanan timestamp mengikuti `TIME_ZONE` server melalui `App_time`/`app_now()`.
+- Penyimpanan timestamp selalu UTC melalui `App_time`/`app_now()`.
 - Tampilan timestamp selalu dikonversi ke timezone browser melalui `app-time.js`
   atau `<time data-local-datetime>`.
 - Input datetime dari browser dikonversi ke timezone server sebelum disimpan.
 - Tanggal kalender tidak digeser timezone.
 - Export waktu memakai `client_timezone` browser.
 - Detail aturan ada di `AGENTS.md` bagian **Time zone rule (absolute)**.
-- Mengubah `TIME_ZONE` bukan sekadar ubah `.env`: data `DATETIME` lama harus
-  dimigrasikan dari zona lama ke zona baru agar tidak bergeser.
-- Nilai `TIME_ZONE` wajib IANA (`UTC`, `Asia/Jakarta`), bukan `WIB`.
+- Tidak ada konfigurasi `TIME_ZONE` terpisah; storage dikunci ke UTC.
 
 ## Database
 

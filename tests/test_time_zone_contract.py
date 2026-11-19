@@ -13,7 +13,7 @@ class TimeZoneContractTests(unittest.TestCase):
         self.assertIn("'app_time'", autoload.split("$autoload['helper']", 1)[1])
         for marker in (
             "function now_storage_string", "function utc_iso", "function to_storage",
-            "function localize", "date_default_timezone_get()",
+            "function localize", "new DateTimeZone('UTC')",
         ):
             self.assertIn(marker, library)
         helper = (APP / "helpers" / "app_time_helper.php").read_text(encoding="utf-8")
@@ -46,6 +46,7 @@ class TimeZoneContractTests(unittest.TestCase):
         self.assertIn("client_timezone", controller)
         self.assertIn("->localize(", controller)
         self.assertIn("client_timezone", report)
+        self.assertIn("Time Zone", controller)
 
     def test_special_reports_mark_default_dates_for_local_sync(self):
         helper = (ROOT / "web/assets/js/app-time.js").read_text(encoding="utf-8")
@@ -54,10 +55,16 @@ class TimeZoneContractTests(unittest.TestCase):
             source = (APP / "views/admin/finance" / name).read_text(encoding="utf-8")
             self.assertIn('data-local-date="end"', source, name)
 
-    def test_invalid_time_zone_falls_back_to_utc(self):
+    def test_storage_time_zone_is_fixed_to_utc(self):
         config = (APP / "config" / "config.php").read_text(encoding="utf-8")
         self.assertIn("date_default_timezone_set('UTC')", config)
-        self.assertIn("date_default_timezone_set($time_zone)", config)
+        self.assertNotIn("getenv('TIME_ZONE')", config)
+        for name in (".env.example", "docker-compose.yml"):
+            self.assertNotIn("TIME_ZONE", (ROOT / name).read_text(encoding="utf-8"), name)
+
+    def test_api_cancelled_at_is_utc_iso(self):
+        api = (APP / "controllers/Finance_api.php").read_text(encoding="utf-8")
+        self.assertIn("'cancelled_at' => app_utc_iso($cancelled_at)", api)
 
     def test_new_timestamps_use_server_time_helper(self):
         sample = (APP / "controllers/Admin_finance.php").read_text(encoding="utf-8")

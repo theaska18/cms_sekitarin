@@ -510,12 +510,11 @@ $config['compress_output'] = FALSE;
 | helper' page of the user guide for information regarding date handling.
 |
 */
-$time_zone = getenv('TIME_ZONE');
-if ($time_zone === FALSE || $time_zone === '' || !@date_default_timezone_set($time_zone))
-{
-	// Keep storage deterministic when TIME_ZONE is missing or not an IANA zone.
-	date_default_timezone_set('UTC');
-}
+/*
+| Storage time zone is fixed to UTC. Browser-facing timestamps are converted
+| to the user's local zone by App_time/app-time.js.
+*/
+date_default_timezone_set('UTC');
 
 $config['time_reference'] = 'local';
 
