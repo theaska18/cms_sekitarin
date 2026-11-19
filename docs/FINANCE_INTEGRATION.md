@@ -42,6 +42,7 @@ yang sebenarnya di form draft.
    ```text
    database/migrations/20261119000200_create_finance_inbox.sql
    database/migrations/20261119000400_add_finance_inbox_cancelled.sql
+   database/migrations/20261119001000_allow_finance_inbox_number_reuse.sql
    ```
 
    Tabel yang dibuat:
@@ -135,7 +136,7 @@ Field:
 
 | Field | Wajib | Tipe | Keterangan |
 | --- | --- | --- | --- |
-| `invoice_number` | Ya | string, maks. 48 | Nomor faktur dari sistem eksternal. Unik per tenant. |
+| `invoice_number` | Ya | string, maks. 48 | Nomor faktur dari sistem eksternal. Unik di antara data aktif per tenant. |
 | `invoice_date` | Ya | `YYYY-MM-DD` | Tanggal invoice dari sistem eksternal. |
 | `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `invoice_date`. |
 | `customer_name` | Ya | string, maks. 160 | Nama pelanggan sebagai referensi. Tidak dipakai untuk mapping. |
@@ -189,7 +190,7 @@ Field:
 
 | Field | Wajib | Tipe | Keterangan |
 | --- | --- | --- | --- |
-| `bill_number` | Ya | string, maks. 48 | Nomor tagihan dari sistem eksternal. Unik per tenant. |
+| `bill_number` | Ya | string, maks. 48 | Nomor tagihan dari sistem eksternal. Unik di antara data aktif per tenant. |
 | `bill_date` | Ya | `YYYY-MM-DD` | Tanggal tagihan dari sistem eksternal. |
 | `due_date` | Tidak | `YYYY-MM-DD` | Tanggal jatuh tempo. Tidak boleh lebih awal dari `bill_date`. |
 | `supplier_name` | Ya | string, maks. 160 | Nama pemasok sebagai referensi. Tidak dipakai untuk mapping. |
@@ -312,15 +313,20 @@ curl -X DELETE 'http://localhost:8086/api/finance/sales-invoices?invoice_number=
   -H 'Authorization: Bearer <api_secret>'
 ```
 
-Pembatalan hanya diizinkan jika:
+Pembatalan diizinkan jika:
 
 ```text
-status inbox = received
-sales_invoice_id / purchase_bill_id = NULL
+status inbox = received dan belum ada draft
 ```
 
-Jika sudah dibuatkan draft, termasuk draft yang sudah posted, permintaan ditolak
-dengan `409` dan data tidak diubah.
+atau:
+
+```text
+draft terkait sudah berstatus cancelled
+```
+
+Jika draft masih aktif atau sudah posted, permintaan ditolak dengan `409` dan
+data tidak diubah.
 
 Respons sukses `200`:
 
@@ -370,8 +376,14 @@ Jika sudah posted:
 ```
 
 Pembatalan tidak menyentuh `fin_sales_invoice`, `fin_purchase_bill`, jurnal, atau
-posting. Nomor dokumen tetap tersimpan dan masih dianggap sudah pernah diterima,
-sehingga pengiriman ulang nomor yang sama akan dibalas `409`.
+posting. Baris cancelled tetap tersimpan untuk audit.
+
+Nomor yang sudah `cancelled` boleh dikirim ulang. Setiap pengiriman ulang membuat
+baris inbox baru, sedangkan baris lama tetap tersimpan. Hanya satu baris aktif
+yang boleh memakai nomor yang sama per tenant.
+
+Jika masih ada baris aktif (`received` atau `processed`), pengiriman ulang nomor
+yang sama tetap dibalas `409 duplicate`.
 
 ## Perhitungan
 
@@ -420,8 +432,10 @@ Contoh `409`:
 }
 ```
 
-Nomor dokumen unik per tenant dan per jenis dokumen. Mengirim ulang nomor yang
-sama tidak membuat data baru; respons berisi `inbox_id` data yang sudah ada.
+Nomor dokumen unik di antara data aktif per tenant dan per jenis dokumen.
+Mengirim ulang nomor yang masih aktif tidak membuat data baru; respons berisi
+`inbox_id` data aktif tersebut. Jika semua data lama sudah `cancelled`, nomor
+boleh dipakai lagi dan API membuat baris inbox baru.
 
 ## Tabel inbox
 
@@ -431,7 +445,7 @@ Kolom utama:
 
 ```text
 sales_invoice_inbox_id, tenant_id, created_by,
-invoice_number, invoice_date, due_date, customer_name, customer_code,
+invoice_number, active_invoice_number, invoice_date, due_date, customer_name, customer_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
 sales_invoice_id, payload_json, received_at, processed_at, cancelled_at
@@ -443,7 +457,7 @@ Kolom utama:
 
 ```text
 purchase_bill_inbox_id, tenant_id, created_by,
-bill_number, bill_date, due_date, supplier_name, supplier_code,
+bill_number, active_bill_number, bill_date, due_date, supplier_name, supplier_code,
 amount_before_tax, tax_percent, tax_amount, total_amount,
 description, status, error_message,
 purchase_bill_id, payload_json, received_at, processed_at, cancelled_at
@@ -455,7 +469,7 @@ Status yang dipakai:
 | --- | --- |
 | `received` | Data baru diterima dari API dan menunggu diproses Finance. |
 | `processed` | Sudah dikonversi menjadi draft dan terhubung ke dokumen Finance. |
-| `cancelled` | Dibatalkan lewat API sebelum dibuatkan draft. Tidak tampil di halaman inbox. |
+| `cancelled` | Dibatalkan lewat API, atau draft terkait sudah dibatalkan. Tetap tampil di halaman inbox sebagai riwayat. |
 
 `payload_json` menyimpan body asli yang dikirim sistem eksternal untuk audit.
 `created_by` adalah user pemilik secret API. Data `cancelled` tetap tersimpan dan
@@ -484,9 +498,9 @@ Isi halaman:
 - tombol **Jadikan Draft**;
 - tombol **Lihat Draft** jika sudah diproses.
 
-Data berstatus `cancelled` tidak ditampilkan di daftar admin, sehingga dari sisi
-Finance terlihat seperti terhapus. Datanya tetap tersimpan untuk audit dan masih
-bisa dibaca lewat API status.
+Data berstatus `cancelled` tetap ditampilkan di daftar admin dengan status
+**Dibatalkan** agar riwayat dan audit terlihat. Nomor yang sudah cancelled boleh
+dikirim ulang dan akan muncul sebagai baris baru.
 
 Endpoint data tabel:
 

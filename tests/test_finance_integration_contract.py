@@ -8,6 +8,9 @@ CANCEL_MIGRATION = ROOT / "database/migrations/20261119000400_add_finance_inbox_
 DATES_MIGRATION = ROOT / "database/migrations/20261119000500_add_finance_inbox_dates.sql"
 REFERENCE_MIGRATION = ROOT / "database/migrations/20261119000600_add_finance_draft_integration_reference.sql"
 SYNC_MIGRATION = ROOT / "database/migrations/20261119000900_sync_finance_inbox_cancelled_status.sql"
+REUSE_MIGRATION = ROOT / "database/migrations/20261119001000_allow_finance_inbox_number_reuse.sql"
+SCHEMA = ROOT / "database/schema.sql"
+DOCS = ROOT / "docs/FINANCE_INTEGRATION.md"
 CANCELLATION_STORE = APP / "libraries/Finance_cancellation_store.php"
 API = APP / "controllers/Finance_api.php"
 ADMIN = APP / "controllers/Admin_finance_integration.php"
@@ -58,7 +61,7 @@ class FinanceIntegrationContractTests(unittest.TestCase):
             "function sales_invoices", "function purchase_bills",
             "Authorization", "X-API-Secret", "hash_equals",
             "access_api_flag", "block_flag", "tenant_id",
-            "find_number", "raw_input_stream", "review_status",
+            "find_number", "find_active_number", "raw_input_stream", "review_status",
             "status' => 'accepted'", "202",
             "strlen($description) > 240",
             "function dispatch", "function read_or_cancel", "function resolve_identifier",
@@ -138,7 +141,30 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("->where('status', 'received')", store)
         self.assertIn("$spec['date'] => (string) $data['date']", store)
         self.assertIn("function cancel_linked_cancelled", store)
+        self.assertIn("function find_active_number", store)
+        self.assertIn("status !=', 'cancelled", store)
+        self.assertIn("CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
+
+    def test_cancelled_numbers_can_be_submitted_again(self):
+        migration = REUSE_MIGRATION.read_text(encoding="utf-8")
+        schema = SCHEMA.read_text(encoding="utf-8")
+        for table, column, number, key in (
+            ("fin_sales_invoice_inbox", "active_invoice_number", "invoice_number", "uk_sales_invoice_inbox_active_number"),
+            ("fin_purchase_bill_inbox", "active_bill_number", "bill_number", "uk_purchase_bill_inbox_active_number"),
+        ):
+            with self.subTest(table=table):
+                self.assertIn("ALTER TABLE `" + table + "`", migration)
+                self.assertIn("`" + column + "`", migration)
+                self.assertIn("`" + number + "`", migration)
+                self.assertIn("GENERATED ALWAYS AS", migration)
+                self.assertIn("`status` <> 'cancelled'", migration)
+                self.assertIn("UNIQUE KEY `" + key + "`", migration)
+                self.assertIn("`" + column + "`", schema)
+                self.assertIn("`" + key + "`", schema)
+        docs = DOCS.read_text(encoding="utf-8")
+        self.assertIn("Nomor yang sudah `cancelled` boleh dikirim ulang", docs)
+        self.assertIn("20261119001000_allow_finance_inbox_number_reuse.sql", docs)
 
     def test_cancelled_drafts_sync_their_integration_inbox_rows(self):
         store = CANCELLATION_STORE.read_text(encoding="utf-8")

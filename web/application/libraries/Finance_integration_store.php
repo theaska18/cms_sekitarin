@@ -114,6 +114,27 @@ class Finance_integration_store
         $query = $this->db->from($spec['table'])
             ->where('tenant_id', (int) $tenant_id)
             ->where($spec['number'], (string) $number)
+            ->order_by("CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END", 'ASC', FALSE)
+            ->order_by($spec['id'], 'DESC')
+            ->limit(1)
+            ->get();
+        if ($query === FALSE) {
+            return NULL;
+        }
+        return $query->num_rows() ? $query->row_array() : NULL;
+    }
+
+    public function find_active_number($kind, $tenant_id, $number)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || !$this->available($kind)) {
+            return NULL;
+        }
+        $query = $this->db->from($spec['table'])
+            ->where('tenant_id', (int) $tenant_id)
+            ->where($spec['number'], (string) $number)
+            ->where('status !=', 'cancelled')
+            ->order_by($spec['id'], 'DESC')
             ->limit(1)
             ->get();
         if ($query === FALSE) {

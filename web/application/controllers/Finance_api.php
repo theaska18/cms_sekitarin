@@ -106,7 +106,7 @@ class Finance_api extends CI_Controller
         $this->load->library('finance_integration_store');
         $store = $this->finance_integration_store;
         $tenant_id = (int) $user['tenant_id'];
-        $existing = $store->find_number($kind, $tenant_id, $number);
+        $existing = $store->find_active_number($kind, $tenant_id, $number);
         if ($existing !== NULL) {
             $this->duplicate_response($kind, $existing);
             return;
@@ -126,7 +126,7 @@ class Finance_api extends CI_Controller
             'payload_json' => $raw,
         ));
         if ($created !== TRUE) {
-            $existing = $store->find_number($kind, $tenant_id, $number);
+            $existing = $store->find_active_number($kind, $tenant_id, $number);
             if ($existing !== NULL) {
                 $this->duplicate_response($kind, $existing);
                 return;
