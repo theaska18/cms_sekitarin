@@ -356,6 +356,12 @@ $lang['finance_status_posted'] = 'Posted';
 $lang['finance_status_insufficient_balance'] = 'Insufficient cash/bank balance for this transaction.';
 $lang['finance_status_draft'] = 'Draft';
 $lang['finance_status_completed'] = 'Completed';
+$lang['finance_status_cancelled'] = 'Cancelled';
+$lang['finance_view_document'] = 'View Document';
+$lang['finance_back'] = 'Back';
+$lang['finance_tax_amount'] = 'Tax';
+$lang['finance_invoice_date'] = 'Invoice date';
+$lang['finance_bill_date'] = 'Bill date';
 // Finance validation fallbacks.
 $lang['finance_error_required'] = 'This field is required.';
 $lang['finance_error_invalid'] = 'Enter a valid value for this field.';

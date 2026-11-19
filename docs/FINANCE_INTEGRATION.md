@@ -496,7 +496,8 @@ Isi halaman:
 - nilai sebelum pajak, persen pajak, total;
 - status;
 - tombol **Jadikan Draft**;
-- tombol **Lihat Draft** jika sudah diproses.
+- tombol **Lihat Draft** untuk draft/revisi yang masih bisa diedit;
+- tombol **Lihat Dokumen** untuk dokumen yang sudah approved, posted, atau cancelled.
 
 Data berstatus `cancelled` tetap ditampilkan di daftar admin dengan status
 **Dibatalkan** agar riwayat dan audit terlihat. Nomor yang sudah cancelled boleh

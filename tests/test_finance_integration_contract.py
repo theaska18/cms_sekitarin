@@ -146,6 +146,27 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END", store)
         self.assertIn("->where('tenant_id', (int) $tenant_id)", store)
 
+    def test_posted_and_cancelled_documents_open_read_only(self):
+        routes = ROUTES.read_text(encoding="utf-8")
+        self.assertIn("$route['admin/finance/(:any)/view/(:num)'] = 'admin_finance/view/$1/$2';", routes)
+        self.assertLess(
+            routes.index("admin/finance/(:any)/view/(:num)"),
+            routes.index("admin/finance/(:any)/edit/(:num)")
+        )
+        controller = ADMIN_CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("public function view($slug = '', $id = NULL)", controller)
+        self.assertIn("finance_document_view", controller)
+        self.assertIn("admin/finance/document_view", controller)
+        store = STORE.read_text(encoding="utf-8")
+        self.assertIn("$row['draft_status']", store)
+        view = LIST_VIEW.read_text(encoding="utf-8")
+        self.assertIn("row.draft_status", view)
+        self.assertIn("'/view/'", view)
+        self.assertIn("finance_view_document", view)
+        detail = (APP / "views/admin/finance/document_view.php").read_text(encoding="utf-8")
+        for marker in ("finance_view_document", "finance_status_cancelled", "finance_document_number", "finance_document_integration_reference"):
+            self.assertIn(marker, detail)
+
     def test_cancelled_numbers_can_be_submitted_again(self):
         migration = REUSE_MIGRATION.read_text(encoding="utf-8")
         schema = SCHEMA.read_text(encoding="utf-8")

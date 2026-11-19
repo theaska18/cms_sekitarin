@@ -356,6 +356,12 @@ $lang['finance_status_posted'] = 'Diposting';
 $lang['finance_status_insufficient_balance'] = 'Saldo kas/bank tidak mencukupi untuk melakukan transaksi ini.';
 $lang['finance_status_draft'] = 'Draf';
 $lang['finance_status_completed'] = 'Selesai';
+$lang['finance_status_cancelled'] = 'Dibatalkan';
+$lang['finance_view_document'] = 'Lihat Dokumen';
+$lang['finance_back'] = 'Kembali';
+$lang['finance_tax_amount'] = 'Pajak';
+$lang['finance_invoice_date'] = 'Tanggal Faktur';
+$lang['finance_bill_date'] = 'Tanggal Tagihan';
 // Finance validation fallbacks.
 $lang['finance_error_required'] = 'Kolom ini wajib diisi.';
 $lang['finance_error_invalid'] = 'Masukkan nilai yang valid untuk kolom ini.';

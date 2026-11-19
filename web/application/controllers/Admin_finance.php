@@ -975,6 +975,16 @@ class Admin_finance extends Admin
         $this->finance_form($resource, NULL);
     }
 
+    public function view($slug = '', $id = NULL)
+    {
+        if (in_array($slug, array('sales_invoices', 'purchase_bills'), TRUE)
+            && is_numeric($id) && (int) $id > 0) {
+            $this->finance_document_view($slug, (int) $id);
+            return;
+        }
+        show_404();
+    }
+
     public function edit($slug = '', $id = NULL)
     {
         if (in_array($slug, array('income', 'expenses'), TRUE)) {
@@ -2277,6 +2287,74 @@ class Admin_finance extends Admin
         $this->db->db_debug = $previous_db_debug;
         $this->session->set_flashdata('finance_status', $result);
         redirect('/admin/finance/' . $slug, 'location', 303);
+    }
+
+    private function finance_document_view($slug, $id)
+    {
+        $menu_code = $this->finance_document_menu_code($slug);
+        if ($menu_code === NULL || !$this->has_admin_menu_code($menu_code)) {
+            $this->finance_forbidden();
+            return;
+        }
+        $kind = $slug === 'sales_invoices' ? 'sales' : 'purchase';
+        $this->load->library('finance_document_store');
+        $store = $this->finance_document_store;
+        $available = $store->available($kind);
+        if (!$available) {
+            show_error('Finance document storage is unavailable.', 503);
+            return;
+        }
+        $saved = $store->find((int) $this->current_user['tenant_id'], $kind, (int) $id);
+        if ($saved === NULL) {
+            show_404();
+            return;
+        }
+        if ($saved === FALSE) {
+            show_error('Finance document storage is unavailable.', 503);
+            return;
+        }
+        $spec = $kind === 'sales'
+            ? array('number' => 'invoice_number', 'date' => 'invoice_date')
+            : array('number' => 'bill_number', 'date' => 'bill_date');
+        $record = $saved;
+        $record['document_date'] = $saved[$spec['date']];
+        $record['person_id'] = $saved[$kind === 'sales' ? 'customer_id' : 'supplier_id'];
+        if (!empty($saved['line'])) {
+            $record['account_id'] = $saved['line']['account_id'];
+            $record['tax_id'] = $saved['line']['tax_id'];
+            $record['department_id'] = $saved['line']['department_id'];
+            $record['amount'] = $saved['line']['line_subtotal'];
+            $record['description'] = $saved['line']['description'];
+        }
+        $lookup_labels = array();
+        foreach (array('party', 'account', 'tax') as $lookup_kind) {
+            $field = $lookup_kind === 'party' ? 'person_id' : ($lookup_kind === 'account' ? 'account_id' : 'tax_id');
+            $lookup_labels[$field] = !empty($record[$field])
+                ? $store->lookup_label((int) $this->current_user['tenant_id'], $kind, $lookup_kind, $record[$field])
+                : '';
+        }
+        $integration_reference = !empty($record['integration_number']) ? (string) $record['integration_number'] : '';
+        $integration_party = '';
+        if (!empty($record['integration_party_name'])) {
+            $integration_party = (string) $record['integration_party_name'];
+            if (!empty($record['integration_party_code'])) {
+                $integration_party .= ' (' . (string) $record['integration_party_code'] . ')';
+            }
+        }
+        $this->render_admin(
+            'admin/finance/document_view',
+            'finance_' . $slug,
+            '/admin/finance/' . $slug . '/view/' . (int) $id,
+            array(
+                'finance_document_slug' => $slug,
+                'finance_document_kind' => $kind,
+                'finance_document_record' => $record,
+                'finance_document_lookup_labels' => $lookup_labels,
+                'finance_document_integration_reference' => $integration_reference,
+                'finance_document_integration_party' => $integration_party,
+                'finance_document_number' => (string) $saved[$spec['number']],
+            )
+        );
     }
 
     private function finance_document_form($slug, $id)

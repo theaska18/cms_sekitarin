@@ -85,7 +85,18 @@ class Finance_integration_store
             ->order_by($spec['id'], 'DESC')
             ->limit($limit, $offset)
             ->get();
-        return $query === FALSE ? array() : $query->result_array();
+        if ($query === FALSE) {
+            return array();
+        }
+        $rows = $query->result_array();
+        foreach ($rows as &$row) {
+            $document_id = (int) $row[$spec['document_id']];
+            $row['draft_status'] = $document_id > 0
+                ? $this->document_status($kind, (int) $tenant_id, $document_id)
+                : NULL;
+        }
+        unset($row);
+        return $rows;
     }
 
     public function find($kind, $tenant_id, $inbox_id)

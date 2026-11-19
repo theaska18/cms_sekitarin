@@ -75,7 +75,13 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
                 if (type !== 'display' || !canProcess) return '';
                 var id = parseInt(row[documentField], 10);
                 if (id > 0) {
-                    return '<a class="inline-flex min-h-9 items-center rounded-lg border border-emerald-300 px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" href="' + escapeHtml('/admin/finance/' + <?= json_encode($slug) ?> + '/edit/' + id) + '"><?= html_escape(isset($labels['finance_integration_view_draft']) ? $labels['finance_integration_view_draft'] : 'Lihat Draft') ?></a>';
+                    var draftStatus = String(row.draft_status || '');
+                    var editable = draftStatus === 'draft' || draftStatus === 'revise';
+                    var action = editable ? '/edit/' : '/view/';
+                    var actionLabel = editable
+                        ? <?= json_encode(isset($labels['finance_integration_view_draft']) ? $labels['finance_integration_view_draft'] : 'Lihat Draft') ?>
+                        : <?= json_encode(isset($labels['finance_view_document']) ? $labels['finance_view_document'] : 'Lihat Dokumen') ?>;
+                    return '<a class="inline-flex min-h-9 items-center rounded-lg border border-emerald-300 px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" href="' + escapeHtml('/admin/finance/' + <?= json_encode($slug) ?> + action + id) + '">' + escapeHtml(actionLabel) + '</a>';
                 }
                 return '<a class="inline-flex min-h-9 items-center rounded-lg bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700" href="' + escapeHtml(base + '/draft/' + parseInt(row[inboxField], 10)) + '"><?= html_escape(isset($labels['finance_integration_make_draft']) ? $labels['finance_integration_make_draft'] : 'Jadikan Draft') ?></a>';
             }},
