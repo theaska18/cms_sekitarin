@@ -1,15 +1,15 @@
 /* Shared top-bar actions and demo notification/message panels. */
 .admin-topbar{z-index:40!important}
 .admin-topbar .admin-quick-actions{display:flex;align-items:center;gap:2px}
-.admin-topbar .admin-home-action{display:none;min-height:40px;align-items:center;gap:7px;padding:0 10px;border:1px solid transparent;border-radius:11px;color:#065f46;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.admin-topbar .admin-home-action{display:none;min-height:40px;align-items:center;gap:7px;padding:0 10px;border:1px solid transparent;border-radius:11px;color:#022c22;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
 @media (min-width:768px){.admin-topbar .admin-home-action{display:inline-flex}}
 .admin-topbar .admin-home-action svg{width:18px;height:18px}
-.admin-topbar .admin-home-action:hover{border-color:#6ee7b7;background:#a7f3d0;color:#022c22}
-.admin-topbar .admin-quick-action{position:relative;display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid transparent;border-radius:11px;background:transparent;color:#065f46;cursor:pointer;transition:background-color .16s,color .16s,border-color .16s}
-.admin-topbar .admin-quick-action:hover,.admin-topbar .admin-quick-action[aria-expanded="true"]{border-color:#6ee7b7;background:#a7f3d0;color:#022c22}
+.admin-topbar .admin-home-action:hover{border-color:#34d399;background:#34d399;color:#022c22}
+.admin-topbar .admin-quick-action{position:relative;display:inline-flex;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid transparent;border-radius:11px;background:transparent;color:#022c22;cursor:pointer;transition:background-color .16s,color .16s,border-color .16s}
+.admin-topbar .admin-quick-action:hover,.admin-topbar .admin-quick-action[aria-expanded="true"]{border-color:#34d399;background:#34d399;color:#022c22}
 .admin-topbar .admin-quick-action:focus-visible{outline:2px solid #047857;outline-offset:2px}
 .admin-topbar .admin-quick-action svg{width:19px;height:19px}
-.admin-topbar .admin-action-badge{position:absolute;top:3px;right:2px;display:grid;min-width:16px;height:16px;place-items:center;padding:0 3px;border:2px solid #d1fae5;border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;line-height:1}
+.admin-topbar .admin-action-badge{position:absolute;top:3px;right:2px;display:grid;min-width:16px;height:16px;place-items:center;padding:0 3px;border:2px solid #6ee7b7;border-radius:999px;background:#dc2626;color:#fff;font-size:9px;font-weight:700;line-height:1}
 .admin-topbar .admin-demo-popover{position:fixed;top:72px;right:16px;left:auto;z-index:110;width:360px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 88px);overflow:auto;border:1px solid #e2e8f0;border-radius:16px;background:#fff;color:#1e293b;box-shadow:0 18px 48px rgba(15,23,42,.18);pointer-events:auto;touch-action:pan-y}
 .admin-topbar .admin-popover-heading strong,.admin-topbar .admin-demo-copy strong{color:#1e293b}
 .admin-topbar .admin-demo-copy a{color:#1e293b}
@@ -58,7 +58,7 @@ html[data-theme="dark"] .notification-list-scroll::-webkit-scrollbar-thumb,body[
 html[data-theme="dark"] .notification-list-scroll:focus-within,html[data-theme="dark"] .notification-list-scroll:hover,body[data-theme="dark"] .notification-list-scroll:focus-within,body[data-theme="dark"] .notification-list-scroll:hover{scrollbar-color:#64748b transparent}
 html[data-theme="dark"] .notification-list-scroll:focus-within::-webkit-scrollbar-thumb,html[data-theme="dark"] .notification-list-scroll:hover::-webkit-scrollbar-thumb,body[data-theme="dark"] .notification-list-scroll:focus-within::-webkit-scrollbar-thumb,body[data-theme="dark"] .notification-list-scroll:hover::-webkit-scrollbar-thumb{background:#64748b}
 
-.admin-topbar #admin-notifications-toggle[aria-current="page"]:hover,.admin-topbar #admin-notifications-toggle[aria-current="page"]:focus-visible{border-color:#6ee7b7;background:#a7f3d0;color:#022c22}
+.admin-topbar #admin-notifications-toggle[aria-current="page"]:hover,.admin-topbar #admin-notifications-toggle[aria-current="page"]:focus-visible{border-color:#34d399;background:#34d399;color:#022c22}
 html[data-theme="dark"] .admin-topbar #admin-notifications-toggle[aria-current="page"]:hover,html[data-theme="dark"] .admin-topbar #admin-notifications-toggle[aria-current="page"]:focus-visible,body[data-theme="dark"] .admin-topbar #admin-notifications-toggle[aria-current="page"]:hover,body[data-theme="dark"] .admin-topbar #admin-notifications-toggle[aria-current="page"]:focus-visible{border-color:#047857;background:#065f46;color:#ffffff}
 
 .admin-topbar .admin-demo-item-link{color:inherit;text-decoration:none;cursor:pointer;transition:background-color .16s ease}
@@ -70,12 +70,12 @@ html[data-theme="dark"] .admin-topbar .admin-demo-item-link:hover .admin-demo-co
 
 
 /* Topbar menu, profile, and logo controls on the solid emerald surface. */
-.admin-topbar #admin-menu-toggle{border-color:#6ee7b7;background:#ecfdf5;color:#065f46}
-.admin-topbar #admin-menu-toggle:hover{background:#a7f3d0;color:#022c22}
-.admin-topbar #admin-profile-toggle{color:#065f46}
-.admin-topbar #admin-profile-toggle:hover,.admin-topbar #admin-profile-toggle[aria-expanded="true"]{background:#a7f3d0;color:#022c22}
+.admin-topbar #admin-menu-toggle{border-color:#34d399;background:#a7f3d0;color:#022c22}
+.admin-topbar #admin-menu-toggle:hover{background:#34d399;color:#022c22}
+.admin-topbar #admin-profile-toggle{color:#022c22}
+.admin-topbar #admin-profile-toggle:hover,.admin-topbar #admin-profile-toggle[aria-expanded="true"]{background:#34d399;color:#022c22}
 .admin-topbar #admin-profile-toggle span{color:inherit}
-.admin-topbar #admin-profile-toggle img{border-color:#6ee7b7;background:#ecfdf5}
+.admin-topbar #admin-profile-toggle img{border-color:#34d399;background:#ecfdf5}
 html[data-theme="dark"] .admin-topbar #admin-menu-toggle,body[data-theme="dark"] .admin-topbar #admin-menu-toggle{border-color:#047857;background:#065f46;color:#d1fae5}
 html[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover,body[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover{background:#047857;color:#ffffff}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle,body[data-theme="dark"] .admin-topbar #admin-profile-toggle{color:#d1fae5}
