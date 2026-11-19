@@ -19,6 +19,7 @@ if (!$admin_languages) {
 $setting_locale = isset($admin_languages[$setting_locale]) ? $setting_locale : (isset($admin_languages['english']) ? 'english' : (string) key($admin_languages));
 $setting_language_label = isset($labels['setting_current_language']) ? $labels['setting_current_language'] : (isset($labels['admin_setting_current_language']) ? $labels['admin_setting_current_language'] : 'Language');
 ?>
+<div class="md:px-6 lg:px-8">
 <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
     <ol class="flex flex-wrap items-center gap-2">
         <li><?php echo html_escape($labels['system']); ?></li>
@@ -62,6 +63,7 @@ $setting_language_label = isset($labels['setting_current_language']) ? $labels['
     <aside class="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="setting-account-heading"><div class="flex items-center gap-3"><img src="<?php echo html_escape(!empty($admin_user['profile_image']) ? $admin_user['profile_image'] : '/assets/images/avatar-placeholder.svg'); ?>" alt="" aria-hidden="true" class="h-12 w-12 rounded-full border border-slate-200 bg-slate-100 object-cover"><div class="min-w-0"><p class="text-xs font-medium uppercase tracking-wide text-slate-500"><?php echo html_escape($labels['setting_account_heading']); ?></p><p class="truncate text-sm font-bold text-slate-900"><?php echo html_escape($admin_user['display_name'] ?? ''); ?></p></div></div><p class="mt-4 text-sm leading-6 text-slate-600"><?php echo html_escape($labels['setting_account_help']); ?></p><a href="/admin/profile" class="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"><?php echo html_escape($labels['profile']); ?><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6"/></svg></a></aside>
 </div>
 
+</div>
 <script>
 (function () {
     var language = document.getElementById('setting-locale');

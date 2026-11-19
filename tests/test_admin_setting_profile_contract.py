@@ -61,6 +61,7 @@ class AdminSettingProfileContractTests(unittest.TestCase):
         self.assertIn("name=\"theme\"", setting_view)
         self.assertIn("addEventListener('change'", setting_view)
         self.assertIn("requestSubmit()", setting_view)
+        self.assertIn('class="md:px-6 lg:px-8"', setting_view)
         theme_css = (ROOT / "web/assets/css/admin-theme.css").read_text()
         self.assertIn('html[data-theme="dark"]', theme_css)
         self.assertIn(".admin-topbar { background-color:", theme_css)
