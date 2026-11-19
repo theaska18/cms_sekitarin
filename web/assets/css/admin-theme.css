@@ -590,9 +590,10 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
 .finance-table-fade {
     position: absolute;
     top: 0;
-    bottom: 0;
+    bottom: auto;
     z-index: 5;
     width: 2.25rem;
+    height: 0;
     opacity: 0;
     pointer-events: none;
     transition: opacity .18s ease;

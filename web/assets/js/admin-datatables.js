@@ -97,10 +97,17 @@
             var atStart = !hasOverflow || position <= 1;
             var atEnd = !hasOverflow || position >= max - 1;
             var rtl = window.getComputedStyle && window.getComputedStyle(scroller).direction === 'rtl';
+            var wrapperRect = wrapper.getBoundingClientRect();
+            var scrollerRect = scroller.getBoundingClientRect();
+            var fadeTop = Math.max(0, scrollerRect.top - wrapperRect.top);
             if (leftFade) {
+                leftFade.style.top = fadeTop + 'px';
+                leftFade.style.height = scrollerRect.height + 'px';
                 leftFade.classList.toggle('is-visible', hasOverflow && (rtl ? !atEnd : !atStart));
             }
             if (rightFade) {
+                rightFade.style.top = fadeTop + 'px';
+                rightFade.style.height = scrollerRect.height + 'px';
                 rightFade.classList.toggle('is-visible', hasOverflow && (rtl ? !atStart : !atEnd));
             }
         }

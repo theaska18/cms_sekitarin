@@ -85,10 +85,13 @@ class DatatableLibraryRolloutContractTests(unittest.TestCase):
         self.assertIn(".finance-table-fade.is-right", css)
         self.assertIn(".finance-table-fade.is-visible", css)
         self.assertIn("width: 2.25rem", css)
+        self.assertIn("bottom: auto", css)
         self.assertIn("rgba(255, 255, 255, .45) 70%", css)
         self.assertIn("setupScrollFade", script)
         self.assertIn("scrollLeft", script)
         self.assertIn("bestOverflow", script)
+        self.assertIn("scrollerRect.height", script)
+        self.assertIn("leftFade.style.top", script)
         self.assertIn("draw.dt", script)
 
     def test_datatable_cell_padding_and_row_controls_are_shared(self):
