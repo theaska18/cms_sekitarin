@@ -81,3 +81,6 @@ html[data-theme="dark"] .admin-topbar #admin-menu-toggle:hover,body[data-theme="
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle,body[data-theme="dark"] .admin-topbar #admin-profile-toggle{color:#eff6ff}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle:hover,html[data-theme="dark"] .admin-topbar #admin-profile-toggle[aria-expanded="true"],body[data-theme="dark"] .admin-topbar #admin-profile-toggle:hover,body[data-theme="dark"] .admin-topbar #admin-profile-toggle[aria-expanded="true"]{background:#1e3a8a;color:#ffffff}
 html[data-theme="dark"] .admin-topbar #admin-profile-toggle img,body[data-theme="dark"] .admin-topbar #admin-profile-toggle img{border-color:#1e3a8a;background:#172554}
+
+/* Keep the text logo white on the solid topbar in every theme. */
+.admin-topbar a[href="/admin"] img{filter:brightness(0) invert(1) drop-shadow(0 0 1px rgba(255,255,255,.45))}

@@ -19,6 +19,9 @@ class AdminTopbarActionsContractTests(unittest.TestCase):
         self.assertIn('a[aria-label*="Home"] img', dark_css)
         self.assertIn('id="admin-home-link-mobile"', HEADER)
 
+    def test_topbar_text_logo_is_forced_white(self):
+        self.assertIn('.admin-topbar a[href="/admin"] img{filter:brightness(0) invert(1)', CSS)
+
     def test_home_buttons_are_hidden_when_landing_page_is_disabled(self):
         self.assertIn("'landing_page_enabled' => $this->property_store->landing_page_enabled()", (ROOT / "web/application/controllers/Admin.php").read_text())
         self.assertIn("<?php if ($landing_page_enabled): ?>", HEADER)
