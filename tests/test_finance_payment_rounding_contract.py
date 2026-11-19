@@ -58,7 +58,7 @@ class FinancePaymentRoundingContractTests(unittest.TestCase):
             self.assertIn(marker, view)
         for marker in (
             "data-payment-summary-outstanding", "Intl.NumberFormat", "function shouldAutoFill",
-            "isNewPayment", "setAmount(currentOutstanding)",
+            "isNewPayment", "function roundAmount", "setAmount(currentOutstanding)",
         ):
             self.assertIn(marker, view)
         controller = CONTROLLER.read_text(encoding="utf-8")

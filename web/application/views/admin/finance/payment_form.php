@@ -87,9 +87,15 @@ $summary_amount = function ($value) use ($summary_currency) {
         return String(amountInput.value||'');
     }
     function shouldAutoFill(){return !!payAll&&payAll.checked||(isNewPayment&&(amountRaw()===''||Number(amountRaw())===0));}
+    function roundAmount(value){
+        var amount=Number(value);
+        if(!isFinite(amount))return '';
+        var adjustment=amount>=0?1e-9:-1e-9;
+        return (Math.round((amount+adjustment)*100)/100).toFixed(2);
+    }
     function setAmount(value){
         if(!amountInput||value===null||value===undefined||!isFinite(Number(value)))return;
-        var raw=Number(value).toFixed(2);
+        var raw=roundAmount(value);
         if(window.jQuery&&window.jQuery(amountInput).data('currencyInputOptions'))window.jQuery(amountInput).currencyInput('set',raw);
         else amountInput.value=raw;
     }
