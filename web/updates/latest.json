@@ -1,11 +1,11 @@
 {
-  "version": "1.0.27",
+  "version": "1.0.28",
   "released_at": "2026-11-19",
-  "changelog": "Membatasi lebar tabel Riwayat Pembatalan: kolom alasan kini membungkus teks panjang dengan aturan CSS khusus yang mengalahkan nowrap tabel bersama, sehingga tabel tidak melebar berlebihan.",
+  "changelog": "Membatasi lebar tabel Finance secara menyeluruh: kolom teks panjang seperti deskripsi transaksi/jurnal, referensi pembayaran/rekonsiliasi, dan nama pelanggan/pemasok dipotong dengan tooltip, sedangkan alasan pembatalan dibungkus dalam lebar terbatas.",
   "min_php": "8.1",
-  "requires_version": "1.0.26",
-  "package": "cms-1.0.27.zip",
-  "sha256": "62c5af18b80c0da262b68d2da42b11ea46f2f58d0794f3152eb4788e3363f511",
-  "size": 13580,
+  "requires_version": "1.0.27",
+  "package": "cms-1.0.28.zip",
+  "sha256": "015bf87f440098ea0b84dc3ca7612d28486c8a2d4438d6d97507beca8946f0a3",
+  "size": 33210,
   "migrations": []
 }

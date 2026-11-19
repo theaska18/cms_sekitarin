@@ -1,0 +1,56 @@
+{
+  "version": "1.0.28",
+  "from_version": "1.0.27",
+  "channel": "stable",
+  "released_at": "2026-11-19",
+  "min_php": "8.1",
+  "requires_version": "1.0.27",
+  "changelog": "Membatasi lebar tabel Finance secara menyeluruh: kolom teks panjang seperti deskripsi transaksi/jurnal, referensi pembayaran/rekonsiliasi, dan nama pelanggan/pemasok dipotong dengan tooltip, sedangkan alasan pembatalan dibungkus dalam lebar terbatas.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "805e184abd58dd958622a9be9ef51e2b3225d6dbb913f0b9d66a7a02b44fdb6f",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "e1d200bf9e0539177f36637579de32a4ee062e546b19feffb17f06d7bd1d8576",
+      "size": 19804
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "f44b3cbc0f61b88cce1ab7fd023c9d35d145871cd87c3da91388fc5875c3f6df",
+      "size": 21018
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "36972979e67510de6dad3ce84a628e75450ab998aaf5d8258e09b715e199060c",
+      "size": 18228
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "63d8da344530beae67b83b961a1f490c4622ce094834b1637a4a03c4f8dbdad7",
+      "size": 11255
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "51f0c47c918f9137dc69970cd525ab9624021976ab21e78a710c09376c9b9308",
+      "size": 23621
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "a6b0ab87f17f6441ff15beacc466b7c89b723be79b1c430876a492f5d983031e",
+      "size": 54228
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.28.zip",
+    "sha256": "015bf87f440098ea0b84dc3ca7612d28486c8a2d4438d6d97507beca8946f0a3",
+    "size": 33210
+  },
+  "from_ref": "v1.0.27",
+  "generated_at": "2026-11-19T20:10:27+00:00"
+}
