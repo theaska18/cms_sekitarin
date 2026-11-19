@@ -537,16 +537,19 @@ class Admin_finance extends Admin
             foreach ($existing_rows as $row) {
                 $existing[$row['category_type'] . '|' . $row['category_code']] = TRUE;
             }
-            $conflicts = array_values(array_intersect(array_keys($file_keys), array_keys($existing)));
-            if ($conflicts) {
-                $errors[] = 'Import dibatalkan. Kategori sudah ada di tenant: ' . implode(', ', $conflicts) . '.';
+            $import_rows = array();
+            foreach ($rows as $row) {
+                $key = $row['category_type'] . '|' . $row['category_code'];
+                if (!isset($existing[$key])) {
+                    $import_rows[] = $row;
+                }
             }
         }
         if (!$errors && $rows) {
             $tenant_id = (int) $this->current_user['tenant_id'];
             $user_id = (int) $this->current_user['user_id'];
             $this->db->trans_begin();
-            foreach ($rows as $row) {
+            foreach ($import_rows as $row) {
                 $this->db->insert('fin_category', array(
                     'tenant_id' => $tenant_id,
                     'category_type' => $row['category_type'],
@@ -565,7 +568,7 @@ class Admin_finance extends Admin
             } else {
                 $this->db->trans_commit();
                 $this->session->set_flashdata('finance_status', 'category_imported');
-                $this->session->set_flashdata('category_import_count', count($rows));
+                $this->session->set_flashdata('category_import_count', count($import_rows));
                 redirect('/admin/finance/categories', 'location', 303);
                 return;
             }

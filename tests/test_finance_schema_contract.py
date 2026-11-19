@@ -337,7 +337,11 @@ class FinanceSchemaContractTests(unittest.TestCase):
         self.assertIn("finance_can_export", view)
         self.assertIn("finance_can_import", view)
         self.assertIn("$key = $type . '|' . $code", controller)
-        self.assertIn("Import dibatalkan. Kategori sudah ada di tenant", controller)
+        self.assertIn("$import_rows = array();", controller)
+        self.assertIn("!isset($existing[$key])", controller)
+        self.assertIn("foreach ($import_rows as $row)", controller)
+        self.assertIn("count($import_rows)", controller)
+        self.assertNotIn("Import dibatalkan. Kategori sudah ada di tenant", controller)
         self.assertIn("category_file", view)
         self.assertIn("finance_category_import_errors", view)
         for locale in ("english", "indonesian", "arabic", "chinese", "french", "german", "japanese", "korean", "spanish"):
