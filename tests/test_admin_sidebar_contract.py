@@ -148,6 +148,15 @@ class AdminSidebarContractTests(unittest.TestCase):
         self.assertIn("window.requestAnimationFrame(revealActiveMenu)", script)
         self.assertIn("@media (prefers-reduced-motion: reduce)", css)
 
+    def test_admin_shell_pushes_footer_to_the_bottom(self):
+        css = (ROOT / "web/assets/css/admin-theme.css").read_text()
+        self.assertIn("#admin-app-shell {", css)
+        self.assertIn("flex-direction: column;", css)
+        self.assertIn("min-height: 100vh;", css)
+        self.assertIn("min-height: 100dvh;", css)
+        self.assertIn("#admin-content-shell {", css)
+        self.assertIn("flex: 1 0 auto;", css)
+
     def test_all_existing_navigation_items_keep_destinations_and_have_decorative_icons(self):
         markup = HEADER.read_text()
         icon_map = markup.split("$menu_icons = array(", 1)[1].split(");", 1)[0]
