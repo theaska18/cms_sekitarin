@@ -1,3 +1,4 @@
+<main class="-mx-4 w-[calc(100%+2rem)] px-4 py-6 sm:mx-auto sm:w-full sm:max-w-7xl sm:px-6 sm:py-8 lg:px-8">
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
         <p class="text-xs font-bold uppercase tracking-[.16em] text-emerald-700"><?php echo html_escape($labels['admin_area']); ?></p>
@@ -44,3 +45,4 @@
         <p class="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-6 text-sm text-slate-500"><?php echo html_escape($labels['popular_menu_empty']); ?></p>
     <?php endif; ?>
 </section>
+</main>
