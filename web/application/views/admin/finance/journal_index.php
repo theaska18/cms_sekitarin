@@ -135,7 +135,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
             }},
             {data:'journal_number',name:'journal_number',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
             {data:'journal_date',name:'journal_date',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
-            {data:'description',name:'description',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
+            {data:'description',name:'description',className:'finance-cell-wrap',render:function(v,t){return t==='display'?'<span class="finance-cell-truncate" title="'+escapeHtml(v||'')+'">'+escapeHtml(v||'')+'</span>':v;}},
             {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?escapeHtml(v||''):v;}},
             {data:'debit_total',name:'debit_total',className:'text-right tabular-nums',render:function(v,t){return t==='display'?formatAmount(v):v;}},
             {data:'status',name:'status',render:function(v,t,row){

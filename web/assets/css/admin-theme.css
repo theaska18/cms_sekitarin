@@ -593,6 +593,15 @@ html[data-theme="dark"] #admin-app-shell #approval-error-table_wrapper div.dt-la
     min-width: 14rem;
 }
 
+#admin-app-shell .finance-list-table .finance-cell-truncate {
+    display: inline-block;
+    max-width: 18rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .finance-table-scroll {
     position: relative;
 }

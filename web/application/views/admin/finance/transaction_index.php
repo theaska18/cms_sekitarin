@@ -195,7 +195,7 @@ if ($can_add) {
             <?php if ($finance_transaction_slug === 'all_transactions'): ?>
             {data: 'transaction_type', name: 'transaction_type', render: function (v,t) { return t === 'display' ? escapeHtml(v === 'income' ? txLabels.typeIncome : txLabels.typeExpense) : v; }},
             <?php else: ?>
-            {data: 'description', name: 'description', render: function (v,t) { return t === 'display' ? escapeHtml(v || '') : v; }},
+            {data: 'description', name: 'description', className: 'finance-cell-wrap', render: function (v,t) { return t === 'display' ? '<span class="finance-cell-truncate" title="' + escapeHtml(v || '') + '">' + escapeHtml(v || '') + '</span>' : v; }},
             <?php endif; ?>
             {data: 'transaction_on', name: 'transaction_on', render: function (v,t) { return t === 'display' ? escapeHtml(window.financeFormatDate(v)) : v; }},
             {data: 'create_on', name: 'create_on', render: function (v,t) { return t === 'display' ? window.financeLocalTimeHtml(v) : v; }},

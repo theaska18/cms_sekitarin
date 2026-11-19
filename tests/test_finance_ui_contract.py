@@ -28,6 +28,11 @@ class FinanceUiContractTests(unittest.TestCase):
         self.assertIn("_count", store)
         theme = (ROOT / "web/assets/css/admin-theme.css").read_text(encoding="utf-8")
         self.assertIn("td.finance-cell-wrap", theme)
+        self.assertIn(".finance-cell-truncate", theme)
+        for name in ("transaction_index.php", "journal_index.php", "payment_index.php",
+                     "reconciliation_index.php", "document_index.php"):
+            source = (FIN / name).read_text(encoding="utf-8")
+            self.assertIn("finance-cell-truncate", source, name)
 
     def test_action_menu_and_cancel_dialog_are_localized_and_use_shared_confirm(self):
         script = (ROOT / "web/assets/js/finance-list.js").read_text(encoding="utf-8")
