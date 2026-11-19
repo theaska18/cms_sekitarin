@@ -10,7 +10,7 @@ class FinanceCancellationContractTests(unittest.TestCase):
         source = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
         for marker in (
             "function request(", "function finalize_for_request(", "function create_reversal(",
-            "request_action", "fin_cancellation", "approval_workflow_store->submit(",
+            "request_action", "fin_cancellation", "approval_workflow_store->submit(", "no_steps", "effective_steps(",
             "source_type' => 'reversal'", "debit_amount' => $line['credit_amount']",
             "credit_amount' => $line['debit_amount']", "status' => 'cancelled'",
         ):
@@ -43,7 +43,7 @@ class FinanceCancellationContractTests(unittest.TestCase):
         self.assertIn("request_action", migration)
         self.assertIn("CREATE TABLE IF NOT EXISTS `fin_cancellation`", migration)
         self.assertIn("finance_cancel", flow)
-        self.assertIn("superior", flow)
+        self.assertNotIn("sys_approval_flow_step", flow)
         self.assertIn("fin_cancellation", schema)
         self.assertIn("request_action", schema)
 

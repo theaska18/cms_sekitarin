@@ -63,6 +63,11 @@ class Finance_cancellation_store
         if ($flow_code === '') {
             return array('ok' => FALSE, 'error' => 'no_flow');
         }
+        $CI =& get_instance();
+        $CI->load->library('approval_workflow_store');
+        if (!$CI->approval_workflow_store->effective_steps($flow_code)) {
+            return array('ok' => FALSE, 'error' => 'no_steps');
+        }
         $inserted = $this->db->insert('fin_cancellation', array(
             'tenant_id' => (int) $tenant_id,
             'source_type' => $source_type,
@@ -78,8 +83,6 @@ class Finance_cancellation_store
             return array('ok' => FALSE, 'error' => 'save');
         }
         $cancellation_id = (int) $this->db->insert_id();
-        $CI =& get_instance();
-        $CI->load->library('approval_workflow_store');
         $result = $CI->approval_workflow_store->submit(
             $flow_code,
             'Pembatalan ' . $this->label($source_type, $row),

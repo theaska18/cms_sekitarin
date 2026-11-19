@@ -861,7 +861,7 @@ class Admin_finance extends Admin
             $status = 'approval_submitted';
         } else {
             $error = isset($result['error']) ? (string) $result['error'] : 'error';
-            $status = $error === 'no_flow' ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error');
+            $status = in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'not_submittable' : 'approval_error');
         }
         $this->session->set_flashdata('finance_status', $status);
         redirect($return_url, 'location', 303);

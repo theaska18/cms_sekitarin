@@ -18,8 +18,3 @@ SELECT 'finance_cancel', `menu_code` FROM (
 ) AS `cancel_menus`
 WHERE EXISTS (SELECT 1 FROM `sys_approval_flow` WHERE `flow_code` = 'finance_cancel');
 
-INSERT INTO `sys_approval_flow_step` (`flow_code`, `step_number`, `approver_type`, `create_on`)
-SELECT 'finance_cancel', 1, 'superior', NOW()
-WHERE NOT EXISTS (
-    SELECT 1 FROM `sys_approval_flow_step` WHERE `flow_code` = 'finance_cancel'
-);
