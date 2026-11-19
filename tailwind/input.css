@@ -599,15 +599,6 @@ body[data-theme="dark"] #admin-sidebar-fade-bottom {
     }
 }
 
-@media (min-width: 1024px) {
-    #admin-sidebar {
-        width: 16rem;
-    }
-
-#admin-main {
-    margin-inline-start: calc(16rem + 2rem);
-}
-}
 
 #admin-main .admin-finance-title-row {
     display: flex;
