@@ -1068,13 +1068,14 @@ class Admin_finance extends Admin
             show_404();
             return;
         }
-        $menu_code = $slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer'
-            : ($slug === 'opening_balances' ? 'fin_opening_balances'
-                : ($slug === 'journal_entries' ? 'fin_journal_entries'
-                    : ($slug === 'bank_reconciliation' ? 'fin_bank_reconciliation'
-                        : ($slug === 'sales_invoices' || $slug === 'purchase_bills'
-                            ? $this->finance_document_menu_code($slug)
-                            : $this->finance_payment_menu_code($slug)))));
+        $menu_code = $slug === 'income' || $slug === 'expenses' ? 'fin_' . $slug
+            : ($slug === 'cash_bank_transfer' ? 'fin_cash_bank_transfer'
+                : ($slug === 'opening_balances' ? 'fin_opening_balances'
+                    : ($slug === 'journal_entries' ? 'fin_journal_entries'
+                        : ($slug === 'bank_reconciliation' ? 'fin_bank_reconciliation'
+                            : ($slug === 'sales_invoices' || $slug === 'purchase_bills'
+                                ? $this->finance_document_menu_code($slug)
+                                : $this->finance_payment_menu_code($slug))))));
         if (!$this->has_admin_menu_code($menu_code)
             || !$this->has_admin_access_code($menu_code . '_update')) {
             $this->finance_forbidden();

@@ -36,6 +36,11 @@ class FinanceCancellationContractTests(unittest.TestCase):
         self.assertIn("finance-cancel-dialog", footer)
         self.assertIn('name="reason"', footer)
 
+    def test_income_and_expense_submit_approval_use_their_menu_codes(self):
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        submit = controller.split("public function submit_approval", 1)[1].split("private function", 1)[0]
+        self.assertIn("$slug === 'income' || $slug === 'expenses' ? 'fin_' . $slug", submit)
+
     def test_cancellation_migration_and_default_flow_exist(self):
         migration = (ROOT / "database" / "migrations" / "20261119000700_add_finance_cancellation.sql").read_text(encoding="utf-8")
         flow = (ROOT / "database" / "migrations" / "20261119000800_seed_finance_cancel_flow.sql").read_text(encoding="utf-8")
