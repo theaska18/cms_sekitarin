@@ -1,0 +1,96 @@
+{
+  "version": "1.0.31",
+  "from_version": "1.0.30",
+  "channel": "stable",
+  "released_at": "2026-11-20",
+  "min_php": "8.1",
+  "requires_version": "1.0.30",
+  "changelog": "Rilis pemeliharaan: tabel jurnal dashboard memakai DataTable server-side dengan filter dan pagination, waktu pada semua DataTable dikonversi ke zona waktu browser setelah load/pagination, tampilan dashboard diselaraskan dengan daftar Finance, serta dokumentasi klien PHP integrasi dan format timestamp UTC ISO.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "e41c1389e58631272da4ec808b4abd99693db14319bed1769742cca8c5551b28",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "1c954766d2fb1086758fad1a0572854fe1aea80ddbd0a1a73c86d53b781d10d8",
+      "size": 255971
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "3e8e356b23c7faa1e699c29da9da0bd9cba63c9331cc22cb940a2ea754939166",
+      "size": 54620
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "e8a541d946dceab1c2c7c631435e60bf0d41587886e2f2814ea6f386101c2be7",
+      "size": 43128
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "7ecde11113f48304b2994df68f027287038157eef4127c261200a76a213bf9fe",
+      "size": 45125
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "bea1e3ff485af8402122968e7418455b15bded1ac213b79092e31765e81a699c",
+      "size": 49177
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "3f922532f8adc1ceb37af04c507e48b62425a42683005f1fb31027c5184734f6",
+      "size": 47864
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "334ef53af02c5816562073f5a702f09a095d672f9f3636005618be1f993d4f30",
+      "size": 45776
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "8345e0fc1c6eed02a9e77aa0c44e1afe602109ba73e97df58494868432ab26e4",
+      "size": 48813
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "e77bb39af944153cc86269e13376b51cdd26460b665fad0ede9c58bdd3a1be1e",
+      "size": 47368
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "d39d24a5312b6363c5ced53384c8dcf417fcb6289e7416ba268ef3478c912b71",
+      "size": 48413
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "40d4c40b666b18fa45d4bb8436885261806773b84a070d940468cc28f1ad39d6",
+      "size": 13754
+    },
+    {
+      "path": "application/libraries/Finance_report_store.php",
+      "sha256": "07d2e99169b59e11357fcba49f14aec087e87d09c158c3cd679e94cae46d3c46",
+      "size": 51228
+    },
+    {
+      "path": "application/views/admin/finance/dashboard.php",
+      "sha256": "c392e82f0de4c6d185ff03df00a2c53441c55e22b81750cdc79c0cacd259969b",
+      "size": 10260
+    },
+    {
+      "path": "assets/js/admin-datatables.js",
+      "sha256": "ed1867b95b0c181a302c86003471fd75d48c9445bc1c22813f1f3eeea6b06a9e",
+      "size": 5977
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.31.zip",
+    "sha256": "d766259848276cb06f890bd2ae4f922d5e28ba399a478214de425e7125c4025e",
+    "size": 135920
+  },
+  "from_ref": "v1.0.30",
+  "generated_at": "2026-11-20T14:13:48+00:00"
+}

@@ -1,11 +1,11 @@
 {
-  "version": "1.0.30",
-  "released_at": "2026-11-19",
-  "changelog": "Rilis pemeliharaan: waktu disimpan dalam UTC, tampilan mengikuti timezone browser, export memakai timezone browser dan mencantumkan Time Zone, API timestamp memakai UTC ISO, filter tanggal lokal untuk semua laporan, perbaikan query integrasi, serta tabel Riwayat Pembatalan memakai lebar kolom alami tanpa ellipsis.",
+  "version": "1.0.31",
+  "released_at": "2026-11-20",
+  "changelog": "Rilis pemeliharaan: tabel jurnal dashboard memakai DataTable server-side dengan filter dan pagination, waktu pada semua DataTable dikonversi ke zona waktu browser setelah load/pagination, tampilan dashboard diselaraskan dengan daftar Finance, serta dokumentasi klien PHP integrasi dan format timestamp UTC ISO.",
   "min_php": "8.1",
-  "requires_version": "1.0.29",
-  "package": "cms-1.0.30.zip",
-  "sha256": "c60b9ee19c7aff96ac5bf2372682df33c1337a4e9a6736c509159a4501ce9759",
-  "size": 71467,
+  "requires_version": "1.0.30",
+  "package": "cms-1.0.31.zip",
+  "sha256": "d766259848276cb06f890bd2ae4f922d5e28ba399a478214de425e7125c4025e",
+  "size": 135920,
   "migrations": []
 }
