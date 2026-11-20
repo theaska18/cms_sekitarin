@@ -74,32 +74,9 @@ class Finance_report_store
             ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
             ->join('fin_cash_account ca', 'ca.account_id=jl.account_id AND ca.tenant_id=jl.tenant_id')
             ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')->get();
-        $recent = $this->db->select('journal_entry_id,journal_date,journal_number,description,debit_total,credit_total')
-            ->where('tenant_id', $tenant_id)->where('status', 'posted')
-            ->order_by('journal_date', 'DESC')->order_by('journal_entry_id', 'DESC')->limit(5)
-            ->get('fin_journal_entry');
         $count = $this->db->where('tenant_id', $tenant_id)->where('status', 'posted')->count_all_results('fin_journal_entry');
-        if ($settings === FALSE || $summary === FALSE || $cash === FALSE || $recent === FALSE || $count === FALSE) {
+        if ($settings === FALSE || $summary === FALSE || $cash === FALSE || $count === FALSE) {
             return FALSE;
-        }
-        $recent_rows = $recent->result_array();
-        $recent_lines = array();
-        $journal_ids = array_map('intval', array_column($recent_rows, 'journal_entry_id'));
-        if ($journal_ids) {
-            $line_query = $this->db->select('je.journal_entry_id,je.journal_date,je.journal_number,je.description AS journal_description,'
-                . 'jl.line_number,jl.description AS line_description,jl.debit_base_amount,jl.credit_base_amount,'
-                . 'a.account_code,a.account_name', FALSE)
-                ->from('fin_journal_entry je')
-                ->join('fin_journal_line jl', 'jl.journal_entry_id=je.journal_entry_id AND jl.tenant_id=je.tenant_id')
-                ->join('fin_account a', 'a.account_id=jl.account_id AND a.tenant_id=jl.tenant_id')
-                ->where('je.tenant_id', $tenant_id)->where('je.status', 'posted')
-                ->where_in('je.journal_entry_id', $journal_ids)
-                ->order_by('je.journal_date', 'DESC')->order_by('je.journal_entry_id', 'DESC')
-                ->order_by('jl.line_number', 'ASC')->get();
-            if ($line_query === FALSE) {
-                return FALSE;
-            }
-            $recent_lines = $line_query->result_array();
         }
         $totals = array('revenue' => 0.0, 'expense' => 0.0);
         foreach ($summary->result_array() as $row) {
@@ -116,9 +93,90 @@ class Finance_report_store
             'revenue_ytd' => $totals['revenue'],
             'expense_ytd' => $totals['expense'],
             'net_ytd' => $totals['revenue'] - $totals['expense'],
-            'recent_journals' => $recent_rows,
-            'recent_journal_lines' => $recent_lines,
         );
+    }
+
+    /** Count posted journal entries for the dashboard DataTable. */
+    public function recent_posted_journal_count($tenant_id, $search = '', $filters = array())
+    {
+        $this->db->from('fin_journal_entry je')
+            ->where('je.tenant_id', (int) $tenant_id)
+            ->where('je.status', 'posted');
+        $this->dashboard_journal_search($search);
+        $this->dashboard_journal_filters($filters);
+        $count = $this->db->count_all_results();
+        return $count === FALSE ? FALSE : (int) $count;
+    }
+
+    /** Page posted journal entries for the dashboard DataTable. */
+    public function recent_posted_journal_page($tenant_id, $search, $limit, $offset, $order, $direction, $filters = array())
+    {
+        $allowed = array('journal_date', 'journal_number', 'description', 'debit_total', 'credit_total', 'posted_on', 'source_type');
+        $order = in_array($order, $allowed, TRUE) ? $order : 'journal_date';
+        $direction = strtoupper((string) $direction) === 'ASC' ? 'ASC' : 'DESC';
+        $this->db->select('je.journal_entry_id,je.journal_number,je.journal_date,je.description,'
+                . 'je.debit_total,je.credit_total,je.posted_on,je.source_type', FALSE)
+            ->from('fin_journal_entry je')
+            ->where('je.tenant_id', (int) $tenant_id)
+            ->where('je.status', 'posted');
+        $this->dashboard_journal_search($search);
+        $this->dashboard_journal_filters($filters);
+        $query = $this->db->order_by('je.' . $order, $direction)
+            ->order_by('je.journal_entry_id', 'DESC')
+            ->limit(min(50, max(1, (int) $limit)), max(0, (int) $offset))
+            ->get();
+        return $query === FALSE ? FALSE : $query->result_array();
+    }
+
+    private function dashboard_journal_search($search)
+    {
+        $search = trim((string) $search);
+        if ($search !== '') {
+            $this->db->group_start()
+                ->like('je.journal_number', $search)
+                ->or_like('je.description', $search)
+                ->group_end();
+        }
+    }
+
+    private function dashboard_journal_filters($filters)
+    {
+        if (!is_array($filters)) {
+            return;
+        }
+        $ranges = isset($filters['date_ranges']) && is_array($filters['date_ranges']) ? $filters['date_ranges'] : array();
+        foreach (array('journal_date', 'posted_on') as $column) {
+            if (empty($ranges[$column])) {
+                continue;
+            }
+            if (!empty($ranges[$column]['start'])) {
+                $this->db->where('je.' . $column . ' >=', $ranges[$column]['start']);
+            }
+            if (!empty($ranges[$column]['end'])) {
+                $this->db->where('je.' . $column . ' <=', $ranges[$column]['end']);
+            }
+        }
+        $fields = isset($filters['fields']) && is_array($filters['fields']) ? $filters['fields'] : array();
+        foreach (array('journal_number', 'description', 'source_type') as $column) {
+            if (isset($fields[$column]) && $fields[$column] !== '') {
+                if ($column === 'source_type') {
+                    $this->db->where('je.source_type', $fields[$column]);
+                } else {
+                    $this->db->like('je.' . $column, $fields[$column]);
+                }
+            }
+        }
+        foreach (array('debit_total', 'credit_total') as $column) {
+            if (empty($fields[$column]) || !is_array($fields[$column])) {
+                continue;
+            }
+            if (isset($fields[$column]['min']) && $fields[$column]['min'] !== '') {
+                $this->db->where('je.' . $column . ' >=', $fields[$column]['min']);
+            }
+            if (isset($fields[$column]['max']) && $fields[$column]['max'] !== '') {
+                $this->db->where('je.' . $column . ' <=', $fields[$column]['max']);
+            }
+        }
     }
 
     public function rows($report, $tenant_id, $start, $end, $search = '')

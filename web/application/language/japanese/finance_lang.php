@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'レコード %s をキャンセル承認�
 $lang['finance_cancel_reason'] = 'キャンセル理由';
 $lang['finance_cancel_close'] = '閉じる';
 $lang['finance_cancel_submit'] = 'キャンセルを申請';
+$lang['finance_dashboard_posted_at'] = '転記日時';
+$lang['finance_dashboard_source'] = 'ソース';
+$lang['finance_dashboard_journal_dt_empty'] = '転記済み仕訳はまだありません';
+$lang['finance_dashboard_journal_dt_zero'] = '一致する仕訳はありません';

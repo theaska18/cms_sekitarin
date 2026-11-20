@@ -180,10 +180,20 @@ class Finance_filter_panel
             $date_fields[$index]['start_value'] = ($index === 0 && $is_default) ? $defaults['start_on'] : '';
             $date_fields[$index]['end_value'] = ($index === 0 && $is_default) ? $defaults['end_on'] : '';
         }
+        $field_filters = array();
+        foreach ((array) $config['field_filters'] as $field) {
+            if (empty($field['label']) && !empty($field['label_key'])) {
+                $field['label'] = isset($labels[$field['label_key']]) ? $labels[$field['label_key']] : $field['label_key'];
+            }
+            if (!isset($field['label'])) {
+                $field['label'] = '';
+            }
+            $field_filters[] = $field;
+        }
         $data = array(
             'finance_filter_date' => !empty($config['date']),
             'finance_filter_date_fields' => $date_fields,
-            'finance_filter_field_filters' => (array) $config['field_filters'],
+            'finance_filter_field_filters' => $field_filters,
             'finance_filter_add_action' => (array) $config['add_action'],
             'finance_filter_export_enabled' => !empty($config['export']),
             'finance_filter_target' => (string) $config['target'],

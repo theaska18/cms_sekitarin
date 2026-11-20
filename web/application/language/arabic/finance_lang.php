@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'سيتم إرسال السجل %s إلى 
 $lang['finance_cancel_reason'] = 'سبب الإلغاء';
 $lang['finance_cancel_close'] = 'إغلاق';
 $lang['finance_cancel_submit'] = 'إرسال طلب الإلغاء';
+$lang['finance_dashboard_posted_at'] = 'تاريخ الترحيل';
+$lang['finance_dashboard_source'] = 'المصدر';
+$lang['finance_dashboard_journal_dt_empty'] = 'لا توجد قيود مرحّلة بعد';
+$lang['finance_dashboard_journal_dt_zero'] = 'لا توجد قيود مطابقة';

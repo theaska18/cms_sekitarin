@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'L’enregistrement %s sera envoyé au cir
 $lang['finance_cancel_reason'] = 'Motif de l’annulation';
 $lang['finance_cancel_close'] = 'Fermer';
 $lang['finance_cancel_submit'] = 'Soumettre l’annulation';
+$lang['finance_dashboard_posted_at'] = 'Comptabilisé le';
+$lang['finance_dashboard_source'] = 'Source';
+$lang['finance_dashboard_journal_dt_empty'] = 'Aucun journal comptabilisé';
+$lang['finance_dashboard_journal_dt_zero'] = 'Aucun journal correspondant';

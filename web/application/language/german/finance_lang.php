@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'Datensatz %s wird an den Stornierungsfrei
 $lang['finance_cancel_reason'] = 'Stornierungsgrund';
 $lang['finance_cancel_close'] = 'Schließen';
 $lang['finance_cancel_submit'] = 'Stornierung beantragen';
+$lang['finance_dashboard_posted_at'] = 'Gebucht am';
+$lang['finance_dashboard_source'] = 'Quelle';
+$lang['finance_dashboard_journal_dt_empty'] = 'Noch keine gebuchten Journale';
+$lang['finance_dashboard_journal_dt_zero'] = 'Keine passenden Journale';

@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'El registro %s se enviará al flujo de ap
 $lang['finance_cancel_reason'] = 'Motivo de cancelación';
 $lang['finance_cancel_close'] = 'Cerrar';
 $lang['finance_cancel_submit'] = 'Enviar cancelación';
+$lang['finance_dashboard_posted_at'] = 'Contabilizado el';
+$lang['finance_dashboard_source'] = 'Origen';
+$lang['finance_dashboard_journal_dt_empty'] = 'Aún no hay asientos contabilizados';
+$lang['finance_dashboard_journal_dt_zero'] = 'No hay asientos coincidentes';

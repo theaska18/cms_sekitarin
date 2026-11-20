@@ -1,6 +1,6 @@
 # Project State
 
-Terakhir diperbarui: 2026-11-19
+Terakhir diperbarui: 2026-11-20
 
 Dokumen ini merangkum kondisi repository agar sesi baru tidak kehilangan konteks
 penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
@@ -19,6 +19,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
   `20261119001500_unique_reconciliation_journal_line.sql`, dan
   `20261119001400_allow_repeated_finance_cancellations.sql`.
+- Perubahan setelah `1.0.30` (belum dirilis): penyimpanan waktu tetap UTC,
+  tampilan waktu memakai zona browser, dan daftar jurnal dashboard memakai
+  DataTable server-side per jurnal (tenant-scoped, posted-only, dengan filter
+  tanggal/nomor/deskripsi/nilai/sumber).
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.

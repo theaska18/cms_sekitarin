@@ -98,16 +98,18 @@ class FinanceApprovalContractTests(unittest.TestCase):
         self.assertIn("setCustomValidity", view)
         self.assertIn("revise:'Revisi'", view)
 
-    def test_finance_dashboard_recent_journals_show_line_level_debit_and_credit(self):
+    def test_finance_dashboard_recent_journals_use_a_server_side_datatable(self):
         store = (APP / "libraries/Finance_report_store.php").read_text()
         view = (APP / "views/admin/finance/dashboard.php").read_text()
-        self.assertIn("recent_journal_lines", store)
-        self.assertIn("jl.debit_base_amount", store)
-        self.assertIn("jl.credit_base_amount", store)
-        self.assertIn("recent_journal_lines", view)
-        self.assertIn("$line['debit_base_amount']", view)
-        self.assertIn("$line['credit_base_amount']", view)
-        self.assertIn("finance_report_column_account_code", view)
+        controller = (APP / "controllers/Admin_finance.php").read_text()
+        self.assertIn("recent_posted_journal_count", store)
+        self.assertIn("recent_posted_journal_page", store)
+        self.assertNotIn("recent_journal_lines", store)
+        self.assertIn("finance-dashboard-journals", view)
+        self.assertIn("serverSide: true", view)
+        self.assertIn("finance_dashboard_posted_at", view)
+        self.assertIn("finance_dashboard_journal_data", controller)
+        self.assertIn("'dashboard'", controller)
 
     def test_income_expense_approval_details_name_the_accounts_and_amount(self):
         controller = (APP / "controllers/Admin_finance.php").read_text()

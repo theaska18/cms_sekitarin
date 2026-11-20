@@ -660,3 +660,7 @@ $lang['finance_cancel_dialog_body'] = 'Transaksi %s akan diajukan ke alur perset
 $lang['finance_cancel_reason'] = 'Alasan pembatalan';
 $lang['finance_cancel_close'] = 'Batal';
 $lang['finance_cancel_submit'] = 'Ajukan pembatalan';
+$lang['finance_dashboard_posted_at'] = 'Diposting pada';
+$lang['finance_dashboard_source'] = 'Sumber';
+$lang['finance_dashboard_journal_dt_empty'] = 'Belum ada jurnal yang diposting';
+$lang['finance_dashboard_journal_dt_zero'] = 'Tidak ada jurnal yang cocok';

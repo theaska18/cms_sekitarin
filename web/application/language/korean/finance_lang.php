@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = '기록 %s이(가) 취소 승인 흐름으
 $lang['finance_cancel_reason'] = '취소 사유';
 $lang['finance_cancel_close'] = '닫기';
 $lang['finance_cancel_submit'] = '취소 요청';
+$lang['finance_dashboard_posted_at'] = '전기 일시';
+$lang['finance_dashboard_source'] = '소스';
+$lang['finance_dashboard_journal_dt_empty'] = '아직 전기된 분개가 없습니다';
+$lang['finance_dashboard_journal_dt_zero'] = '일치하는 분개가 없습니다';

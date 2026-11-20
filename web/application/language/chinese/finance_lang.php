@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = '记录 %s 将提交至取消审批流程�
 $lang['finance_cancel_reason'] = '取消原因';
 $lang['finance_cancel_close'] = '关闭';
 $lang['finance_cancel_submit'] = '提交取消';
+$lang['finance_dashboard_posted_at'] = '过账时间';
+$lang['finance_dashboard_source'] = '来源';
+$lang['finance_dashboard_journal_dt_empty'] = '暂无已过账日记账';
+$lang['finance_dashboard_journal_dt_zero'] = '没有匹配的日记账';

@@ -950,6 +950,10 @@ class Admin_finance extends Admin
 
     public function data($slug = '')
     {
+        if ($slug === 'dashboard') {
+            $this->finance_dashboard_journal_data();
+            return;
+        }
         if (in_array($slug, array('all_transactions', 'income', 'expenses'), TRUE)) {
             $this->finance_transaction_data($slug);
             return;
@@ -3620,6 +3624,71 @@ class Admin_finance extends Admin
         );
     }
 
+    private function finance_dashboard_journal_data()
+    {
+        $this->load->library('datatable_server');
+        if (!$this->has_admin_menu_code('fin_dashboard')) {
+            $this->datatable_server->error(403);
+            return;
+        }
+        $this->load->library('finance_report_store');
+        $store = $this->finance_report_store;
+        if (!$store->available('trial_balance')) {
+            $this->datatable_server->error(503);
+            return;
+        }
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $filters = $this->finance_filter_panel->filters($this->finance_dashboard_filter_config());
+        if (!empty($filters['date_ranges']['posted_on'])) {
+            $timezone = $this->input->get('client_timezone', TRUE);
+            $range = $filters['date_ranges']['posted_on'];
+            if (!empty($range['start'])) {
+                $converted = app_to_storage($range['start'] . ' 00:00:00', $timezone);
+                if ($converted !== NULL) $filters['date_ranges']['posted_on']['start'] = $converted;
+            }
+            if (!empty($range['end'])) {
+                $converted = app_to_storage($range['end'] . ' 23:59:59', $timezone);
+                if ($converted !== NULL) $filters['date_ranges']['posted_on']['end'] = $converted;
+            }
+        }
+        $this->datatable_server->respond(
+            array(1 => 'journal_date', 2 => 'journal_number', 3 => 'description', 4 => 'debit_total', 5 => 'credit_total', 6 => 'posted_on', 7 => 'source_type'),
+            function () use ($store, $tenant_id, $filters) {
+                return $store->recent_posted_journal_count($tenant_id, '', $filters);
+            },
+            function ($search) use ($store, $tenant_id, $filters) {
+                return $store->recent_posted_journal_count($tenant_id, $search, $filters);
+            },
+            function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $filters) {
+                return $store->recent_posted_journal_page($tenant_id, $search, $length, $offset, $order, $direction, $filters);
+            },
+            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'journal_date')
+        );
+    }
+
+    private function finance_dashboard_filter_config()
+    {
+        return $this->finance_filter_panel->config(array(
+            'date' => TRUE,
+            'target' => '#finance-dashboard-journals',
+            'status_preset' => 'none',
+            'export' => FALSE,
+            'date_preset' => 'journal',
+            'primary_date' => 'journal_date',
+            'date_fields' => array(
+                array('key' => 'journal_date', 'label_key' => 'finance_column_date'),
+                array('key' => 'posted_on', 'label_key' => 'finance_dashboard_posted_at'),
+            ),
+            'field_filters' => array(
+                array('type' => 'text', 'name' => 'journal_number', 'label_key' => 'finance_dashboard_journal'),
+                array('type' => 'text', 'name' => 'description', 'label_key' => 'finance_field_description'),
+                array('type' => 'range', 'name' => 'debit_total', 'label_key' => 'finance_dashboard_debit', 'min_name' => 'debit_min', 'max_name' => 'debit_max'),
+                array('type' => 'range', 'name' => 'credit_total', 'label_key' => 'finance_dashboard_credit', 'min_name' => 'credit_min', 'max_name' => 'credit_max'),
+                array('type' => 'text', 'name' => 'source_type', 'label_key' => 'finance_dashboard_source'),
+            ),
+        ));
+    }
+
     private function finance_dashboard()
     {
         if (!$this->has_admin_menu_code('fin_dashboard')) {
@@ -3632,7 +3701,10 @@ class Admin_finance extends Admin
             'admin/finance/dashboard',
             'finance_dashboard',
             '/admin/finance/dashboard',
-            array('finance_dashboard_data' => $summary)
+            array(
+                'finance_dashboard_data' => $summary,
+                'finance_dashboard_filter_config' => $this->finance_dashboard_filter_config(),
+            )
         );
     }
 

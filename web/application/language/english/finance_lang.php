@@ -661,3 +661,7 @@ $lang['finance_cancel_dialog_body'] = 'Record %s will be sent to the cancellatio
 $lang['finance_cancel_reason'] = 'Cancellation reason';
 $lang['finance_cancel_close'] = 'Close';
 $lang['finance_cancel_submit'] = 'Submit cancellation';
+$lang['finance_dashboard_posted_at'] = 'Posted at';
+$lang['finance_dashboard_source'] = 'Source';
+$lang['finance_dashboard_journal_dt_empty'] = 'No posted journals yet';
+$lang['finance_dashboard_journal_dt_zero'] = 'No matching journals';
