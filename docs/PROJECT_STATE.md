@@ -7,22 +7,23 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.30` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.31` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.30`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.31`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
-  integrasi, dan hardening) sudah termasuk dalam rilis ini.
+  integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
   `20261119001500_unique_reconciliation_journal_line.sql`, dan
   `20261119001400_allow_repeated_finance_cancellations.sql`.
-- Perubahan setelah `1.0.30` (belum dirilis): penyimpanan waktu tetap UTC,
-  tampilan waktu memakai zona browser, dan daftar jurnal dashboard memakai
-  DataTable server-side per jurnal (tenant-scoped, posted-only, dengan filter
-  tanggal/nomor/deskripsi/nilai/sumber).
+- Rilis `1.0.31` mencakup DataTable server-side untuk jurnal dashboard
+  (tenant-scoped, posted-only, dengan filter tanggal/nomor/deskripsi/nilai/sumber),
+  konversi waktu semua DataTable ke zona browser setelah load/pagination,
+  penyelarasan tampilan dashboard dengan daftar Finance, dokumentasi klien PHP
+  integrasi, dan format timestamp UTC ISO pada contoh API.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -108,13 +109,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-152 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+156 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-573 tests
+580 tests
 43 failure
 6 error
 ```
