@@ -125,8 +125,15 @@
         Array.prototype.forEach.call(wrappers, setupScrollFade);
     }
 
+    function initLocalTimes() {
+        if (window.AppTime && typeof window.AppTime.formatLocalTimes === 'function') {
+            window.AppTime.formatLocalTimes(document);
+        }
+    }
+
     if ($) {
         $(document).on('init.dt draw.dt', initScrollFades);
+        $(document).on('init.dt draw.dt', initLocalTimes);
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initScrollFades);
