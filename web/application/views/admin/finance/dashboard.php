@@ -98,6 +98,9 @@ $money = function ($value) use ($currency) {
             processing: <?= json_encode(isset($labels['finance_dt_processing']) ? $labels['finance_dt_processing'] : 'Loading…') ?>
         }
     });
+    table.on('draw.dt', function () {
+        if (window.financeFormatLocalTimes) window.financeFormatLocalTimes(document);
+    });
 }());
 </script>
 </main>
