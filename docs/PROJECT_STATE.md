@@ -24,6 +24,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   konversi waktu semua DataTable ke zona browser setelah load/pagination,
   penyelarasan tampilan dashboard dengan daftar Finance, dokumentasi klien PHP
   integrasi, dan format timestamp UTC ISO pada contoh API.
+- Perubahan setelah `1.0.31` (belum dirilis): halaman Tahun Fiskal punya
+  generator satu tahun (Januari–Desember) beserta 12 periode akuntansi bulanan;
+  tombol generate disembunyikan untuk tahun yang sudah memiliki tahun fiskal.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -115,7 +118,7 @@ Seluruh kontrak Finance lulus:
 Suite penuh saat ini:
 
 ```text
-580 tests
+585 tests
 43 failure
 6 error
 ```

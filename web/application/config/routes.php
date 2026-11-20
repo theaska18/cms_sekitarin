@@ -42,6 +42,7 @@ $route['admin/finance/tax_configuration/export'] = 'admin_finance/tax_export';
 $route['admin/finance/tax_configuration/import'] = 'admin_finance/tax_import';
 $route['admin/finance/categories/export'] = 'admin_finance/category_export';
 $route['admin/finance/categories/import'] = 'admin_finance/category_import';
+$route['admin/finance/fiscal_year/generate'] = 'admin_finance/fiscal_year_generate';
 $route['admin/finance/cancel_request'] = 'admin_finance/cancel_request';
 $route['admin/finance/delete_draft/(:any)/(:num)'] = 'admin_finance/delete_draft/$1/$2';
 $route['admin/finance/chart_of_accounts/export'] = 'admin_finance/chart_of_accounts_export';

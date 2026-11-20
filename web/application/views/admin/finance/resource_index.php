@@ -24,6 +24,60 @@ $panel_config = array('date'=>FALSE,'target'=>'#finance-resource-table','status_
 if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => isset($labels['finance_add']) ? $labels['finance_add'] : 'Tambah'); }
 ?>
 <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
+    <?php if ($finance_resource['slug'] === 'fiscal_year' && !empty($finance_can_generate_year)): ?>
+    <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex min-w-0 items-start gap-3">
+                <div class="finance-data-exchange-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3m10-3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm5 8h4m-4 4h4"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h2 class="text-base font-semibold text-slate-900"><?= html_escape(isset($labels['finance_generate_fiscal_year_title']) ? $labels['finance_generate_fiscal_year_title'] : 'Generate fiscal year') ?></h2>
+                    <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_generate_fiscal_year_hint']) ? $labels['finance_generate_fiscal_year_hint'] : 'Create one January–December fiscal year with 12 monthly accounting periods. Generate one year at a time.') ?></p>
+                </div>
+            </div>
+            <form method="post" action="<?= html_escape($current_path . '/generate') ?>" class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:items-end" data-fiscal-year-generate data-existing-years="<?= html_escape(json_encode($finance_generate_years)) ?>">
+                <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
+                <label for="fiscal-year-generate-year" class="block text-xs font-semibold text-slate-600">
+                    <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_generate_fiscal_year_year']) ? $labels['finance_generate_fiscal_year_year'] : 'Year') ?></span>
+                    <input id="fiscal-year-generate-year" type="number" name="year" min="2000" max="2100" step="1" required value="<?= (int) $finance_generate_default_year ?>" data-fiscal-year-input class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200 sm:w-28">
+                </label>
+                <button type="submit" data-fiscal-year-submit class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M10 4v12M4 10h12"/></svg>
+                    <?= html_escape(isset($labels['finance_generate_fiscal_year_action']) ? $labels['finance_generate_fiscal_year_action'] : 'Generate') ?>
+                </button>
+                <p data-fiscal-year-exists hidden class="max-w-xs text-xs font-medium text-amber-800" role="status"><?= html_escape(isset($labels['finance_generate_fiscal_year_exists_note']) ? $labels['finance_generate_fiscal_year_exists_note'] : 'A fiscal year already exists for this year, so the generate button is hidden.') ?></p>
+            </form>
+        </div>
+    </section>
+    <script>
+    (function () {
+        var form = document.querySelector('[data-fiscal-year-generate]');
+        if (!form) return;
+        var input = form.querySelector('[data-fiscal-year-input]');
+        var submit = form.querySelector('[data-fiscal-year-submit]');
+        var note = form.querySelector('[data-fiscal-year-exists]');
+        var ranges = [];
+        try { ranges = JSON.parse(form.getAttribute('data-existing-years') || '[]'); } catch (error) { ranges = []; }
+        function sync() {
+            var year = parseInt(input.value, 10);
+            var exists = false;
+            if (isFinite(year)) {
+                exists = ranges.some(function (range) {
+                    return year >= parseInt(range.start, 10) && year <= parseInt(range.end, 10);
+                });
+            }
+            submit.hidden = exists;
+            submit.disabled = exists;
+            submit.style.display = exists ? 'none' : '';
+            note.hidden = !exists;
+        }
+        input.addEventListener('input', sync);
+        input.addEventListener('change', sync);
+        sync();
+    }());
+    </script>
+    <?php endif; ?>
     <?php if ($finance_resource['slug'] === 'categories'): ?>
     <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -119,6 +173,14 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
     <?php elseif ($finance_status === 'save_error'): ?>
         <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-900">
             <?= html_escape(isset($labels['finance_save_error']) ? $labels['finance_save_error'] : 'Could not save the record. Check that its code is unique.') ?>
+        </div>
+    <?php elseif ($finance_status === 'fiscal_year_generated'): ?>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+            <?= html_escape(isset($labels['finance_fiscal_year_generated']) ? $labels['finance_fiscal_year_generated'] : 'Fiscal year and 12 accounting periods generated.') ?>
+        </div>
+    <?php elseif (in_array($finance_status, array('fiscal_year_generate_exists', 'fiscal_year_generate_invalid', 'fiscal_year_generate_failed', 'fiscal_year_generate_unavailable'), TRUE)): ?>
+        <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-900">
+            <?= html_escape(isset($labels['finance_' . $finance_status]) ? $labels['finance_' . $finance_status] : 'The fiscal year could not be generated.') ?>
         </div>
     <?php endif; ?>
 

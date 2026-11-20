@@ -94,6 +94,33 @@ class Admin_finance extends Admin
             }
         }
         unset($column);
+        $generate_years = array();
+        $generate_default_year = (int) date('Y');
+        $can_generate_year = FALSE;
+        if ($slug === 'fiscal_year' && $available) {
+            $can_generate_year = $this->has_admin_menu_code('fin_accounting_periods')
+                && $this->has_admin_access_code('fin_fiscal_year_add')
+                && $this->has_admin_access_code('fin_accounting_periods_add')
+                && $this->finance_write_available();
+            if ($can_generate_year) {
+                $existing_years = $this->db->select('start_on,end_on')
+                    ->from('fin_fiscal_year')
+                    ->where('tenant_id', (int) $this->current_user['tenant_id'])
+                    ->order_by('end_on', 'DESC')
+                    ->get()->result_array();
+                $latest_end_year = 0;
+                foreach ($existing_years as $existing_year) {
+                    $start_year = (int) substr((string) $existing_year['start_on'], 0, 4);
+                    $end_year = (int) substr((string) $existing_year['end_on'], 0, 4);
+                    if ($start_year > 0 && $end_year >= $start_year) {
+                        $generate_years[] = array('start' => $start_year, 'end' => $end_year);
+                        $latest_end_year = max($latest_end_year, $end_year);
+                    }
+                }
+                $generate_default_year = $latest_end_year > 0 ? $latest_end_year + 1 : (int) date('Y');
+                $generate_default_year = min(2100, max(2000, $generate_default_year));
+            }
+        }
         $this->render_admin(
             'admin/finance/resource_index',
             $resource['title_key'],
@@ -101,6 +128,9 @@ class Admin_finance extends Admin
             array(
                 'finance_resource' => $resource,
                 'finance_available' => $available,
+                'finance_can_generate_year' => $can_generate_year,
+                'finance_generate_years' => $generate_years,
+                'finance_generate_default_year' => $generate_default_year,
                 'finance_can_add' => $this->has_admin_access_code($resource['menu_code'] . '_add')
                     && !($slug === 'financial_settings' && $available
                         && $store->count($resource, (int) $this->current_user['tenant_id']) > 0),
@@ -119,6 +149,118 @@ class Admin_finance extends Admin
                 'finance_tax_import_skipped' => $slug === 'tax_configuration' ? (int) $this->session->flashdata('tax_import_skipped') : 0,
             )
         );
+    }
+
+    public function fiscal_year_generate()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        if (!$this->has_admin_menu_code('fin_fiscal_year')
+            || !$this->has_admin_menu_code('fin_accounting_periods')
+            || !$this->has_admin_access_code('fin_fiscal_year_add')
+            || !$this->has_admin_access_code('fin_accounting_periods_add')) {
+            $this->finance_forbidden();
+            return;
+        }
+        if (!$this->finance_write_available()) {
+            $this->session->set_flashdata('finance_status', 'fiscal_year_generate_unavailable');
+            redirect('/admin/finance/fiscal_year', 'location', 303);
+            return;
+        }
+
+        $this->load->library('finance_store');
+        $fiscal_resource = $this->finance_resource('fiscal_year');
+        $period_resource = $this->finance_resource('accounting_periods');
+        if ($fiscal_resource === NULL || $period_resource === NULL
+            || !$this->finance_store->available($fiscal_resource)
+            || !$this->finance_store->available($period_resource)) {
+            $this->session->set_flashdata('finance_status', 'fiscal_year_generate_unavailable');
+            redirect('/admin/finance/fiscal_year', 'location', 303);
+            return;
+        }
+
+        $year_raw = trim((string) $this->input->post('year', TRUE));
+        if (!preg_match('/^\d{4}$/', $year_raw)
+            || (int) $year_raw < 2000 || (int) $year_raw > 2100) {
+            $this->session->set_flashdata('finance_status', 'fiscal_year_generate_invalid');
+            redirect('/admin/finance/fiscal_year', 'location', 303);
+            return;
+        }
+        $year = (int) $year_raw;
+        $tenant_id = (int) $this->current_user['tenant_id'];
+        $user_id = (int) $this->current_user['user_id'];
+        $start_on = sprintf('%04d-01-01', $year);
+        $end_on = sprintf('%04d-12-31', $year);
+
+        $overlap = $this->db->from('fin_fiscal_year')
+            ->where('tenant_id', $tenant_id)
+            ->where('start_on <=', $end_on)
+            ->where('end_on >=', $start_on)
+            ->count_all_results();
+        $code_exists = $this->db->from('fin_fiscal_year')
+            ->where('tenant_id', $tenant_id)
+            ->where('year_code', 'FY' . $year)
+            ->count_all_results();
+        if ($overlap > 0 || $code_exists > 0) {
+            $this->session->set_flashdata('finance_status', 'fiscal_year_generate_exists');
+            redirect('/admin/finance/fiscal_year', 'location', 303);
+            return;
+        }
+
+        $locale = $this->resolve_admin_locale();
+        $this->lang->load('finance', $locale);
+        $name_pattern = $this->lang->line('finance_fiscal_year_generated_name');
+        if (!is_string($name_pattern) || $name_pattern === '') {
+            $name_pattern = 'Fiscal Year %d';
+        }
+
+        $previous_db_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $this->db->trans_begin();
+        $ok = $this->finance_store->insert($fiscal_resource, $tenant_id, array(
+            'year_code' => 'FY' . $year,
+            'year_name' => sprintf($name_pattern, $year),
+            'start_on' => $start_on,
+            'end_on' => $end_on,
+            'status' => 'open',
+        ), $user_id);
+        $fiscal_year_id = $ok ? (int) $this->db->insert_id() : 0;
+        if ($ok && $fiscal_year_id > 0) {
+            for ($month = 1; $month <= 12; $month++) {
+                $month_start = sprintf('%04d-%02d-01', $year, $month);
+                $month_end = sprintf('%04d-%02d-%02d', $year, $month, (int) date('t', strtotime($month_start)));
+                $month_name = $this->lang->line('finance_month_' . $month);
+                if (!is_string($month_name) || $month_name === '') {
+                    $month_name = date('F', strtotime($month_start));
+                }
+                $ok = $this->finance_store->insert($period_resource, $tenant_id, array(
+                    'fiscal_year_id' => $fiscal_year_id,
+                    'period_number' => $month,
+                    'period_name' => $month_name . ' ' . $year,
+                    'start_on' => $month_start,
+                    'end_on' => $month_end,
+                    'status' => 'open',
+                ), $user_id);
+                if (!$ok) {
+                    break;
+                }
+            }
+        }
+        $failed = !$ok || $fiscal_year_id < 1 || $this->db->trans_status() === FALSE;
+        if ($failed) {
+            $this->db->trans_rollback();
+        } else {
+            $this->db->trans_commit();
+        }
+        $this->db->db_debug = $previous_db_debug;
+
+        $this->session->set_flashdata(
+            'finance_status',
+            $failed ? 'fiscal_year_generate_failed' : 'fiscal_year_generated'
+        );
+        redirect('/admin/finance/fiscal_year', 'location', 303);
     }
 
     private function finance_chart_of_accounts_index()
