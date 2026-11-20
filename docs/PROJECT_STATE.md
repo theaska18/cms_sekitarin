@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.31` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.32` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.31`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.32`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
@@ -24,11 +24,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   konversi waktu semua DataTable ke zona browser setelah load/pagination,
   penyelarasan tampilan dashboard dengan daftar Finance, dokumentasi klien PHP
   integrasi, dan format timestamp UTC ISO pada contoh API.
-- Perubahan setelah `1.0.31` (belum dirilis): halaman Tahun Fiskal punya
-  generator satu tahun (Januari–Desember) beserta 12 periode akuntansi bulanan;
-  tombol generate disembunyikan untuk tahun yang sudah memiliki tahun fiskal.
-  Generator memakai access code baru `fin_fiscal_year_generate`, yang tidak
-  diberikan otomatis dan harus di-assign lewat System → Tenant/Role Menu Access.
+- Rilis `1.0.32` menambahkan generator satu tahun fiskal (Januari–Desember)
+  beserta 12 periode akuntansi bulanan. Tombol generate disembunyikan untuk
+  tahun yang sudah memiliki tahun fiskal. Generator memakai access code baru
+  `fin_fiscal_year_generate`, yang tidak diberikan otomatis dan harus
+  di-assign lewat System → Tenant/Role Menu Access.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
