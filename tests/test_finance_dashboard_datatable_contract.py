@@ -37,6 +37,7 @@ class FinanceDashboardDatatableContractTests(unittest.TestCase):
             "financeFormatDate", "financeLocalTimeHtml", "financeFormatAmount",
             "finance_dashboard_journal_dt_empty", "finance_dashboard_journal_dt_zero",
             "finance_filter_panel->render(", "finance-dashboard-journals",
+            "assets/css/vendor/datatables.min.css", "aria-label=\"Breadcrumb\"",
         ):
             self.assertIn(marker, view)
 

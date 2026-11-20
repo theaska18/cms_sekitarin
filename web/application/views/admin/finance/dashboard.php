@@ -6,11 +6,16 @@ $money = function ($value) use ($currency) {
     return $currency . ' ' . number_format((float) $value, 2, '.', ',');
 };
 ?>
+<link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
-    <header class="mb-7">
-        <p class="text-xs font-bold uppercase tracking-[.16em] text-emerald-700"><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-950"><?= html_escape(isset($labels['finance_dashboard']) ? $labels['finance_dashboard'] : 'Finance Dashboard') ?></h1>
-        <p class="mt-2 text-sm text-slate-600"><?= html_escape(isset($labels['finance_dashboard_intro']) ? $labels['finance_dashboard_intro'] : 'Summary is based on posted journals for the current calendar year; drafts are excluded.') ?></p>
+    <nav aria-label="Breadcrumb" class="mb-5 text-sm text-slate-500">
+        <span><?= html_escape(isset($labels['finance']) ? $labels['finance'] : 'Finance') ?></span>
+        <span aria-hidden="true" class="mx-2">/</span>
+        <span aria-current="page" class="font-medium text-slate-800"><?= html_escape(isset($labels['finance_dashboard']) ? $labels['finance_dashboard'] : 'Finance Dashboard') ?></span>
+    </nav>
+    <header class="mb-6">
+        <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape(isset($labels['finance_dashboard']) ? $labels['finance_dashboard'] : 'Finance Dashboard') ?></h1>
+        <p class="mt-2 max-w-4xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_dashboard_intro']) ? $labels['finance_dashboard_intro'] : 'Summary is based on posted journals for the current calendar year; drafts are excluded.') ?></p>
     </header>
     <?php if (!$data): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_dashboard_unavailable']) ? $labels['finance_dashboard_unavailable'] : 'Finance summary data is unavailable.') ?></div>
@@ -41,13 +46,10 @@ $money = function ($value) use ($currency) {
                 <p class="text-2xl font-bold <?= $data['net_ytd'] >= 0 ? 'text-emerald-700' : 'text-rose-700' ?>"><?= html_escape($money($data['net_ytd'])) ?></p>
             </div>
         </section>
+        <h2 class="mt-8 mb-3 text-lg font-bold text-slate-900"><?= html_escape(isset($labels['finance_dashboard_recent']) ? $labels['finance_dashboard_recent'] : 'Recent posted journals') ?></h2>
         <?= $this->finance_filter_panel->render($finance_dashboard_filter_config, $labels) ?>
-        <section class="mt-2 border border-slate-200 bg-white shadow-sm">
-            <div class="border-b border-slate-100 px-5 py-4">
-                <h2 class="text-lg font-bold text-slate-900"><?= html_escape(isset($labels['finance_dashboard_recent']) ? $labels['finance_dashboard_recent'] : 'Recent posted journals') ?></h2>
-            </div>
-            <?= $this->finance_list_table->open('finance-dashboard-journals') ?>
-                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <?= $this->finance_list_table->open('finance-dashboard-journals') ?>
+                <thead>
                     <tr>
                         <th scope="col"><?= html_escape(isset($labels['finance_column_date']) ? $labels['finance_column_date'] : 'Date') ?></th>
                         <th scope="col"><?= html_escape(isset($labels['finance_dashboard_journal']) ? $labels['finance_dashboard_journal'] : 'Journal') ?></th>
@@ -58,8 +60,7 @@ $money = function ($value) use ($currency) {
                         <th scope="col"><?= html_escape(isset($labels['finance_dashboard_source']) ? $labels['finance_dashboard_source'] : 'Source') ?></th>
                     </tr>
                 </thead>
-            <?= $this->finance_list_table->close() ?>
-        </section>
+        <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
 <script src="/assets/js/vendor/jquery.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/jquery.min.js')?filemtime(FCPATH . 'assets/js/vendor/jquery.min.js'):'1' ?>"></script>
 <script src="/assets/js/vendor/datatables.min.js?v=<?= is_file(FCPATH . 'assets/js/vendor/datatables.min.js')?filemtime(FCPATH . 'assets/js/vendor/datatables.min.js'):'1' ?>"></script>
