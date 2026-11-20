@@ -259,7 +259,7 @@ Respons `200`:
   "draft_created": false,
   "draft_id": null,
   "draft_status": null,
-  "received_at": "2026-11-18 20:00:00",
+  "received_at": "2026-11-18T20:00:00Z",
   "processed_at": null,
   "cancelled_at": null
 }
@@ -273,7 +273,7 @@ Jika sudah menjadi draft:
   "draft_created": true,
   "draft_id": 2,
   "draft_status": "draft",
-  "processed_at": "2026-11-18 20:15:00"
+  "processed_at": "2026-11-18T20:15:00Z"
 }
 ```
 
@@ -335,7 +335,7 @@ Respons sukses `200`:
   "status": "cancelled",
   "review_status": "cancelled",
   "inbox_id": 12,
-  "cancelled_at": "2026-11-18 20:30:00"
+  "cancelled_at": "2026-11-18T20:30:00Z"
 }
 ```
 
@@ -346,7 +346,7 @@ Pembatalan ulang bersifat idempotent:
   "status": "cancelled",
   "review_status": "cancelled",
   "inbox_id": 12,
-  "cancelled_at": "2026-11-18 20:30:00",
+  "cancelled_at": "2026-11-18T20:30:00Z",
   "already_cancelled": true
 }
 ```
@@ -596,6 +596,225 @@ menjadi **Lihat Draft** dan mengarah ke halaman edit draft tersebut.
   duplikat jika dikirim ulang.
 - Secret API dikirim sebagai bearer token. Gunakan HTTPS di production dan
   jangan menaruh secret di URL, log, atau repository.
+
+## Contoh klien PHP (sistem eksternal)
+
+Contoh berikut bisa dipakai di sistem pengirim faktur/tagihan. Simpan base URL dan
+secret di environment, jangan di source code:
+
+```text
+FINANCE_API_BASE_URL=https://cms.example.com
+FINANCE_API_SECRET=<api_secret_user>
+```
+
+Fungsi umum di bawah menangani timeout, kegagalan koneksi, JSON tidak valid,
+validasi `422`, autentikasi `401`, duplikat `409`, layanan belum tersedia `503`,
+dan error server `500`.
+
+```php
+<?php
+declare(strict_types=1);
+
+/**
+ * Kirim request ke API integrasi Finance.
+ *
+ * @return array{
+ *   ok: bool, http: int, status: string, body: array,
+ *   error?: string, fields?: array, inbox_id?: int
+ * }
+ */
+function finance_integration_request(
+    string $method,
+    string $path,
+    ?array $payload = null,
+    int $timeoutSeconds = 10
+): array {
+    $baseUrl = rtrim((string) getenv('FINANCE_API_BASE_URL'), '/');
+    $secret  = (string) getenv('FINANCE_API_SECRET');
+
+    if ($baseUrl === '' || $secret === '') {
+        return [
+            'ok' => false, 'http' => 0, 'status' => 'config_error', 'body' => [],
+            'error' => 'FINANCE_API_BASE_URL atau FINANCE_API_SECRET belum diatur.',
+        ];
+    }
+
+    $headers = [
+        'Authorization: Bearer ' . $secret,
+        'Accept: application/json',
+    ];
+    $body = null;
+
+    if ($payload !== null) {
+        try {
+            $body = json_encode(
+                $payload,
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            );
+        } catch (JsonException $error) {
+            return [
+                'ok' => false, 'http' => 0, 'status' => 'encode_error', 'body' => [],
+                'error' => 'Payload tidak bisa diubah menjadi JSON: ' . $error->getMessage(),
+            ];
+        }
+        $headers[] = 'Content-Type: application/json';
+    }
+
+    $ch = curl_init($baseUrl . '/' . ltrim($path, '/'));
+    if ($ch === false) {
+        return [
+            'ok' => false, 'http' => 0, 'status' => 'transport_error', 'body' => [],
+            'error' => 'cURL tidak bisa diinisialisasi.',
+        ];
+    }
+
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST  => strtoupper($method),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => $timeoutSeconds,
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+    ]);
+    if ($body !== null) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
+
+    $raw         = curl_exec($ch);
+    $curlErrorNo = curl_errno($ch);
+    $curlError   = curl_error($ch);
+    $http        = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+
+    if ($raw === false || $curlErrorNo !== 0) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'transport_error', 'body' => [],
+            'error' => $curlError !== '' ? $curlError : 'Koneksi ke API gagal.',
+        ];
+    }
+
+    $data = json_decode((string) $raw, true);
+    if (!is_array($data)) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'invalid_response', 'body' => [],
+            'error' => 'Respons API bukan JSON object yang valid.',
+        ];
+    }
+
+    // 202: data baru diterima.
+    if ($http === 202) {
+        return [
+            'ok' => true, 'http' => $http, 'status' => 'accepted', 'body' => $data,
+            'inbox_id' => (int) ($data['inbox_id'] ?? 0),
+        ];
+    }
+
+    // 200: status berhasil dibaca atau pembatalan berhasil.
+    if ($http === 200) {
+        return ['ok' => true, 'http' => $http, 'status' => 'ok', 'body' => $data];
+    }
+
+    // 409 duplicate: nomor sudah pernah diterima. Anggap idempotent.
+    if ($http === 409 && ($data['status'] ?? '') === 'duplicate') {
+        return [
+            'ok' => true, 'http' => $http, 'status' => 'duplicate', 'body' => $data,
+            'inbox_id' => (int) ($data['inbox_id'] ?? 0),
+        ];
+    }
+
+    // 422: validasi payload gagal.
+    if ($http === 422) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'validation_error', 'body' => $data,
+            'fields' => array_values((array) ($data['fields'] ?? [])),
+            'error' => (string) ($data['message'] ?? 'Validation failed.'),
+        ];
+    }
+
+    // 401: secret salah, user diblokir, atau akses API mati.
+    if ($http === 401) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'auth_error', 'body' => $data,
+            'error' => 'Autentikasi API gagal. Periksa secret dan status user.',
+        ];
+    }
+
+    // 503: tabel inbox belum tersedia; aman untuk dicoba ulang nanti.
+    if ($http === 503) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'unavailable', 'body' => $data,
+            'error' => 'Layanan integrasi belum tersedia.',
+        ];
+    }
+
+    // 400/404/405/413: request tidak valid atau data tidak ditemukan.
+    if (in_array($http, [400, 404, 405, 413], true)) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'request_error', 'body' => $data,
+            'error' => (string) ($data['message'] ?? 'Request ditolak.'),
+        ];
+    }
+
+    // 500 dan status tak terduga.
+    return [
+        'ok' => false, 'http' => $http, 'status' => 'server_error', 'body' => $data,
+        'error' => (string) ($data['message'] ?? 'Terjadi kesalahan pada server.'),
+    ];
+}
+
+function finance_send_sales_invoice(array $invoice): array
+{
+    return finance_integration_request('POST', 'api/finance/sales-invoices', $invoice);
+}
+
+function finance_send_purchase_bill(array $bill): array
+{
+    return finance_integration_request('POST', 'api/finance/purchase-bills', $bill);
+}
+```
+
+Contoh pemakaian:
+
+```php
+$result = finance_send_sales_invoice([
+    'invoice_number'    => 'INV-EXT-2026-001',
+    'invoice_date'      => '2026-11-18',
+    'due_date'          => '2026-12-18',
+    'customer_name'     => 'PT Contoh Pelanggan',
+    'customer_code'     => 'CUST-001',
+    'amount_before_tax' => 1000000,
+    'tax_percent'       => 11,
+    'description'       => 'Jasa konsultasi implementasi',
+]);
+
+if ($result['ok']) {
+    // accepted atau duplicate; inbox_id selalu tersedia.
+    echo 'Inbox ID: ' . $result['inbox_id'];
+} elseif ($result['status'] === 'validation_error') {
+    echo 'Field bermasalah: ' . implode(', ', $result['fields']);
+} elseif ($result['status'] === 'auth_error') {
+    // Jangan retry; perbaiki secret atau status user.
+} elseif (in_array($result['status'], ['transport_error', 'unavailable'], true)) {
+    // Jangan kirim ulang tanpa cek status. Cek berdasarkan nomor dokumen:
+    // GET api/finance/sales-invoices?invoice_number=INV-EXT-2026-001
+} else {
+    error_log($result['error']);
+}
+```
+
+Aturan pemakaian:
+
+- Tidak perlu mengirim `client_timezone`. `invoice_date`, `bill_date`, dan
+  `due_date` adalah tanggal kalender; `received_at`, `processed_at`, dan
+  `cancelled_at` dari API sudah berupa UTC ISO 8601.
+- Jangan retry untuk `401`, `404`, `422`, atau `405`.
+- `409 duplicate` berarti nomor sudah pernah diterima dan aman dianggap sukses;
+  gunakan `inbox_id` dari respons.
+- Untuk `transport_error` atau `503`, cek status lewat endpoint `GET` berdasarkan
+  nomor dokumen sebelum mengirim ulang.
+- Gunakan HTTPS di production dan jangan menulis secret ke log, URL, atau
+  repository.
 
 ## Troubleshooting
 
