@@ -723,6 +723,14 @@ function finance_integration_request(
         ];
     }
 
+    // 409 conflict: draft sudah ada atau dokumen sudah posted.
+    if ($http === 409) {
+        return [
+            'ok' => false, 'http' => $http, 'status' => 'conflict', 'body' => $data,
+            'error' => (string) ($data['message'] ?? 'Dokumen tidak bisa dibatalkan.'),
+        ];
+    }
+
     // 422: validasi payload gagal.
     if ($http === 422) {
         return [
@@ -772,6 +780,32 @@ function finance_send_purchase_bill(array $bill): array
 {
     return finance_integration_request('POST', 'api/finance/purchase-bills', $bill);
 }
+
+function finance_cancel_sales_invoice(int $inboxId): array
+{
+    return finance_integration_request('DELETE', 'api/finance/sales-invoices/' . $inboxId);
+}
+
+function finance_cancel_sales_invoice_by_number(string $invoiceNumber): array
+{
+    return finance_integration_request(
+        'DELETE',
+        'api/finance/sales-invoices?invoice_number=' . rawurlencode($invoiceNumber)
+    );
+}
+
+function finance_cancel_purchase_bill(int $inboxId): array
+{
+    return finance_integration_request('DELETE', 'api/finance/purchase-bills/' . $inboxId);
+}
+
+function finance_cancel_purchase_bill_by_number(string $billNumber): array
+{
+    return finance_integration_request(
+        'DELETE',
+        'api/finance/purchase-bills?bill_number=' . rawurlencode($billNumber)
+    );
+}
 ```
 
 Contoh pemakaian:
@@ -803,14 +837,42 @@ if ($result['ok']) {
 }
 ```
 
+Contoh pembatalan berdasarkan `inbox_id`:
+
+```php
+$cancel = finance_cancel_sales_invoice(12);
+
+if ($cancel['ok']) {
+    // cancelled atau already_cancelled.
+    echo $cancel['body']['status']; // cancelled | already_cancelled
+} elseif ($cancel['status'] === 'conflict') {
+    // Draft masih aktif atau dokumen sudah posted.
+    // Jangan retry; periksa draft_id/draft_status pada body.
+} elseif ($cancel['status'] === 'request_error') {
+    // 400/404/405/413: identifier salah atau data tidak ditemukan.
+} else {
+    error_log($cancel['error']);
+}
+```
+
+Pembatalan berdasarkan nomor dokumen:
+
+```php
+$cancel = finance_cancel_purchase_bill_by_number('BILL-EXT-2026-001');
+```
+
 Aturan pemakaian:
 
 - Tidak perlu mengirim `client_timezone`. `invoice_date`, `bill_date`, dan
   `due_date` adalah tanggal kalender; `received_at`, `processed_at`, dan
   `cancelled_at` dari API sudah berupa UTC ISO 8601.
 - Jangan retry untuk `401`, `404`, `422`, atau `405`.
-- `409 duplicate` berarti nomor sudah pernah diterima dan aman dianggap sukses;
-  gunakan `inbox_id` dari respons.
+- `409 duplicate` pada `POST` berarti nomor sudah pernah diterima dan aman
+  dianggap sukses; gunakan `inbox_id` dari respons.
+- `409 conflict` pada `DELETE` berarti draft masih aktif atau dokumen sudah
+  posted. Jangan retry; periksa `draft_id` dan `draft_status` pada body.
+- `DELETE` bersifat idempotent: pembatalan ulang mengembalikan `200` dengan
+  `already_cancelled = true`.
 - Untuk `transport_error` atau `503`, cek status lewat endpoint `GET` berdasarkan
   nomor dokumen sebelum mengirim ulang.
 - Gunakan HTTPS di production dan jangan menulis secret ke log, URL, atau
