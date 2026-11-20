@@ -27,6 +27,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Perubahan setelah `1.0.31` (belum dirilis): halaman Tahun Fiskal punya
   generator satu tahun (Januari–Desember) beserta 12 periode akuntansi bulanan;
   tombol generate disembunyikan untuk tahun yang sudah memiliki tahun fiskal.
+  Generator memakai access code baru `fin_fiscal_year_generate`, yang tidak
+  diberikan otomatis dan harus di-assign lewat System → Tenant/Role Menu Access.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -118,7 +120,7 @@ Seluruh kontrak Finance lulus:
 Suite penuh saat ini:
 
 ```text
-585 tests
+586 tests
 43 failure
 6 error
 ```

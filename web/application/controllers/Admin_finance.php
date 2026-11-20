@@ -99,8 +99,7 @@ class Admin_finance extends Admin
         $can_generate_year = FALSE;
         if ($slug === 'fiscal_year' && $available) {
             $can_generate_year = $this->has_admin_menu_code('fin_accounting_periods')
-                && $this->has_admin_access_code('fin_fiscal_year_add')
-                && $this->has_admin_access_code('fin_accounting_periods_add')
+                && $this->has_admin_access_code('fin_fiscal_year_generate')
                 && $this->finance_write_available();
             if ($can_generate_year) {
                 $existing_years = $this->db->select('start_on,end_on')
@@ -159,8 +158,7 @@ class Admin_finance extends Admin
         }
         if (!$this->has_admin_menu_code('fin_fiscal_year')
             || !$this->has_admin_menu_code('fin_accounting_periods')
-            || !$this->has_admin_access_code('fin_fiscal_year_add')
-            || !$this->has_admin_access_code('fin_accounting_periods_add')) {
+            || !$this->has_admin_access_code('fin_fiscal_year_generate')) {
             $this->finance_forbidden();
             return;
         }

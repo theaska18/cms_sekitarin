@@ -21,7 +21,7 @@ class FinanceFiscalYearGenerationContractTests(unittest.TestCase):
         self.assertIn("method(TRUE) !== 'POST'", method)
         for marker in (
             "fin_fiscal_year", "fin_accounting_periods",
-            "fin_fiscal_year_add", "fin_accounting_periods_add",
+            "fin_fiscal_year_generate",
             "finance_write_available", "$tenant_id", "$user_id",
         ):
             self.assertIn(marker, method)
@@ -40,6 +40,15 @@ class FinanceFiscalYearGenerationContractTests(unittest.TestCase):
         self.assertIn("trans_commit", method)
         self.assertIn("trans_rollback", method)
         self.assertNotIn("year_end", method)
+
+    def test_generate_access_code_is_registered_in_the_manifest(self):
+        manifest = (APP / "views" / "admin" / "menu_manifest" / "finance_setting.xml").read_text(encoding="utf-8")
+        self.assertIn('access code="fin_fiscal_year_generate"', manifest)
+        controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
+        self.assertIn("has_admin_access_code('fin_fiscal_year_generate')", controller)
+        self.assertNotIn("has_admin_access_code('fin_fiscal_year_add')", controller.split(
+            "public function fiscal_year_generate()", 1
+        )[1].split("private function finance_chart_of_accounts_index()", 1)[0])
 
     def test_generate_panel_hides_the_button_for_existing_years(self):
         view = (APP / "views" / "admin" / "finance" / "resource_index.php").read_text(encoding="utf-8")

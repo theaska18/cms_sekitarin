@@ -7,5 +7,6 @@
     <menu code="fin_fiscal_year" name="Fiscal Year" label_key="admin_finance_fiscal_year" icon="default" route="/admin/finance/fiscal_year" module_key="finance_fiscal_year" module_description_key="module_backend_unavailable" module_focus_key="module_focus" sort_order="32" status="active">
         <access code="fin_fiscal_year_add" name="Add" />
         <access code="fin_fiscal_year_update" name="Update" />
+        <access code="fin_fiscal_year_generate" name="Generate" />
     </menu>
 </menu-group>
