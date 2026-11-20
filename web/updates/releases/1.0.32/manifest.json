@@ -1,0 +1,84 @@
+{
+  "version": "1.0.32",
+  "from_version": "1.0.31",
+  "channel": "stable",
+  "released_at": "2026-11-20",
+  "min_php": "8.1",
+  "requires_version": "1.0.31",
+  "changelog": "Rilis fitur: generator satu tahun fiskal Januari–Desember beserta 12 periode akuntansi bulanan, tombol generate disembunyikan jika tahun sudah ada, access code khusus fin_fiscal_year_generate, serta dokumentasi contoh klien PHP integrasi termasuk pembatalan.",
+  "files": [
+    {
+      "path": "application/config/routes.php",
+      "sha256": "838b44ac2abc42042e0c13f402b097c2a99ea29e5c5bbb7c3e6934635e0d5f0b",
+      "size": 4952
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "bd3add43304f183ab24426ea5561c7f47ecad7df4796c7c61d8e3235a5263ef8",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "1c7ab27cb32ee244ddcc8e9f2dc473986a79acf6b17720636e7096321178899b",
+      "size": 262520
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "29d764475488328b82d3ff2df9dfd58a459d7e9ee7a2d64f6a5905a13f4a2077",
+      "size": 56337
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "4cddd8069e9d79d98d89ac06272452edcb3c80fc0ec801a156f59ece983fc8c7",
+      "size": 44563
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "6a25356df91fb096d10496b430a1a73875e5b89044f2de5a9965cb7558f53508",
+      "size": 46591
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "4fd7aa9c535996e2906ba192e99ffed5cecc419eef8fffa81c46df0d8d147f32",
+      "size": 50705
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "5fc4609d136355c767dc67cb84950ef9bbc2b32cc7948f6c023f0ce5724e2e49",
+      "size": 49456
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "5cba029ef74fe69b218fca7f36d33ef4ac3e2d28fe75e044713a4b030f2324c5",
+      "size": 47252
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "44b6b23b0e4fff331b5515d76e6861b110748568cf331f38d81f3f73cd510ade",
+      "size": 50373
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "075faa1d7973c189c4e36af5ab3c69bedb0c648ffee99a6e83f5babddc954ac4",
+      "size": 48937
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "2598a268ac116329b06e8eb8298573e5e8674847fff90feef19c014dd4b5d54e",
+      "size": 49939
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "cc76e5207b507d210fac9fb8dd523f91ec999354d284f8f8beecc354d66d02b2",
+      "size": 27023
+    },
+    {
+      "path": "application/views/admin/menu_manifest/finance_setting.xml",
+      "sha256": "549c0b7f38ae87a10d69b093c5db87a497fc1d42f75a94902e86b0f2efb923c1",
+      "size": 1157
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

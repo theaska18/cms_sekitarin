@@ -1,11 +1,11 @@
 {
-  "version": "1.0.31",
+  "version": "1.0.32",
   "released_at": "2026-11-20",
-  "changelog": "Rilis pemeliharaan: tabel jurnal dashboard memakai DataTable server-side dengan filter dan pagination, waktu pada semua DataTable dikonversi ke zona waktu browser setelah load/pagination, tampilan dashboard diselaraskan dengan daftar Finance, serta dokumentasi klien PHP integrasi dan format timestamp UTC ISO.",
+  "changelog": "Rilis fitur: generator satu tahun fiskal Januari–Desember beserta 12 periode akuntansi bulanan, tombol generate disembunyikan jika tahun sudah ada, access code khusus fin_fiscal_year_generate, serta dokumentasi contoh klien PHP integrasi termasuk pembatalan.",
   "min_php": "8.1",
-  "requires_version": "1.0.30",
-  "package": "cms-1.0.31.zip",
-  "sha256": "d766259848276cb06f890bd2ae4f922d5e28ba399a478214de425e7125c4025e",
-  "size": 135920,
+  "requires_version": "1.0.31",
+  "package": "cms-1.0.32.zip",
+  "sha256": "fa5bd14da9d6a9aeecf96d7d89e650c491f34122ffad2437657480f20a6e2564",
+  "size": 131438,
   "migrations": []
 }
