@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.34` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.35` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.34`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.35`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
@@ -39,9 +39,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   penjualan dan tagihan pembelian: tidak lagi memakai rentang default 7 hari,
   sehingga dokumen bertanggal maju atau lama tetap terlihat sampai pengguna
   memilih rentang tanggal sendiri.
-- Perubahan setelah `1.0.34` (belum dirilis): export pajak menulis tarif
-  maksimal 2 desimal dan import pajak menerima format lama `11.000000`,
-  desimal koma `11,00`, serta tanda persen `11%`.
+- Rilis `1.0.35` memperbaiki export/import pajak: export menulis tarif
+  maksimal 2 desimal dan import menerima format lama `11.000000`, desimal
+  koma `11,00`, serta tanda persen `11%`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
