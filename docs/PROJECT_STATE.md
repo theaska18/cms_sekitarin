@@ -65,6 +65,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   diselaraskan dengan wrapper pencarian dan icon yang sama seperti Finance;
   input pencarian karyawan tidak ikut auto-width agar tombol close dan icon
   tetap menempel pada input.
+- Perubahan setelah `1.0.39` (belum dirilis): panah dropdown pada elemen
+  select digeser ke dalam (1.25rem dari tepi) dan memakai panah kustom yang
+  konsisten, termasuk layout RTL.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
