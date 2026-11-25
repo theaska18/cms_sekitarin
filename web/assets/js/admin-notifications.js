@@ -16,6 +16,10 @@
     if (!isFinite(interval) || interval < 5000) {
         interval = 10000;
     }
+    var lastId = parseInt(toggle.getAttribute('data-notification-last-id'), 10);
+    if (!isFinite(lastId) || lastId < 0) {
+        lastId = 0;
+    }
     var loading = false;
 
     function escapeHtml(value) {
@@ -52,6 +56,10 @@
     function render(payload) {
         var count = Math.max(0, parseInt(payload.count, 10) || 0);
         var list = Array.isArray(payload.items) ? payload.items : [];
+        var latestId = parseInt(payload.latest_id, 10);
+        if (isFinite(latestId) && latestId > lastId) {
+            lastId = latestId;
+        }
         var badge = document.getElementById('admin-notification-badge');
 
         if (count > 0) {
@@ -73,22 +81,28 @@
             ? baseLabel + ', ' + unreadLabel.replace('%d', String(count))
             : baseLabel);
 
-        if (list.length) {
-            items.innerHTML = list.map(itemHtml).join('');
-        } else {
+        if (payload.changed === true && list.length) {
+            var placeholder = items.querySelector('p');
+            if (placeholder) placeholder.remove();
+            items.insertAdjacentHTML('afterbegin', list.map(itemHtml).join(''));
+            while (items.children.length > 5) {
+                items.lastElementChild.remove();
+            }
+            if (window.AppTime && typeof window.AppTime.formatLocalTimes === 'function') {
+                window.AppTime.formatLocalTimes(items);
+            }
+        } else if (payload.changed === true && !items.children.length) {
             items.innerHTML = '<p class="px-5 py-4 text-sm text-slate-500">'
                 + escapeHtml(toggle.getAttribute('data-notification-empty') || 'No notifications yet')
                 + '</p>';
-        }
-        if (window.AppTime && typeof window.AppTime.formatLocalTimes === 'function') {
-            window.AppTime.formatLocalTimes(items);
         }
     }
 
     function poll() {
         if (loading || document.visibilityState === 'hidden') return;
         loading = true;
-        window.fetch(feedUrl, {
+        var separator = feedUrl.indexOf('?') === -1 ? '?' : '&';
+        window.fetch(feedUrl + separator + 'since_id=' + encodeURIComponent(String(lastId)), {
             credentials: 'same-origin',
             cache: 'no-store',
             headers: { 'Accept': 'application/json' }

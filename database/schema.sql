@@ -289,6 +289,8 @@ CREATE TABLE `app_notification` (
   `create_on` datetime DEFAULT NULL,
   PRIMARY KEY (`notification_id`),
   KEY `fk_sys_notification_user_id_idx` (`user_id`),
+  KEY `idx_app_notification_user_id_notification_id` (`user_id`,`notification_id`),
+  KEY `idx_app_notification_user_id_view_flag` (`user_id`,`view_flag`),
   CONSTRAINT `fk_sys_notification_user_id` FOREIGN KEY (`user_id`) REFERENCES `app_user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -142,6 +142,10 @@ class Admin_notifications extends Admin
     public function feed()
     {
         $user_id = isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0;
+        $since_raw = $this->input->get('since_id', TRUE);
+        $since_id = $since_raw !== NULL && ctype_digit((string) $since_raw) ? (int) $since_raw : 0;
+        $latest_id = 0;
+        $changed = FALSE;
         $count = 0;
         $items = array();
         $available = FALSE;
@@ -162,6 +166,16 @@ class Admin_notifications extends Admin
                         ->count_all_results();
                     $count = $count_result === FALSE ? 0 : (int) $count_result;
                 }
+                $latest_result = $db->select_max('notification_id', 'latest_id')
+                    ->from('app_notification')
+                    ->where('user_id', $user_id)
+                    ->get()->row_array();
+                $latest_id = $latest_result && isset($latest_result['latest_id'])
+                    ? (int) $latest_result['latest_id'] : 0;
+                $changed = $latest_id > $since_id;
+                if (!$changed) {
+                    $latest_id = max($latest_id, $since_id);
+                }
                 $select = array('notification_id', 'title', 'message');
                 $order_date_field = NULL;
                 foreach (array('create_on', 'created_at', 'created_date', 'date_created') as $candidate) {
@@ -177,23 +191,26 @@ class Admin_notifications extends Admin
                 if (isset($fields['read_flag'])) {
                     $select[] = 'read_flag';
                 }
-                $query = $db->select(implode(', ', $select), FALSE)
-                    ->from('app_notification')
-                    ->where('user_id', $user_id);
-                if ($order_date_field !== NULL) {
-                    $query->order_by($order_date_field, 'DESC');
-                }
-                $result = $query->order_by('notification_id', 'DESC')->limit(5)->get();
-                if ($result !== FALSE) {
-                    foreach ($result->result_array() as $row) {
-                        $items[] = array(
-                            'id' => (int) $row['notification_id'],
-                            'title' => (string) $row['title'],
-                            'message' => (string) $row['message'],
-                            'created_at' => $order_date_field !== NULL && isset($row[$order_date_field])
-                                ? app_utc_iso($row[$order_date_field]) : '',
-                            'read_flag' => isset($row['read_flag']) ? (string) $row['read_flag'] : '1',
-                        );
+                if ($changed) {
+                    $query = $db->select(implode(', ', $select), FALSE)
+                        ->from('app_notification')
+                        ->where('user_id', $user_id)
+                        ->where('notification_id >', $since_id);
+                    if ($order_date_field !== NULL) {
+                        $query->order_by($order_date_field, 'DESC');
+                    }
+                    $result = $query->order_by('notification_id', 'DESC')->limit(5)->get();
+                    if ($result !== FALSE) {
+                        foreach ($result->result_array() as $row) {
+                            $items[] = array(
+                                'id' => (int) $row['notification_id'],
+                                'title' => (string) $row['title'],
+                                'message' => (string) $row['message'],
+                                'created_at' => $order_date_field !== NULL && isset($row[$order_date_field])
+                                    ? app_utc_iso($row[$order_date_field]) : '',
+                                'read_flag' => isset($row['read_flag']) ? (string) $row['read_flag'] : '1',
+                            );
+                        }
                     }
                 }
             }
@@ -204,6 +221,8 @@ class Admin_notifications extends Admin
             ->set_output(json_encode(array(
                 'success' => TRUE,
                 'available' => $available,
+                'changed' => $changed,
+                'latest_id' => $latest_id,
                 'count' => $count,
                 'items' => $items,
             ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

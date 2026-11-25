@@ -16,9 +16,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Katalog update terakhir: `1.0.38`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
-- Migration terbaru: `20261119001600_unique_api_secret.sql`,
-  `20261119001500_unique_reconciliation_journal_line.sql`, dan
-  `20261119001400_allow_repeated_finance_cancellations.sql`.
+- Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
+  `20261119001600_unique_api_secret.sql`, dan
+  `20261119001500_unique_reconciliation_journal_line.sql`.
 - Rilis `1.0.31` mencakup DataTable server-side untuk jurnal dashboard
   (tenant-scoped, posted-only, dengan filter tanggal/nomor/deskripsi/nilai/sumber),
   konversi waktu semua DataTable ke zona browser setelah load/pagination,
@@ -53,6 +53,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.38` menambahkan polling feed notifikasi topbar setiap 10 detik.
   Badge dan daftar preview diperbarui tanpa reload halaman; polling berhenti
   saat tab browser tidak aktif dan tidak menumpuk request.
+- Perubahan setelah `1.0.38` (belum dirilis): polling notifikasi memakai
+  cursor `since_id` dan hanya mengambil daftar baru jika `notification_id`
+  terbaru berubah. Ditambahkan index `(user_id, notification_id)` dan
+  `(user_id, view_flag)` pada `app_notification`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
