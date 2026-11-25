@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.39` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.40` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.39`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.40`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -59,15 +59,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   `(user_id, view_flag)` pada `app_notification`, serta kolom Status di
   seluruh daftar Finance dipindahkan tepat setelah kolom Tindakan dengan
   urutan DataTable yang disesuaikan.
-- Perubahan setelah `1.0.39` (belum dirilis): semua input autocomplete
-  menjadi read-only setelah nilai dipilih dan menampilkan tombol close sebelum
-  icon pencarian untuk mengosongkan nilai serta hidden target. Form User
-  diselaraskan dengan wrapper pencarian dan icon yang sama seperti Finance;
-  input pencarian karyawan tidak ikut auto-width agar tombol close dan icon
-  tetap menempel pada input.
-- Perubahan setelah `1.0.39` (belum dirilis): panah dropdown pada elemen
-  select digeser sedikit ke dalam (0.75rem dari tepi) dan memakai panah kustom yang
-  konsisten, termasuk layout RTL.
+- Rilis `1.0.40` membuat semua input autocomplete read-only setelah nilai
+  dipilih dan menampilkan tombol close sebelum icon pencarian untuk
+  mengosongkan nilai serta hidden target. Form User diselaraskan dengan
+  wrapper/icon Finance dan input pencarian karyawan tidak ikut auto-width.
+  Panah dropdown select memakai panah kustom pada 0.75rem dari tepi, termasuk
+  layout RTL.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
