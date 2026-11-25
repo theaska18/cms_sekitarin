@@ -1,11 +1,11 @@
 {
-  "version": "1.0.33",
+  "version": "1.0.34",
   "released_at": "2026-11-25",
-  "changelog": "Rilis fitur: import Pelanggan dan Pemasok dengan template Excel/CSV, kode yang sudah ada dilewati beserta pesan hasil, access code fin_customers_import dan fin_suppliers_import, serta perbaikan aksi Jadikan Draft pada data integrasi yang sudah dibatalkan.",
+  "changelog": "Rilis perbaikan: filter tanggal pada halaman integrasi faktur penjualan dan tagihan pembelian kini kosong secara default, sehingga dokumen bertanggal maju atau lama tetap terlihat sampai pengguna memilih rentang tanggal sendiri.",
   "min_php": "8.1",
-  "requires_version": "1.0.32",
-  "package": "cms-1.0.33.zip",
-  "sha256": "7c678312b93a7b68178465fe43aba3f2929b924285421f37f8596a4084f24644",
-  "size": 139235,
+  "requires_version": "1.0.33",
+  "package": "cms-1.0.34.zip",
+  "sha256": "afcfd3b3e269a889b196f4d69b2a1645b2f3479d101ef688084a68c034e9fd4b",
+  "size": 3831,
   "migrations": []
 }

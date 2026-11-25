@@ -1,0 +1,24 @@
+{
+  "version": "1.0.34",
+  "from_version": "1.0.33",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.33",
+  "changelog": "Rilis perbaikan: filter tanggal pada halaman integrasi faktur penjualan dan tagihan pembelian kini kosong secara default, sehingga dokumen bertanggal maju atau lama tetap terlihat sampai pengguna memilih rentang tanggal sendiri.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "1b1deb801acb2b0a2622451f4447ff5f958cd5aaa1572596ada8ed5ec547ce2c",
+      "size": 449
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "60025226fcabcc9c67f2e61335d19ce92bef7934e1dc23eabf00b68b5a50700e",
+      "size": 13755
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
