@@ -149,7 +149,7 @@ class Finance_filter_panel
             case 'document':
                 return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_report_column_invoice_date', 'default' => TRUE));
             case 'integration':
-                return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_integration_document_date', 'default' => TRUE));
+                return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_integration_document_date', 'default' => FALSE));
             case 'journal':
                 return array(array('key' => 'journal_date', 'label_key' => 'finance_journal_date', 'default' => TRUE));
             case 'payment':

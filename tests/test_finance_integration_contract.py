@@ -112,6 +112,11 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("values['amount'] = (string) $inbox['amount_before_tax']", admin)
         self.assertIn("values['description'] = (string) $inbox['description']", admin)
 
+    def test_integration_date_filter_has_no_default_range(self):
+        panel = (APP / "libraries/Finance_filter_panel.php").read_text()
+        method = panel.split("case 'integration':", 1)[1].split("case 'journal':", 1)[0]
+        self.assertIn("'default' => FALSE", method)
+
     def test_views_and_store(self):
         view = LIST_VIEW.read_text()
         self.assertIn("finance-integration-table", view)
