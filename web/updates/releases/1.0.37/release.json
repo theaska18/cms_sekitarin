@@ -1,0 +1,66 @@
+{
+  "version": "1.0.37",
+  "from_version": "1.0.36",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.36",
+  "changelog": "Rilis fitur: filter status integrasi default received, draft integrasi memakai default pajak yang sama dengan form faktur/tagihan, dan riwayat System Update menampilkan kolom Keterangan berisi changelog rilis.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "af2adf098b330e60963e171bef9c4288761af28fabc0d96c7cea55f7fd137705",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "9ff6e11186a39818711a3cd40a96dcd95b212847407c8cf0e3a5ae35ca47bdac",
+      "size": 16083
+    },
+    {
+      "path": "application/language/english/update_lang.php",
+      "sha256": "6f040915d568cc3a7fc226516afa032b75f6751b1aa916d2cc30b59f0d1e1c33",
+      "size": 5178
+    },
+    {
+      "path": "application/language/indonesian/update_lang.php",
+      "sha256": "4a767630ac9eac80221efab07c4446c54dab09e66f6625e8bbc57d71050b6ea4",
+      "size": 5140
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "d95f95c37d44fece0a45d97cd60e134b2574f44914cd93b297ce0c9795029af8",
+      "size": 14505
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "32db3af6712e0fd82d0e43b081acb3cef7cf5562820015fef815d8689fed0d76",
+      "size": 12410
+    },
+    {
+      "path": "application/views/admin/finance/partials/filter_panel.php",
+      "sha256": "a1b4bed16e24a8356f9f8ad0fc54a2afc3ee310d3036b732e9897a9b94d68fdb",
+      "size": 16800
+    },
+    {
+      "path": "application/views/admin/system/update/index.php",
+      "sha256": "ec030fc16860ca1009524b692c81451c588dfc9fbba6c2995833780b80f7cf44",
+      "size": 30767
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "7b44427af79ab37e3edae0fd3ee68d9466d726f0ad20bbf0643dc14af2d525a2",
+      "size": 12146
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.37.zip",
+    "sha256": "95896de3f9bca8c3daa6120279dfa46544f99268dded970d9fa708843038aca4",
+    "size": 27146
+  },
+  "from_ref": "v1.0.36",
+  "generated_at": "2026-11-25T12:09:29+00:00"
+}

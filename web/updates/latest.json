@@ -1,11 +1,11 @@
 {
-  "version": "1.0.36",
+  "version": "1.0.37",
   "released_at": "2026-11-25",
-  "changelog": "Rilis perbaikan: kolom dan filter Tenant pada daftar Peran dan Pengguna disembunyikan jika pengguna tidak memiliki akses app_role_tenant atau app_user_tenant, tanpa mengubah tenant scoping di server.",
+  "changelog": "Rilis fitur: filter status integrasi default received, draft integrasi memakai default pajak yang sama dengan form faktur/tagihan, dan riwayat System Update menampilkan kolom Keterangan berisi changelog rilis.",
   "min_php": "8.1",
-  "requires_version": "1.0.35",
-  "package": "cms-1.0.36.zip",
-  "sha256": "fb5073bf03f6541cf11ea37927210d7ca14d9ac0d7f1bc61537e084610c81513",
-  "size": 9939,
+  "requires_version": "1.0.36",
+  "package": "cms-1.0.37.zip",
+  "sha256": "95896de3f9bca8c3daa6120279dfa46544f99268dded970d9fa708843038aca4",
+  "size": 27146,
   "migrations": []
 }
