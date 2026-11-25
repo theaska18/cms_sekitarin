@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.36` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.37` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.36`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.37`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
@@ -45,14 +45,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.36` menyembunyikan kolom dan filter Tenant pada daftar Peran
   dan Pengguna jika pengguna tidak memiliki akses `app_role_tenant` /
   `app_user_tenant`, tanpa mengubah tenant scoping di server.
-- Perubahan setelah `1.0.36` (belum dirilis): filter status pada halaman
-  integrasi faktur penjualan dan tagihan pembelian memakai default `received`,
-  dan Reset mengembalikan filter ke status tersebut.
-- Perubahan setelah `1.0.36` (belum dirilis): form Jadikan Draft dari
-  integrasi memakai default pajak yang sama dengan form Faktur Penjualan dan
-  Tagihan Pembelian (`default_output_tax_id` / `default_input_tax_id`).
-- Perubahan setelah `1.0.36` (belum dirilis): riwayat System → Update
-  menampilkan kolom Keterangan berisi changelog setiap rilis.
+- Rilis `1.0.37` mencakup: filter status integrasi default `received` dan
+  Reset mengembalikan ke status tersebut; form Jadikan Draft integrasi memakai
+  default pajak yang sama dengan form Faktur Penjualan/Tagihan Pembelian
+  (`default_output_tax_id` / `default_input_tax_id`); serta riwayat
+  System → Update menampilkan kolom Keterangan berisi changelog rilis.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
