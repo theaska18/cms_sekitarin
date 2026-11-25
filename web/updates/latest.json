@@ -1,11 +1,13 @@
 {
-  "version": "1.0.38",
+  "version": "1.0.39",
   "released_at": "2026-11-25",
-  "changelog": "Rilis fitur: topbar CMS mengecek notifikasi baru setiap 10 detik, memperbarui badge dan daftar preview tanpa reload, serta tetap berhenti saat tab browser tidak aktif.",
+  "changelog": "Rilis fitur: polling notifikasi 60 detik dengan cursor since_id, penanda lonceng dan titik merah pada favicon yang langsung hilang saat notifikasi dibuka, index feed notifikasi, serta kolom Status di seluruh daftar Finance dipindahkan tepat setelah kolom Tindakan.",
   "min_php": "8.1",
-  "requires_version": "1.0.37",
-  "package": "cms-1.0.38.zip",
-  "sha256": "38a88391252b46fa446f5ec1873169226e9d9ff9837283aea1a1f4903565d11b",
-  "size": 23490,
-  "migrations": []
+  "requires_version": "1.0.38",
+  "package": "cms-1.0.39.zip",
+  "sha256": "88b488b9fc40ad61ea087bbaf398a670ac004c4e6a71a5765741affc068021e3",
+  "size": 65604,
+  "migrations": [
+    "20261125000100_add_notification_feed_indexes.sql"
+  ]
 }

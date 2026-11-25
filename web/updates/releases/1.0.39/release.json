@@ -1,0 +1,95 @@
+{
+  "version": "1.0.39",
+  "from_version": "1.0.38",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.38",
+  "changelog": "Rilis fitur: polling notifikasi 60 detik dengan cursor since_id, penanda lonceng dan titik merah pada favicon yang langsung hilang saat notifikasi dibuka, index feed notifikasi, serta kolom Status di seluruh daftar Finance dipindahkan tepat setelah kolom Tindakan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "3b21965e41f9ec4370cb80ad4f8eee07b3ac43c5cf5ebfb46ff0a73a75778bdb",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_notifications.php",
+      "sha256": "b285894e028c9e8615eeb8cd40c5f42af541a07f0a637144d988fd544be1dd53",
+      "size": 15404
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "2b09ae4358e94da7ccb3b58e75297805acbb7929e4e0aa31f29856f764f6a994",
+      "size": 19805
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "d72c2d2e1117ab0098ab9e515904e4be7d7fe28fd8e309a15f3264572eed181c",
+      "size": 12410
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "b4ad0c7ecee0ababea00d430ba8f655bd6f4b4014a3072d317819ebe7aa1de1c",
+      "size": 21018
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "3452b5bbc801d7ce5ca83a8d439664b5cc5c00e12eeb9c95295d1f9360cc81d1",
+      "size": 18238
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "b5611d18af8b4e49b827d9ba3c5693bc0a33a6ea695a0e43620c571cba451878",
+      "size": 11265
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "b43f7537ee73f428940e6b4aa2d3efd65e775755d997e0125d0612975349c565",
+      "size": 33527
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "003e03c4a3072157472564277785eca32c8cba1caf04a1ad1f23feaea811fc00",
+      "size": 23621
+    },
+    {
+      "path": "application/views/admin/finance/transfer_index.php",
+      "sha256": "3c5df57b254086e404cd2adf8626c7867c4fd3205718b2c8e58c3e53f1942b0e",
+      "size": 16281
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "b4aaccfa0de6995d43df5604fa35f7bb1f6acf4ed66dac8d95e80d278448c1a2",
+      "size": 39177
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "a393508f9bc13b629f353bf90a0e9179037a008184336c2ba295b226748771a4",
+      "size": 35995
+    },
+    {
+      "path": "assets/css/admin-topbar-actions.css",
+      "sha256": "2131aeab7388f23f9fadbb8d192b1fb22ac537eb7a44778b91e74f9e896f4ee6",
+      "size": 12565
+    },
+    {
+      "path": "assets/js/admin-notifications.js",
+      "sha256": "467f9c8993c0c9aba5cdc12dab06b189baa57ee448200ebee9145ff29847544d",
+      "size": 8224
+    }
+  ],
+  "delete": [],
+  "migrations": [
+    "20261125000100_add_notification_feed_indexes.sql"
+  ],
+  "migration_checksums": {
+    "20261125000100_add_notification_feed_indexes.sql": "c3ec805ed0250e6bd2c89292e5b58aca654edb60222839e6cb161324d14362f4"
+  },
+  "package": {
+    "name": "cms-1.0.39.zip",
+    "sha256": "88b488b9fc40ad61ea087bbaf398a670ac004c4e6a71a5765741affc068021e3",
+    "size": 65604
+  },
+  "from_ref": "v1.0.38",
+  "generated_at": "2026-11-25T16:26:11+00:00"
+}
