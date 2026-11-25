@@ -1,11 +1,11 @@
 {
-  "version": "1.0.37",
+  "version": "1.0.38",
   "released_at": "2026-11-25",
-  "changelog": "Rilis fitur: filter status integrasi default received, draft integrasi memakai default pajak yang sama dengan form faktur/tagihan, dan riwayat System Update menampilkan kolom Keterangan berisi changelog rilis.",
+  "changelog": "Rilis fitur: topbar CMS mengecek notifikasi baru setiap 10 detik, memperbarui badge dan daftar preview tanpa reload, serta tetap berhenti saat tab browser tidak aktif.",
   "min_php": "8.1",
-  "requires_version": "1.0.36",
-  "package": "cms-1.0.37.zip",
-  "sha256": "95896de3f9bca8c3daa6120279dfa46544f99268dded970d9fa708843038aca4",
-  "size": 27146,
+  "requires_version": "1.0.37",
+  "package": "cms-1.0.38.zip",
+  "sha256": "38a88391252b46fa446f5ec1873169226e9d9ff9837283aea1a1f4903565d11b",
+  "size": 23490,
   "migrations": []
 }

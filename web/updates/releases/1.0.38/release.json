@@ -1,0 +1,51 @@
+{
+  "version": "1.0.38",
+  "from_version": "1.0.37",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.37",
+  "changelog": "Rilis fitur: topbar CMS mengecek notifikasi baru setiap 10 detik, memperbarui badge dan daftar preview tanpa reload, serta tetap berhenti saat tab browser tidak aktif.",
+  "files": [
+    {
+      "path": "application/config/routes.php",
+      "sha256": "bf1346dd1a947bd3aeec796add54737aadc0fe2bf10e9ce5a4c3014babdd14b1",
+      "size": 5333
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "8535a8c533a1610219c52560a019c9b1273db4de920a48dad5d8de409110e8da",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_notifications.php",
+      "sha256": "de791d5821acc72671a20800d644b83f2d500b16d81ef0141e3143b01aa6cdaf",
+      "size": 14399
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "0cbb7d087bac480748760efadf61ba4d3170e55fb9fa6b59b7d2aa4753aaab80",
+      "size": 38826
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "47e954836b85a80cfe961e157f5a00b9e7b9973f23ef5fca0eb46fb50bd8cafd",
+      "size": 35679
+    },
+    {
+      "path": "assets/js/admin-notifications.js",
+      "sha256": "e625254148accc8768d8865778b815212092beae0620bb54b3ef9cf3914c142b",
+      "size": 4818
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.38.zip",
+    "sha256": "38a88391252b46fa446f5ec1873169226e9d9ff9837283aea1a1f4903565d11b",
+    "size": 23490
+  },
+  "from_ref": "v1.0.37",
+  "generated_at": "2026-11-25T15:53:07+00:00"
+}
