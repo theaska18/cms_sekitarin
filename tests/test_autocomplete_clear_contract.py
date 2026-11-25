@@ -29,6 +29,14 @@ class AutocompleteClearContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, script)
 
+    def test_hierarchy_autocomplete_has_the_same_clear_and_readonly_behavior(self):
+        script = (ROOT / "web" / "assets" / "js" / "admin-hierarchy-autocomplete.js").read_text(encoding="utf-8")
+        for marker in (
+            "function setSelected", "data-hierarchy-clear", "input.readOnly = selected",
+            "target.value = ''", "setSelected(input, true)", "setSelected(input, false)",
+        ):
+            self.assertIn(marker, script)
+
     def test_clear_button_is_positioned_before_the_search_icon(self):
         script = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("insetInlineEnd: '2.4rem'", script)

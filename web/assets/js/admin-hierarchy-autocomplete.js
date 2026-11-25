@@ -28,6 +28,37 @@
             input.setAttribute('aria-expanded', 'false');
         }
 
+        function setSelected(input, selected) {
+            var parent = input.parentNode;
+            var button = parent.querySelector('[data-hierarchy-clear]');
+            if (!button) {
+                if (parent.style.position !== 'relative') parent.style.position = 'relative';
+                button = document.createElement('button');
+                button.type = 'button';
+                button.setAttribute('data-hierarchy-clear', '1');
+                button.setAttribute('aria-label', 'Clear selection');
+                button.setAttribute('title', 'Clear selection');
+                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="width:1rem;height:1rem"><path stroke-linecap="round" d="m5 5 10 10M15 5 5 15"/></svg>';
+                button.style.cssText = 'position:absolute;inset-inline-end:.65rem;top:50%;transform:translateY(-50%);display:none;width:1.25rem;height:1.25rem;align-items:center;justify-content:center;border:0;border-radius:9999px;background:transparent;color:#64748b;cursor:pointer;z-index:2';
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    input.value = '';
+                    var target = document.getElementById(input.getAttribute('data-employee-id-target'));
+                    if (target) target.value = '';
+                    closeList(input);
+                    setSelected(input, false);
+                    input.focus();
+                    input.dispatchEvent(new Event('input', {bubbles: true}));
+                });
+                parent.appendChild(button);
+            }
+            input.readOnly = selected;
+            input.setAttribute('aria-readonly', selected ? 'true' : 'false');
+            input.style.paddingInlineEnd = selected ? '2.5rem' : '';
+            button.style.display = selected ? 'inline-flex' : 'none';
+        }
+
         function selectItem(input, item) {
             var idField = document.getElementById(input.getAttribute('data-employee-id-target'));
             var status = input.parentNode.querySelector('[data-employee-status]');
@@ -35,6 +66,7 @@
             if (idField) idField.value = item.id;
             if (status) status.textContent = format(labels.selected, item.label);
             closeList(input);
+            setSelected(input, true);
         }
 
         function render(input, items) {
@@ -65,6 +97,7 @@
             var status = input.parentNode.querySelector('[data-employee-status]');
             if (idField) idField.value = '';
             closeList(input);
+            setSelected(input, false);
             var term = input.value.trim();
             if (term.length < 2) {
                 if (status) status.textContent = labels.minimum;
@@ -118,6 +151,12 @@
             } else if (event.key === 'Escape') {
                 closeList(input);
             }
+        });
+
+        Array.prototype.forEach.call(form.querySelectorAll('[data-employee-autocomplete]'), function (input) {
+            var target = document.getElementById(input.getAttribute('data-employee-id-target'));
+            if (input.value.trim() !== '' && target && target.value.trim() !== '') setSelected(input, true);
+            else setSelected(input, false);
         });
 
         form.addEventListener('focusout', function (event) {
