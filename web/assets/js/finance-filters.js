@@ -257,7 +257,9 @@
                 Array.prototype.forEach.call(detailFields, function (node) {
                     var name = node.getAttribute('data-finance-filter');
                     if (name === 'search' || name === 'page_size') return;
-                    if (name === 'status' || name === 'flag') {
+                    if (name === 'status') {
+                        node.value = panel.getAttribute('data-default-status') || '';
+                    } else if (name === 'flag') {
                         node.value = '';
                     } else if (Object.prototype.hasOwnProperty.call(initialDetails, name)) {
                         node.value = initialDetails[name];

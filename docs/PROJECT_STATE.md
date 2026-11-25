@@ -45,6 +45,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.36` menyembunyikan kolom dan filter Tenant pada daftar Peran
   dan Pengguna jika pengguna tidak memiliki akses `app_role_tenant` /
   `app_user_tenant`, tanpa mengubah tenant scoping di server.
+- Perubahan setelah `1.0.36` (belum dirilis): filter status pada halaman
+  integrasi faktur penjualan dan tagihan pembelian memakai default `received`,
+  dan Reset mengembalikan filter ke status tersebut.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -130,13 +133,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-169 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+170 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-594 tests
+595 tests
 43 failure
 6 error
 ```

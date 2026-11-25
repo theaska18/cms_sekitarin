@@ -117,6 +117,17 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         method = panel.split("case 'integration':", 1)[1].split("case 'journal':", 1)[0]
         self.assertIn("'default' => FALSE", method)
 
+    def test_integration_status_filter_defaults_to_received(self):
+        controller = (APP / "controllers/Admin_finance_integration.php").read_text()
+        view = LIST_VIEW.read_text()
+        panel = (APP / "libraries/Finance_filter_panel.php").read_text()
+        partial = (APP / "views/admin/finance/partials/filter_panel.php").read_text()
+        self.assertIn("'status_default' => 'received'", controller)
+        self.assertIn("'status_default'=>'received'", view)
+        self.assertIn("$status_raw === NULL && $config['status_default']", panel)
+        self.assertIn("finance_filter_status_selected", partial)
+        self.assertIn("data-default-status", partial)
+
     def test_views_and_store(self):
         view = LIST_VIEW.read_text()
         self.assertIn("finance-integration-table", view)

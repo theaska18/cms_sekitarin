@@ -24,7 +24,8 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
          data-finance-filter-panel
          data-target="<?= html_escape($filter_target) ?>"
          data-default-start="<?= html_escape($filter_default_start) ?>"
-         data-default-end="<?= html_escape($filter_default_end) ?>">
+         data-default-end="<?= html_escape($filter_default_end) ?>"
+         data-default-status="<?= html_escape(isset($finance_filter_default_status) ? $finance_filter_default_status : '') ?>">
     <div class="flex items-center justify-between gap-2">
         <?php if (!empty($finance_filter_add_action['url'])): ?>
             <a href="<?= html_escape($finance_filter_add_action['url']) ?>" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800">
@@ -73,8 +74,9 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
                     <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_filter_status']) ? $labels['finance_filter_status'] : 'Status') ?></span>
                     <select data-finance-filter="status" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900">
                         <option value=""><?= html_escape(isset($labels['finance_filter_all']) ? $labels['finance_filter_all'] : 'All') ?></option>
+                        <?php $selected_status = isset($finance_filter_status_selected) ? $finance_filter_status_selected : ''; ?>
                         <?php foreach ($finance_filter_status_options as $value => $label): ?>
-                            <option value="<?= html_escape($value) ?>"><?= html_escape($label) ?></option>
+                            <option value="<?= html_escape($value) ?>"<?= (string) $value === (string) $selected_status ? ' selected' : '' ?>><?= html_escape($label) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </label>

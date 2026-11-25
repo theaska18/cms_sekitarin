@@ -269,6 +269,7 @@ class Admin_finance_integration extends Admin
             'date_preset' => 'integration',
             'primary_date' => $spec !== NULL ? $spec['date'] : 'invoice_date',
             'status_preset' => 'integration',
+            'status_default' => 'received',
         )));
     }
 

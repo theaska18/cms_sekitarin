@@ -18,6 +18,7 @@ class Finance_filter_panel
             'target' => '',
             'date' => TRUE,
             'status_preset' => 'transaction',
+            'status_default' => '',
             'flag' => FALSE,
             'default_days' => 7,
             'default_start' => '',
@@ -91,10 +92,15 @@ class Finance_filter_panel
             }
         }
 
-        $status = trim((string) $this->CI->input->get('status', TRUE));
+        $status_raw = $this->CI->input->get('status', TRUE);
+        $status = trim((string) $status_raw);
         $allowed = array_keys($this->status_options($config['status_preset'], array()));
         if (!in_array($status, $allowed, TRUE)) {
             $status = '';
+        }
+        if ($status_raw === NULL && $config['status_default'] !== ''
+            && in_array($config['status_default'], $allowed, TRUE)) {
+            $status = $config['status_default'];
         }
 
         $flag = trim((string) $this->CI->input->get('flag', TRUE));
@@ -190,6 +196,12 @@ class Finance_filter_panel
             }
             $field_filters[] = $field;
         }
+        $status_options = $this->status_options($config['status_preset'], $labels);
+        $status_raw = $this->CI->input->get('status', TRUE);
+        $selected_status = $status_raw === NULL ? (string) $config['status_default'] : trim((string) $status_raw);
+        if (!array_key_exists($selected_status, $status_options)) {
+            $selected_status = '';
+        }
         $data = array(
             'finance_filter_date' => !empty($config['date']),
             'finance_filter_date_fields' => $date_fields,
@@ -199,7 +211,9 @@ class Finance_filter_panel
             'finance_filter_target' => (string) $config['target'],
             'finance_filter_default_start' => $defaults['start_on'],
             'finance_filter_default_end' => $defaults['end_on'],
-            'finance_filter_status_options' => $this->status_options($config['status_preset'], $labels),
+            'finance_filter_default_status' => (string) $config['status_default'],
+            'finance_filter_status_selected' => $selected_status,
+            'finance_filter_status_options' => $status_options,
             'finance_filter_flag_options' => !empty($config['flag'])
                 ? array(
                     '1' => isset($labels['finance_filter_active']) ? $labels['finance_filter_active'] : 'Active',
