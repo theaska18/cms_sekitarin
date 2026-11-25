@@ -1,11 +1,11 @@
 {
-  "version": "1.0.35",
+  "version": "1.0.36",
   "released_at": "2026-11-25",
-  "changelog": "Rilis perbaikan: export pajak menulis tarif maksimal 2 desimal dan import pajak menerima format lama 11.000000, desimal koma, serta tanda persen, sehingga file export dapat di-import kembali.",
+  "changelog": "Rilis perbaikan: kolom dan filter Tenant pada daftar Peran dan Pengguna disembunyikan jika pengguna tidak memiliki akses app_role_tenant atau app_user_tenant, tanpa mengubah tenant scoping di server.",
   "min_php": "8.1",
-  "requires_version": "1.0.34",
-  "package": "cms-1.0.35.zip",
-  "sha256": "7c71dbd4cdb6a2b5c09a9306957693ebaa2b8c503229dafab49ef1220d910a57",
-  "size": 36212,
+  "requires_version": "1.0.35",
+  "package": "cms-1.0.36.zip",
+  "sha256": "fb5073bf03f6541cf11ea37927210d7ca14d9ac0d7f1bc61537e084610c81513",
+  "size": 9939,
   "migrations": []
 }
