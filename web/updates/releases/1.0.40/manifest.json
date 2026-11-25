@@ -1,0 +1,49 @@
+{
+  "version": "1.0.40",
+  "from_version": "1.0.39",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.39",
+  "changelog": "Rilis fitur: semua lookup autocomplete menjadi read-only setelah dipilih dan memiliki tombol close sebelum icon pencarian untuk mengosongkan nilai, form User diselaraskan dengan Finance, serta panah dropdown select diposisikan lebih konsisten.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "54a7aac9097c697f584c08c14350b7cc93c571259d95a4e0ce824cfe6a8a27ed",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "76d7cccb91194fede4ab57f30a553450f9ab3fb5737a0d32744e8e79725b5e59",
+      "size": 39357
+    },
+    {
+      "path": "application/views/admin/user/form.php",
+      "sha256": "ad9ea288eeaca47a7b58eec42d9cb708d7eb5a5c8a9a0d49d143b2bccc205dae",
+      "size": 25274
+    },
+    {
+      "path": "assets/css/admin-theme.css",
+      "sha256": "5e9ae1162c84d9a49db7b4b639c2649d61992374405fe59f8c1794b747192d71",
+      "size": 54989
+    },
+    {
+      "path": "assets/css/ios-form-controls.css",
+      "sha256": "a231377eca2a6c3d37d6335416221e247f0b19923933425b8a9bd8621056c12f",
+      "size": 1177
+    },
+    {
+      "path": "assets/js/admin-hierarchy-autocomplete.js",
+      "sha256": "dd82af65a0c75219364556d81e9fac8ad7fbe1f066f0d1b767a7e7ffdda9ef05",
+      "size": 9123
+    },
+    {
+      "path": "assets/js/autocomplete-clear.js",
+      "sha256": "e0b2ddf00dcb98407d420841989c7655be497a34209506b730c3fb3b12d870e3",
+      "size": 6649
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}
