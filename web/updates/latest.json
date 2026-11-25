@@ -1,11 +1,11 @@
 {
-  "version": "1.0.34",
+  "version": "1.0.35",
   "released_at": "2026-11-25",
-  "changelog": "Rilis perbaikan: filter tanggal pada halaman integrasi faktur penjualan dan tagihan pembelian kini kosong secara default, sehingga dokumen bertanggal maju atau lama tetap terlihat sampai pengguna memilih rentang tanggal sendiri.",
+  "changelog": "Rilis perbaikan: export pajak menulis tarif maksimal 2 desimal dan import pajak menerima format lama 11.000000, desimal koma, serta tanda persen, sehingga file export dapat di-import kembali.",
   "min_php": "8.1",
-  "requires_version": "1.0.33",
-  "package": "cms-1.0.34.zip",
-  "sha256": "afcfd3b3e269a889b196f4d69b2a1645b2f3479d101ef688084a68c034e9fd4b",
-  "size": 3831,
+  "requires_version": "1.0.34",
+  "package": "cms-1.0.35.zip",
+  "sha256": "7c71dbd4cdb6a2b5c09a9306957693ebaa2b8c503229dafab49ef1220d910a57",
+  "size": 36212,
   "migrations": []
 }

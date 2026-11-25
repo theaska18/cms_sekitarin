@@ -1,0 +1,31 @@
+{
+  "version": "1.0.35",
+  "from_version": "1.0.34",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.34",
+  "changelog": "Rilis perbaikan: export pajak menulis tarif maksimal 2 desimal dan import pajak menerima format lama 11.000000, desimal koma, serta tanda persen, sehingga file export dapat di-import kembali.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "9508cb04585bba0ff3282139558628fc17bd91d82cf3303746456ad77302afd2",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "8f89c4d45c39e4b8e214362d2e3d501db68463b8bafa091f9632b153f139d8e5",
+      "size": 276664
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.35.zip",
+    "sha256": "7c71dbd4cdb6a2b5c09a9306957693ebaa2b8c503229dafab49ef1220d910a57",
+    "size": 36212
+  },
+  "from_ref": "v1.0.34",
+  "generated_at": "2026-11-25T11:44:19+00:00"
+}
