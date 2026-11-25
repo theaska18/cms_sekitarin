@@ -376,6 +376,9 @@
                             if (badge) badge.remove();
                             item.trigger.classList.remove('has-notifications', 'is-notification-new');
                             item.trigger.setAttribute('aria-label', item.trigger.getAttribute('data-notification-label') || 'Notifikasi');
+                            if (window.CustomEvent) {
+                                window.dispatchEvent(new window.CustomEvent('admin-notifications-viewed'));
+                            }
                         }).catch(function () {
                             item.trigger.removeAttribute('data-mark-viewed-pending');
                         });

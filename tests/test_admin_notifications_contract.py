@@ -48,7 +48,8 @@ class AdminNotificationsContractTests(unittest.TestCase):
         for marker in ("data-notification-feed-url", 'data-notification-interval="60000"', "data-notification-last-id", "admin-notifications-items", "admin-notification-badge"):
             self.assertIn(marker, header)
         self.assertIn("assets/js/admin-notifications.js", footer)
-        for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "since_id=", "insertAdjacentHTML('afterbegin'", "has-notifications", "is-notification-new", "formatLocalTimes(items)", "data-local-datetime", "link[rel=\"icon\"]", "canvas.toDataURL('image/png')", "updateFavicon"):
+        self.assertIn("admin-notifications-viewed", footer)
+        for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "since_id=", "insertAdjacentHTML('afterbegin'", "has-notifications", "is-notification-new", "formatLocalTimes(items)", "data-local-datetime", "link[rel=\"icon\"]", "canvas.toDataURL('image/png')", "updateFavicon", "admin-notifications-viewed"):
             self.assertIn(marker, script)
         css = (ROOT / "web/assets/css/admin-topbar-actions.css").read_text()
         for marker in ("has-notifications", "is-notification-new", "@keyframes admin-notification-ring", "prefers-reduced-motion"):

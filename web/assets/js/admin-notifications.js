@@ -185,6 +185,9 @@
     var initialBadge = document.getElementById('admin-notification-badge');
     updateFavicon(initialBadge ? Math.max(0, parseInt(initialBadge.textContent, 10) || 0) : 0);
 
+    window.addEventListener('admin-notifications-viewed', function () {
+        updateFavicon(0);
+    });
     window.setInterval(poll, interval);
     window.addEventListener('focus', poll);
     document.addEventListener('visibilitychange', function () {
