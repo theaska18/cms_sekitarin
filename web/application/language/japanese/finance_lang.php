@@ -697,3 +697,4 @@ $lang['finance_people_import_success_skipped'] = '%s インポート: %d、ス�
 $lang['finance_people_import_error'] = 'インポートに失敗しました。';
 $lang['finance_customers'] = '顧客';
 $lang['finance_suppliers'] = '仕入先';
+$lang['finance_integration_no_action'] = '実行できる操作はありません';

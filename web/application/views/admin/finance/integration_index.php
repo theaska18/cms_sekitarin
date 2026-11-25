@@ -72,7 +72,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
         ajax: {url: base + '/data', type: 'GET'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row) {
-                if (type !== 'display' || !canProcess) return '';
+                if (type !== 'display') return '';
                 var id = parseInt(row[documentField], 10);
                 if (id > 0) {
                     var draftStatus = String(row.draft_status || '');
@@ -82,6 +82,9 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
                         ? <?= json_encode(isset($labels['finance_integration_view_draft']) ? $labels['finance_integration_view_draft'] : 'Lihat Draft') ?>
                         : <?= json_encode(isset($labels['finance_view_document']) ? $labels['finance_view_document'] : 'Lihat Dokumen') ?>;
                     return '<a class="inline-flex min-h-9 items-center rounded-lg border border-emerald-300 px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" href="' + escapeHtml('/admin/finance/' + <?= json_encode($slug) ?> + action + id) + '">' + escapeHtml(actionLabel) + '</a>';
+                }
+                if (String(row.status || '') === 'cancelled' || !canProcess) {
+                    return '<span class="inline-flex items-center text-sm text-slate-400" aria-label="<?= html_escape(isset($labels['finance_integration_no_action']) ? $labels['finance_integration_no_action'] : 'No action available') ?>">&mdash;</span>';
                 }
                 return '<a class="inline-flex min-h-9 items-center rounded-lg border border-indigo-300 px-3 text-sm font-semibold text-indigo-800 hover:bg-indigo-50" href="' + escapeHtml(base + '/draft/' + parseInt(row[inboxField], 10)) + '"><?= html_escape(isset($labels['finance_integration_make_draft']) ? $labels['finance_integration_make_draft'] : 'Jadikan Draft') ?></a>';
             }},

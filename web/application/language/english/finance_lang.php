@@ -697,3 +697,4 @@ $lang['finance_people_import_success_skipped'] = '%s imported: %d, skipped: %d.'
 $lang['finance_people_import_error'] = 'Import failed.';
 $lang['finance_customers'] = 'Customers';
 $lang['finance_suppliers'] = 'Suppliers';
+$lang['finance_integration_no_action'] = 'No action available';

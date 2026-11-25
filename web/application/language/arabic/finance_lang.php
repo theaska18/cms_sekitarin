@@ -697,3 +697,4 @@ $lang['finance_people_import_success_skipped'] = 'تم استيراد %s: %d، �
 $lang['finance_people_import_error'] = 'فشل الاستيراد.';
 $lang['finance_customers'] = 'العملاء';
 $lang['finance_suppliers'] = 'الموردون';
+$lang['finance_integration_no_action'] = 'لا يوجد إجراء متاح';

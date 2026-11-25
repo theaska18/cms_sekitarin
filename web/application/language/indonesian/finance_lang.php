@@ -696,3 +696,4 @@ $lang['finance_people_import_success_skipped'] = '%s diimport: %d, dilewati: %d.
 $lang['finance_people_import_error'] = 'Import gagal.';
 $lang['finance_customers'] = 'Pelanggan';
 $lang['finance_suppliers'] = 'Pemasok';
+$lang['finance_integration_no_action'] = 'Tidak ada tindakan';

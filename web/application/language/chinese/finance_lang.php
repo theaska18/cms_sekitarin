@@ -697,3 +697,4 @@ $lang['finance_people_import_success_skipped'] = '%s已导入：%d，已跳过�
 $lang['finance_people_import_error'] = '导入失败。';
 $lang['finance_customers'] = '客户';
 $lang['finance_suppliers'] = '供应商';
+$lang['finance_integration_no_action'] = '无可执行操作';

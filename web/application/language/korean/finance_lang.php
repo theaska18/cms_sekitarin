@@ -697,3 +697,4 @@ $lang['finance_people_import_success_skipped'] = '%s 가져옴: %d, 건너뜀: %
 $lang['finance_people_import_error'] = '가져오기에 실패했습니다.';
 $lang['finance_customers'] = '고객';
 $lang['finance_suppliers'] = '공급업체';
+$lang['finance_integration_no_action'] = '사용 가능한 작업 없음';

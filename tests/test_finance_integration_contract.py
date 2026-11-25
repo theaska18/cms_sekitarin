@@ -121,6 +121,8 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("tax_percent", view)
         self.assertIn("dateField", view)
         self.assertIn("finance_integration_document_date", view)
+        self.assertIn("String(row.status || '') === 'cancelled'", view)
+        self.assertIn("finance_integration_no_action", view)
         form = FORM_VIEW.read_text()
         self.assertIn("$finance_document_amount_readonly", form)
         self.assertIn("$finance_document_description_readonly", form)
