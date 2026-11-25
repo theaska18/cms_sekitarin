@@ -35,6 +35,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   `fin_suppliers_import`, yang harus di-assign lewat System → Tenant/Role
   Menu Access. Rilis ini juga menyembunyikan aksi Jadikan Draft pada data
   integrasi yang sudah dibatalkan.
+- Perubahan setelah `1.0.33` (belum dirilis): filter tanggal pada halaman
+  integrasi faktur penjualan dan tagihan pembelian tidak lagi memakai rentang
+  default 7 hari; tanggal kosong sampai pengguna memilih rentang sendiri.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -120,13 +123,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-168 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+169 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-592 tests
+593 tests
 43 failure
 6 error
 ```
