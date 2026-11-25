@@ -42,6 +42,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.35` memperbaiki export/import pajak: export menulis tarif
   maksimal 2 desimal dan import menerima format lama `11.000000`, desimal
   koma `11,00`, serta tanda persen `11%`.
+- Perubahan setelah `1.0.35` (belum dirilis): kolom Tenant pada daftar Peran
+  dan Pengguna disembunyikan jika pengguna tidak memiliki akses
+  `app_role_tenant` / `app_user_tenant`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -133,7 +136,7 @@ Seluruh kontrak Finance lulus:
 Suite penuh saat ini:
 
 ```text
-593 tests
+594 tests
 43 failure
 6 error
 ```

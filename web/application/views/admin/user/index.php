@@ -36,7 +36,7 @@ $status_messages = array(
         <?= $this->finance_list_table->open('user-data-table') ?>
             <thead><tr>
                 <?= $this->finance_list_table->action_header($labels['user_actions']) ?>
-                <th scope="col"><?= html_escape($labels['user_tenant']) ?></th>
+                <?php if (!empty($user_can_tenant)): ?><th scope="col"><?= html_escape($labels['user_tenant']) ?></th><?php endif; ?>
                 <th scope="col"><?= html_escape($labels['user_code']) ?></th>
                 <th scope="col"><?= html_escape($labels['user_name']) ?></th>
                 <th scope="col"><?= html_escape($labels['user_full_name']) ?></th>
@@ -89,7 +89,7 @@ $status_messages = array(
 
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'asc']], language: language,
+        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[<?= !empty($user_can_tenant) ? 2 : 1 ?>, 'asc']], language: language,
         ajax: {url: base + '/data', type: 'GET', dataSrc: 'data'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
@@ -102,7 +102,7 @@ $status_messages = array(
                 if (canDelete) items += '<form method="post" action="' + escapeHtml(base + '/delete') + '" role="none" data-web-confirm data-web-confirm-title="' + escapeHtml(labels.delete) + '" data-web-confirm-message="' + escapeHtml(labels.deleteConfirm) + '" data-web-confirm-accept="' + escapeHtml(labels.delete) + '"><input type="hidden" name="' + escapeHtml(csrfName) + '" value="' + escapeHtml(csrfHash) + '"><input type="hidden" name="user_id" value="' + id + '"><input type="hidden" name="tenant_id" value="' + tenant + '"><button type="submit" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50">' + escapeHtml(labels.delete) + '</button></form>';
                 return '<div class="relative inline-flex"><button type="button" data-user-menu-toggle aria-label="' + escapeHtml(labels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-user-actions-menu hidden role="menu" class="fixed z-[60] w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + items + '</div></div>';
             }},
-            {data: 'tenant_code', name: 'tenant_id', render: function (v, t, row) { return t === 'display' ? escapeHtml((row.tenant_code || '') + ' — ' + (row.tenant_name || '')) : v; }},
+            <?php if (!empty($user_can_tenant)): ?>{data: 'tenant_code', name: 'tenant_id', render: function (v, t, row) { return t === 'display' ? escapeHtml((row.tenant_code || '') + ' — ' + (row.tenant_name || '')) : v; }},<?php endif; ?>
             {data: 'user_code', name: 'user_code', className: 'font-mono text-xs font-semibold', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'user_name', name: 'user_name', className: 'font-medium', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'full_name', name: 'full_name', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},

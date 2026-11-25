@@ -39,7 +39,7 @@ $role_status_messages = array(
         <?= $this->finance_list_table->open('role-data-table') ?>
             <thead><tr>
                 <?= $this->finance_list_table->action_header($labels['role_actions']) ?>
-                <th scope="col"><?= html_escape($labels['role_tenant_label']) ?></th>
+                <?php if (!empty($role_tenant_access)): ?><th scope="col"><?= html_escape($labels['role_tenant_label']) ?></th><?php endif; ?>
                 <th scope="col"><?= html_escape($labels['role_code_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['role_name_label']) ?></th>
                 <th scope="col"><?= html_escape($labels['role_description_label']) ?></th>
@@ -103,7 +103,7 @@ $role_status_messages = array(
 
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'asc']], language: language,
+        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[<?= !empty($role_tenant_access) ? 2 : 1 ?>, 'asc']], language: language,
         ajax: {url: base + '/data', type: 'GET', dataSrc: 'data'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {
@@ -117,7 +117,7 @@ $role_status_messages = array(
                 if (canDelete) items += '<button type="button" data-role-delete-open="1" data-role-code="' + escapeHtml(code) + '" data-role-tenant-id="' + tenantId + '" data-role-name="' + escapeHtml(row.role_name || code) + '" aria-haspopup="dialog" aria-controls="role-delete-dialog" role="menuitem" class="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" d="M4 5.5h12M8 3.5h4m-6.5 2 1 11h7l1-11M8.5 8v5.5m3-5.5v5.5"/></svg>' + escapeHtml(labels.delete) + '</button>';
                 return '<div class="relative inline-flex"><button type="button" data-role-actions-toggle aria-label="' + escapeHtml(labels.actions) + '" aria-haspopup="menu" aria-expanded="false" aria-controls="' + menuId + '" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="' + menuId + '" data-role-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-40 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">' + items + '</div></div>';
             }},
-            {data: 'tenant_code', name: 'tenant_id', render: function (v, t, row) { return t === 'display' ? escapeHtml((row.tenant_code || '') + ' — ' + (row.tenant_name || '')) : v; }},
+            <?php if (!empty($role_tenant_access)): ?>{data: 'tenant_code', name: 'tenant_id', render: function (v, t, row) { return t === 'display' ? escapeHtml((row.tenant_code || '') + ' — ' + (row.tenant_name || '')) : v; }},<?php endif; ?>
             {data: 'role_code', name: 'role_code', className: 'font-mono text-xs font-semibold', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'role_name', name: 'role_name', className: 'font-medium', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'description', name: 'description', render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},

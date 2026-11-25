@@ -57,7 +57,16 @@ class AppUserAuthorizationContractTests(unittest.TestCase):
             self.assertIn(marker, controller)
         for marker in ("user_can_add", "user_can_update", "user_can_delete", "user_can_change_password", "user_can_block"):
             self.assertIn(marker, index)
+        self.assertIn("if (!empty($user_can_tenant))", index)
+        self.assertIn("data: 'tenant_code', name: 'tenant_id'", index)
         self.assertIn("user_can_tenant", form)
+
+    def test_role_and_user_lists_hide_tenant_column_without_tenant_access(self):
+        role_view = (APP / "views/admin/role/index.php").read_text()
+        role_controller = (APP / "controllers/Admin_role.php").read_text()
+        self.assertIn("if (!empty($role_tenant_access))", role_view)
+        self.assertIn("data: 'tenant_code', name: 'tenant_id'", role_view)
+        self.assertIn("has_admin_access_code('app_role_tenant')", role_controller)
 
     def test_user_access_denial_is_localized_in_both_supported_languages(self):
         for locale in ("indonesian", "english"):
