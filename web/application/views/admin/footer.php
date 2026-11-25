@@ -696,5 +696,6 @@ window.financeActionLabels = {
 </dialog>
 <script src="/assets/js/admin-action-menu.js?v=<?= is_file(FCPATH . 'assets/js/admin-action-menu.js') ? filemtime(FCPATH . 'assets/js/admin-action-menu.js') : '1' ?>"></script>
 <script src="/assets/js/finance-filters.js?v=<?= is_file(FCPATH . 'assets/js/finance-filters.js') ? filemtime(FCPATH . 'assets/js/finance-filters.js') : '1' ?>"></script>
+<script src="/assets/js/admin-notifications.js?v=<?= is_file(FCPATH . 'assets/js/admin-notifications.js') ? filemtime(FCPATH . 'assets/js/admin-notifications.js') : '1' ?>"></script>
 </body>
 </html>

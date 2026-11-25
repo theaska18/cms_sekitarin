@@ -50,6 +50,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   default pajak yang sama dengan form Faktur Penjualan/Tagihan Pembelian
   (`default_output_tax_id` / `default_input_tax_id`); serta riwayat
   System → Update menampilkan kolom Keterangan berisi changelog rilis.
+- Perubahan setelah `1.0.37` (belum dirilis): topbar CMS mengecek feed
+  notifikasi setiap 60 detik dan memperbarui badge serta daftar preview tanpa
+  reload halaman.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -141,7 +144,7 @@ Seluruh kontrak Finance lulus:
 Suite penuh saat ini:
 
 ```text
-596 tests
+597 tests
 43 failure
 6 error
 ```

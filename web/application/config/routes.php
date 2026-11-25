@@ -20,6 +20,7 @@ $route['admin'] = 'admin/index';
 $route['admin/csrf-token'] = 'admin/csrf_token';
 $route['admin/notifications'] = 'admin_notifications/index';
 $route['admin/notifications/mark-viewed'] = 'admin_notifications/mark_viewed';
+$route['admin/notifications/feed'] = 'admin_notifications/feed';
 $route['admin/notifications/delete'] = 'admin_notifications/delete';
 $route['admin/notifications/(:num)'] = 'admin_notifications/index/$1';
 $route['admin/setting'] = 'admin/setting';

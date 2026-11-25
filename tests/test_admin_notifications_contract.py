@@ -31,6 +31,23 @@ class AdminNotificationsContractTests(unittest.TestCase):
         self.assertIn("->where('notification_id', $selected_notification_id)", selected)
         self.assertIn("->where('user_id', $user_id)", selected)
 
+    def test_notification_feed_and_interval_refresh_are_wired(self):
+        routes = (APP / "config" / "routes.php").read_text()
+        controller = CONTROLLER.read_text()
+        header = (APP / "views/admin/header.php").read_text()
+        footer = (APP / "views/admin/footer.php").read_text()
+        script = (ROOT / "web/assets/js/admin-notifications.js").read_text()
+        self.assertIn("admin/notifications/feed", routes)
+        self.assertIn("public function feed()", controller)
+        self.assertIn("->where('view_flag', 0)", controller)
+        self.assertIn("->where('user_id', $user_id)", controller)
+        self.assertIn("app_utc_iso($row[$order_date_field])", controller)
+        for marker in ("data-notification-feed-url", 'data-notification-interval="60000"', "admin-notifications-items", "admin-notification-badge"):
+            self.assertIn(marker, header)
+        self.assertIn("assets/js/admin-notifications.js", footer)
+        for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "formatLocalTimes(items)", "data-local-datetime"):
+            self.assertIn(marker, script)
+
     def test_view_has_numbered_pagination_at_the_bottom_of_the_list(self):
         view = VIEW.read_text()
         for marker in (

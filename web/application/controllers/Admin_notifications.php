@@ -139,6 +139,76 @@ class Admin_notifications extends Admin
         $this->render_admin('admin/notifications/index', 'notifications_heading', '/admin/notifications', $data);
     }
 
+    public function feed()
+    {
+        $user_id = isset($this->current_user['user_id']) ? (int) $this->current_user['user_id'] : 0;
+        $count = 0;
+        $items = array();
+        $available = FALSE;
+        $db = $this->load->database('default', TRUE);
+        if ($user_id > 0 && $db && $db->table_exists('app_notification')) {
+            $fields = array();
+            foreach ((array) $db->field_data('app_notification') as $field) {
+                if (isset($field->name)) {
+                    $fields[(string) $field->name] = TRUE;
+                }
+            }
+            if (isset($fields['user_id'], $fields['notification_id'], $fields['title'], $fields['message'])) {
+                $available = TRUE;
+                if (isset($fields['view_flag'])) {
+                    $count_result = $db->from('app_notification')
+                        ->where('user_id', $user_id)
+                        ->where('view_flag', 0)
+                        ->count_all_results();
+                    $count = $count_result === FALSE ? 0 : (int) $count_result;
+                }
+                $select = array('notification_id', 'title', 'message');
+                $order_date_field = NULL;
+                foreach (array('create_on', 'created_at', 'created_date', 'date_created') as $candidate) {
+                    if (isset($fields[$candidate])) {
+                        $select[] = $candidate;
+                        $order_date_field = $candidate;
+                        break;
+                    }
+                }
+                if (isset($fields['view_flag'])) {
+                    $select[] = 'view_flag';
+                }
+                if (isset($fields['read_flag'])) {
+                    $select[] = 'read_flag';
+                }
+                $query = $db->select(implode(', ', $select), FALSE)
+                    ->from('app_notification')
+                    ->where('user_id', $user_id);
+                if ($order_date_field !== NULL) {
+                    $query->order_by($order_date_field, 'DESC');
+                }
+                $result = $query->order_by('notification_id', 'DESC')->limit(5)->get();
+                if ($result !== FALSE) {
+                    foreach ($result->result_array() as $row) {
+                        $items[] = array(
+                            'id' => (int) $row['notification_id'],
+                            'title' => (string) $row['title'],
+                            'message' => (string) $row['message'],
+                            'created_at' => $order_date_field !== NULL && isset($row[$order_date_field])
+                                ? app_utc_iso($row[$order_date_field]) : '',
+                            'read_flag' => isset($row['read_flag']) ? (string) $row['read_flag'] : '1',
+                        );
+                    }
+                }
+            }
+        }
+        $this->output
+            ->set_header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0')
+            ->set_content_type('application/json', 'utf-8')
+            ->set_output(json_encode(array(
+                'success' => TRUE,
+                'available' => $available,
+                'count' => $count,
+                'items' => $items,
+            ), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
     private function apply_notification_filters($query, $fields, $search, $status)
     {
         if ($search !== '') {
