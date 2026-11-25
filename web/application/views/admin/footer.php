@@ -702,5 +702,6 @@ window.financeActionLabels = {
 <script src="/assets/js/finance-filters.js?v=<?= is_file(FCPATH . 'assets/js/finance-filters.js') ? filemtime(FCPATH . 'assets/js/finance-filters.js') : '1' ?>"></script>
 <script src="/assets/js/admin-notifications.js?v=<?= is_file(FCPATH . 'assets/js/admin-notifications.js') ? filemtime(FCPATH . 'assets/js/admin-notifications.js') : '1' ?>"></script>
 <script src="/assets/js/autocomplete-clear.js?v=<?= is_file(FCPATH . 'assets/js/autocomplete-clear.js') ? filemtime(FCPATH . 'assets/js/autocomplete-clear.js') : '1' ?>"></script>
+<script src="/assets/js/admin-topbar.js?v=<?= is_file(FCPATH . 'assets/js/admin-topbar.js') ? filemtime(FCPATH . 'assets/js/admin-topbar.js') : '1' ?>"></script>
 </body>
 </html>
