@@ -43,7 +43,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 <?php if(!$finance_transfer_available): ?><div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_transfer_unavailable']) ? $labels['finance_transfer_unavailable'] : 'Transfer storage is unavailable.') ?></div><?php else: ?>
 <?= $this->finance_list_table->open('finance-transfer-table', array('table_attrs' => 'data-finance-can-update="' . ($can_update ? '1' : '0') . '"')) ?>
 <thead><tr>
-<?= $this->finance_list_table->action_header($t_labels['actions']) ?>
+<?= $this->finance_list_table->action_header($t_labels['actions']) ?><th><?= html_escape(isset($labels['finance_column_status'])?$labels['finance_column_status']:'Status') ?></th>
 <th><?= html_escape(isset($labels['finance_transfer_column_number'])?$labels['finance_transfer_column_number']:'Transfer') ?></th>
 <th><?= html_escape($t_labels['transactionDate']) ?></th>
 <th><?= html_escape($t_labels['createdAt']) ?></th>
@@ -51,7 +51,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 <th><?= html_escape($t_labels['to']) ?></th>
 <th><?= html_escape($t_labels['amount']) ?></th>
 <th><?= html_escape($t_labels['createdBy']) ?></th>
-<th><?= html_escape(isset($labels['finance_column_status'])?$labels['finance_column_status']:'Status') ?></th>
+
 </tr></thead><?= $this->finance_list_table->close() ?>
 <?php endif; ?>
 </main>
@@ -79,7 +79,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
     var csrf='<input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">';
     t.DataTable({
         processing:true,serverSide:true,deferRender:true,autoWidth:false,
-        pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order:[[3,'desc']],
+        pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order: [[4,'desc']],
         ajax:{url:base+'/data',type:'GET'},
         columns:[
             {data:null,orderable:false,searchable:false,render:function(d,type,r,meta){
@@ -98,20 +98,6 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
                 if(!items)return '';
                 return '<div class="relative inline-flex"><button type="button" data-transfer-actions-toggle aria-label="'+e(labels.actions)+'" aria-haspopup="menu" aria-expanded="false" aria-controls="'+menuId+'" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="'+menuId+'" data-transfer-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">'+items+'</div></div>';
             }},
-            {data:'transfer_number',name:'transfer_number',render:function(v,t){return t==='display'?e(v):v;}},
-            {data:'transfer_date',name:'transfer_date',render:function(v,t){return t==='display'?e(window.financeFormatDate(v)):v;}},
-            {data:'create_on',name:'create_on',render:function(v,t){return t==='display'?window.financeLocalTimeHtml(v):v;}},
-            {data:'from_account_name',name:'from_account_name',render:function(v,t){return t==='display'?e(v||''):v;}},
-            {data:'to_account_name',name:'to_account_name',render:function(v,t){return t==='display'?e(v||''):v;}},
-            {data:'from_amount',name:'from_amount',className:'text-right tabular-nums',render:function(v,t,r){
-                if(t!=='display')return v;
-                var text=e(window.financeFormatAmount(v))+' '+e(r.from_currency);
-                if(String(r.from_currency)!==String(r.to_currency)){
-                    text+=' <span class="text-slate-400">→</span> '+e(window.financeFormatAmount(r.to_amount))+' '+e(r.to_currency);
-                }
-                return text;
-            }},
-            {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?e(v||''):v;}},
             {data:'status',name:'status',render:function(v,t,r){
                 if(t!=='display')return v;
                 var map={draft:labels.draft,pending_approval:labels.pending,approved:labels.approved,revise:labels.revise,rejected:labels.rejected,cancel_pending:labels.cancel_pending,posted:labels.posted,cancelled:labels.cancelled};
@@ -134,7 +120,21 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
                     html+='<div class="max-w-xs border-l-2 border-amber-300 pl-2 text-xs leading-5 text-amber-800 dark:text-amber-300" title="'+e(r.revise_note)+'"><span class="font-medium">'+e(labels.reason)+':</span> '+e(r.revise_note)+'</div>';
                 }
                 return html+'</div>';
-            }}
+            }},
+            {data:'transfer_number',name:'transfer_number',render:function(v,t){return t==='display'?e(v):v;}},
+            {data:'transfer_date',name:'transfer_date',render:function(v,t){return t==='display'?e(window.financeFormatDate(v)):v;}},
+            {data:'create_on',name:'create_on',render:function(v,t){return t==='display'?window.financeLocalTimeHtml(v):v;}},
+            {data:'from_account_name',name:'from_account_name',render:function(v,t){return t==='display'?e(v||''):v;}},
+            {data:'to_account_name',name:'to_account_name',render:function(v,t){return t==='display'?e(v||''):v;}},
+            {data:'from_amount',name:'from_amount',className:'text-right tabular-nums',render:function(v,t,r){
+                if(t!=='display')return v;
+                var text=e(window.financeFormatAmount(v))+' '+e(r.from_currency);
+                if(String(r.from_currency)!==String(r.to_currency)){
+                    text+=' <span class="text-slate-400">→</span> '+e(window.financeFormatAmount(r.to_amount))+' '+e(r.to_currency);
+                }
+                return text;
+            }},
+            {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?e(v||''):v;}}
         ],
         language:{emptyTable:<?= json_encode(isset($labels['finance_transfer_dt_empty'])?$labels['finance_transfer_dt_empty']:'No transfers yet') ?>,search:<?= json_encode(isset($labels['finance_dt_search'])?$labels['finance_dt_search']:'Search:') ?>,lengthMenu:<?= json_encode(isset($labels['finance_dt_length'])?$labels['finance_dt_length']:'Show _MENU_') ?>,info:<?= json_encode(isset($labels['finance_dt_info'])?$labels['finance_dt_info']:'Showing _START_ to _END_ of _TOTAL_') ?>,infoEmpty:<?= json_encode(isset($labels['finance_transfer_dt_info_empty'])?$labels['finance_transfer_dt_info_empty']:'No transfers') ?>,zeroRecords:<?= json_encode(isset($labels['finance_transfer_dt_zero'])?$labels['finance_transfer_dt_zero']:'No matching transfers') ?>,processing:<?= json_encode(isset($labels['finance_dt_processing'])?$labels['finance_dt_processing']:'Loading…') ?>}
     });

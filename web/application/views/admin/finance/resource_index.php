@@ -3,6 +3,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $title = isset($labels[$finance_resource['title_key']]) ? $labels[$finance_resource['title_key']] : $finance_resource['title_key'];
 $can_add = $finance_can_add && $finance_write_available;
 $can_edit = $finance_can_update && $finance_write_available;
+$resource_columns = $finance_resource['columns'];
+$has_status_column = FALSE;
+foreach ($resource_columns as $index => $column) {
+    if (isset($column['name']) && $column['name'] === 'status') {
+        $status_column = $column;
+        unset($resource_columns[$index]);
+        array_unshift($resource_columns, $status_column);
+        $has_status_column = TRUE;
+        break;
+    }
+}
+$resource_order_index = ($can_edit ? 1 : 0) + ($has_status_column ? 1 : 0);
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -252,7 +264,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
         <?= $this->finance_list_table->open('finance-resource-table') ?>
                     <thead><tr>
                         <?php if ($can_edit): ?><?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?><?php endif; ?>
-                        <?php foreach ($finance_resource['columns'] as $column): ?>
+                        <?php foreach ($resource_columns as $column): ?>
                             <?php
                                 $column_label_key = isset($column['label_key']) ? $column['label_key'] : '';
                                 $column_label = $column_label_key !== '' && isset($labels[$column_label_key]) ? $labels[$column_label_key] : $column['label'];
@@ -289,7 +301,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
             }
         });
     }
-    <?php foreach ($finance_resource['columns'] as $column): ?>
+    <?php foreach ($resource_columns as $column): ?>
     columns.push({
         data: <?= json_encode($column['name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
         name: <?= json_encode($column['name'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
@@ -319,7 +331,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
         autoWidth: false,
         pageLength: 10,
         lengthMenu: [[10, 25, 50], [10, 25, 50]],
-        order: [[canEdit ? 1 : 0, 'asc']],
+        order: [[<?= (int) $resource_order_index ?>, 'asc']],
         ajax: {url: <?= json_encode('/admin/finance/' . $finance_resource['slug'] . '/data', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, type: 'GET'},
         columns: columns,
         language: {

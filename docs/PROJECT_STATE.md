@@ -60,6 +60,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   menampilkan titik merah selama masih ada notifikasi belum dibaca; titik
   langsung hilang saat icon notifikasi diklik. Ditambahkan index
   `(user_id, notification_id)` dan `(user_id, view_flag)` pada `app_notification`.
+- Perubahan setelah `1.0.38` (belum dirilis): seluruh daftar Finance
+  menempatkan kolom Status tepat setelah kolom Tindakan, dan urutan default
+  DataTable disesuaikan.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -145,13 +148,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-171 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+173 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-597 tests
+599 tests
 43 failure
 6 error
 ```

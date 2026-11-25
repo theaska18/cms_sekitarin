@@ -55,7 +55,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_journal_unavailable']) ? $labels['finance_journal_unavailable'] : 'Finance journal storage is unavailable.') ?></div>
     <?php else: ?>
         <?= $this->finance_list_table->open('finance-journal-table', array('table_attrs' => 'data-finance-can-update="' . ($can_update ? '1' : '0') . '"')) ?><thead><tr>
-                 <?= $this->finance_list_table->action_header(isset($labels['finance_actions'])?$labels['finance_actions']:'Actions') ?><th scope="col"><?= html_escape(isset($labels['finance_dashboard_journal'])?$labels['finance_dashboard_journal']:'Journal') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_date'])?$labels['finance_column_date']:'Date') ?></th><th scope="col"><?= html_escape(isset($labels['finance_field_description'])?$labels['finance_field_description']:'Description') ?></th><th scope="col"><?= html_escape(isset($labels['finance_created_by'])?$labels['finance_created_by']:'Created by') ?></th><th scope="col"><?= html_escape(isset($labels['finance_dashboard_debit'])?$labels['finance_dashboard_debit']:'Debit') ?> (<?= html_escape(isset($labels['finance_column_base_currency'])?$labels['finance_column_base_currency']:'base') ?>)</th><th scope="col"><?= html_escape(isset($labels['finance_column_status'])?$labels['finance_column_status']:'Status') ?></th>
+                 <?= $this->finance_list_table->action_header(isset($labels['finance_actions'])?$labels['finance_actions']:'Actions') ?><th scope="col"><?= html_escape(isset($labels['finance_column_status'])?$labels['finance_column_status']:'Status') ?></th><th scope="col"><?= html_escape(isset($labels['finance_dashboard_journal'])?$labels['finance_dashboard_journal']:'Journal') ?></th><th scope="col"><?= html_escape(isset($labels['finance_column_date'])?$labels['finance_column_date']:'Date') ?></th><th scope="col"><?= html_escape(isset($labels['finance_field_description'])?$labels['finance_field_description']:'Description') ?></th><th scope="col"><?= html_escape(isset($labels['finance_created_by'])?$labels['finance_created_by']:'Created by') ?></th><th scope="col"><?= html_escape(isset($labels['finance_dashboard_debit'])?$labels['finance_dashboard_debit']:'Debit') ?> (<?= html_escape(isset($labels['finance_column_base_currency'])?$labels['finance_column_base_currency']:'base') ?>)</th>
             </tr></thead><?= $this->finance_list_table->close() ?>
     <?php endif; ?>
 </main>
@@ -110,7 +110,7 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
     }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10,25,50],[10,25,50]], order: [[2,'desc']],
+        pageLength: 10, lengthMenu: [[10,25,50],[10,25,50]], order: [[3,'desc']],
         ajax: {url: <?= json_encode($current_path . '/data', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, type:'GET'},
         columns: [
             {data:null,orderable:false,searchable:false,render:function(data,type,row,meta){
@@ -133,11 +133,6 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
                 if(!items)return '';
                 return '<div class="relative inline-flex"><button type="button" data-journal-actions-toggle aria-label="'+escapeHtml(labels.actions)+'" aria-haspopup="menu" aria-expanded="false" aria-controls="'+menuId+'" class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg></button><div id="'+menuId+'" data-journal-actions-menu hidden role="menu" class="fixed z-[60] mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-left shadow-lg">'+items+'</div></div>';
             }},
-            {data:'journal_number',name:'journal_number',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
-            {data:'journal_date',name:'journal_date',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
-            {data:'description',name:'description',className:'finance-cell-wrap',render:function(v,t){return t==='display'?'<span class="finance-cell-truncate" title="'+escapeHtml(v||'')+'">'+escapeHtml(v||'')+'</span>':v;}},
-            {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?escapeHtml(v||''):v;}},
-            {data:'debit_total',name:'debit_total',className:'text-right tabular-nums',render:function(v,t){return t==='display'?formatAmount(v):v;}},
             {data:'status',name:'status',render:function(v,t,row){
                 if(t!=='display')return v;
                 var label=states[v]||v;
@@ -163,7 +158,12 @@ $ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_au
                         + '<span class="font-medium">'+escapeHtml(labels.reviseReason)+':</span> '+escapeHtml(row.revise_note)+'</div>';
                 }
                 return html+'</div>';
-            }}
+            }},
+            {data:'journal_number',name:'journal_number',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
+            {data:'journal_date',name:'journal_date',render:function(v,t){return t==='display'?escapeHtml(v):v;}},
+            {data:'description',name:'description',className:'finance-cell-wrap',render:function(v,t){return t==='display'?'<span class="finance-cell-truncate" title="'+escapeHtml(v||'')+'">'+escapeHtml(v||'')+'</span>':v;}},
+            {data:'created_by_name',name:'created_by_name',render:function(v,t){return t==='display'?escapeHtml(v||''):v;}},
+            {data:'debit_total',name:'debit_total',className:'text-right tabular-nums',render:function(v,t){return t==='display'?formatAmount(v):v;}}
         ],
         language:{emptyTable:<?= json_encode(isset($labels['finance_journal_dt_empty'])?$labels['finance_journal_dt_empty']:'No journal entries yet') ?>,search:<?= json_encode(isset($labels['finance_dt_search'])?$labels['finance_dt_search']:'Search:') ?>,lengthMenu:<?= json_encode(isset($labels['finance_dt_length'])?$labels['finance_dt_length']:'Show _MENU_') ?>,info:<?= json_encode(isset($labels['finance_dt_info'])?$labels['finance_dt_info']:'Showing _START_ to _END_ of _TOTAL_') ?>,infoEmpty:<?= json_encode(isset($labels['finance_journal_dt_info_empty'])?$labels['finance_journal_dt_info_empty']:'No entries') ?>,zeroRecords:<?= json_encode(isset($labels['finance_journal_dt_zero'])?$labels['finance_journal_dt_zero']:'No matching entries') ?>,processing:<?= json_encode(isset($labels['finance_dt_processing'])?$labels['finance_dt_processing']:'Loading…') ?>}
     });

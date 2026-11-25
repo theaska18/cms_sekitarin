@@ -27,7 +27,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     <?php else: ?>
         <?= $this->finance_list_table->open('finance-integration-table') ?>
                 <thead><tr>
-                    <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?>
+                    <?= $this->finance_list_table->action_header(isset($labels['finance_actions']) ? $labels['finance_actions'] : 'Actions') ?><th scope="col"><?= html_escape(isset($labels['finance_column_status']) ? $labels['finance_column_status'] : 'Status') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_received']) ? $labels['finance_integration_received'] : 'Diterima') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_integration_document_date']) ? $labels['finance_integration_document_date'] : 'Tanggal') ?></th>
                     <th scope="col"><?= html_escape(isset($labels['finance_column_number']) ? $labels['finance_column_number'] : 'Nomor') ?></th>
@@ -36,7 +36,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
                     <th scope="col" class="text-right"><?= html_escape(isset($labels['finance_doc_line_amount']) ? $labels['finance_doc_line_amount'] : 'Jumlah sebelum pajak') ?></th>
                     <th scope="col" class="text-right"><?= html_escape(isset($labels['finance_tax_percent']) ? $labels['finance_tax_percent'] : 'Pajak %') ?></th>
                     <th scope="col" class="text-right"><?= html_escape(isset($labels['finance_column_total']) ? $labels['finance_column_total'] : 'Total') ?></th>
-                    <th scope="col"><?= html_escape(isset($labels['finance_column_status']) ? $labels['finance_column_status'] : 'Status') ?></th>
+                    
                 </tr></thead>
             <?= $this->finance_list_table->close() ?>
     <?php endif; ?>
@@ -68,7 +68,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     function documentDate(value) { return window.financeFormatDate ? window.financeFormatDate(value) : value; }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[1, 'desc']],
+        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'desc']],
         ajax: {url: base + '/data', type: 'GET'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row) {
@@ -88,6 +88,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
                 }
                 return '<a class="inline-flex min-h-9 items-center rounded-lg border border-indigo-300 px-3 text-sm font-semibold text-indigo-800 hover:bg-indigo-50" href="' + escapeHtml(base + '/draft/' + parseInt(row[inboxField], 10)) + '"><?= html_escape(isset($labels['finance_integration_make_draft']) ? $labels['finance_integration_make_draft'] : 'Jadikan Draft') ?></a>';
             }},
+            {data: 'status', name: 'status', render: function (v, t) { if (t !== 'display') return v; var key=String(v||''); var cls=key==='processed'?'border-emerald-200 bg-emerald-50 text-emerald-800':(key==='cancelled'||key==='failed'?'border-rose-200 bg-rose-50 text-rose-800':(key==='needs_review'?'border-amber-200 bg-amber-50 text-amber-900':'border-slate-200 bg-slate-50 text-slate-700')); return '<span class="inline-flex w-fit items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold '+cls+'">'+escapeHtml(statusLabels[v]||v)+'</span>'; }},
             {data: 'received_at', name: 'received_at', render: function (v, t) { return t === 'display' ? (window.financeLocalTimeHtml ? window.financeLocalTimeHtml(v) : escapeHtml(v)) : v; }},
             {data: dateField, name: dateField, render: function (v, t) { return t === 'display' ? escapeHtml(documentDate(v)) : v; }},
             {data: <?= json_encode($number_field) ?>, name: <?= json_encode($number_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
@@ -95,8 +96,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
             {data: <?= json_encode($code_field) ?>, name: <?= json_encode($code_field) ?>, render: function (v, t) { return t === 'display' ? escapeHtml(v) : v; }},
             {data: 'amount_before_tax', name: 'amount_before_tax', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
             {data: 'tax_percent', name: 'tax_percent', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(percent(v)) + '%' : v; }},
-            {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }},
-            {data: 'status', name: 'status', render: function (v, t) { if (t !== 'display') return v; var key=String(v||''); var cls=key==='processed'?'border-emerald-200 bg-emerald-50 text-emerald-800':(key==='cancelled'||key==='failed'?'border-rose-200 bg-rose-50 text-rose-800':(key==='needs_review'?'border-amber-200 bg-amber-50 text-amber-900':'border-slate-200 bg-slate-50 text-slate-700')); return '<span class="inline-flex w-fit items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold '+cls+'">'+escapeHtml(statusLabels[v]||v)+'</span>'; }}
+            {data: 'total_amount', name: 'total_amount', className: 'text-right tabular-nums', render: function (v, t) { return t === 'display' ? escapeHtml(amount(v)) : v; }}
         ],
         language: {emptyTable: <?= json_encode(isset($labels['finance_integration_empty']) ? $labels['finance_integration_empty'] : 'Belum ada data integrasi') ?>, search: <?= json_encode(isset($labels['finance_dt_search']) ? $labels['finance_dt_search'] : 'Cari:') ?>, lengthMenu: <?= json_encode(isset($labels['finance_dt_length']) ? $labels['finance_dt_length'] : 'Tampilkan _MENU_') ?>, info: <?= json_encode(isset($labels['finance_dt_info']) ? $labels['finance_dt_info'] : 'Menampilkan _START_ sampai _END_ dari _TOTAL_') ?>, infoEmpty: <?= json_encode(isset($labels['finance_integration_empty']) ? $labels['finance_integration_empty'] : 'Belum ada data') ?>, zeroRecords: <?= json_encode(isset($labels['finance_integration_zero']) ? $labels['finance_integration_zero'] : 'Tidak ada data yang cocok') ?>, processing: <?= json_encode(isset($labels['finance_dt_processing']) ? $labels['finance_dt_processing'] : 'Memuat…') ?>}
     });
