@@ -1,11 +1,11 @@
 {
-  "version": "1.0.32",
-  "released_at": "2026-11-20",
-  "changelog": "Rilis fitur: generator satu tahun fiskal Januari–Desember beserta 12 periode akuntansi bulanan, tombol generate disembunyikan jika tahun sudah ada, access code khusus fin_fiscal_year_generate, serta dokumentasi contoh klien PHP integrasi termasuk pembatalan.",
+  "version": "1.0.33",
+  "released_at": "2026-11-25",
+  "changelog": "Rilis fitur: import Pelanggan dan Pemasok dengan template Excel/CSV, kode yang sudah ada dilewati beserta pesan hasil, access code fin_customers_import dan fin_suppliers_import, serta perbaikan aksi Jadikan Draft pada data integrasi yang sudah dibatalkan.",
   "min_php": "8.1",
-  "requires_version": "1.0.31",
-  "package": "cms-1.0.32.zip",
-  "sha256": "fa5bd14da9d6a9aeecf96d7d89e650c491f34122ffad2437657480f20a6e2564",
-  "size": 131438,
+  "requires_version": "1.0.32",
+  "package": "cms-1.0.33.zip",
+  "sha256": "7c678312b93a7b68178465fe43aba3f2929b924285421f37f8596a4084f24644",
+  "size": 139235,
   "migrations": []
 }

@@ -1,0 +1,96 @@
+{
+  "version": "1.0.33",
+  "from_version": "1.0.32",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.32",
+  "changelog": "Rilis fitur: import Pelanggan dan Pemasok dengan template Excel/CSV, kode yang sudah ada dilewati beserta pesan hasil, access code fin_customers_import dan fin_suppliers_import, serta perbaikan aksi Jadikan Draft pada data integrasi yang sudah dibatalkan.",
+  "files": [
+    {
+      "path": "application/config/routes.php",
+      "sha256": "37aad2198c7a8442eeb83c6d8ae56aa7e5a8cd099d4e453e2fcf18d551960f8e",
+      "size": 5268
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "ddb7106e87a0e917a33ce69da1b22105c2c16e3d85b3dd31c97eab698151ac08",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "2c7b47f239bf9c91bf3269ba65a5cf7e55004ad349a5b40154072a496810396a",
+      "size": 276039
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "f0442eba7784efe3282347aa1b68857b827bfcacdb4817570b40dd05598862a9",
+      "size": 57108
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "2907e3a18d2ab5cdbc8abb8a25024d455dd34a90669391a79331b17943a9a003",
+      "size": 45196
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "5948d6ce8243cf41e1044abbca72d32b1335a14b0ef2a9ba1f39d6b5c72a0452",
+      "size": 47245
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "7af7590d4b792fc9764c60873f2c1dc4bc806eba79aeeb34f71d58c31abf2594",
+      "size": 51416
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "d162f086ba1293880d2f2a3e146d479b52b2bfc03f52d33f0d1f0111fb695712",
+      "size": 50181
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "e39bccec203448da440de771f723d310ccadda1020c0ba07fcaaf7749cdd1c5e",
+      "size": 47893
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "202449144c4558a6cb089e5691eda6445c07ac9e9d7f3d8b4a1c536f34551f1d",
+      "size": 51195
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "1eedbcf6c014d634a5fc97de7384536e7fadcfd1bac01bbbd29a292cdb7ea41c",
+      "size": 49674
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "7d8c65d7bd179e487b6ab4c115084c6f7bec4942cf1ed5d99bd76690a6322192",
+      "size": 50629
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "4156907212e17c1671d68d1c53d4b8a5e9cea92b231059ff9af065775d924868",
+      "size": 12381
+    },
+    {
+      "path": "application/views/admin/finance/resource_index.php",
+      "sha256": "3243e6e19faafc75e80b33b7f8a31fb1509d9b85b78380c04695b640eef579a2",
+      "size": 33067
+    },
+    {
+      "path": "application/views/admin/menu_manifest/finance_master.xml",
+      "sha256": "3f51c6b97dea28a5cbef0d576a75f4641853438ae38b6e92bd90fa833a60abeb",
+      "size": 2689
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.33.zip",
+    "sha256": "7c678312b93a7b68178465fe43aba3f2929b924285421f37f8596a4084f24644",
+    "size": 139235
+  },
+  "from_ref": "v1.0.32",
+  "generated_at": "2026-11-25T10:57:42+00:00"
+}
