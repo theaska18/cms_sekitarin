@@ -1,0 +1,39 @@
+{
+  "version": "1.0.41",
+  "from_version": "1.0.40",
+  "channel": "stable",
+  "released_at": "2026-11-25",
+  "min_php": "8.1",
+  "requires_version": "1.0.40",
+  "changelog": "Rilis tampilan: topbar admin memakai gradient biru-indigo yang lebih terang dengan bayangan saat halaman di-scroll, dan garis bawah topbar dihapus agar menyatu dengan area kerja.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "727e0c4844feb13315945bdd2280742bc7861ffd33a3837fe03c0f93a1e7f4f9",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "209df36c5c93068e985c22227e07930c2ea7d300ce84bf46546d0de989c3a6a7",
+      "size": 39519
+    },
+    {
+      "path": "application/views/admin/header.php",
+      "sha256": "4a84f4cc1aa9a855d399901d710725ca96cffd8969465d8597806719519d5f63",
+      "size": 35970
+    },
+    {
+      "path": "assets/css/admin-topbar-actions.css",
+      "sha256": "65ff1c4b1b72230be7b97c58fd24908e3a80273b78ca6c1c1af0db851b52756f",
+      "size": 13568
+    },
+    {
+      "path": "assets/js/admin-topbar.js",
+      "sha256": "70252f1b32078ab62823c02b9a712025b0f27c42d8c31f0f0ed3a99f5d232ddb",
+      "size": 525
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

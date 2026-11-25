@@ -1,11 +1,11 @@
 {
-  "version": "1.0.40",
+  "version": "1.0.41",
   "released_at": "2026-11-25",
-  "changelog": "Rilis fitur: semua lookup autocomplete menjadi read-only setelah dipilih dan memiliki tombol close sebelum icon pencarian untuk mengosongkan nilai, form User diselaraskan dengan Finance, serta panah dropdown select diposisikan lebih konsisten.",
+  "changelog": "Rilis tampilan: topbar admin memakai gradient biru-indigo yang lebih terang dengan bayangan saat halaman di-scroll, dan garis bawah topbar dihapus agar menyatu dengan area kerja.",
   "min_php": "8.1",
-  "requires_version": "1.0.39",
-  "package": "cms-1.0.40.zip",
-  "sha256": "f48cdf487f55180ad605e500931e93f76599c93a756082f81ffb6e122ad2a6bd",
-  "size": 27691,
+  "requires_version": "1.0.40",
+  "package": "cms-1.0.41.zip",
+  "sha256": "e3eebd2f321b8971d27dfcfa94c7cbd2a6f7e9e30b8906245bd72118a34d8f0f",
+  "size": 20888,
   "migrations": []
 }
