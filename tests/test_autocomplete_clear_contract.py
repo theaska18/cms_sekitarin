@@ -29,6 +29,13 @@ class AutocompleteClearContractTests(unittest.TestCase):
         ):
             self.assertIn(marker, script)
 
+    def test_user_employee_lookup_uses_the_same_relative_search_markup(self):
+        form = (ROOT / "web" / "application" / "views" / "admin" / "user" / "form.php").read_text(encoding="utf-8")
+        self.assertIn('id="employee-search"', form)
+        self.assertIn('aria-autocomplete="list"', form)
+        self.assertIn('pe-10 ps-3', form)
+        self.assertIn('data-autocomplete-clear', (ROOT / "web" / "assets" / "js" / "autocomplete-clear.js").read_text(encoding="utf-8"))
+
     def test_hierarchy_autocomplete_has_the_same_clear_and_readonly_behavior(self):
         script = (ROOT / "web" / "assets" / "js" / "admin-hierarchy-autocomplete.js").read_text(encoding="utf-8")
         for marker in (

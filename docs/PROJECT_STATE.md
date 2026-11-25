@@ -61,7 +61,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   urutan DataTable yang disesuaikan.
 - Perubahan setelah `1.0.39` (belum dirilis): semua input autocomplete
   menjadi read-only setelah nilai dipilih dan menampilkan tombol close sebelum
-  icon pencarian untuk mengosongkan nilai serta hidden target.
+  icon pencarian untuk mengosongkan nilai serta hidden target. Form User
+  diselaraskan dengan wrapper pencarian dan icon yang sama seperti Finance.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -153,7 +154,7 @@ Seluruh kontrak Finance lulus:
 Suite penuh saat ini:
 
 ```text
-604 tests
+605 tests
 43 failure
 6 error
 ```
