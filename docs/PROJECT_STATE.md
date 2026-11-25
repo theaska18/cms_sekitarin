@@ -29,6 +29,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   tahun yang sudah memiliki tahun fiskal. Generator memakai access code baru
   `fin_fiscal_year_generate`, yang tidak diberikan otomatis dan harus
   di-assign lewat System → Tenant/Role Menu Access.
+- Perubahan setelah `1.0.32` (belum dirilis): halaman Pelanggan dan Pemasok
+  memiliki import template Excel/CSV. Kode yang sudah ada dilewati dan
+  dilaporkan di pesan hasil. Import memakai access code baru
+  `fin_customers_import` dan `fin_suppliers_import`, yang harus di-assign
+  lewat System → Tenant/Role Menu Access.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -114,13 +119,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-156 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+168 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-586 tests
+592 tests
 43 failure
 6 error
 ```

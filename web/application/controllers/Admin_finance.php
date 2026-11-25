@@ -138,6 +138,10 @@ class Admin_finance extends Admin
                 'finance_can_import' => $this->has_admin_access_code($resource['menu_code'] . '_import'),
                 'finance_write_available' => $this->finance_write_available(),
                 'finance_status' => (string) $this->session->flashdata('finance_status'),
+                'finance_people_import_type' => (string) $this->session->flashdata('finance_people_import_type'),
+                'finance_people_import_count' => (int) $this->session->flashdata('finance_people_import_count'),
+                'finance_people_import_skipped' => (int) $this->session->flashdata('finance_people_import_skipped'),
+                'finance_people_import_errors' => $this->session->flashdata('finance_people_import_errors'),
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
                 'finance_category_import_errors' => $slug === 'categories' ? $this->session->flashdata('category_import_errors') : NULL,
@@ -726,6 +730,303 @@ class Admin_finance extends Admin
         $this->session->set_flashdata('finance_status', 'category_import_error');
         $this->session->set_flashdata('category_import_errors', $errors);
         redirect('/admin/finance/categories', 'location', 303);
+    }
+
+    public function customers_template()
+    {
+        $this->finance_people_template('customers');
+    }
+
+    public function customers_import()
+    {
+        $this->finance_people_import('customers');
+    }
+
+    public function suppliers_template()
+    {
+        $this->finance_people_template('suppliers');
+    }
+
+    public function suppliers_import()
+    {
+        $this->finance_people_import('suppliers');
+    }
+
+    private function finance_people_template($slug)
+    {
+        $resource = $this->finance_resource($slug);
+        if ($resource === NULL || !$this->has_admin_menu_code($resource['menu_code'])
+            || !$this->has_admin_access_code($resource['menu_code'] . '_import')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $headers = array();
+        foreach ($resource['fields'] as $field) {
+            $headers[] = $field['name'];
+        }
+        $sheet_name = $slug === 'suppliers' ? 'Suppliers' : 'Customers';
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+            . '<?mso-application progid="Excel.Sheet"?>' . "\n"
+            . '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'
+            . ' xmlns:o="urn:schemas-microsoft-com:office:office"'
+            . ' xmlns:x="urn:schemas-microsoft-com:office:excel"'
+            . ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+            . '<Styles><Style ss:ID="header"><Font ss:Bold="1"/>'
+            . '<Interior ss:Color="#D9EAD3" ss:Pattern="Solid"/></Style></Styles>'
+            . '<Worksheet ss:Name="' . $sheet_name . '"><Table>';
+        foreach ($headers as $header) {
+            $xml .= '<Column ss:Width="180"/>';
+        }
+        $xml .= '<Row>';
+        foreach ($headers as $header) {
+            $xml .= '<Cell ss:StyleID="header"><Data ss:Type="String">'
+                . htmlspecialchars($header, ENT_QUOTES | ENT_XML1, 'UTF-8')
+                . '</Data></Cell>';
+        }
+        $xml .= '</Row></Table></Worksheet></Workbook>';
+        $filename = $slug . '-template-' . date('Ymd') . '.xls';
+        $this->output->set_content_type('application/vnd.ms-excel', 'utf-8')
+            ->set_header('Content-Disposition: attachment; filename="' . $filename . '"')
+            ->set_output($xml);
+    }
+
+    private function finance_people_import($slug)
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            show_404();
+            return;
+        }
+        $resource = $this->finance_resource($slug);
+        if ($resource === NULL || !$this->has_admin_menu_code($resource['menu_code'])
+            || !$this->has_admin_access_code($resource['menu_code'] . '_import')) {
+            $this->finance_forbidden();
+            return;
+        }
+        $this->load->library('finance_store');
+        $store = $this->finance_store;
+        if (!$store->available($resource)) {
+            $this->session->set_flashdata('finance_status', 'people_import_error');
+            $this->session->set_flashdata('finance_people_import_type', $slug);
+            $this->session->set_flashdata('finance_people_import_errors', array('Penyimpanan data tidak tersedia.'));
+            redirect('/admin/finance/' . $slug, 'location', 303);
+            return;
+        }
+
+        $errors = array();
+        if (empty($_FILES['import_file']) || !is_array($_FILES['import_file'])
+            || !isset($_FILES['import_file']['error']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK
+            || empty($_FILES['import_file']['tmp_name']) || !is_uploaded_file($_FILES['import_file']['tmp_name'])) {
+            $errors[] = 'File import wajib diunggah.';
+        } else {
+            $file = $_FILES['import_file'];
+            $extension = strtolower(pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, array('csv', 'xls', 'xml'), TRUE)) {
+                $errors[] = 'Format file harus CSV, XLS, atau XML. Untuk XLSX, simpan ulang sebagai Excel 97-2003 atau CSV.';
+            }
+            if ((int) $file['size'] > 2 * 1024 * 1024) {
+                $errors[] = 'Ukuran file maksimal 2 MB.';
+            }
+        }
+
+        $raw_rows = array();
+        if (!$errors) {
+            $content = file_get_contents($_FILES['import_file']['tmp_name']);
+            if ($content === FALSE || trim($content) === '') {
+                $errors[] = 'File import kosong.';
+            } else {
+                $extension = strtolower(pathinfo((string) $_FILES['import_file']['name'], PATHINFO_EXTENSION));
+                $raw_rows = $this->finance_people_parse_rows($content, $extension);
+                if ($raw_rows === FALSE) {
+                    $errors[] = 'File tidak dapat dibaca. Gunakan template Excel yang disediakan.';
+                }
+            }
+        }
+
+        $headers = array();
+        foreach ($resource['fields'] as $field) {
+            $headers[] = $field['name'];
+        }
+        $rows = array();
+        if (!$errors) {
+            if (!$raw_rows) {
+                $errors[] = 'File import tidak berisi data.';
+            } else {
+                $header = array_shift($raw_rows);
+                $header = array_map(function ($value) {
+                    return trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $value));
+                }, (array) $header);
+                if ($header !== $headers) {
+                    $errors[] = 'Header file tidak sesuai. Gunakan template Excel yang disediakan.';
+                }
+            }
+        }
+        if (!$errors) {
+            $limit = 1000;
+            foreach ($raw_rows as $index => $line) {
+                if (count($rows) >= $limit) {
+                    $errors[] = 'Maksimal 1.000 baris import.';
+                    break;
+                }
+                $line = array_map(function ($value) { return trim((string) $value); }, array_pad((array) $line, count($headers), ''));
+                if (count(array_filter($line, function ($value) { return $value !== ''; })) === 0) {
+                    continue;
+                }
+                $line_no = $index + 2;
+                $code = strtolower(preg_replace('/\s+/', '', $line[0]));
+                $name = $this->finance_normalize_name($line[1]);
+                $email = $line[2];
+                $phone = $line[3];
+                $tax = $line[4];
+                $address = $line[5];
+                $active = $line[6] === '' ? '1' : $line[6];
+                if ($code === '' || strlen($code) > 32) {
+                    $errors[] = 'Baris ' . $line_no . ': kode wajib, maksimal 32 karakter.';
+                }
+                if ($name === '' || strlen($name) > 160) {
+                    $errors[] = 'Baris ' . $line_no . ': nama wajib, maksimal 160 karakter.';
+                }
+                if ($email !== '' && (strlen($email) > 160 || filter_var($email, FILTER_VALIDATE_EMAIL) === FALSE)) {
+                    $errors[] = 'Baris ' . $line_no . ': email tidak valid.';
+                }
+                if ($phone !== '' && strlen($phone) > 32) {
+                    $errors[] = 'Baris ' . $line_no . ': telepon maksimal 32 karakter.';
+                }
+                if ($tax !== '' && strlen($tax) > 64) {
+                    $errors[] = 'Baris ' . $line_no . ': NPWP maksimal 64 karakter.';
+                }
+                if (!in_array($active, array('0', '1'), TRUE)) {
+                    $errors[] = 'Baris ' . $line_no . ': active_flag harus 0 atau 1.';
+                }
+                $rows[] = array(
+                    'code' => $code,
+                    'name' => $name,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'tax' => $tax,
+                    'address' => $address,
+                    'active' => (int) $active,
+                );
+            }
+        }
+
+        $import_rows = array();
+        $skipped = 0;
+        if (!$errors) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $code_column = $resource['fields'][0]['name'];
+            $existing_rows = $this->db->select($code_column)->from($resource['table'])
+                ->where('tenant_id', $tenant_id)->get()->result_array();
+            $seen = array();
+            foreach ($existing_rows as $existing_row) {
+                $existing_code = strtolower(preg_replace('/\s+/', '', (string) $existing_row[$code_column]));
+                $seen[$existing_code] = TRUE;
+            }
+            foreach ($rows as $row) {
+                if (isset($seen[$row['code']])) {
+                    $skipped++;
+                    continue;
+                }
+                $seen[$row['code']] = TRUE;
+                $row['code_column'] = $code_column;
+                $import_rows[] = $row;
+            }
+        }
+
+        if (!$errors && $rows) {
+            $tenant_id = (int) $this->current_user['tenant_id'];
+            $user_id = (int) $this->current_user['user_id'];
+            $previous_debug = $this->db->db_debug;
+            $this->db->db_debug = FALSE;
+            $this->db->trans_begin();
+            foreach ($import_rows as $row) {
+                $values = array(
+                    $row['code_column'] => $row['code'],
+                    ($slug === 'suppliers' ? 'supplier_name' : 'customer_name') => $row['name'],
+                    'email_address' => $row['email'] !== '' ? $row['email'] : NULL,
+                    'phone_number' => $row['phone'] !== '' ? $row['phone'] : NULL,
+                    'tax_number' => $row['tax'] !== '' ? $row['tax'] : NULL,
+                    'billing_address' => $row['address'] !== '' ? $row['address'] : NULL,
+                    'active_flag' => (int) $row['active'],
+                );
+                if (!$store->insert($resource, $tenant_id, $values, $user_id)) {
+                    $errors[] = 'Data ' . $row['code'] . ' gagal disimpan.';
+                    break;
+                }
+            }
+            if ($errors || $this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+            } else {
+                $this->db->trans_commit();
+                $this->db->db_debug = $previous_debug;
+                $this->session->set_flashdata('finance_status', 'people_imported');
+                $this->session->set_flashdata('finance_people_import_type', $slug);
+                $this->session->set_flashdata('finance_people_import_count', count($import_rows));
+                $this->session->set_flashdata('finance_people_import_skipped', $skipped);
+                redirect('/admin/finance/' . $slug, 'location', 303);
+                return;
+            }
+            $this->db->db_debug = $previous_debug;
+        }
+
+        if (!$errors && !$rows) {
+            $errors[] = 'File import tidak berisi data.';
+        }
+        $this->session->set_flashdata('finance_status', 'people_import_error');
+        $this->session->set_flashdata('finance_people_import_type', $slug);
+        $this->session->set_flashdata('finance_people_import_errors', $errors);
+        redirect('/admin/finance/' . $slug, 'location', 303);
+    }
+
+    private function finance_people_parse_rows($content, $extension)
+    {
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', (string) $content);
+        if (strtolower(substr(ltrim($content), 0, 5)) === '<?xml') {
+            $previous = libxml_use_internal_errors(TRUE);
+            $xml = simplexml_load_string($content);
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+            if ($xml === FALSE) {
+                return FALSE;
+            }
+            $namespace = 'urn:schemas-microsoft-com:office:spreadsheet';
+            $worksheets = $xml->children($namespace)->Worksheet;
+            if (!$worksheets || !isset($worksheets[0])) {
+                return FALSE;
+            }
+            $table = $worksheets[0]->children($namespace)->Table;
+            if (!$table) {
+                return FALSE;
+            }
+            $rows = array();
+            foreach ($table->children($namespace)->Row as $row) {
+                $cells = array();
+                foreach ($row->children($namespace)->Cell as $cell) {
+                    $attributes = $cell->attributes($namespace);
+                    $index = isset($attributes['Index']) ? (int) $attributes['Index'] : 0;
+                    if ($index > 0) {
+                        while (count($cells) < $index - 1) {
+                            $cells[] = '';
+                        }
+                    }
+                    $data = $cell->children($namespace)->Data;
+                    $cells[] = trim((string) $data);
+                }
+                $rows[] = $cells;
+            }
+            return $rows;
+        }
+        if ($extension !== 'csv') {
+            return FALSE;
+        }
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $content);
+        rewind($stream);
+        $rows = array();
+        while (($line = fgetcsv($stream)) !== FALSE) {
+            $rows[] = $line;
+        }
+        fclose($stream);
+        return $rows;
     }
 
     public function chart_of_accounts_export()

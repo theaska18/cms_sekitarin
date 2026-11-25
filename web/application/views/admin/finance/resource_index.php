@@ -24,6 +24,51 @@ $panel_config = array('date'=>FALSE,'target'=>'#finance-resource-table','status_
 if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_path . '/new', 'label' => isset($labels['finance_add']) ? $labels['finance_add'] : 'Tambah'); }
 ?>
 <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
+    <?php if (in_array($finance_resource['slug'], array('customers', 'suppliers'), TRUE) && !empty($finance_can_import)): ?>
+    <?php
+    $people_label = $finance_resource['slug'] === 'suppliers'
+        ? (isset($labels['finance_suppliers']) ? $labels['finance_suppliers'] : 'Suppliers')
+        : (isset($labels['finance_customers']) ? $labels['finance_customers'] : 'Customers');
+    ?>
+    <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-5 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex min-w-0 items-start gap-3">
+                <div class="finance-data-exchange-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2h16v-2"/></svg>
+                </div>
+                <div class="min-w-0">
+                    <h2 class="text-base font-semibold text-slate-900"><?= html_escape(sprintf(isset($labels['finance_people_import_title']) ? $labels['finance_people_import_title'] : 'Import %s', $people_label)) ?></h2>
+                    <p class="mt-1 max-w-2xl text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_people_import_hint']) ? $labels['finance_people_import_hint'] : 'Download the Excel template, fill it in, then upload it. Rows with an existing code are skipped.') ?></p>
+                </div>
+            </div>
+            <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                <a href="<?= html_escape($current_path . '/template') ?>" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12"/></svg>
+                    <?= html_escape(isset($labels['finance_people_download_template']) ? $labels['finance_people_download_template'] : 'Download Excel Template') ?>
+                </a>
+                <form method="post" action="<?= html_escape($current_path . '/import') ?>" enctype="multipart/form-data" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <input type="hidden" name="<?= html_escape($finance_csrf_name) ?>" value="<?= html_escape($finance_csrf_hash) ?>">
+                    <input id="people-import-file" type="file" name="import_file" accept=".csv,.xls,.xml" required class="sr-only" data-people-file-input data-people-file-default="<?= html_escape(isset($labels['finance_people_choose_file']) ? $labels['finance_people_choose_file'] : 'Choose file') ?>">
+                    <label for="people-import-file" class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-sm font-medium text-slate-600 hover:border-indigo-400 hover:text-indigo-700">
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 13V4m0 0L6.5 7.5M10 4l3.5 3.5M4 16h12"/></svg>
+                        <span data-people-file-label><?= html_escape(isset($labels['finance_people_choose_file']) ? $labels['finance_people_choose_file'] : 'Choose file') ?></span>
+                    </label>
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800"><?= html_escape(sprintf(isset($labels['finance_people_import_action']) ? $labels['finance_people_import_action'] : 'Import %s', $people_label)) ?></button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <script>
+    (function () {
+        var input = document.querySelector('[data-people-file-input]');
+        if (!input) return;
+        input.addEventListener('change', function () {
+            var label = document.querySelector('[data-people-file-label]');
+            if (label) label.textContent = this.files && this.files[0] ? this.files[0].name : (this.getAttribute('data-people-file-default') || 'Choose file');
+        });
+    }());
+    </script>
+    <?php endif; ?>
     <?php if ($finance_resource['slug'] === 'fiscal_year' && !empty($finance_can_generate_year)): ?>
     <section class="finance-data-exchange mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:justify-between">
@@ -173,6 +218,21 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
     <?php elseif ($finance_status === 'save_error'): ?>
         <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-900">
             <?= html_escape(isset($labels['finance_save_error']) ? $labels['finance_save_error'] : 'Could not save the record. Check that its code is unique.') ?>
+        </div>
+    <?php elseif ($finance_status === 'people_imported'): ?>
+        <?php
+        $people_type = isset($finance_people_import_type) ? (string) $finance_people_import_type : '';
+        $people_label = $people_type === 'suppliers'
+            ? (isset($labels['finance_suppliers']) ? $labels['finance_suppliers'] : 'Suppliers')
+            : (isset($labels['finance_customers']) ? $labels['finance_customers'] : 'Customers');
+        ?>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
+            <?= html_escape(sprintf(isset($labels['finance_people_import_success_skipped']) ? $labels['finance_people_import_success_skipped'] : '%s imported: %d, skipped: %d.', $people_label, (int) $finance_people_import_count, (int) $finance_people_import_skipped)) ?>
+        </div>
+    <?php elseif ($finance_status === 'people_import_error'): ?>
+        <div role="alert" class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+            <p class="font-semibold"><?= html_escape(isset($labels['finance_people_import_error']) ? $labels['finance_people_import_error'] : 'Import failed.') ?></p>
+            <ul class="mt-2 list-inside list-disc"><?php foreach ((array) $finance_people_import_errors as $error): ?><li><?= html_escape($error) ?></li><?php endforeach; ?></ul>
         </div>
     <?php elseif ($finance_status === 'fiscal_year_generated'): ?>
         <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-900">
