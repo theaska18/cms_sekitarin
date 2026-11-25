@@ -376,7 +376,11 @@ class Admin_finance extends Admin
         $stream = fopen('php://temp', 'r+');
         $this->finance_csv_row($stream, array('tax_code', 'tax_name', 'rate_percent', 'account_code', 'active_flag'));
         foreach ($rows as $row) {
-            $this->finance_csv_row($stream, array($row['tax_code'], $row['tax_name'], $row['rate_percent'], (string) $row['account_code'], (int) $row['active_flag']));
+            $rate_text = rtrim(rtrim(number_format((float) $row['rate_percent'], 2, '.', ''), '0'), '.');
+            if ($rate_text === '') {
+                $rate_text = '0';
+            }
+            $this->finance_csv_row($stream, array($row['tax_code'], $row['tax_name'], $rate_text, (string) $row['account_code'], (int) $row['active_flag']));
         }
         rewind($stream);
         $csv = stream_get_contents($stream);
@@ -454,7 +458,14 @@ class Admin_finance extends Admin
                     if ($line[1] === '' || strlen($line[1]) > 100) {
                         $errors[] = 'Baris ' . $line_no . ': nama pajak wajib, maksimal 100 karakter.';
                     }
-                    if (!preg_match('/^\d{1,3}(?:\.\d{1,2})?$/', $line[2]) || (float) $line[2] < 0 || (float) $line[2] > 100) {
+                    $rate_raw = str_replace(array('%', ' '), '', $line[2]);
+                    $rate_raw = str_replace(',', '.', $rate_raw);
+                    $rate_valid = preg_match('/^(\d{1,3})(?:\.(\d+))?$/', $rate_raw, $rate_match) === 1;
+                    if ($rate_valid && isset($rate_match[2]) && $rate_match[2] !== ''
+                        && strlen(rtrim($rate_match[2], '0')) > 2) {
+                        $rate_valid = FALSE;
+                    }
+                    if (!$rate_valid || (float) $rate_raw < 0 || (float) $rate_raw > 100) {
                         $errors[] = 'Baris ' . $line_no . ': tarif pajak harus angka 0-100 dengan maksimal 2 desimal.';
                     }
                     if (!in_array($line[4], array('0', '1'), TRUE)) {
@@ -470,7 +481,7 @@ class Admin_finance extends Admin
                     $rows[] = array(
                         'tax_code' => $code,
                         'tax_name' => $line[1],
-                        'rate_percent' => (float) $line[2],
+                        'rate_percent' => round((float) $rate_raw, 2),
                         'account_code' => $line[3],
                         'active_flag' => (int) $line[4],
                     );

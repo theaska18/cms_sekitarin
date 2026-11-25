@@ -39,6 +39,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   penjualan dan tagihan pembelian: tidak lagi memakai rentang default 7 hari,
   sehingga dokumen bertanggal maju atau lama tetap terlihat sampai pengguna
   memilih rentang tanggal sendiri.
+- Perubahan setelah `1.0.34` (belum dirilis): export pajak menulis tarif
+  maksimal 2 desimal dan import pajak menerima format lama `11.000000`,
+  desimal koma `11,00`, serta tanda persen `11%`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
