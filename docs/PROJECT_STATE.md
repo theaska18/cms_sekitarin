@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.38` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.39` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.38`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.39`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -53,16 +53,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.38` menambahkan polling feed notifikasi topbar setiap 10 detik.
   Badge dan daftar preview diperbarui tanpa reload halaman; polling berhenti
   saat tab browser tidak aktif dan tidak menumpuk request.
-- Perubahan setelah `1.0.38` (belum dirilis): polling notifikasi menjadi
-  setiap 60 detik, memakai cursor `since_id`, dan hanya mengambil daftar baru
-  jika `notification_id` terbaru berubah. Icon lonceng diberi penanda warna
-  dan animasi singkat saat notifikasi baru masuk, dan favicon browser
-  menampilkan titik merah selama masih ada notifikasi belum dibaca; titik
-  langsung hilang saat icon notifikasi diklik. Ditambahkan index
-  `(user_id, notification_id)` dan `(user_id, view_flag)` pada `app_notification`.
-- Perubahan setelah `1.0.38` (belum dirilis): seluruh daftar Finance
-  menempatkan kolom Status tepat setelah kolom Tindakan, dan urutan default
-  DataTable disesuaikan.
+- Rilis `1.0.39` mencakup polling notifikasi 60 detik dengan cursor
+  `since_id`, penanda lonceng dan titik merah pada favicon yang langsung
+  hilang saat notifikasi dibuka, index `(user_id, notification_id)` dan
+  `(user_id, view_flag)` pada `app_notification`, serta kolom Status di
+  seluruh daftar Finance dipindahkan tepat setelah kolom Tindakan dengan
+  urutan DataTable yang disesuaikan.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
