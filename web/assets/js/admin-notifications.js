@@ -13,9 +13,10 @@
 
     var feedUrl = toggle.getAttribute('data-notification-feed-url') || '/admin/notifications/feed';
     var interval = parseInt(toggle.getAttribute('data-notification-interval'), 10);
-    if (!isFinite(interval) || interval < 5000) {
-        interval = 10000;
+    if (!isFinite(interval) || interval < 15000) {
+        interval = 60000;
     }
+    var newNotificationTimer = null;
     var lastId = parseInt(toggle.getAttribute('data-notification-last-id'), 10);
     if (!isFinite(lastId) || lastId < 0) {
         lastId = 0;
@@ -62,6 +63,7 @@
         }
         var badge = document.getElementById('admin-notification-badge');
 
+        toggle.classList.toggle('has-notifications', count > 0);
         if (count > 0) {
             if (!badge) {
                 badge = document.createElement('span');
@@ -73,6 +75,15 @@
             badge.textContent = String(count);
         } else if (badge) {
             badge.remove();
+        }
+        if (payload.changed === true && list.length) {
+            toggle.classList.remove('is-notification-new');
+            void toggle.offsetWidth;
+            toggle.classList.add('is-notification-new');
+            if (newNotificationTimer) window.clearTimeout(newNotificationTimer);
+            newNotificationTimer = window.setTimeout(function () {
+                toggle.classList.remove('is-notification-new');
+            }, 4000);
         }
 
         var baseLabel = toggle.getAttribute('data-notification-label') || 'Notifications';

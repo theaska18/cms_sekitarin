@@ -53,10 +53,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.38` menambahkan polling feed notifikasi topbar setiap 10 detik.
   Badge dan daftar preview diperbarui tanpa reload halaman; polling berhenti
   saat tab browser tidak aktif dan tidak menumpuk request.
-- Perubahan setelah `1.0.38` (belum dirilis): polling notifikasi memakai
-  cursor `since_id` dan hanya mengambil daftar baru jika `notification_id`
-  terbaru berubah. Ditambahkan index `(user_id, notification_id)` dan
-  `(user_id, view_flag)` pada `app_notification`.
+- Perubahan setelah `1.0.38` (belum dirilis): polling notifikasi menjadi
+  setiap 60 detik, memakai cursor `since_id`, dan hanya mengambil daftar baru
+  jika `notification_id` terbaru berubah. Icon lonceng diberi penanda warna
+  dan animasi singkat saat notifikasi baru masuk. Ditambahkan index
+  `(user_id, notification_id)` dan `(user_id, view_flag)` pada `app_notification`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.

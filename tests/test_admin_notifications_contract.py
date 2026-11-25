@@ -45,11 +45,14 @@ class AdminNotificationsContractTests(unittest.TestCase):
         self.assertIn("since_id", controller)
         self.assertIn("'changed' => $changed", controller)
         self.assertIn("'latest_id' => $latest_id", controller)
-        for marker in ("data-notification-feed-url", 'data-notification-interval="10000"', "data-notification-last-id", "admin-notifications-items", "admin-notification-badge"):
+        for marker in ("data-notification-feed-url", 'data-notification-interval="60000"', "data-notification-last-id", "admin-notifications-items", "admin-notification-badge"):
             self.assertIn(marker, header)
         self.assertIn("assets/js/admin-notifications.js", footer)
-        for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "since_id=", "insertAdjacentHTML('afterbegin'", "formatLocalTimes(items)", "data-local-datetime"):
+        for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "since_id=", "insertAdjacentHTML('afterbegin'", "has-notifications", "is-notification-new", "formatLocalTimes(items)", "data-local-datetime"):
             self.assertIn(marker, script)
+        css = (ROOT / "web/assets/css/admin-topbar-actions.css").read_text()
+        for marker in ("has-notifications", "is-notification-new", "@keyframes admin-notification-ring", "prefers-reduced-motion"):
+            self.assertIn(marker, css)
 
     def test_view_has_numbered_pagination_at_the_bottom_of_the_list(self):
         view = VIEW.read_text()

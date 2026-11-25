@@ -374,7 +374,8 @@
                             if (result.csrf_hash) item.trigger.setAttribute('data-csrf-hash', result.csrf_hash);
                             var badge = item.trigger.querySelector('.admin-action-badge');
                             if (badge) badge.remove();
-                            item.trigger.setAttribute('aria-label', 'Notifikasi');
+                            item.trigger.classList.remove('has-notifications', 'is-notification-new');
+                            item.trigger.setAttribute('aria-label', item.trigger.getAttribute('data-notification-label') || 'Notifikasi');
                         }).catch(function () {
                             item.trigger.removeAttribute('data-mark-viewed-pending');
                         });

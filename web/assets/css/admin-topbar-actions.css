@@ -84,3 +84,11 @@ html[data-theme="dark"] .admin-topbar #admin-profile-toggle img,body[data-theme=
 
 /* Keep the text logo white on the solid topbar in every theme. */
 .admin-topbar a[href="/admin"] img{filter:brightness(0) invert(1) drop-shadow(0 0 1px rgba(255,255,255,.45))}
+
+/* Notification presence: warm bell plus a short ring animation for new items. */
+.admin-topbar #admin-notifications-toggle.has-notifications > svg{color:#fbbf24}
+.admin-topbar #admin-notifications-toggle.is-notification-new > svg{transform-origin:50% 15%;animation:admin-notification-ring 1s ease-in-out 2}
+.admin-topbar #admin-notifications-toggle.is-notification-new .admin-action-badge{animation:admin-notification-badge 1s ease-out 2}
+@keyframes admin-notification-ring{0%,100%{transform:rotate(0)}15%{transform:rotate(14deg)}30%{transform:rotate(-12deg)}45%{transform:rotate(9deg)}60%{transform:rotate(-6deg)}75%{transform:rotate(3deg)}}
+@keyframes admin-notification-badge{0%,100%{transform:scale(1)}35%{transform:scale(1.18)}}
+@media (prefers-reduced-motion: reduce){.admin-topbar #admin-notifications-toggle.is-notification-new > svg,.admin-topbar #admin-notifications-toggle.is-notification-new .admin-action-badge{animation:none}}
