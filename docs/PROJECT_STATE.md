@@ -1,19 +1,19 @@
 # Project State
 
-Terakhir diperbarui: 2026-11-20
+Terakhir diperbarui: 2026-11-25
 
 Dokumen ini merangkum kondisi repository agar sesi baru tidak kehilangan konteks
 penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.40` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.41` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.40`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.41`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -65,6 +65,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   wrapper/icon Finance dan input pencarian karyawan tidak ikut auto-width.
   Panah dropdown select memakai panah kustom pada 0.75rem dari tepi, termasuk
   layout RTL.
+- Rilis `1.0.41` menyegarkan tampilan topbar admin: gradient biru ke indigo
+  yang lebih terang, highlight tipis di tepi atas, bayangan yang menguat saat
+  halaman di-scroll (`assets/js/admin-topbar.js`), dan garis bawah topbar
+  dihapus agar menyatu dengan area kerja. Mode gelap memakai gradient navy ke
+  indigo yang tetap terbaca.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
