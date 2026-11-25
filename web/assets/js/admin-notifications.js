@@ -22,6 +22,58 @@
         lastId = 0;
     }
     var loading = false;
+    var iconLink = document.querySelector('link[rel="icon"]');
+    var originalIconHref = iconLink ? iconLink.getAttribute('href') : '';
+    var faviconImage = null;
+    var faviconReady = false;
+    var faviconCount = -1;
+    var faviconPendingCount = 0;
+
+    function drawFavicon() {
+        if (!iconLink || !originalIconHref || !faviconReady || !faviconImage) return;
+        var canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        var context = canvas.getContext('2d');
+        if (!context) return;
+        context.clearRect(0, 0, 64, 64);
+        context.drawImage(faviconImage, 0, 0, 64, 64);
+        context.beginPath();
+        context.arc(48, 48, 14, 0, Math.PI * 2);
+        context.fillStyle = '#dc2626';
+        context.fill();
+        context.lineWidth = 5;
+        context.strokeStyle = '#ffffff';
+        context.stroke();
+        iconLink.type = 'image/png';
+        iconLink.href = canvas.toDataURL('image/png');
+    }
+
+    function updateFavicon(count) {
+        if (!iconLink || !originalIconHref) return;
+        if (count === faviconCount) return;
+        faviconCount = count;
+        faviconPendingCount = count;
+        if (count <= 0) {
+            iconLink.href = originalIconHref;
+            return;
+        }
+        if (faviconReady) {
+            drawFavicon();
+            return;
+        }
+        if (!faviconImage) {
+            faviconImage = new Image();
+            faviconImage.onload = function () {
+                faviconReady = true;
+                if (faviconPendingCount > 0) drawFavicon();
+            };
+            faviconImage.onerror = function () {
+                faviconReady = false;
+            };
+            faviconImage.src = originalIconHref;
+        }
+    }
 
     function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
@@ -76,6 +128,7 @@
         } else if (badge) {
             badge.remove();
         }
+        updateFavicon(count);
         if (payload.changed === true && list.length) {
             toggle.classList.remove('is-notification-new');
             void toggle.offsetWidth;
@@ -128,6 +181,9 @@
             loading = false;
         });
     }
+
+    var initialBadge = document.getElementById('admin-notification-badge');
+    updateFavicon(initialBadge ? Math.max(0, parseInt(initialBadge.textContent, 10) || 0) : 0);
 
     window.setInterval(poll, interval);
     window.addEventListener('focus', poll);
