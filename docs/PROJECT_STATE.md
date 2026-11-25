@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.35` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.36` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.35`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.36`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261119001600_unique_api_secret.sql`,
@@ -42,9 +42,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Rilis `1.0.35` memperbaiki export/import pajak: export menulis tarif
   maksimal 2 desimal dan import menerima format lama `11.000000`, desimal
   koma `11,00`, serta tanda persen `11%`.
-- Perubahan setelah `1.0.35` (belum dirilis): kolom Tenant pada daftar Peran
-  dan Pengguna disembunyikan jika pengguna tidak memiliki akses
-  `app_role_tenant` / `app_user_tenant`.
+- Rilis `1.0.36` menyembunyikan kolom dan filter Tenant pada daftar Peran
+  dan Pengguna jika pengguna tidak memiliki akses `app_role_tenant` /
+  `app_user_tenant`, tanpa mengubah tenant scoping di server.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
