@@ -13,8 +13,8 @@
 
     var feedUrl = toggle.getAttribute('data-notification-feed-url') || '/admin/notifications/feed';
     var interval = parseInt(toggle.getAttribute('data-notification-interval'), 10);
-    if (!isFinite(interval) || interval < 15000) {
-        interval = 60000;
+    if (!isFinite(interval) || interval < 5000) {
+        interval = 10000;
     }
     var loading = false;
 

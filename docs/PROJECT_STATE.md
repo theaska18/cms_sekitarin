@@ -51,7 +51,7 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   (`default_output_tax_id` / `default_input_tax_id`); serta riwayat
   System → Update menampilkan kolom Keterangan berisi changelog rilis.
 - Perubahan setelah `1.0.37` (belum dirilis): topbar CMS mengecek feed
-  notifikasi setiap 60 detik dan memperbarui badge serta daftar preview tanpa
+  notifikasi setiap 10 detik dan memperbarui badge serta daftar preview tanpa
   reload halaman.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi

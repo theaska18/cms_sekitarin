@@ -42,7 +42,7 @@ class AdminNotificationsContractTests(unittest.TestCase):
         self.assertIn("->where('view_flag', 0)", controller)
         self.assertIn("->where('user_id', $user_id)", controller)
         self.assertIn("app_utc_iso($row[$order_date_field])", controller)
-        for marker in ("data-notification-feed-url", 'data-notification-interval="60000"', "admin-notifications-items", "admin-notification-badge"):
+        for marker in ("data-notification-feed-url", 'data-notification-interval="10000"', "admin-notifications-items", "admin-notification-badge"):
             self.assertIn(marker, header)
         self.assertIn("assets/js/admin-notifications.js", footer)
         for marker in ("setInterval(poll, interval)", "fetch(feedUrl", "formatLocalTimes(items)", "data-local-datetime"):
