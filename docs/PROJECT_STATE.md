@@ -48,6 +48,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Perubahan setelah `1.0.36` (belum dirilis): filter status pada halaman
   integrasi faktur penjualan dan tagihan pembelian memakai default `received`,
   dan Reset mengembalikan filter ke status tersebut.
+- Perubahan setelah `1.0.36` (belum dirilis): form Jadikan Draft dari
+  integrasi memakai default pajak yang sama dengan form Faktur Penjualan dan
+  Tagihan Pembelian (`default_output_tax_id` / `default_input_tax_id`).
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
@@ -133,13 +136,13 @@ push ke remote. Tanpa opsi tersebut, commit dan tag dilakukan manual.
 Seluruh kontrak Finance lulus:
 
 ```text
-170 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
+171 tests OK  (python3 -m unittest discover -s tests -p 'test_finance_*.py')
 ```
 
 Suite penuh saat ini:
 
 ```text
-595 tests
+596 tests
 43 failure
 6 error
 ```

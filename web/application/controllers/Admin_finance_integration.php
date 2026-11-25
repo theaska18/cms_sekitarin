@@ -154,7 +154,7 @@ class Admin_finance_integration extends Admin
             'due_date' => $due_date,
             'person_id' => '',
             'account_id' => '',
-            'tax_id' => '',
+            'tax_id' => $this->default_tax_id($kind),
             'department_id' => '',
             'currency_code' => $base_currency,
             'exchange_rate' => '1.00',
@@ -163,6 +163,9 @@ class Admin_finance_integration extends Admin
             'memo' => 'Integrasi ' . (string) $inbox[$spec['number']] . ' · ' . (string) $inbox[$spec['party_name']],
         );
         $lookup_labels = array('person_id' => '', 'account_id' => '', 'tax_id' => '');
+        if ($record['tax_id'] !== '') {
+            $lookup_labels['tax_id'] = $store->lookup_label($tenant_id, $kind, 'tax', (int) $record['tax_id']);
+        }
         $errors = array();
         $write_available = $available && $this->write_available();
         if ($this->input->method(TRUE) === 'POST') {
@@ -276,6 +279,23 @@ class Admin_finance_integration extends Admin
     private function format_amount($value)
     {
         return number_format((float) $value, 2, '.', '');
+    }
+
+    private function default_tax_id($kind)
+    {
+        $field = $kind === 'sales' ? 'default_output_tax_id' : 'default_input_tax_id';
+        if (!$this->db->field_exists($field, 'fin_settings')) {
+            return '';
+        }
+        $tenant_id = isset($this->current_user['tenant_id']) ? (int) $this->current_user['tenant_id'] : 0;
+        if ($tenant_id < 1) {
+            return '';
+        }
+        $row = $this->db->select('t.tax_id')
+            ->from('fin_settings s')
+            ->join('fin_tax t', 't.tax_id=s.' . $field . ' AND t.tenant_id=s.tenant_id AND t.active_flag=1', 'inner')
+            ->where('s.tenant_id', $tenant_id)->limit(1)->get()->row_array();
+        return $row ? (string) $row['tax_id'] : '';
     }
 
     private function values()

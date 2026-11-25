@@ -128,6 +128,14 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("finance_filter_status_selected", partial)
         self.assertIn("data-default-status", partial)
 
+    def test_integration_draft_uses_the_same_default_tax_as_document_forms(self):
+        controller = (APP / "controllers/Admin_finance_integration.php").read_text()
+        self.assertIn("'tax_id' => $this->default_tax_id($kind)", controller)
+        self.assertIn("function default_tax_id($kind)", controller)
+        self.assertIn("default_output_tax_id", controller)
+        self.assertIn("default_input_tax_id", controller)
+        self.assertIn("t.active_flag=1", controller)
+
     def test_views_and_store(self):
         view = LIST_VIEW.read_text()
         self.assertIn("finance-integration-table", view)
