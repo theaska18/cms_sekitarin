@@ -74,3 +74,4 @@ $lang['update_history_first'] = 'First page';
 $lang['update_history_previous'] = 'Previous page';
 $lang['update_history_next'] = 'Next page';
 $lang['update_history_last'] = 'Last page';
+$lang['update_history_changelog'] = 'Changes';

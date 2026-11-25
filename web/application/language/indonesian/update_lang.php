@@ -74,3 +74,4 @@ $lang['update_history_first'] = 'Halaman pertama';
 $lang['update_history_previous'] = 'Halaman sebelumnya';
 $lang['update_history_next'] = 'Halaman berikutnya';
 $lang['update_history_last'] = 'Halaman terakhir';
+$lang['update_history_changelog'] = 'Keterangan';

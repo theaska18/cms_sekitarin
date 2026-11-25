@@ -272,6 +272,7 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                     <tr>
                         <th scope="col" class="whitespace-nowrap px-4 py-3"><?= html_escape($labels['update_version']) ?></th>
                         <th scope="col" class="whitespace-nowrap px-4 py-3"><?= html_escape($labels['update_previous_version']) ?></th>
+                        <th scope="col" class="px-4 py-3"><?= html_escape($labels['update_history_changelog']) ?></th>
                         <th scope="col" class="whitespace-nowrap px-4 py-3"><?= html_escape($labels['update_status']) ?></th>
                         <th scope="col" class="whitespace-nowrap px-4 py-3"><?= html_escape($labels['update_started']) ?></th>
                         <th scope="col" class="whitespace-nowrap px-4 py-3"><?= html_escape($labels['update_finished']) ?></th>
@@ -292,6 +293,9 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                             <tr>
                                 <th scope="row" class="whitespace-nowrap px-4 py-3 font-mono text-xs font-semibold text-slate-800">v<?= html_escape((string) $entry['version']) ?></th>
                                 <td class="whitespace-nowrap px-4 py-3 font-mono text-xs text-slate-600">v<?= html_escape((string) $entry['previous_version']) ?></td>
+                                <td class="min-w-[16rem] max-w-md px-4 py-3 text-xs leading-5 text-slate-700">
+                                    <?php if (trim((string) $entry['changelog']) !== ''): ?><div class="break-words"><?= nl2br(html_escape((string) $entry['changelog'])) ?></div><?php else: ?><span class="text-slate-400">—</span><?php endif; ?>
+                                </td>
                                 <td class="whitespace-nowrap px-4 py-3"><span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold <?= $status_class ?>"><?= html_escape($status_text) ?></span></td>
                                 <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= $history_local_time($entry['started_on']) ?></td>
                                 <td class="whitespace-nowrap px-4 py-3 text-xs text-slate-600"><?= $history_local_time($entry['finished_on']) ?></td>
@@ -313,7 +317,7 @@ html[data-theme="dark"] .update-page .update-log,body[data-theme="dark"] .update
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500"><?= html_escape($labels['update_no_history']) ?></td>
+                            <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500"><?= html_escape($labels['update_no_history']) ?></td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

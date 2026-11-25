@@ -51,6 +51,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Perubahan setelah `1.0.36` (belum dirilis): form Jadikan Draft dari
   integrasi memakai default pajak yang sama dengan form Faktur Penjualan dan
   Tagihan Pembelian (`default_output_tax_id` / `default_input_tax_id`).
+- Perubahan setelah `1.0.36` (belum dirilis): riwayat System → Update
+  menampilkan kolom Keterangan berisi changelog setiap rilis.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
