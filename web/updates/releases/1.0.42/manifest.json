@@ -1,0 +1,69 @@
+{
+  "version": "1.0.42",
+  "from_version": "1.0.41",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.41",
+  "changelog": "Perbaikan integrasi: form Jadikan Draft memilih kode pajak dengan tarif yang sama dengan data integrasi sehingga draft tidak lagi gagal karena total tidak cocok, dan pesan validasi kini menyebut penyebab spesifik (pajak tidak dipilih, tarif pajak berbeda, akun kontrol atau pengaturan Finance belum tersedia).",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "9b3d1274c5bc63badb07eef1d3a11811279b7966dc3957218f9e62659db17dbf",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "eaac4dd0d0b6cb4d5957a4f39f405c0dcb04ea68c37b5c3567dae46551509baa",
+      "size": 17634
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "dcea7af9869da28acad23fdb17f5bf41f62b1683e73cd5a3d93f12d746e9a6b8",
+      "size": 58188
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "7ea454f6cfec0c2621887c81ddbf5c3d33c5f62bed014705feb3e3c35ca3ccd4",
+      "size": 45895
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "34641753abc8b7c1abed782aaf3092573efdbf895aef871f99c7fc5521343a0e",
+      "size": 48060
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "6a4d563f8ba5c811a1b28949894ff8042da66e76bfaf51d322b921911ffca6ee",
+      "size": 52385
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "63d3f603a1033dca9a79cafdabdb30cd87815e0062ebe3b73939168baad0021a",
+      "size": 51171
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "328d704b9cb4f3ffd212792cbe774cde63937e128a9354b240123377f0e89a5c",
+      "size": 48704
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "e850de034cd694007eb727a0060c5e303a50d8f11a2cc236763f1bed9f681323",
+      "size": 52146
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "0ba65bcdd59454eaff52e31717fdc67b767c8c5476057acf925ca0654382f901",
+      "size": 50613
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "0700c78785074e5983b23c345d810df6966ee00a6a4c71e586352c08a30bccf2",
+      "size": 51574
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

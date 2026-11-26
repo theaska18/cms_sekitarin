@@ -1,11 +1,11 @@
 {
-  "version": "1.0.41",
-  "released_at": "2026-11-25",
-  "changelog": "Rilis tampilan: topbar admin memakai gradient biru-indigo yang lebih terang dengan bayangan saat halaman di-scroll, dan garis bawah topbar dihapus agar menyatu dengan area kerja.",
+  "version": "1.0.42",
+  "released_at": "2026-11-26",
+  "changelog": "Perbaikan integrasi: form Jadikan Draft memilih kode pajak dengan tarif yang sama dengan data integrasi sehingga draft tidak lagi gagal karena total tidak cocok, dan pesan validasi kini menyebut penyebab spesifik (pajak tidak dipilih, tarif pajak berbeda, akun kontrol atau pengaturan Finance belum tersedia).",
   "min_php": "8.1",
-  "requires_version": "1.0.40",
-  "package": "cms-1.0.41.zip",
-  "sha256": "e3eebd2f321b8971d27dfcfa94c7cbd2a6f7e9e30b8906245bd72118a34d8f0f",
-  "size": 20888,
+  "requires_version": "1.0.41",
+  "package": "cms-1.0.42.zip",
+  "sha256": "917b0b4a667537689c323e74ecf3da60db1faf9139cb870b58979b61a427f451",
+  "size": 98324,
   "migrations": []
 }
