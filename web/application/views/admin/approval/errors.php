@@ -64,7 +64,7 @@
     tableLanguage.aria={paginate:pagingLabels};
     table.DataTable({
         processing:true,serverSide:true,deferRender:true,autoWidth:false,
-        pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order:[[5,'desc']],language:tableLanguage,
+        pageLength: 50,lengthMenu: [[50, 100, 200], [50, 100, 200]],order:[[5,'desc']],language:tableLanguage,
         ajax:{url:'/admin/system/approval/error_data',type:'GET',dataSrc:'data'},
         columns:[
             {data:'subject',name:'subject',render:function(value,type){return type==='display'?escapeHtml(value):value;}},

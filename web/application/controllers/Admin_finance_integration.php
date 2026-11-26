@@ -102,7 +102,7 @@ class Admin_finance_integration extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $kind, $tenant_id, $filters) {
                 return $store->page($kind, $tenant_id, $search, $length, $offset, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'received_at')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'received_at')
         );
     }
 

@@ -168,8 +168,8 @@ if ($can_add) {
         serverSide: true,
         deferRender: true,
         autoWidth: false,
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50], [10, 25, 50]],
+        pageLength: 50,
+        lengthMenu: [[50, 100, 200], [50, 100, 200]],
         order: [[5, 'desc']],
         ajax: {url: <?= json_encode($current_path . '/data', $js_flags) ?>, type: 'GET'},
         columns: [

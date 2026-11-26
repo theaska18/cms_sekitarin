@@ -71,7 +71,7 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
     function documentDate(value) { return window.financeFormatDate ? window.financeFormatDate(value) : value; }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'desc']],
+        pageLength: 50, lengthMenu: [[50, 100, 200], [50, 100, 200]], order: [[2, 'desc']],
         ajax: {url: base + '/data', type: 'GET'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row) {

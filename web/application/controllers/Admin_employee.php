@@ -94,7 +94,7 @@ class Admin_employee extends Admin
                 $state = $this->employee_list_state($search);
                 return $store->page($state['search'], $length, $start, $order, $direction, $tenant_id, '', '', $state['filters']);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'employee_name')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'employee_name')
         );
     }
 

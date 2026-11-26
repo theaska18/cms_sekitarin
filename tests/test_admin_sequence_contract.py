@@ -80,7 +80,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         self.assertIn("sequence_data", controller)
         self.assertIn("$store->count($search, $this->sequence_list_filters($search))", controller)
         self.assertIn("$store->page($search, $length, $start, $order, $direction, $this->sequence_list_filters($search))", controller)
-        self.assertIn("max_length' => 50", controller)
+        self.assertIn("max_length' => 200", controller)
         self.assertIn("max_search_length' => 120", controller)
         self.assertIn("$this->datatable_server->respond(", controller)
         self.assertIn("1 => 'sequence_code'", controller)
@@ -90,7 +90,7 @@ class AdminSequenceContractTests(unittest.TestCase):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
         self.assertIn("serverSide: true", view)
         self.assertIn("processing: true", view)
-        self.assertIn("lengthMenu: [[10, 25, 50], [10, 25, 50]]", view)
+        self.assertIn("lengthMenu: [[50, 100, 200], [50, 100, 200]]", view)
         self.assertIn("order: [[1, 'asc']]", view)
 
     def test_action_menu_escapes_the_horizontal_scroll_container(self):
@@ -115,7 +115,7 @@ class AdminSequenceContractTests(unittest.TestCase):
 
     def test_footer_aligns_pagination_controls_to_the_right(self):
         view = (APP / "views" / "admin" / "sequence" / "index.php").read_text()
-        self.assertIn("lengthMenu: [[10, 25, 50], [10, 25, 50]]", view)
+        self.assertIn("lengthMenu: [[50, 100, 200], [50, 100, 200]]", view)
         self.assertIn("'paginate' => array(", view)
         self.assertIn("$labels['sequence_dt_first']", view)
         self.assertIn("$labels['sequence_dt_last']", view)

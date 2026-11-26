@@ -158,7 +158,7 @@ class Admin_sequence extends Admin
                 unset($record);
                 return $records;
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'sequence_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'sequence_code')
         );
     }
 
@@ -260,7 +260,7 @@ class Admin_sequence extends Admin
             function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $menu_codes) {
                 return $store->page($tenant_id, $menu_codes, $search, $length, $start, $order, $direction, $this->application_sequence_list_filters($search));
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'sequence_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'sequence_code')
         );
     }
 

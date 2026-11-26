@@ -56,11 +56,33 @@
     window.adminDataTableLanguage = iconLanguage;
     window.adminPagingIcons = clone(icons);
 
+    var pageDefaults = {
+        defaultLength: 50,
+        maxLength: 200,
+        options: [50, 100, 200]
+    };
+    window.adminDataTablePageDefaults = pageDefaults;
+
     if ($ && $.fn && $.fn.dataTable) {
         $.extend(true, $.fn.dataTable.defaults, {
+            pageLength: pageDefaults.defaultLength,
+            lengthMenu: [pageDefaults.options, pageDefaults.options],
             language: {
                 paginate: clone(icons),
                 aria: {paginate: clone(textLabels)}
+            }
+        });
+
+        // Server-side paging is capped at 200 rows even if a page requests more.
+        $(document).on('preXhr.dt', function (event, settings, data) {
+            if (!data || data.length === undefined) {
+                return;
+            }
+            var length = parseInt(data.length, 10);
+            if (isNaN(length) || length <= 0) {
+                data.length = pageDefaults.defaultLength;
+            } else if (length > pageDefaults.maxLength) {
+                data.length = pageDefaults.maxLength;
             }
         });
     }

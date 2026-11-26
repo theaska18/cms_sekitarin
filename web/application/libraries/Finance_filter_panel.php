@@ -29,6 +29,8 @@ class Finance_filter_panel
             'field_filters' => array(),
             'add_action' => array(),
             'export' => TRUE,
+            'page_size_default' => 50,
+            'page_size_options' => array(50, 100, 200),
         );
         if (is_array($overrides)) {
             $config = array_merge($config, $overrides);
@@ -212,6 +214,8 @@ class Finance_filter_panel
             'finance_filter_default_start' => $defaults['start_on'],
             'finance_filter_default_end' => $defaults['end_on'],
             'finance_filter_default_status' => (string) $config['status_default'],
+            'finance_filter_page_size_default' => (int) $config['page_size_default'],
+            'finance_filter_page_size_options' => (array) $config['page_size_options'],
             'finance_filter_status_selected' => $selected_status,
             'finance_filter_status_options' => $status_options,
             'finance_filter_flag_options' => !empty($config['flag'])

@@ -176,7 +176,7 @@ class Admin_approval extends Admin
             function($search,$length,$start,$order,$direction) use ($store) {
                 return $store->my_approval_requests($search,$length,$start,$order,$direction, $this->approval_history_list_filters($search));
             },
-            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
+            array('max_length'=>200,'max_search_length'=>120,'default_order'=>'create_on')
         );
     }
 
@@ -224,7 +224,7 @@ class Admin_approval extends Admin
             function($search,$length,$start,$order,$direction) use ($store) {
                 return $store->approval_errors($search,$length,$start,$order,$direction, $this->approval_error_list_filters($search));
             },
-            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
+            array('max_length'=>200,'max_search_length'=>120,'default_order'=>'create_on')
         );
     }
 

@@ -9,6 +9,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Datatable_server
 {
+    /** Default rows per page for every admin DataTable. */
+    const DEFAULT_LENGTH = 50;
+
+    /** Hard cap for a single server-side page. */
+    const MAX_LENGTH = 200;
+
+    /** Rows-per-page choices rendered by shared filter panels. */
+    public static function page_size_options()
+    {
+        return array(self::DEFAULT_LENGTH, 100, self::MAX_LENGTH);
+    }
+
     /**
      * Parse a DataTables GET request, invoke feature-specific query callbacks,
      * and write the standard DataTables JSON response.
@@ -21,15 +33,18 @@ class Datatable_server
     {
         $CI =& get_instance();
         $columns = is_array($columns) ? $columns : array();
-        $max_length = isset($options['max_length']) ? max(1, min(500, (int) $options['max_length'])) : 50;
+        $max_length = isset($options['max_length'])
+            ? max(1, min(self::MAX_LENGTH, (int) $options['max_length']))
+            : self::MAX_LENGTH;
         $max_search_length = isset($options['max_search_length']) ? max(1, min(1000, (int) $options['max_search_length'])) : 120;
         $draw = $this->bounded_integer($CI->input->get('draw', TRUE), 0, 2147483647, 0);
         $start = $this->bounded_integer($CI->input->get('start', TRUE), 0, 2147483647, 0);
         $requested_length = $CI->input->get('length', TRUE);
+        $default_length = min(self::DEFAULT_LENGTH, $max_length);
         $length = $this->is_integer_value($requested_length)
             ? (int) $requested_length
-            : $max_length;
-        $length = $length <= 0 ? $max_length : min($max_length, $length);
+            : $default_length;
+        $length = $length <= 0 ? $default_length : min($max_length, $length);
 
         $search_input = $CI->input->get('search', TRUE);
         $search_value = is_array($search_input) && isset($search_input['value'])

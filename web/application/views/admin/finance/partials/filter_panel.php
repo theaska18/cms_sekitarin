@@ -121,10 +121,11 @@ $filter_id = 'finance-filter-details-' . substr(md5($filter_target . $filter_def
             <?php endif; ?>
             <label class="block text-xs font-semibold text-slate-600">
                 <span class="mb-1.5 block"><?= html_escape(isset($labels['finance_filter_page_size']) ? $labels['finance_filter_page_size'] : 'Rows') ?></span>
-                <select data-finance-filter="page_size" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
+                <?php $page_sizes = isset($finance_filter_page_size_options) ? (array) $finance_filter_page_size_options : array(50, 100, 200); $page_size_default = isset($finance_filter_page_size_default) ? (int) $finance_filter_page_size_default : 50; ?>
+                <select data-finance-filter="page_size" data-page-size-default="<?= $page_size_default ?>" class="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900">
+                    <?php foreach ($page_sizes as $page_size): ?>
+                        <option value="<?= (int) $page_size ?>"<?= (int) $page_size === $page_size_default ? ' selected' : '' ?>><?= (int) $page_size ?></option>
+                    <?php endforeach; ?>
                 </select>
             </label>
         </div>

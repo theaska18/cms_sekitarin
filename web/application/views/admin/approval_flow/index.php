@@ -52,7 +52,7 @@ $status_messages = array('saved' => 'Tahapan alur berhasil disimpan.', 'error' =
 
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[2, 'asc']], language: language,
+        pageLength: 50, lengthMenu: [[50, 100, 200], [50, 100, 200]], order: [[2, 'asc']], language: language,
         ajax: {url: base + '/data', type: 'GET', dataSrc: 'data'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {

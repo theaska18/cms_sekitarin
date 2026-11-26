@@ -248,8 +248,8 @@ $balance_money = function ($value) use ($finance_report_base_currency) {
         serverSide: true,
         deferRender: true,
         autoWidth: false,
-        pageLength: 25,
-        lengthMenu: [[10,25,50],[10,25,50]],
+        pageLength: 50,
+        lengthMenu: [[50, 100, 200], [50, 100, 200]],
         order: [[0, <?= json_encode($report_default_order) ?>]],
         ajax: {
             url: <?= json_encode($current_path . '/data', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,

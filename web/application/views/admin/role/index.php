@@ -103,7 +103,7 @@ $role_status_messages = array(
 
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10, 25, 50], [10, 25, 50]], order: [[<?= !empty($role_tenant_access) ? 2 : 1 ?>, 'asc']], language: language,
+        pageLength: 50, lengthMenu: [[50, 100, 200], [50, 100, 200]], order: [[<?= !empty($role_tenant_access) ? 2 : 1 ?>, 'asc']], language: language,
         ajax: {url: base + '/data', type: 'GET', dataSrc: 'data'},
         columns: [
             {data: null, orderable: false, searchable: false, render: function (data, type, row, meta) {

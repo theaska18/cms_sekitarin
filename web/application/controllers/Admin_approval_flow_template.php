@@ -91,7 +91,7 @@ class Admin_approval_flow_template extends Admin
             function ($search, $length, $start, $order, $direction) use ($store) {
                 return $store->page($search, $length, $start, $order, $direction, $this->approval_flow_template_list_filters($search));
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'flow_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'flow_code')
         );
     }
 

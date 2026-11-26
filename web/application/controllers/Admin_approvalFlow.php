@@ -68,7 +68,7 @@ class Admin_approvalFlow extends Admin
                     $state['filters']
                 );
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'flow_name')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'flow_name')
         );
     }
 

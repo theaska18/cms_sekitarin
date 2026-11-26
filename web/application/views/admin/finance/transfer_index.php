@@ -79,7 +79,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
     var csrf='<input type="hidden" name="<?= html_escape($csrf_token_name) ?>" value="<?= html_escape($csrf_hash) ?>">';
     t.DataTable({
         processing:true,serverSide:true,deferRender:true,autoWidth:false,
-        pageLength:10,lengthMenu:[[10,25,50],[10,25,50]],order: [[4,'desc']],
+        pageLength: 50,lengthMenu: [[50, 100, 200], [50, 100, 200]],order: [[4,'desc']],
         ajax:{url:base+'/data',type:'GET'},
         columns:[
             {data:null,orderable:false,searchable:false,render:function(d,type,r,meta){

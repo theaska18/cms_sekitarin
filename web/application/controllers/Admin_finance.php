@@ -1521,7 +1521,7 @@ class Admin_finance extends Admin
             function ($search, $length, $start, $order, $direction) use ($store, $resource, $tenant_id, $filters) {
                 return $store->page($resource, $tenant_id, $search, $length, $start, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => $resource['columns'][0]['name'])
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => $resource['columns'][0]['name'])
         );
     }
 
@@ -2321,7 +2321,7 @@ class Admin_finance extends Admin
             function ($search, $length, $start, $order, $direction) use ($store, $tenant_id, $type, $filters) {
                 return $store->page($tenant_id, $type, $search, $length, $start, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'create_on')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'create_on')
         );
     }
 
@@ -2564,7 +2564,7 @@ class Admin_finance extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $source_type, $filters) {
                 return $store->page($tenant_id, $source_type, $search, $length, $offset, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'journal_date')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'journal_date')
         );
     }
 
@@ -2859,7 +2859,7 @@ class Admin_finance extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $kind, $filters) {
                 return $store->page($tenant_id, $kind, $search, $length, $offset, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => $date_column)
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => $date_column)
         );
     }
 
@@ -3234,7 +3234,7 @@ class Admin_finance extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $tenant, $kind, $filters) {
                 return $store->page($tenant, $kind, $search, $length, $offset, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'payment_date')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'payment_date')
         );
     }
 
@@ -3418,7 +3418,7 @@ class Admin_finance extends Admin
             function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
             function($search)use($store,$tenant,$filters){return $store->count($tenant,$search,$filters);},
             function($search,$length,$offset,$order,$direction)use($store,$tenant,$filters){return $store->page($tenant,$search,$length,$offset,$order,$direction,$filters);},
-            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'create_on')
+            array('max_length'=>200,'max_search_length'=>120,'default_order'=>'create_on')
         );
     }
 
@@ -3491,7 +3491,7 @@ class Admin_finance extends Admin
             function()use($store,$tenant,$filters){return $store->count($tenant,'',$filters);},
             function($search)use($store,$tenant,$filters){return $store->count($tenant,$search,$filters);},
             function($search,$length,$offset,$order,$direction)use($store,$tenant,$filters){return $store->page($tenant,$search,$length,$offset,$order,$direction,$filters);},
-            array('max_length'=>50,'max_search_length'=>120,'default_order'=>'statement_date')
+            array('max_length'=>200,'max_search_length'=>120,'default_order'=>'statement_date')
         );
     }
 
@@ -4197,7 +4197,7 @@ class Admin_finance extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $tenant_id, $filters) {
                 return $store->recent_posted_journal_page($tenant_id, $search, $length, $offset, $order, $direction, $filters);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'journal_date')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'journal_date')
         );
     }
 
@@ -4280,7 +4280,7 @@ class Admin_finance extends Admin
             function ($search, $length, $offset, $order, $direction) use ($store, $slug, $tenant_id, $start, $end) {
                 return $store->page($slug, $tenant_id, $start, $end, $search, $length, $offset, $order, $direction);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => $this->finance_report_columns($slug)[0]['name'])
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => $this->finance_report_columns($slug)[0]['name'])
         );
     }
 

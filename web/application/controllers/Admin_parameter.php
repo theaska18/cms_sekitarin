@@ -97,7 +97,7 @@ class Admin_parameter extends Admin
                     strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC'
                 );
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'parameter_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'parameter_code')
         );
     }
 

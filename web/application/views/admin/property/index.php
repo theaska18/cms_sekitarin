@@ -189,7 +189,7 @@ $status_key = in_array($status_key, $status_messages, TRUE) ? $status_key : '';
             deferRender: true,
             autoWidth: false,
             pageLength: <?= (int) $per_page ?>,
-            lengthMenu: [[10, 25, 50], [10, 25, 50]],
+            lengthMenu: [[50, 100, 200], [50, 100, 200]],
             displayStart: <?= max(0, ($current_page - 1) * $per_page) ?>,
             search: {search: <?= json_encode($filters['search'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>},
             order: [[<?= $sort === 'property_name' ? 2 : 1 ?>, <?= json_encode(strtolower($direction)) ?>]],

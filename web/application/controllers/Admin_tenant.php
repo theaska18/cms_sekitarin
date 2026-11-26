@@ -63,7 +63,7 @@ class Admin_tenant extends Admin
                 'sort' => $sort,
                 'direction' => $direction,
                 'per_page' => $per_page,
-                'per_page_choices' => array(10, 25, 50),
+                'per_page_choices' => array(50, 100, 200),
                 'current_page' => $page,
                 'page_count' => $page_count,
                 'total_records' => $total_records,
@@ -143,7 +143,7 @@ class Admin_tenant extends Admin
                     $this->tenant_sort_direction($direction)
                 );
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'tenant_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'tenant_code')
         );
     }
 
@@ -447,7 +447,7 @@ class Admin_tenant extends Admin
 
                 return $this->menu_access_payload($page, $write_available);
             },
-            array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'group')
         );
     }
 
@@ -700,16 +700,16 @@ class Admin_tenant extends Admin
     {
         $requested = $this->input->get('per_page', TRUE);
         if (!is_string($requested) || !preg_match('/^\d{1,9}$/', $requested)) {
-            return 10;
-        }
-        $requested = (int) $requested;
-        if ($requested > 50) {
             return 50;
         }
-        if ($requested <= 10) {
-            return 10;
+        $requested = (int) $requested;
+        if ($requested > 200) {
+            return 200;
         }
-        return $requested <= 25 ? 25 : 50;
+        if ($requested <= 50) {
+            return 50;
+        }
+        return $requested <= 100 ? 100 : 200;
     }
 
     private function tenant_page_number()

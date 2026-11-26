@@ -110,8 +110,15 @@
         }
 
         var pageSize = panel.querySelector('[data-finance-filter="page_size"]');
+        var defaultPageSize = pageSize ? String(pageSize.getAttribute('data-page-size-default') || '50') : '50';
         if (pageSize) {
             pageSize.value = String(api.page.len());
+            var hasSize = Array.prototype.some.call(pageSize.options, function (option) {
+                return option.value === pageSize.value;
+            });
+            if (!hasSize) {
+                pageSize.value = defaultPageSize;
+            }
             pageSize.addEventListener('change', function () {
                 api.page.len(parseInt(pageSize.value, 10) || 10).draw();
             });
@@ -123,7 +130,7 @@
 
         function activeDetails() {
             var pageSize = value(panel, 'page_size');
-            if (pageSize !== '10') return true;
+            if (pageSize !== defaultPageSize) return true;
             var changed = false;
             Array.prototype.forEach.call(detailFields, function (node) {
                 var name = node.getAttribute('data-finance-filter');
@@ -273,7 +280,7 @@
                     }
                 });
                 setValue(panel, 'search', '');
-                setValue(panel, 'page_size', '10');
+                setValue(panel, 'page_size', defaultPageSize);
                 api.search('');
                 api.page.len(10);
                 updateIndicator();

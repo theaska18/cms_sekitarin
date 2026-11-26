@@ -111,7 +111,7 @@ $ok_statuses = array('draft_saved', 'draft_deleted', 'posted', 'approval_submitt
     }
     table.DataTable({
         processing: true, serverSide: true, deferRender: true, autoWidth: false,
-        pageLength: 10, lengthMenu: [[10,25,50],[10,25,50]], order: [[3,'desc']],
+        pageLength: 50, lengthMenu: [[50, 100, 200], [50, 100, 200]], order: [[3,'desc']],
         ajax: {url: <?= json_encode($current_path . '/data', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, type:'GET'},
         columns: [
             {data:null,orderable:false,searchable:false,render:function(data,type,row,meta){

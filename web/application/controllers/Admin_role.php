@@ -155,7 +155,7 @@ class Admin_role extends Admin
                     $state['filters']
                 );
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'role_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'role_code')
         );
     }
 
@@ -511,7 +511,7 @@ class Admin_role extends Admin
 
                 return $this->menu_access_payload($page, $write_available);
             },
-            array('max_length' => 100, 'max_search_length' => 120, 'default_order' => 'group')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'group')
         );
     }
 

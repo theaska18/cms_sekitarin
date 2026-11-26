@@ -105,7 +105,7 @@ class Admin_user extends Admin
                 $state = $this->user_list_state($search);
                 return $store->page($state['search'], $length, $start, $order, $direction, $state['tenant'], '', '', $state['filters']);
             },
-            array('max_length' => 50, 'max_search_length' => 120, 'default_order' => 'user_code')
+            array('max_length' => 200, 'max_search_length' => 120, 'default_order' => 'user_code')
         );
     }
 
