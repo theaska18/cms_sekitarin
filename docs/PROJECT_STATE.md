@@ -162,10 +162,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
 - Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,
-  [`../../flutter_sekitarin/`](../../flutter_sekitarin/README.md), dengan auth,
-  chat (WebSocket + polling), peta OSM/nearby, feed/post, profil, ganti/buat
-  akun, consent, dan notifikasi in-app. `flutter analyze` tanpa error; tes unit
-  lulus. Android/iOS memakai HTTP cleartext khusus development.
+  [`../../flutter_sekitarin/`](../../flutter_sekitarin/README.md), dengan auth
+  (username publik + konfirmasi password), tambah kontak lewat username, chat
+  direct/grup (buat grup, kelola anggota, ganti nama), peta OSM/nearby,
+  feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
+  notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
+  memakai HTTP cleartext khusus development.
 - Kontrak tes backend: `tests/test_sekitar_api_contract.py`; tes Flutter ada di
   repo `flutter_sekitarin`.
 - Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi

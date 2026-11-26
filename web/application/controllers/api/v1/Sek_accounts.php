@@ -74,6 +74,55 @@ class Sek_accounts extends Sek_api_base
         ));
     }
 
+    public function handle_available()
+    {
+        if (!$this->require_method('GET')) {
+            return;
+        }
+        $handle = $this->sek_account_model->normalize_handle($this->input->get('handle', TRUE));
+        if (!$this->sek_account_model->valid_handle($handle)) {
+            $this->api_response->error('validation_error', 'Username 3–40 karakter: huruf kecil, angka, titik, atau garis bawah.', 422, array('handle' => 'Format tidak valid.'));
+            return;
+        }
+        if (!$this->api_auth->rate_limit('handle_check', 120, 3600, 300)) {
+            $this->api_response->error('rate_limited', 'Terlalu banyak pengecekan username.', 429);
+            return;
+        }
+        $this->api_response->ok(array(
+            'handle' => $handle,
+            'available' => !$this->sek_account_model->handle_exists($handle),
+        ));
+    }
+
+    public function lookup()
+    {
+        if (!$this->require_method('GET')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $handle = $this->sek_account_model->normalize_handle($this->input->get('handle', TRUE));
+        if (!$this->sek_account_model->valid_handle($handle)) {
+            $this->api_response->error('validation_error', 'Username tidak valid.', 422);
+            return;
+        }
+        $account = $this->sek_account_model->find_by_handle($handle);
+        if (!is_array($account) || (string) $account['status'] !== 'active') {
+            $this->api_response->error('not_found', 'Akun dengan username tersebut tidak ditemukan.', 404);
+            return;
+        }
+        $viewer_account = $this->viewer_account_id();
+        if ($viewer_account !== NULL && $this->sek_account_model->blocked_between($viewer_account, (int) $account['account_id'])) {
+            $this->api_response->error('not_found', 'Akun dengan username tersebut tidak ditemukan.', 404);
+            return;
+        }
+        $private = $this->sek_account_model->member_role((int) $account['account_id'], $this->api_auth->user_id()) !== NULL;
+        $this->api_response->ok(array(
+            'account' => $this->account_payload($account, $private),
+        ));
+    }
+
     public function search()
     {
         if (!$this->require_method('GET')) {

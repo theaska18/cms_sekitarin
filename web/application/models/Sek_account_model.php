@@ -72,6 +72,28 @@ class Sek_account_model extends CI_Model
         return is_array($row) ? (int) $row['account_id'] : NULL;
     }
 
+    public function normalize_handle($handle)
+    {
+        $handle = strtolower(trim((string) $handle));
+        return ltrim($handle, '@');
+    }
+
+    public function valid_handle($handle)
+    {
+        return (bool) preg_match('/^[a-z0-9._]{3,40}$/', $this->normalize_handle($handle));
+    }
+
+    public function find_by_handle($handle)
+    {
+        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services')
+            ->from('sek_account a')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('a.handle', $this->normalize_handle($handle))
+            ->limit(1)
+            ->get()
+            ->row_array();
+    }
+
     public function handle_exists($handle)
     {
         return $this->db->where('handle', strtolower(trim((string) $handle)))

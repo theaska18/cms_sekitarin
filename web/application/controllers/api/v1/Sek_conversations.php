@@ -28,10 +28,14 @@ class Sek_conversations extends Sek_api_base
 
     public function show($conversation_id = 0)
     {
-        if (!$this->require_method(array('GET', 'DELETE'))) {
+        if (!$this->require_method(array('GET', 'PATCH', 'DELETE'))) {
             return;
         }
         if (!$this->require_auth()) {
+            return;
+        }
+        if (strtoupper((string) $this->input->method(TRUE)) === 'PATCH') {
+            $this->update($conversation_id);
             return;
         }
         $conversation = $this->conversation_for((int) $conversation_id);
@@ -45,6 +49,64 @@ class Sek_conversations extends Sek_api_base
         }
         $this->api_response->ok(array(
             'conversation' => $this->conversation_payload($conversation, $this->api_auth->user_id(), TRUE),
+        ));
+    }
+
+    public function update($conversation_id = 0)
+    {
+        if (!$this->require_method('PATCH')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $conversation = $this->conversation_for((int) $conversation_id);
+        if ($conversation === NULL) {
+            return;
+        }
+        if ((string) $conversation['type'] !== 'group') {
+            $this->api_response->error('unprocessable', 'Hanya grup yang dapat diubah.', 422);
+            return;
+        }
+        $membership = $this->sek_chat_model->membership((int) $conversation_id, $this->api_auth->user_id());
+        if ((string) $membership['role'] !== 'owner') {
+            $this->api_response->error('forbidden', 'Hanya owner grup yang dapat mengubah grup.', 403);
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $fields = array();
+        if (array_key_exists('title', $body)) {
+            $title = trim((string) $body['title']);
+            if ($title === '' || mb_strlen($title) > 120) {
+                $this->api_response->error('validation_error', 'Judul grup wajib (maks 120 karakter).', 422);
+                return;
+            }
+            $fields['title'] = $title;
+        }
+        if (array_key_exists('avatar_media_id', $body)) {
+            $media_id = (int) $body['avatar_media_id'];
+            if ($media_id > 0 && !$this->sek_account_model->media_belongs_to($media_id, $this->api_auth->user_id())) {
+                $this->api_response->error('validation_error', 'avatar_media_id tidak valid.', 422);
+                return;
+            }
+            $fields['avatar_media_id'] = $media_id > 0 ? $media_id : NULL;
+        }
+        if (!$fields) {
+            $this->api_response->error('validation_error', 'Tidak ada perubahan.', 422);
+            return;
+        }
+        $this->sek_chat_model->update_conversation((int) $conversation_id, $fields);
+        $fresh = $this->sek_chat_model->find((int) $conversation_id);
+        $this->sek_realtime->publish((int) $conversation_id, 'conversation.updated', array(
+            'conversation_id' => (int) $conversation_id,
+            'title' => $fresh['title'],
+            'avatar_media_id' => $fresh['avatar_media_id'] !== NULL ? (int) $fresh['avatar_media_id'] : NULL,
+        ));
+        $this->api_response->ok(array(
+            'conversation' => $this->conversation_payload($fresh, $this->api_auth->user_id(), TRUE),
         ));
     }
 
@@ -298,8 +360,22 @@ class Sek_conversations extends Sek_api_base
         $member_ids = array_values(array_filter($member_ids, function ($id) {
             return $id > 0;
         }));
+        if (isset($body['member_account_ids']) && is_array($body['member_account_ids'])) {
+            foreach (array_unique(array_map('intval', $body['member_account_ids'])) as $member_account_id) {
+                if ($member_account_id <= 0) {
+                    continue;
+                }
+                $member_account = $this->sek_account_model->find($member_account_id);
+                if (!is_array($member_account) || (string) $member_account['status'] !== 'active') {
+                    $this->api_response->error('validation_error', 'Akun anggota tidak valid.', 422);
+                    return;
+                }
+                $member_ids[] = (int) $member_account['user_id'];
+            }
+            $member_ids = array_values(array_unique($member_ids));
+        }
         if (!$member_ids || count($member_ids) > 99) {
-            $this->api_response->error('validation_error', 'member_user_ids wajib (1–99 anggota).', 422);
+            $this->api_response->error('validation_error', 'Pilih 1–99 anggota grup.', 422);
             return;
         }
         foreach ($member_ids as $member_id) {
@@ -341,6 +417,14 @@ class Sek_conversations extends Sek_api_base
             $user = $this->sek_user_model->find((int) $body['user_id']);
         } elseif (isset($body['email'])) {
             $user = $this->sek_user_model->find_by_email((string) $body['email']);
+        } elseif (isset($body['username']) || isset($body['handle'])) {
+            $handle = $this->sek_account_model->normalize_handle(
+                isset($body['username']) ? (string) $body['username'] : (string) $body['handle']
+            );
+            $account = $this->sek_account_model->find_by_handle($handle);
+            if (is_array($account) && (string) $account['status'] === 'active') {
+                $user = $this->sek_user_model->find((int) $account['user_id']);
+            }
         }
         if (!is_array($user) || (string) $user['status'] !== 'active') {
             $this->api_response->error('not_found', 'Pengguna tidak ditemukan.', 404);

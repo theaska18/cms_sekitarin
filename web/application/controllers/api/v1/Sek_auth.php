@@ -21,6 +21,16 @@ class Sek_auth extends Sek_api_base
             'password' => 'required|min:8|max:200',
             'display_name' => 'required|min:1|max:80',
         ));
+        $username = $this->sek_account_model->normalize_handle(
+            isset($body['username']) ? (string) $body['username'] : ''
+        );
+        if ($username !== '' && !$this->sek_account_model->valid_handle($username)) {
+            $errors['username'] = 'Username 3–40 karakter: huruf kecil, angka, titik, atau garis bawah.';
+        }
+        $confirmation = isset($body['password_confirmation']) ? (string) $body['password_confirmation'] : NULL;
+        if ($confirmation !== NULL && !hash_equals((string) $body['password'], $confirmation)) {
+            $errors['password_confirmation'] = 'Konfirmasi password tidak sama.';
+        }
         $device = isset($body['device']) && is_array($body['device']) ? $body['device'] : array();
         $device_uuid = isset($device['device_uuid']) ? trim((string) $device['device_uuid']) : '';
         $platform = isset($device['platform']) ? strtolower(trim((string) $device['platform'])) : '';
@@ -44,9 +54,15 @@ class Sek_auth extends Sek_api_base
             $this->api_response->error('conflict', 'Email sudah terdaftar.', 409, array('email' => 'Email sudah terdaftar.'));
             return;
         }
+        if ($username !== '' && $this->sek_account_model->handle_exists($username)) {
+            $this->api_response->error('conflict', 'Username sudah dipakai.', 409, array('username' => 'Username sudah dipakai.'));
+            return;
+        }
 
         $local = strstr($email, '@', TRUE);
-        $handle = $this->sek_account_model->suggest_handle($local !== FALSE ? $local : $email);
+        $handle = $username !== ''
+            ? $username
+            : $this->sek_account_model->suggest_handle($local !== FALSE ? $local : $email);
         $created = $this->sek_user_model->create_with_personal_account(
             $email,
             Sek_user_model::hash_password((string) $body['password']),

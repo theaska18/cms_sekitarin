@@ -225,6 +225,12 @@ class Sek_me extends Sek_api_base
 
         if (isset($fields['display_name'])) {
             $this->sek_user_model->update_profile($this->api_auth->user_id(), $fields['display_name']);
+            $this->db->where('user_id', $this->api_auth->user_id())
+                ->where('type_code', 'personal')
+                ->update('sek_account', array(
+                    'display_name' => $fields['display_name'],
+                    'updated_at' => gmdate('Y-m-d H:i:s'),
+                ));
         }
         $user = $this->sek_user_model->find($this->api_auth->user_id());
         $this->api_response->ok(array('user' => $this->user_payload($user)));

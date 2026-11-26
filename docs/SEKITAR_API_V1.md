@@ -50,7 +50,9 @@ Skema database: [`SEKITAR_ERD.md`](SEKITAR_ERD.md). Visi produk dan roadmap:
 {
   "email": "asep@example.com",
   "password": "minimal-8-karakter",
+  "password_confirmation": "minimal-8-karakter",
   "display_name": "Asep",
+  "username": "asep.development",
   "device": {
     "device_uuid": "8f2c...",
     "platform": "android",
@@ -62,6 +64,11 @@ Skema database: [`SEKITAR_ERD.md`](SEKITAR_ERD.md). Visi produk dan roadmap:
 201 — membuat `sek_user`, akun **personal** default, consent default (belum
 granted), dan mengirim email verifikasi. Respons sama dengan login, dengan
 `email_verified: false`.
+
+`username` menjadi `handle` akun personal (huruf kecil, 3–40 karakter:
+`a-z0-9._`). Jika kosong, backend membuat handle otomatis dari email; klien
+Flutter mewajibkannya. `password_confirmation` wajib sama bila dikirim dan
+diverifikasi juga di server.
 
 ### `POST /auth/login`
 
@@ -140,6 +147,8 @@ granted), dan mengirim email verifikasi. Respons sama dengan login, dengan
 | DELETE | `/accounts/{account_id}` | Arsipkan (`status=archived`), bukan hapus fisik. |
 | POST | `/accounts/{account_id}/activate` | Set akun aktif untuk perangkat ini. |
 | GET | `/accounts/search?q=` | Cari handle/nama, minimal 2 karakter, maks 20 hasil. |
+| GET | `/accounts/lookup?handle=` | Cari akun exact berdasarkan username (auth). |
+| GET | `/accounts/handle-available?handle=` | Cek ketersediaan username (publik, untuk form daftar). |
 | GET | `/accounts/{account_id}/hours` | Jam buka. |
 | PUT | `/accounts/{account_id}/hours` | Ganti seluruh jadwal (array). |
 
@@ -275,17 +284,19 @@ Event realtime dikirim lewat WebSocket gateway; lihat
 | --- | --- | --- |
 | GET | `/conversations` | Daftar percakapan + pesan terakhir + unread. |
 | POST | `/conversations` | Buat direct (`account_id`/`user_id`) atau grup (`title`, `member_user_ids`). |
-| GET | `/conversations/{id}` | Detail + anggota. |
+| GET/PATCH | `/conversations/{id}` | Detail + anggota / ubah grup (`title`, `avatar_media_id`, owner). |
 | DELETE | `/conversations/{id}` | Keluar dari percakapan. |
 | GET | `/conversations/{id}/members` | Daftar anggota. |
-| POST | `/conversations/{id}/members` | Tambah anggota grup (owner). Body `user_id` atau `email`. |
+| POST | `/conversations/{id}/members` | Tambah anggota grup (owner). Body `user_id`, `email`, atau `username`. |
 | DELETE | `/conversations/{id}/members/{user_id}` | Hapus anggota grup (owner). |
 | POST | `/conversations/{id}/read` | Body `{message_id}`; tandai sudah dibaca. |
 | POST | `/conversations/{id}/typing` | Body `{is_typing}`; event typing saja. |
 
 Direct chat memakai `direct_key` unik sehingga membuka chat dengan akun yang
 sama mengembalikan percakapan lama (`created: false`). Grup maksimal 100
-anggota; hanya owner yang dapat menambah/menghapus anggota lain.
+anggota; hanya owner yang dapat menambah/menghapus anggota lain. Saat membuat
+grup, klien boleh mengirim `member_user_ids` atau `member_account_ids` (akun
+usaha diselesaikan ke pemiliknya oleh server).
 
 ### Pesan
 
@@ -545,7 +556,8 @@ Sudah berjalan (Fase 1–4):
 - Order/ride-hailing: katalog `product/service/ride`, order makanan/jasa/ride,
   state machine, pembayaran tunai/transfer manual, dan riwayat status.
 - Klien Flutter MVP di repo terpisah
-  [`flutter_sekitarin`](../../flutter_sekitarin/README.md): auth, chat,
+  [`flutter_sekitarin`](../../flutter_sekitarin/README.md): auth, username,
+  tambah kontak lewat username, chat direct/grup, edit profil/ganti password,
   peta/nearby, feed/post, profil/akun, consent, dan notifikasi in-app.
 - Rate limit login, register, refresh, resend, forgot-password, laporan, dan
   update presence.

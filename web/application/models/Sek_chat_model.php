@@ -95,6 +95,16 @@ class Sek_chat_model extends CI_Model
         return $this->db->trans_status() ? $conversation_id : NULL;
     }
 
+    public function update_conversation($conversation_id, $fields)
+    {
+        if (!$fields) {
+            return TRUE;
+        }
+        $fields['updated_at'] = gmdate('Y-m-d H:i:s');
+        return $this->db->where('conversation_id', (int) $conversation_id)
+            ->update('sek_conversation', $fields);
+    }
+
     public function add_member($conversation_id, $user_id, $role = 'member')
     {
         $existing = $this->membership($conversation_id, $user_id, FALSE);

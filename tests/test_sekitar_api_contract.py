@@ -39,6 +39,8 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/conversations/(:num)/live-location",
             "api/v1/messages/(:num)",
             "api/v1/nearby",
+            "api/v1/accounts/handle-available",
+            "api/v1/accounts/lookup",
             "api/v1/feed",
             "api/v1/posts",
             "api/v1/posts/(:num)",
@@ -265,6 +267,23 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("provider_action_order", orders)
         self.assertIn("Hanya penyedia", orders)
         self.assertIn("Hanya owner atau manager", services)
+
+    def test_username_contact_and_group_management(self):
+        auth = (API / "Sek_auth.php").read_text()
+        accounts = (API / "Sek_accounts.php").read_text()
+        me = (API / "Sek_me.php").read_text()
+        conversations = (API / "Sek_conversations.php").read_text()
+        account_model = (APP / "models" / "Sek_account_model.php").read_text()
+        self.assertIn("password_confirmation", auth)
+        self.assertIn("username", auth)
+        self.assertIn("handle_available", accounts)
+        self.assertIn("function lookup", accounts)
+        self.assertIn("valid_handle", account_model)
+        self.assertIn("find_by_handle", account_model)
+        self.assertIn("type_code', 'personal'", me)
+        self.assertIn("function update", conversations)
+        self.assertIn("avatar_media_id", conversations)
+        self.assertIn("username", conversations)
 
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
