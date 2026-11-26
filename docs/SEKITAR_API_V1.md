@@ -544,7 +544,8 @@ Sudah berjalan (Fase 1–4):
   `order_payment`.
 - Order/ride-hailing: katalog `product/service/ride`, order makanan/jasa/ride,
   state machine, pembayaran tunai/transfer manual, dan riwayat status.
-- Klien Flutter MVP di [`../mobile/`](../mobile/README.md): auth, chat,
+- Klien Flutter MVP di repo terpisah
+  [`flutter_sekitarin`](../../flutter_sekitarin/README.md): auth, chat,
   peta/nearby, feed/post, profil/akun, consent, dan notifikasi in-app.
 - Rate limit login, register, refresh, resend, forgot-password, laporan, dan
   update presence.

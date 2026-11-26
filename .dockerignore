@@ -6,4 +6,3 @@ database_backup
 web/data
 web/.env
 secrets
-mobile

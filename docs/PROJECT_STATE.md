@@ -161,12 +161,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   makanan/jasa/ride dengan state machine, riwayat `sek_order_event`, pembayaran
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
-- Fase 7 dimulai: aplikasi Flutter ada di [`../mobile/`](../mobile/README.md)
-  dengan auth, chat (WebSocket + polling), peta OSM/nearby, feed/post, profil,
-  ganti/buat akun, consent, dan notifikasi in-app. `flutter analyze` tanpa error;
-  tes unit lulus. Android/iOS memakai HTTP cleartext khusus development.
-- Kontrak tes: `tests/test_sekitar_api_contract.py` dan
-  `mobile/test/` (Flutter).
+- Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,
+  [`../../flutter_sekitarin/`](../../flutter_sekitarin/README.md), dengan auth,
+  chat (WebSocket + polling), peta OSM/nearby, feed/post, profil, ganti/buat
+  akun, consent, dan notifikasi in-app. `flutter analyze` tanpa error; tes unit
+  lulus. Android/iOS memakai HTTP cleartext khusus development.
+- Kontrak tes backend: `tests/test_sekitar_api_contract.py`; tes Flutter ada di
+  repo `flutter_sekitarin`.
 - Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi
   platform/integrasi Finance, matching driver otomatis, push notification di
   Flutter (konfigurasi Firebase), serta layar order/ride.
