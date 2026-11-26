@@ -162,12 +162,15 @@ diverifikasi juga di server.
   "bio": "Sembako dan makanan ringan",
   "address": "Jl. Contoh No. 5",
   "location": {"lat": -6.9147, "lng": 107.6098},
+  "location_mode": "realtime",
   "service_radius_m": 3000
 }
 ```
 
 201 — `handle` unik, huruf kecil, `[a-z0-9._]`, 3–40 karakter. Akun tipe
-`personal` tidak boleh dibuat lewat endpoint ini. Untuk tipe dengan
+`personal` tidak boleh dibuat lewat endpoint ini. `location_mode`:
+`fixed` (default, titik dibekukan) atau `realtime` (klien mengirim
+`PUT /accounts/{id}/location` atau `/presence` berkala). Untuk tipe dengan
 `allows_presence=true`, akun otomatis `is_online=false` sampai presence dikirim.
 
 ### Akun anggota (staff)
@@ -229,6 +232,7 @@ Contoh `GET /nearby`:
       "lng": 107.6101,
       "is_online": true,
       "source": "live",
+      "is_own": false,
       "verified": false,
       "last_seen_at": "2026-11-26T10:00:03Z"
     }
@@ -239,7 +243,9 @@ Contoh `GET /nearby`:
 ```
 
 `source` bernilai `place` untuk lokasi dasar usaha dan `live` untuk presence
-realtime. Jika akun punya keduanya, hasil `live` yang dipakai.
+realtime. Jika akun punya keduanya, hasil `live` yang dipakai. `is_own=true`
+menandai akun usaha milik pengguna yang sedang login (untuk label “Akunmu” di
+peta).
 
 ## Kontak
 

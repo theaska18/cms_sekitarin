@@ -162,9 +162,11 @@ class Sek_places extends Sek_api_base
         );
 
         $data = array();
+        $viewer_user_id = $this->api_auth->user_id();
         foreach ($rows as $row) {
             $data[] = array(
                 'account_id' => (int) $row['account_id'],
+                'is_own' => (int) $row['user_id'] === (int) $viewer_user_id,
                 'type_code' => (string) $row['type_code'],
                 'type_label' => (string) $row['label_id'],
                 'handle' => (string) $row['handle'],

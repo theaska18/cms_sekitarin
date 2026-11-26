@@ -324,6 +324,12 @@ class Sek_accounts extends Sek_api_base
         if ($radius < 100 || $radius > 50000) {
             $errors['service_radius_m'] = 'Radius layanan 100–50000 meter.';
         }
+        $location_mode = isset($body['location_mode'])
+            ? strtolower(trim((string) $body['location_mode']))
+            : 'fixed';
+        if (!in_array($location_mode, array('fixed', 'realtime'), TRUE)) {
+            $errors['location_mode'] = 'location_mode harus fixed atau realtime.';
+        }
 
         $location = isset($body['location']) && is_array($body['location']) ? $body['location'] : array();
         if (!$this->valid_lat(isset($location['lat']) ? $location['lat'] : NULL)
@@ -343,6 +349,7 @@ class Sek_accounts extends Sek_api_base
             'phone' => isset($body['phone']) ? trim((string) $body['phone']) : NULL,
             'address' => isset($body['address']) ? trim((string) $body['address']) : NULL,
             'service_radius_m' => $radius,
+            'location_mode' => $location_mode,
             'lat' => (float) $location['lat'],
             'lng' => (float) $location['lng'],
             'source' => 'manual',
@@ -416,6 +423,15 @@ class Sek_accounts extends Sek_api_base
                 return;
             }
             $fields['service_radius_m'] = $radius;
+        }
+
+        if (array_key_exists('location_mode', $body)) {
+            $mode = strtolower(trim((string) $body['location_mode']));
+            if (!in_array($mode, array('fixed', 'realtime'), TRUE)) {
+                $this->api_response->error('validation_error', 'location_mode harus fixed atau realtime.', 422);
+                return;
+            }
+            $fields['location_mode'] = $mode;
         }
 
         foreach (array('avatar_media_id', 'cover_media_id') as $media_field) {

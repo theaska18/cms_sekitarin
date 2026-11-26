@@ -158,9 +158,10 @@ Flutter MVP client lives in the separate
 [`flutter_sekitarin`](../flutter_sekitarin/README.md) repository (auth with
 public username, add contact by username, direct/group chat with group
 management, map, feed/post, edit profile/change password, settings,
-notifications, and order/ride screens). Admin report moderation, payment
-gateway/commission/Finance integration, and automatic driver matching remain
-for later increments. Email tokens are written to
+notifications, and order/ride screens). Business accounts support
+`location_mode` (`fixed`/`realtime`), and the map marks the viewer's own accounts
+with `is_own`. Admin report moderation, payment gateway/commission/Finance
+integration, and automatic driver matching remain for later increments. Email tokens are written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
 

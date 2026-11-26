@@ -135,6 +135,7 @@ class Sek_account_model extends CI_Model
             'phone' => isset($data['phone']) ? $data['phone'] : NULL,
             'address' => isset($data['address']) ? $data['address'] : NULL,
             'service_radius_m' => isset($data['service_radius_m']) ? (int) $data['service_radius_m'] : 5000,
+            'location_mode' => isset($data['location_mode']) ? (string) $data['location_mode'] : 'fixed',
             'is_online' => 0,
             'status' => 'active',
             'created_at' => $now,
@@ -404,7 +405,7 @@ class Sek_account_model extends CI_Model
         $distance_sql = 'ST_Distance_Sphere(%s.location, ST_SRID(POINT(?, ?), 4326))';
         $base = array((float) $lng, (float) $lat);
 
-        $place_sql = 'SELECT a.account_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
+        $place_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
             . 'a.is_online, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(l.location) AS lat, ST_Y(l.location) AS lng, '
             . sprintf($distance_sql, 'l') . ' AS distance_m, "place" AS source, NULL AS last_seen_at '
@@ -425,7 +426,7 @@ class Sek_account_model extends CI_Model
         $place_sql .= ' ORDER BY distance_m ASC LIMIT ?';
         $params[] = (int) $limit;
 
-        $presence_sql = 'SELECT a.account_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
+        $presence_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
             . 'a.is_online, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(p.location) AS lat, ST_Y(p.location) AS lng, '
             . sprintf($distance_sql, 'p') . ' AS distance_m, "live" AS source, p.updated_at AS last_seen_at '

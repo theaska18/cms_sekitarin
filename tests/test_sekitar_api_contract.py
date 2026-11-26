@@ -209,6 +209,11 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("blocked_account_ids", model)
         self.assertIn("presence|", places)
         self.assertIn("Persetujuan lokasi belum diberikan", places)
+        self.assertIn("is_own", places)
+        self.assertTrue(
+            (MIGRATIONS / "20261126000900_sekitar_location_mode.sql").is_file()
+        )
+        self.assertIn("location_mode", (APP / "controllers" / "api" / "v1" / "Sek_accounts.php").read_text())
 
     def test_post_migration_and_feed_scope(self):
         sql = (MIGRATIONS / "20261126000600_sekitar_posts.sql").read_text()

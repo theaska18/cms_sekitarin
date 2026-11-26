@@ -129,6 +129,7 @@ class Sek_api_base extends CI_Controller
             'cover_media_id' => !empty($account['cover_media_id']) ? (int) $account['cover_media_id'] : NULL,
             'address' => isset($account['address']) && $account['address'] !== NULL ? (string) $account['address'] : NULL,
             'service_radius_m' => isset($account['service_radius_m']) ? (int) $account['service_radius_m'] : 0,
+            'location_mode' => isset($account['location_mode']) ? (string) $account['location_mode'] : 'fixed',
             'is_online' => !empty($account['is_online']),
             'verified' => !empty($account['verified_at']),
             'status' => isset($account['status']) ? (string) $account['status'] : 'active',
@@ -137,6 +138,9 @@ class Sek_api_base extends CI_Controller
         );
         if (isset($account['label_id'])) {
             $payload['type_label'] = (string) $account['label_id'];
+        }
+        if (array_key_exists('allows_presence', $account)) {
+            $payload['allows_presence'] = (int) $account['allows_presence'] === 1;
         }
         if ($private) {
             $payload['phone'] = isset($account['phone']) && $account['phone'] !== NULL ? (string) $account['phone'] : NULL;

@@ -161,6 +161,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   makanan/jasa/ride dengan state machine, riwayat `sek_order_event`, pembayaran
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
+- Akun usaha punya `location_mode` (`fixed`/`realtime`). Mode realtime
+  memperbarui lokasi/presence berkala; peta menandai akun sendiri dengan
+  `is_own` dan melakukan polling nearby.
 - Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,
   [`../../flutter_sekitarin/`](../../flutter_sekitarin/README.md), dengan auth
   (username publik + konfirmasi password), tambah kontak lewat username, chat
