@@ -1,0 +1,113 @@
+{
+  "version": "1.0.48",
+  "from_version": "1.0.47",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.47",
+  "changelog": "Fitur revisi setelah posting untuk Faktur Penjualan dan Tagihan Pembelian: aksi Revisi mengajukan persetujuan, membuat jurnal pembalik, menandai dokumen asli revised, dan membuat draft pengganti bernomor baru yang tertaut untuk diedit dan diposting ulang. Halaman dokumen menampilkan link Revisi dari/Diganti oleh, dan filter status mendapat Revised serta Revision pending.",
+  "files": [
+    {
+      "path": "application/config/routes.php",
+      "sha256": "a0e8c97a5309fb069ab035798491692556292b2db5cb025df92bc8b1299b99ab",
+      "size": 5406
+    },
+    {
+      "path": "application/config/version.php",
+      "sha256": "db389de2b6d643b009fcc53de33c2bbed10ef1cd3d1177992fa6a45ec53e8e06",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance.php",
+      "sha256": "aa83f6a99e23cd779756b7caad03bec5733481e80129da99145e830689385269",
+      "size": 281512
+    },
+    {
+      "path": "application/language/arabic/finance_lang.php",
+      "sha256": "3fad39bd0baf78dd25a6695110393eb0dd4d7e93ae755e62aab45255076f0b72",
+      "size": 59089
+    },
+    {
+      "path": "application/language/chinese/finance_lang.php",
+      "sha256": "f6ecbc3fbadc3098ef11947cfaa3c5c923afcf083b1e6a74952da5e9350150b9",
+      "size": 46637
+    },
+    {
+      "path": "application/language/english/finance_lang.php",
+      "sha256": "06c0eca3f4987e1a1c8efdf7b3ffc33f8d7571ddda372f7819c3c2aef799f669",
+      "size": 48864
+    },
+    {
+      "path": "application/language/french/finance_lang.php",
+      "sha256": "9171686fe495e29baa9713527682f19acfc2027bdc767418fd34828aef218613",
+      "size": 53255
+    },
+    {
+      "path": "application/language/german/finance_lang.php",
+      "sha256": "b84f2dc57240cd4ee14da4cb3fa536e038b6e68434341ee91159e01d687f0997",
+      "size": 52058
+    },
+    {
+      "path": "application/language/indonesian/finance_lang.php",
+      "sha256": "f36c12e9a73d296750998105d10d6fb8b1abbec11f9b64078f806c946f44f492",
+      "size": 49487
+    },
+    {
+      "path": "application/language/japanese/finance_lang.php",
+      "sha256": "a6e1ecbe05cd3c032a539263670cf57182497994e7c3514a7bf502bd16f931cb",
+      "size": 52978
+    },
+    {
+      "path": "application/language/korean/finance_lang.php",
+      "sha256": "ee224fa19574c95e50e340ba6f2944bc53b520530eae5345b27d8b1b9da7f1aa",
+      "size": 51433
+    },
+    {
+      "path": "application/language/spanish/finance_lang.php",
+      "sha256": "06e5c2d91b356ec0cb057ccf47e78a33b5680590bebd568c4386676ee017fdcb",
+      "size": 52413
+    },
+    {
+      "path": "application/libraries/Approval_workflow_store.php",
+      "sha256": "626e38ee55ba71e8fcc2665ed8f69ab5a9b86ac7bb1b112aaa4d65fc733efd85",
+      "size": 78974
+    },
+    {
+      "path": "application/libraries/Finance_cancellation_store.php",
+      "sha256": "7d0889563d57213a0823a6f981b5647d4f3b5d3591d7c96e530f2b66d7c11b86",
+      "size": 27925
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "663684ba35f2c649fc7452e6fc06583c1dfe2b15fe147d595d966322ec9639b5",
+      "size": 14780
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "9a85dee58b363ae8932cd26d230efa617dfe7f2b69fe922ea84a9238886323ad",
+      "size": 23228
+    },
+    {
+      "path": "application/views/admin/finance/document_view.php",
+      "sha256": "0a460c32babb162aac0d9af685bad7f861897a84abbe1d40aecccc375a0c81b5",
+      "size": 13061
+    },
+    {
+      "path": "application/views/admin/footer.php",
+      "sha256": "aa460d04586aefc58e0848c44b8bab578c9d5d600da7ed40c6ab7adc784deb3b",
+      "size": 42355
+    },
+    {
+      "path": "assets/js/finance-list.js",
+      "sha256": "f928d516f4cd17accbf8943c329af992151c063ecff577a82f51da3354ce586b",
+      "size": 18059
+    }
+  ],
+  "delete": [],
+  "migrations": [
+    "20261126000100_add_finance_revision.sql"
+  ],
+  "migration_checksums": {
+    "20261126000100_add_finance_revision.sql": "ad01feb486f47271cff192a8c4faf626399721dab51499cf43a5033dd35fc997"
+  }
+}

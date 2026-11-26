@@ -1,11 +1,13 @@
 {
-  "version": "1.0.47",
+  "version": "1.0.48",
   "released_at": "2026-11-26",
-  "changelog": "Setelah Simpan Draft pada menu integrasi, pengguna kembali ke list integrasi dengan filter status Processed dan banner \"Draf tersimpan.\" Deep link filter pada list Finance kini diterapkan sejak load pertama.",
+  "changelog": "Fitur revisi setelah posting untuk Faktur Penjualan dan Tagihan Pembelian: aksi Revisi mengajukan persetujuan, membuat jurnal pembalik, menandai dokumen asli revised, dan membuat draft pengganti bernomor baru yang tertaut untuk diedit dan diposting ulang. Halaman dokumen menampilkan link Revisi dari/Diganti oleh, dan filter status mendapat Revised serta Revision pending.",
   "min_php": "8.1",
-  "requires_version": "1.0.46",
-  "package": "cms-1.0.47.zip",
-  "sha256": "0fe29f4ae69525e7f8152a3b1a965e27080068ea6254e03566951a4853417478",
-  "size": 11587,
-  "migrations": []
+  "requires_version": "1.0.47",
+  "package": "cms-1.0.48.zip",
+  "sha256": "edcb439959378dd67ff21f5f623ca115b1d6453b6e06fc5b8c060568022cbbaf",
+  "size": 176735,
+  "migrations": [
+    "20261126000100_add_finance_revision.sql"
+  ]
 }
