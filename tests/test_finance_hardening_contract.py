@@ -76,7 +76,7 @@ class FinanceHardeningContractTests(unittest.TestCase):
         controller = (APP / "controllers" / "Admin_finance_integration.php").read_text(encoding="utf-8")
         store = (APP / "libraries" / "Finance_integration_store.php").read_text(encoding="utf-8")
         self.assertIn("tax_id_required", controller)
-        self.assertIn("total_mismatch", controller)
+        self.assertNotIn("total_mismatch", controller)
         self.assertIn("trans_begin()", controller)
         self.assertIn("mark_processed(", controller)
         self.assertNotIn("select('t.*,'", store)

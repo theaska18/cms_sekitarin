@@ -130,19 +130,17 @@ class FinanceIntegrationContractTests(unittest.TestCase):
 
     def test_integration_draft_uses_the_same_default_tax_as_document_forms(self):
         controller = (APP / "controllers/Admin_finance_integration.php").read_text()
-        self.assertIn("$this->default_tax_id($kind, isset($inbox['tax_percent'])", controller)
-        self.assertIn("function default_tax_id($kind, $tax_percent = NULL)", controller)
+        self.assertIn("'tax_id' => $this->default_tax_id($kind)", controller)
+        self.assertIn("function default_tax_id($kind)", controller)
         self.assertIn("default_output_tax_id", controller)
         self.assertIn("default_input_tax_id", controller)
         self.assertIn("t.active_flag=1", controller)
 
-    def test_integration_draft_prefers_the_tax_rate_from_the_payload(self):
+    def test_integration_draft_does_not_block_different_totals(self):
         controller = (APP / "controllers/Admin_finance_integration.php").read_text()
-        method = controller.split("private function default_tax_id(", 1)[1].split("private function ", 1)[0]
-        self.assertIn("from('fin_tax')", method)
-        self.assertIn("$tax_percent", method)
-        self.assertIn("$expected_rate", method)
-        self.assertIn("return $expected_rate <= 0 ? '' : $default_tax_id;", method)
+        self.assertNotIn("total_mismatch", controller)
+        self.assertIn("tax_id_required", controller)
+        self.assertIn("tax_id_invalid", controller)
 
     def test_integration_errors_have_specific_labels_for_every_locale(self):
         for locale in LOCALES:
