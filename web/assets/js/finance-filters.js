@@ -83,6 +83,13 @@
             });
         });
 
+        // A deep link (for example the integration inbox after saving a draft)
+        // renders its filters server-side, but the first DataTable request is
+        // sent before this handler is bound. Reload once so those filters apply.
+        if (window.location.search && window.location.search.length > 1) {
+            api.ajax.reload(null, false);
+        }
+
         var container = table.closest('.dt-container');
         container.find('.dt-layout-row').has('.dt-search, .dt-length').hide();
 

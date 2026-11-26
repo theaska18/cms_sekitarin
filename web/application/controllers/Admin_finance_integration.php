@@ -61,6 +61,7 @@ class Admin_finance_integration extends Admin
                 'finance_integration_menu' => $spec['menu_code'],
                 'finance_integration_available' => $this->finance_integration_store->available($kind),
                 'finance_integration_can_process' => $this->has_admin_access_code($spec['menu_code'] . '_add'),
+                'finance_status' => (string) $this->session->flashdata('finance_status'),
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),
                 'finance_csrf_hash' => $this->security->get_csrf_hash(),
             )
@@ -205,7 +206,8 @@ class Admin_finance_integration extends Admin
                         if ($this->db->trans_status() !== FALSE) {
                             $this->db->trans_commit();
                             $this->session->set_flashdata('finance_status', 'draft_saved');
-                            redirect('/admin/finance/' . $spec['slug'] . '/edit/' . $document_id, 'location', 303);
+                            $inbox_path = '/admin/finance/' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox');
+                            redirect($inbox_path . '?status=processed', 'location', 303);
                             return;
                         }
                     }

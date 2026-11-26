@@ -142,6 +142,14 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("tax_id_required", controller)
         self.assertIn("tax_id_invalid", controller)
 
+    def test_integration_draft_returns_to_the_inbox_list(self):
+        controller = (APP / "controllers/Admin_finance_integration.php").read_text(encoding="utf-8")
+        view = (APP / "views/admin/finance/integration_index.php").read_text(encoding="utf-8")
+        self.assertIn("$inbox_path = '/admin/finance/' . ($kind === 'sales' ? 'sales_invoice_inbox' : 'purchase_bill_inbox');", controller)
+        self.assertIn("redirect($inbox_path . '?status=processed', 'location', 303);", controller)
+        self.assertIn("'finance_status' => (string) $this->session->flashdata('finance_status')", controller)
+        self.assertIn("$finance_status === 'draft_saved'", view)
+
     def test_integration_errors_have_specific_labels_for_every_locale(self):
         for locale in LOCALES:
             text = (APP / f"language/{locale}/finance_lang.php").read_text(encoding="utf-8")

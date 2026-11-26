@@ -21,6 +21,9 @@ $date_field = $kind === 'sales' ? 'invoice_date' : 'bill_date';
         <h1 class="text-3xl font-bold tracking-tight text-slate-950"><?= html_escape($title) ?></h1>
         <p class="mt-2 text-sm leading-6 text-slate-600"><?= html_escape(isset($labels['finance_integration_intro']) ? $labels['finance_integration_intro'] : 'Data dari API eksternal. Pilih Jadikan Draft untuk membuat draft dan memilih pelanggan/pemasok, akun, dan pajak.') ?></p>
     </header>
+    <?php if (!empty($finance_status) && $finance_status === 'draft_saved'): ?>
+        <div role="status" class="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><?= html_escape(isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.') ?></div>
+    <?php endif; ?>
 <?= $this->finance_filter_panel->render(array('date'=>TRUE,'target'=>'#finance-integration-table','status_preset'=>'integration','status_default'=>'received','date_preset'=>'integration','primary_date'=>($kind === 'sales' ? 'invoice_date' : 'bill_date')), $labels) ?>
     <?php if (!$available): ?>
         <div role="status" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><?= html_escape(isset($labels['finance_integration_unavailable']) ? $labels['finance_integration_unavailable'] : 'Tabel inbox integrasi belum tersedia. Jalankan migration database terlebih dahulu.') ?></div>
