@@ -117,7 +117,7 @@ Content-Type: application/json
 Contoh:
 
 ```sh
-curl -X POST 'http://localhost:8086/api/finance/sales-invoices' \
+curl -X POST 'http://localhost:8088/api/finance/sales-invoices' \
   -H 'Authorization: Bearer <api_secret>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -171,7 +171,7 @@ Content-Type: application/json
 Contoh:
 
 ```sh
-curl -X POST 'http://localhost:8086/api/finance/purchase-bills' \
+curl -X POST 'http://localhost:8088/api/finance/purchase-bills' \
   -H 'Authorization: Bearer <api_secret>' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -232,10 +232,10 @@ GET /api/finance/purchase-bills?inbox_id=7
 Contoh:
 
 ```sh
-curl 'http://localhost:8086/api/finance/sales-invoices/12' \
+curl 'http://localhost:8088/api/finance/sales-invoices/12' \
   -H 'Authorization: Bearer <api_secret>'
 
-curl 'http://localhost:8086/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
+curl 'http://localhost:8088/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
   -H 'Authorization: Bearer <api_secret>'
 ```
 
@@ -306,10 +306,10 @@ DELETE /api/finance/purchase-bills?inbox_id=7
 Contoh:
 
 ```sh
-curl -X DELETE 'http://localhost:8086/api/finance/sales-invoices/12' \
+curl -X DELETE 'http://localhost:8088/api/finance/sales-invoices/12' \
   -H 'Authorization: Bearer <api_secret>'
 
-curl -X DELETE 'http://localhost:8086/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
+curl -X DELETE 'http://localhost:8088/api/finance/sales-invoices?invoice_number=INV-EXT-2026-001' \
   -H 'Authorization: Bearer <api_secret>'
 ```
 

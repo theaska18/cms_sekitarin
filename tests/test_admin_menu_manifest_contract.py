@@ -26,7 +26,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
     def test_php_loader_reads_real_manifest_and_exercises_sorting_fallback_and_errors(self):
         container_test = f"/tmp/admin_menu_manifest_test_{__import__('os').getpid()}.php"
         copied = subprocess.run(
-            ["docker", "cp", str(PHP_TEST), f"cms_app:{container_test}"],
+            ["docker", "cp", str(PHP_TEST), f"cms_sekitarin_app:{container_test}"],
             capture_output=True,
             text=True,
             check=False,
@@ -35,7 +35,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
         try:
             result = subprocess.run(
                 [
-                    "docker", "exec", "cms_app", "php", container_test,
+                    "docker", "exec", "cms_sekitarin_app", "php", container_test,
                     "/var/www/html/application/libraries/Admin_menu_manifest.php",
                     "/var/www/html/application/views/admin/menu_manifest",
                 ],
@@ -45,7 +45,7 @@ class AdminMenuManifestContractTests(unittest.TestCase):
             )
         finally:
             subprocess.run(
-                ["docker", "exec", "cms_app", "rm", "-f", container_test],
+                ["docker", "exec", "cms_sekitarin_app", "rm", "-f", container_test],
                 capture_output=True,
                 text=True,
                 check=False,

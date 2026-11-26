@@ -135,6 +135,25 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Installer mendukung dua mode: restore dari backup, atau sambung ke database
   yang sudah ada lalu hanya menulis `web/.env`.
 
+## Sekitar (aplikasi mobile)
+
+- `cms_sekitarin` menjadi backend dan operasional aplikasi **Sekitar** (Flutter,
+  iOS/Android). Visi produk dan roadmap ada di [`../AGENTS.md`](../AGENTS.md).
+- Fase 0 selesai 2026-11-26: scope MVP (akun, profil, chat, map, post dasar),
+  tipe akun usaha, peta OpenStreetMap/MapLibre, login email + password, dan media
+  lokal + backup. Order/ride-hailing ditunda.
+- Kontrak Fase 1–2 ada di [`SEKITAR_ERD.md`](SEKITAR_ERD.md) dan
+  [`SEKITAR_API_V1.md`](SEKITAR_API_V1.md).
+- Fase 1 sudah diimplementasikan: migrasi `20261126000200_sekitar_identity.sql`
+  dan `20261126000300_sekitar_accounts.sql`, API `/api/v1` untuk auth, profil,
+  perangkat, consent, tipe akun, dan akun dasar (list/create/show/update/arsip/
+  activate/search). Kontrak tes: `tests/test_sekitar_api_contract.py`.
+- Belum diimplementasikan: media, kontak, blokir, laporan, lokasi/presence,
+  nearby, jam buka, dan manajemen staff.
+- Provider email transaksional belum dipilih; token development ditulis ke
+  `web/application/logs/sekitar-mail.log` dan dikembalikan sebagai field
+  `dev_*` saat environment bukan production.
+
 ## Sistem update
 
 Komponen utama:

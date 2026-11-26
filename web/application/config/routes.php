@@ -16,6 +16,26 @@ $route['login'] = 'auth/index';
 $route['logout'] = 'auth/logout';
 $route['api/update/check'] = 'update_api/check';
 $route['api/update/package/(:any)'] = 'update_api/package/$1';
+
+// Sekitar mobile API v1.
+$route['api/v1/auth/register'] = 'api/v1/sek_auth/register';
+$route['api/v1/auth/login'] = 'api/v1/sek_auth/login';
+$route['api/v1/auth/refresh'] = 'api/v1/sek_auth/refresh';
+$route['api/v1/auth/logout'] = 'api/v1/sek_auth/logout';
+$route['api/v1/auth/email/verify'] = 'api/v1/sek_auth/verify_email';
+$route['api/v1/auth/email/resend'] = 'api/v1/sek_auth/resend_verification';
+$route['api/v1/auth/password/forgot'] = 'api/v1/sek_auth/forgot_password';
+$route['api/v1/auth/password/reset'] = 'api/v1/sek_auth/reset_password';
+$route['api/v1/me'] = 'api/v1/sek_me/index';
+$route['api/v1/me/consents/(:any)'] = 'api/v1/sek_me/consent/$1';
+$route['api/v1/me/consents'] = 'api/v1/sek_me/consents';
+$route['api/v1/me/devices/(:num)'] = 'api/v1/sek_me/delete_device/$1';
+$route['api/v1/me/devices'] = 'api/v1/sek_me/devices';
+$route['api/v1/account-types'] = 'api/v1/sek_account_types/index';
+$route['api/v1/accounts/search'] = 'api/v1/sek_accounts/search';
+$route['api/v1/accounts/(:num)/activate'] = 'api/v1/sek_accounts/activate/$1';
+$route['api/v1/accounts/(:num)'] = 'api/v1/sek_accounts/show/$1';
+$route['api/v1/accounts'] = 'api/v1/sek_accounts/index';
 $route['admin'] = 'admin/index';
 $route['admin/csrf-token'] = 'admin/csrf_token';
 $route['admin/notifications'] = 'admin_notifications/index';

@@ -23,7 +23,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = rtrim(getenv('CI_BASE_URL') ?: 'http://localhost:8086/', '/') . '/';
+$config['base_url'] = rtrim(getenv('CI_BASE_URL') ?: 'http://localhost:8088/', '/') . '/';
 if (isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== '') {
     $forwarded_proto = '';
     if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
@@ -475,7 +475,7 @@ $config['csrf_token_name'] = 'csrf_test_name';
 $config['csrf_cookie_name'] = 'csrf_cookie_name';
 $config['csrf_expire'] = 7200;
 $config['csrf_regenerate'] = TRUE;
-$config['csrf_exclude_uris'] = array('api/finance/.*');
+$config['csrf_exclude_uris'] = array('api/finance/.*', 'api/v1/.*');
 
 /*
 |--------------------------------------------------------------------------

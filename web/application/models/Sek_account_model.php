@@ -1,0 +1,211 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+/** Accounts, members, profiles, and locations for Sekitar. */
+class Sek_account_model extends CI_Model
+{
+    public function types($active_only = TRUE)
+    {
+        if ($active_only) {
+            $this->db->where('is_active', 1);
+        }
+        return $this->db->order_by('sort_order', 'ASC')->get('sek_account_type')->result_array();
+    }
+
+    public function type($type_code)
+    {
+        return $this->db->where('type_code', (string) $type_code)
+            ->limit(1)
+            ->get('sek_account_type')
+            ->row_array();
+    }
+
+    public function find($account_id)
+    {
+        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services')
+            ->from('sek_account a')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('a.account_id', (int) $account_id)
+            ->limit(1)
+            ->get()
+            ->row_array();
+    }
+
+    public function list_for_user($user_id)
+    {
+        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services, m.role')
+            ->from('sek_account a')
+            ->join('sek_account_member m', 'm.account_id = a.account_id AND m.status = "active"', 'inner')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('m.user_id', (int) $user_id)
+            ->where('a.status !=', 'archived')
+            ->order_by('a.type_code = "personal"', 'DESC', FALSE)
+            ->order_by('a.created_at', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
+    public function member_role($account_id, $user_id)
+    {
+        $row = $this->db->select('role')
+            ->where('account_id', (int) $account_id)
+            ->where('user_id', (int) $user_id)
+            ->where('status', 'active')
+            ->limit(1)
+            ->get('sek_account_member')
+            ->row_array();
+        return is_array($row) ? (string) $row['role'] : NULL;
+    }
+
+    public function primary_account($user_id)
+    {
+        $row = $this->db->select('a.account_id')
+            ->from('sek_account a')
+            ->join('sek_account_member m', 'm.account_id = a.account_id AND m.status = "active"', 'inner')
+            ->where('m.user_id', (int) $user_id)
+            ->where('a.status', 'active')
+            ->order_by('a.type_code = "personal"', 'DESC', FALSE)
+            ->order_by('a.created_at', 'ASC')
+            ->limit(1)
+            ->get()
+            ->row_array();
+        return is_array($row) ? (int) $row['account_id'] : NULL;
+    }
+
+    public function handle_exists($handle)
+    {
+        return $this->db->where('handle', strtolower(trim((string) $handle)))
+            ->count_all_results('sek_account') > 0;
+    }
+
+    public function suggest_handle($seed)
+    {
+        $base = strtolower((string) $seed);
+        $base = preg_replace('/[^a-z0-9._]+/', '', $base);
+        $base = trim($base, '._');
+        if (strlen($base) < 3) {
+            $base = 'user' . $base;
+        }
+        $base = substr($base, 0, 32);
+        $candidate = $base;
+        $attempt = 0;
+        while ($this->handle_exists($candidate) && $attempt < 20) {
+            $attempt++;
+            $candidate = substr($base, 0, 32) . substr(bin2hex(random_bytes(3)), 0, 4);
+        }
+        return $candidate;
+    }
+
+    /**
+     * Create a business account with owner membership and base location.
+     * Returns the new account_id or NULL.
+     */
+    public function create($user_id, $data)
+    {
+        $now = gmdate('Y-m-d H:i:s');
+        $this->db->trans_start();
+        $this->db->insert('sek_account', array(
+            'user_id' => (int) $user_id,
+            'type_code' => (string) $data['type_code'],
+            'handle' => strtolower((string) $data['handle']),
+            'display_name' => (string) $data['display_name'],
+            'bio' => isset($data['bio']) ? $data['bio'] : NULL,
+            'phone' => isset($data['phone']) ? $data['phone'] : NULL,
+            'address' => isset($data['address']) ? $data['address'] : NULL,
+            'service_radius_m' => isset($data['service_radius_m']) ? (int) $data['service_radius_m'] : 5000,
+            'is_online' => 0,
+            'status' => 'active',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ));
+        $account_id = (int) $this->db->insert_id();
+
+        $this->db->insert('sek_account_member', array(
+            'account_id' => $account_id,
+            'user_id' => (int) $user_id,
+            'role' => 'owner',
+            'status' => 'active',
+            'created_at' => $now,
+        ));
+
+        if (isset($data['lat'], $data['lng'])) {
+            $this->db->query(
+                'INSERT INTO sek_account_location (account_id, location, address, source, updated_at) '
+                . 'VALUES (?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?)',
+                array(
+                    $account_id,
+                    (float) $data['lat'],
+                    (float) $data['lng'],
+                    isset($data['address']) ? $data['address'] : NULL,
+                    isset($data['source']) ? (string) $data['source'] : 'manual',
+                    $now,
+                )
+            );
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status() ? $account_id : NULL;
+    }
+
+    public function update($account_id, $fields)
+    {
+        if (!$fields) {
+            return TRUE;
+        }
+        $fields['updated_at'] = gmdate('Y-m-d H:i:s');
+        return $this->db->where('account_id', (int) $account_id)
+            ->update('sek_account', $fields);
+    }
+
+    public function set_location($account_id, $lat, $lng, $address = NULL, $source = 'manual')
+    {
+        return $this->db->query(
+            'INSERT INTO sek_account_location (account_id, location, address, source, updated_at) '
+            . 'VALUES (?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?) '
+            . 'ON DUPLICATE KEY UPDATE location = VALUES(location), address = VALUES(address), '
+            . 'source = VALUES(source), updated_at = VALUES(updated_at)',
+            array(
+                (int) $account_id,
+                (float) $lat,
+                (float) $lng,
+                $address,
+                (string) $source,
+                gmdate('Y-m-d H:i:s'),
+            )
+        );
+    }
+
+    public function location($account_id)
+    {
+        return $this->db->select('ST_X(location) AS lat, ST_Y(location) AS lng, address, source, updated_at')
+            ->where('account_id', (int) $account_id)
+            ->limit(1)
+            ->get('sek_account_location')
+            ->row_array();
+    }
+
+    public function search($query, $limit = 20)
+    {
+        $like = $this->db->escape_like_str((string) $query);
+        return $this->db->select('a.*, t.label_id, t.label_en')
+            ->from('sek_account a')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('a.status', 'active')
+            ->group_start()
+                ->like('a.handle', $like, 'both', FALSE)
+                ->or_like('a.display_name', $like, 'both', FALSE)
+            ->group_end()
+            ->order_by('a.verified_at IS NULL', 'ASC', FALSE)
+            ->order_by('a.display_name', 'ASC')
+            ->limit(max(1, min(20, (int) $limit)))
+            ->get()
+            ->result_array();
+    }
+
+    public function media_belongs_to($media_id, $user_id)
+    {
+        return $this->db->where('media_id', (int) $media_id)
+            ->where('owner_user_id', (int) $user_id)
+            ->count_all_results('sek_media') > 0;
+    }
+}

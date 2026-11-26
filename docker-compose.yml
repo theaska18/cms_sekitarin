@@ -3,19 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: cms_app
+    container_name: cms_sekitarin_app
     depends_on:
       cms-db:
         condition: service_healthy
     ports:
-      - "8086:80"
+      - "8088:80"
     restart: unless-stopped
     environment:
-      CI_BASE_URL: ${CI_BASE_URL:-http://localhost:8086/}
+      CI_BASE_URL: ${CI_BASE_URL:-http://localhost:8088/}
       CMS_DB_HOST: ${CMS_DB_HOST:-cms-db}
       CMS_DB_PORT: ${CMS_DB_PORT:-3306}
-      CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb}
-      CMS_DB_USER: ${CMS_DB_USER:-cmsuser}
+      CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb_sekitarin}
+      CMS_DB_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
       CMS_DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
       BACKUP_ENABLED: ${BACKUP_ENABLED:-1}
       BACKUP_TIME: ${BACKUP_TIME:-02:00}
@@ -29,14 +29,14 @@ services:
 
   cms-db:
     image: mysql:8.0
-    container_name: cms_db
+    container_name: cms_sekitarin_db
     restart: unless-stopped
     ports:
-      - "3307:3306"
+      - "3308:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${CMS_DB_ROOT_PASSWORD:?Set CMS_DB_ROOT_PASSWORD in .env}
-      MYSQL_DATABASE: ${CMS_DB_NAME:-cmsdb}
-      MYSQL_USER: ${CMS_DB_USER:-cmsuser}
+      MYSQL_DATABASE: ${CMS_DB_NAME:-cmsdb_sekitarin}
+      MYSQL_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
       MYSQL_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
     volumes:
       - db_data:/var/lib/mysql
