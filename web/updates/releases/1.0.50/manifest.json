@@ -1,0 +1,24 @@
+{
+  "version": "1.0.50",
+  "from_version": "1.0.49",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.49",
+  "changelog": "Perbaikan Unpost Finance setelah revisi: pemeriksaan pembatalan submission kini melihat dokumen terbaru pada rantai revisi, sehingga data dengan dokumen asli revised dan pengganti cancelled bisa dibatalkan (200) dan finance_flag di aplikasi persediaan dapat dikosongkan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "0ac969b8e262e70dc7e3921551aa82d418f2bbe78684acd326412ed6afcca5e6",
+      "size": 449
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "d65a3479940db97af80d235be9a5bd1a0e531fb9bd640541dea5f85e6cb35673",
+      "size": 14410
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

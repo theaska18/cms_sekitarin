@@ -1,11 +1,11 @@
 {
-  "version": "1.0.49",
+  "version": "1.0.50",
   "released_at": "2026-11-26",
-  "changelog": "Integrasi penjualan/pembelian kini mengikuti rantai revisi: DELETE API menelusuri dokumen pengganti terbaru dan membalas 200 bila rantai sudah berakhir cancelled, atau 409 dengan status sebenarnya bila pengganti masih aktif. Saat revisi disetujui, inbox diarahkan ke dokumen pengganti sehingga pembatalannya otomatis menandai submission selesai.",
+  "changelog": "Perbaikan Unpost Finance setelah revisi: pemeriksaan pembatalan submission kini melihat dokumen terbaru pada rantai revisi, sehingga data dengan dokumen asli revised dan pengganti cancelled bisa dibatalkan (200) dan finance_flag di aplikasi persediaan dapat dikosongkan.",
   "min_php": "8.1",
-  "requires_version": "1.0.48",
-  "package": "cms-1.0.49.zip",
-  "sha256": "c7a97c14c42fe9800c3edcfc4eb30098fb7bbeba5e93ae95088c9cbeedb5d6b7",
-  "size": 13058,
+  "requires_version": "1.0.49",
+  "package": "cms-1.0.50.zip",
+  "sha256": "a7803d684d732b4f21295b2e098e8011ba34e38f6331e8ca5c8c585a19dc0e81",
+  "size": 3855,
   "migrations": []
 }
