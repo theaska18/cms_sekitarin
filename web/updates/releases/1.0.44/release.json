@@ -1,0 +1,31 @@
+{
+  "version": "1.0.44",
+  "from_version": "1.0.43",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.43",
+  "changelog": "Faktur Penjualan dan Tagihan Pembelian tidak lagi memakai rentang tanggal default 7 hari. Filter tanggal tampil kosong sampai pengguna memilih rentang, sehingga dokumen bertanggal mundur atau maju tetap terlihat di daftar.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "885cbc6a400756fd9c841f98fb5aab26ce20aaa5b9a8b527d687105ffda953d5",
+      "size": 449
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "99e591d98b53e228652e95a288e5ede36b8dc71ed74000683b79f963344f8c11",
+      "size": 14506
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.44.zip",
+    "sha256": "e17beafbd8ba399ce4e1a9bf1aff99e467f84600070c1e7ef5483e5a2411f2d4",
+    "size": 3949
+  },
+  "from_ref": "v1.0.43",
+  "generated_at": "2026-11-26T11:54:55+00:00"
+}
