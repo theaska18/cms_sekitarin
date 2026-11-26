@@ -96,5 +96,6 @@ sudah tampil.
   `npm ci --omit=dev`.
 - Batas satu koneksi: autentikasi wajib, subscribe diverifikasi ke database,
   payload publish maksimal 1 MB.
-- Belum ada push notification (FCM/APNs); event hanya sampai saat aplikasi
-  terkoneksi. Tambahkan push pada iterasi berikutnya.
+- Push notification ditangani pipeline terpisah (`sekitar-push`, FCM HTTP v1);
+  lihat [`SEKITAR_PUSH.md`](SEKITAR_PUSH.md). WebSocket hanya untuk event saat
+  aplikasi terkoneksi.

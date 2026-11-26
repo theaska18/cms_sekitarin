@@ -147,9 +147,12 @@ location, realtime presence, `nearby` map queries (spatial index, 5-minute
 presence freshness, block filtering), and post/feed (saved contacts plus 500 m
 radius), likes, comments, and profile grids. The `sekitar-ws` WebSocket gateway
 runs on host port 8090 (protocol:
-[`docs/SEKITAR_REALTIME.md`](docs/SEKITAR_REALTIME.md)). Push notifications and
-an admin moderation panel for reports remain for later increments. Email tokens
-are written to
+[`docs/SEKITAR_REALTIME.md`](docs/SEKITAR_REALTIME.md)). In-app notifications
+and an FCM HTTP v1 push queue are implemented; the `sekitar-push` worker reads
+`secrets/fcm-service-account.json` (see
+[`docs/SEKITAR_PUSH.md`](docs/SEKITAR_PUSH.md)) and marks pushes `skipped` when
+credentials are absent. Admin report moderation, orders/ride-hailing, and the
+Flutter app remain for later increments. Email tokens are written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
 

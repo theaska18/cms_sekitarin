@@ -150,6 +150,25 @@ class Sek_messages extends Sek_api_base
         $message = $this->sek_chat_model->message($message_id);
         $payload_out = $this->message_payload($message, array(), $this->api_auth->user_id());
         $this->sek_realtime->publish($conversation_id, 'message.created', $payload_out);
+
+        $recipients = array();
+        foreach ($this->sek_chat_model->members($conversation_id) as $member) {
+            if ((int) $member['user_id'] !== (int) $this->api_auth->user_id()) {
+                $recipients[] = (int) $member['user_id'];
+            }
+        }
+        if ($recipients) {
+            $preview = $type === 'text'
+                ? mb_substr((string) $payload['body'], 0, 160)
+                : ($type === 'image' ? 'Mengirim gambar' : ($type === 'audio' ? 'Mengirim audio' : ($type === 'location' ? 'Membagikan lokasi' : 'Mengirim file')));
+            $this->sek_notifier->notify_users(
+                $recipients,
+                'chat_message',
+                (string) $this->api_auth->user()['display_name'],
+                $preview,
+                array('conversation_id' => $conversation_id, 'message_id' => $message_id, 'message_type' => $type)
+            );
+        }
         $this->api_response->json(array('message' => $payload_out), 201);
     }
 

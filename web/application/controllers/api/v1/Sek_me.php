@@ -29,6 +29,7 @@ class Sek_me extends Sek_api_base
             'accounts' => $accounts,
             'active_account_id' => $this->active_account_id(),
             'consents' => $this->latest_consents($this->api_auth->user_id()),
+            'unread_notifications' => $this->sek_notification_model->unread_count($this->api_auth->user_id()),
         ));
     }
 
@@ -83,6 +84,35 @@ class Sek_me extends Sek_api_base
         }
         $this->api_auth->revoke_device((int) $device['device_id'], $this->api_auth->user_id());
         $this->api_response->ok(array('status' => 'revoked'));
+    }
+
+    public function push_token()
+    {
+        if (!$this->require_method(array('POST', 'DELETE'))) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $device = $this->api_auth->device();
+        if (strtoupper((string) $this->input->method(TRUE)) === 'DELETE') {
+            $this->db->where('device_id', (int) $device['device_id'])
+                ->update('sek_device', array('push_token' => NULL));
+            $this->api_response->ok(array('status' => 'cleared'));
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $token = isset($body['push_token']) ? trim((string) $body['push_token']) : '';
+        if ($token === '' || strlen($token) > 255) {
+            $this->api_response->error('validation_error', 'push_token wajib (maks 255 karakter).', 422);
+            return;
+        }
+        $this->db->where('device_id', (int) $device['device_id'])
+            ->update('sek_device', array('push_token' => $token));
+        $this->api_response->ok(array('status' => 'registered'));
     }
 
     public function consents()

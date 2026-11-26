@@ -199,6 +199,20 @@ Index (`account_id`, `status`, `post_id`).
 
 `sek_report.post_id` (nullable FK) ditambahkan untuk laporan post.
 
+### Notifikasi
+
+**`sek_notification`** — feed in-app.
+
+`notification_id`, `user_id`, `type` varchar(40), `title` varchar(150),
+`body` varchar(500), `data_json` json, `read_at`, `created_at`.
+
+**`sek_push_queue`**
+
+`queue_id`, `notification_id`, `user_id`, `device_id`, `push_token`, `title`,
+`body`, `data_json`, `status` enum('pending','sent','failed','skipped'),
+`attempts`, `last_error`, `next_attempt_at`, `created_at`, `sent_at`.
+Index (`status`, `next_attempt_at`) untuk worker.
+
 ## ERD
 
 ```mermaid
@@ -261,6 +275,8 @@ erDiagram
    `sek_live_location`.
 5. `20261126000600_sekitar_posts.sql` — `sek_post`, `sek_post_media`,
    `sek_post_like`, `sek_post_comment`, plus `sek_report.post_id`.
+6. `20261126000700_sekitar_notifications.sql` — `sek_notification`,
+   `sek_push_queue`.
 
 Setiap migrasi harus aman dijalankan pada database CMS yang sudah berisi data
 (damai, tanpa menyentuh tabel lama) dan dicatat di `sys_update_migration`.

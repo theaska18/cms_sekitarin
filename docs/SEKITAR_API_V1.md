@@ -378,6 +378,35 @@ lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
 - Laporan post otomatis mengisi `target_account_id` dari pemilik post dan
   menyimpan `post_id` di `sek_report`; kategori sama dengan laporan akun.
 
+## Notifikasi
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| POST/DELETE | `/me/push-token` | Daftarkan / hapus token FCM perangkat aktif. |
+| GET | `/notifications` | Feed notifikasi + `unread_count`; `before_id`, `limit`. |
+| POST | `/notifications/{id}/read` | Tandai satu notifikasi dibaca. |
+| POST | `/notifications/read-all` | Tandai semua dibaca. |
+
+Tipe saat ini: `chat_message`, `post_like`, `post_comment`. Setiap event
+menyimpan notifikasi in-app untuk user penerima; push FCM hanya diantrikan bila
+perangkat punya `push_token`. Detail worker dan konfigurasi FCM:
+[`SEKITAR_PUSH.md`](SEKITAR_PUSH.md).
+
+Contoh item:
+
+```json
+{
+  "notification_id": 12,
+  "type": "chat_message",
+  "title": "Asep",
+  "body": "Halo",
+  "data": {"conversation_id": 31, "message_id": 88, "message_type": "text"},
+  "read": false,
+  "read_at": null,
+  "created_at": "2026-11-26T19:55:18Z"
+}
+```
+
 ## Kode error
 
 | HTTP | `code` | Arti |
@@ -442,13 +471,15 @@ Sudah berjalan (Fase 1–4):
   `GET /nearby` (spatial index, filter tipe/online, blokir dua arah).
 - Post/feed: `GET /feed` (kontak + radius 500 m), `POST /posts`, grid profil,
   media carousel, like, komentar, dan laporan post.
+- Notifikasi: feed in-app, daftar/hapus token push, dan queue FCM HTTP v1 untuk
+  `chat_message`, `post_like`, `post_comment`.
 - Rate limit login, register, refresh, resend, forgot-password, laporan, dan
   update presence.
 
 Belum diimplementasikan:
 
-- Push notification FCM/APNs untuk pesan saat aplikasi tertutup.
 - Panel admin untuk meninjau laporan post (data laporan sudah tersimpan).
+- Order/ride-hailing (Fase 6) dan aplikasi Flutter (Fase 7).
 
 Catatan pengembangan: karena provider email belum dipilih, token verifikasi dan
 reset ditulis ke `application/logs/sekitar-mail.log` di dalam container

@@ -47,6 +47,10 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/posts/(:num)/report",
             "api/v1/comments/(:num)",
             "api/v1/accounts/(:num)/posts",
+            "api/v1/me/push-token",
+            "api/v1/notifications",
+            "api/v1/notifications/(:num)/read",
+            "api/v1/notifications/read-all",
             "api/v1/accounts/search",
             "api/v1/accounts/(:num)/location",
             "api/v1/accounts/(:num)/presence",
@@ -213,6 +217,25 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("blocked_account_ids", account_model)
         self.assertIn("function contact_account_ids", social_model)
 
+    def test_notification_and_push_pipeline(self):
+        sql = (MIGRATIONS / "20261126000700_sekitar_notifications.sql").read_text()
+        self.assertIn("CREATE TABLE `sek_notification`", sql)
+        self.assertIn("CREATE TABLE `sek_push_queue`", sql)
+        self.assertIn("idx_sek_push_due", sql)
+
+        notifier = (APP / "libraries" / "Sek_notifier.php").read_text()
+        model = (APP / "models" / "Sek_notification_model.php").read_text()
+        worker = (ROOT / "tools" / "push_worker.php").read_text()
+        compose = (ROOT / "docker-compose.yml").read_text()
+        self.assertIn("sek_push_queue", notifier)
+        self.assertIn("push_token", notifier)
+        self.assertIn("function mark_all_read", model)
+        self.assertIn("class FcmClient", worker)
+        self.assertIn("fcm.googleapis.com/v1/projects/", worker)
+        self.assertIn("fcm_not_configured", worker)
+        self.assertIn("sekitar-push:", compose)
+        self.assertIn("fcm-service-account.json", compose)
+
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
 
@@ -220,6 +243,7 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "docs" / "SEKITAR_ERD.md").is_file())
         self.assertTrue((ROOT / "docs" / "SEKITAR_API_V1.md").is_file())
         self.assertTrue((ROOT / "docs" / "SEKITAR_REALTIME.md").is_file())
+        self.assertTrue((ROOT / "docs" / "SEKITAR_PUSH.md").is_file())
 
 
 if __name__ == "__main__":

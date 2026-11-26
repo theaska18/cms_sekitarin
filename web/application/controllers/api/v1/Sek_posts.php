@@ -164,12 +164,23 @@ class Sek_posts extends Sek_api_base
         if ($post === NULL) {
             return;
         }
+        $before = $this->sek_post_model->counts(array((int) $post_id), $this->api_auth->user_id());
+        $was_liked = !empty($before[(int) $post_id]['liked']);
         if (strtoupper((string) $this->input->method(TRUE)) === 'DELETE') {
             $this->sek_post_model->unlike((int) $post_id, $this->api_auth->user_id());
             $liked = FALSE;
         } else {
             $this->sek_post_model->like((int) $post_id, $this->api_auth->user_id());
             $liked = TRUE;
+            if (!$was_liked && (int) $post['user_id'] !== (int) $this->api_auth->user_id()) {
+                $this->sek_notifier->notify_user(
+                    (int) $post['user_id'],
+                    'post_like',
+                    'Suka baru',
+                    (string) $this->api_auth->user()['display_name'] . ' menyukai post Anda.',
+                    array('post_id' => (int) $post_id)
+                );
+            }
         }
         $counts = $this->sek_post_model->counts(array((int) $post_id), $this->api_auth->user_id());
         $this->api_response->ok(array(
@@ -221,6 +232,15 @@ class Sek_posts extends Sek_api_base
         $comment_id = $this->sek_post_model->add_comment((int) $post_id, $this->api_auth->user_id(), $text);
         $comment = $this->sek_post_model->comment($comment_id);
         $comment['display_name'] = (string) $this->api_auth->user()['display_name'];
+        if ((int) $post['user_id'] !== (int) $this->api_auth->user_id()) {
+            $this->sek_notifier->notify_user(
+                (int) $post['user_id'],
+                'post_comment',
+                'Komentar baru',
+                (string) $this->api_auth->user()['display_name'] . ': ' . mb_substr($text, 0, 120),
+                array('post_id' => (int) $post_id, 'comment_id' => $comment_id)
+            );
+        }
         $this->api_response->json(array('comment' => $this->comment_payload($comment)), 201);
     }
 

@@ -151,10 +151,15 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   typing, live location grup, lokasi dasar akun, presence realtime, `GET /nearby`
   berbasis spatial index, serta post/feed (kontak + radius 500 m), like, komentar,
   dan grid profil. Gateway WebSocket `sekitar-ws` berjalan di port 8090 dengan
-  protokol di [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md). Kontrak tes:
-  `tests/test_sekitar_api_contract.py`.
-- Belum diimplementasikan: push notification FCM/APNs dan panel admin moderasi
-  laporan post.
+  protokol di [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md).
+- Notifikasi in-app dan push pipeline tersedia: `sek_notification`,
+  `sek_push_queue`, endpoint `/notifications` dan `/me/push-token`, serta worker
+  `sekitar-push` (FCM HTTP v1). Kredensial FCM diletakkan di
+  `secrets/fcm-service-account.json`; tanpa file itu queue ditandai `skipped`.
+  Detail: [`SEKITAR_PUSH.md`](SEKITAR_PUSH.md).
+- Kontrak tes: `tests/test_sekitar_api_contract.py`.
+- Belum diimplementasikan: panel admin moderasi laporan, order/ride-hailing
+  (Fase 6), dan aplikasi Flutter (Fase 7).
 - Provider email transaksional belum dipilih; token development ditulis ke
   `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
   dikembalikan sebagai field `dev_*` saat environment bukan production.

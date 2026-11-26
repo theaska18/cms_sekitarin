@@ -29,6 +29,28 @@ services:
       - app_cache:/var/www/html/application/cache
       - app_logs:/var/www/html/application/logs
 
+  sekitar-push:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cms_sekitarin_push
+    depends_on:
+      cms-db:
+        condition: service_healthy
+    entrypoint: ["php", "/tools/push_worker.php"]
+    restart: unless-stopped
+    environment:
+      DB_HOST: ${CMS_DB_HOST:-cms-db}
+      DB_PORT: ${CMS_DB_PORT:-3306}
+      DB_NAME: ${CMS_DB_NAME:-cmsdb_sekitarin}
+      DB_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
+      DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
+      SEKITAR_FCM_SERVICE_ACCOUNT: /run/secrets/fcm-service-account.json
+      PUSH_POLL_SECONDS: 5
+    volumes:
+      - ./tools:/tools:ro
+      - ./secrets:/run/secrets:ro
+
   sekitar-ws:
     build:
       context: ./ws

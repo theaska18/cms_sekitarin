@@ -5,3 +5,4 @@ node_modules
 database_backup
 web/data
 web/.env
+secrets
