@@ -211,7 +211,7 @@ Run from the repository root:
   (Flutter 3.50/Dart 3.14). From that directory: `flutter pub get`,
   `flutter analyze`, `flutter test`. `flutter run` defaults to
   `https://sekitarin.ckamal.com/api/v1` and
-  `ws://sekitarinws.ckamal.com`; override with
+  `wss://sekitarinws.ckamal.com`; override with
   `--dart-define=API_BASE_URL=...` / `--dart-define=WS_URL=...` for local
   development. See [`../flutter_sekitarin/README.md`](../flutter_sekitarin/README.md).
 - PHP lint in the app container:
