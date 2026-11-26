@@ -23,6 +23,8 @@ class FinanceHardeningContractTests(unittest.TestCase):
         self.assertNotIn("'/' + cfg.slug + '/delete_draft/'", script)
         self.assertIn("data-finance-draft-delete", script)
         self.assertIn("finance-draft-delete-form", footer)
+        self.assertIn("function label(key, fallback)", script)
+        self.assertNotIn("var L = window.financeActionLabels", script)
 
     def test_cancellation_reversal_uses_an_open_period(self):
         store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")

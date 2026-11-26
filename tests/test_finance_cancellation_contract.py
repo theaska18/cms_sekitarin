@@ -62,7 +62,7 @@ class FinanceCancellationContractTests(unittest.TestCase):
     def test_approval_flow_supports_cancel_requests(self):
         source = (APP / "libraries" / "Approval_workflow_store.php").read_text(encoding="utf-8")
         self.assertIn("$request_action = 'submit'", source)
-        self.assertIn("'request_action'=>$request_action === 'cancel' ? 'cancel' : 'submit'", source)
+        self.assertIn("in_array($request_action, array('cancel', 'revise'), TRUE) ? $request_action : 'submit'", source)
         self.assertIn("finalize_for_request(", source)
 
     def test_cancel_endpoint_and_ui_are_wired(self):

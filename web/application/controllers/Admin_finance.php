@@ -1400,6 +1400,57 @@ class Admin_finance extends Admin
         redirect($return_url, 'location', 303);
     }
 
+    /** Submit an approval-backed revision for a posted invoice or bill. */
+    public function revise_request()
+    {
+        if ($this->input->method(TRUE) !== 'POST') {
+            $this->output->set_header('Allow: POST')->set_status_header(405);
+            return;
+        }
+        $source_type = trim((string) $this->input->post('source_type', TRUE));
+        $source_id = (int) $this->input->post('source_id', TRUE);
+        $menu_code = trim((string) $this->input->post('menu_code', TRUE));
+        $reason = trim((string) $this->input->post('reason', TRUE));
+        $return_url = trim((string) $this->input->post('return_url', TRUE));
+        if ($return_url === '' || strpos($return_url, '/admin/finance/') !== 0) {
+            $return_url = '/admin/finance/all_transactions';
+        }
+        $allowed = array(
+            'fin_sales_invoice' => array('fin_sales_invoices'),
+            'fin_purchase_bill' => array('fin_purchase_bills'),
+        );
+        if (!isset($allowed[$source_type]) || !in_array($menu_code, $allowed[$source_type], TRUE)
+            || $source_id < 1 || $reason === '') {
+            $this->session->set_flashdata('finance_status', 'revision_invalid');
+            redirect($return_url, 'location', 303);
+            return;
+        }
+        if (!$this->has_admin_menu_code($menu_code)
+            || (!$this->has_admin_access_code($menu_code . '_update')
+                && !$this->has_admin_access_code($menu_code . '_delete'))) {
+            $this->finance_forbidden();
+            return;
+        }
+        $this->load->library('finance_cancellation_store');
+        $result = $this->finance_cancellation_store->request(
+            (int) $this->current_user['tenant_id'],
+            (int) $this->current_user['user_id'],
+            $source_type,
+            $source_id,
+            $menu_code,
+            $reason,
+            'revise'
+        );
+        if (!empty($result['ok'])) {
+            $status = !empty($result['auto_approved']) ? 'revision_auto_approved' : 'revision_submitted';
+        } else {
+            $error = isset($result['error']) ? (string) $result['error'] : 'error';
+            $status = $error === 'insufficient_balance' ? 'insufficient_balance' : ($error === 'has_payments' ? 'document_has_payments' : (in_array($error, array('period_closed', 'period_ambiguous'), TRUE) ? $error : (in_array($error, array('no_flow', 'no_steps'), TRUE) ? 'approval_steps_missing' : ($error === 'reason' || $error === 'invalid' || $error === 'status' || $error === 'not_found' || $error === 'pending' ? 'revision_invalid' : 'approval_error'))));
+        }
+        $this->session->set_flashdata('finance_status', $status);
+        redirect($return_url, 'location', 303);
+    }
+
     public function data($slug = '')
     {
         if ($slug === 'dashboard') {
@@ -2893,6 +2944,23 @@ class Admin_finance extends Admin
         $financials = $this->finance_payment_store->available($kind)
             ? $this->finance_payment_store->document_financials((int) $this->current_user['tenant_id'], $kind, (int) $id)
             : NULL;
+        $revision_source = NULL;
+        if (!empty($record['revision_of_id'])) {
+            $source_doc = $store->find((int) $this->current_user['tenant_id'], $kind, (int) $record['revision_of_id']);
+            if (is_array($source_doc)) {
+                $revision_source = array(
+                    'id' => (int) $source_doc[$kind === 'sales' ? 'sales_invoice_id' : 'purchase_bill_id'],
+                    'number' => (string) $source_doc[$spec['number']],
+                );
+            }
+        }
+        $replacement_table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
+        $replacement_id_column = $kind === 'sales' ? 'sales_invoice_id' : 'purchase_bill_id';
+        $replacement_number_column = $kind === 'sales' ? 'invoice_number' : 'bill_number';
+        $replacement = $this->db->select($replacement_id_column . ',' . $replacement_number_column)
+            ->where('tenant_id', (int) $this->current_user['tenant_id'])
+            ->where('revision_of_id', (int) $id)
+            ->order_by($replacement_id_column, 'DESC')->limit(1)->get($replacement_table)->row_array();
         $this->render_admin(
             'admin/finance/document_view',
             'finance_' . $slug,
@@ -2904,6 +2972,11 @@ class Admin_finance extends Admin
                 'finance_document_lookup_labels' => $lookup_labels,
                 'finance_document_integration_reference' => $integration_reference,
                 'finance_document_integration_party' => $integration_party,
+                'finance_document_revision_of' => $revision_source,
+                'finance_document_replacement' => $replacement ? array(
+                    'id' => (int) $replacement[$replacement_id_column],
+                    'number' => (string) $replacement[$replacement_number_column],
+                ) : NULL,
                 'finance_document_number' => (string) $saved[$spec['number']],
                 'finance_document_financials' => $financials,
             )
@@ -2979,6 +3052,10 @@ class Admin_finance extends Admin
                 }
             }
         }
+        // Documents created from an integration submission keep the amount and
+        // description from the payload; editing them would desync the draft
+        // from the source document.
+        $integration_locked = !$is_new && !empty($record['integration_number']) && empty($record['revision_of_id']);
         $errors = array();
         $write_available = $available && $this->finance_write_available();
         if ($this->input->method(TRUE) === 'POST') {
@@ -2987,6 +3064,10 @@ class Admin_finance extends Admin
                 return;
             }
             $values = $this->finance_document_values();
+            if ($integration_locked) {
+                $values['amount'] = number_format((float) $record['amount'], 2, '.', '');
+                $values['description'] = (string) $record['description'];
+            }
             $errors = $this->finance_document_validate($values, $kind);
             if (!$errors) {
                 $previous_db_debug = $this->db->db_debug;
@@ -3042,6 +3123,8 @@ class Admin_finance extends Admin
                 'finance_document_available' => $available,
                 'finance_document_write_available' => $write_available,
                 'finance_document_lookup_labels' => $labels,
+                'finance_document_amount_readonly' => $integration_locked,
+                'finance_document_description_readonly' => $integration_locked,
                 'finance_document_integration_reference' => $integration_reference,
                 'finance_document_integration_party' => $integration_party,
                 'finance_csrf_name' => $this->security->get_csrf_token_name(),

@@ -14,6 +14,8 @@ $status_labels = array(
     'approved' => isset($labels['finance_tx_state_approved']) ? $labels['finance_tx_state_approved'] : 'Approved',
     'posted' => isset($labels['finance_tx_state_posted']) ? $labels['finance_tx_state_posted'] : 'Posted',
     'cancelled' => isset($labels['finance_status_cancelled']) ? $labels['finance_status_cancelled'] : 'Cancelled',
+    'revised' => isset($labels['finance_tx_state_revised']) ? $labels['finance_tx_state_revised'] : 'Revised',
+    'revision_pending' => isset($labels['finance_tx_state_revision_pending']) ? $labels['finance_tx_state_revision_pending'] : 'Revision pending',
 );
 $status_styles = array(
     'draft' => 'border-slate-200 bg-slate-50 text-slate-700',
@@ -21,6 +23,8 @@ $status_styles = array(
     'approved' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
     'posted' => 'border-slate-800 bg-slate-800 text-white',
     'cancelled' => 'border-rose-200 bg-rose-50 text-rose-800',
+    'revised' => 'border-violet-200 bg-violet-50 text-violet-800',
+    'revision_pending' => 'border-amber-200 bg-amber-50 text-amber-900',
 );
 $status_style = isset($status_styles[$status]) ? $status_styles[$status] : $status_styles['draft'];
 $financials = isset($finance_document_financials) && is_array($finance_document_financials) ? $finance_document_financials : NULL;
@@ -67,6 +71,25 @@ $document_label = $finance_document_kind === 'sales'
         <p class="font-semibold"><?= html_escape(isset($labels['finance_integration_source']) ? $labels['finance_integration_source'] : 'Integration data') ?></p>
         <p class="mt-1 font-mono text-xs"><?= html_escape($finance_document_integration_reference) ?></p>
         <?php if ($finance_document_integration_party !== ''): ?><p class="mt-1"><?= html_escape($finance_document_integration_party) ?></p><?php endif; ?>
+    </section>
+    <?php endif; ?>
+
+    <?php
+    $revision_source = isset($finance_document_revision_of) && is_array($finance_document_revision_of) ? $finance_document_revision_of : NULL;
+    $revision_replacement = isset($finance_document_replacement) && is_array($finance_document_replacement) ? $finance_document_replacement : NULL;
+    ?>
+    <?php if ($revision_source || $revision_replacement || ($status === 'revised' && !empty($finance_document_record['revision_reason']))): ?>
+    <section class="mb-5 rounded-xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-950">
+        <p class="font-semibold"><?= html_escape(isset($labels['finance_revise_dialog_title']) ? $labels['finance_revise_dialog_title'] : 'Revision') ?></p>
+        <?php if (!empty($finance_document_record['revision_reason'])): ?><p class="mt-1"><?= html_escape($finance_document_record['revision_reason']) ?></p><?php endif; ?>
+        <div class="mt-2 flex flex-wrap gap-4">
+            <?php if ($revision_source): ?>
+                <a class="font-semibold underline" href="/admin/finance/<?= html_escape($finance_document_slug) ?>/view/<?= (int) $revision_source['id'] ?>"><?= html_escape(isset($labels['finance_revision_of']) ? $labels['finance_revision_of'] : 'Revised from') ?>: <?= html_escape($revision_source['number']) ?></a>
+            <?php endif; ?>
+            <?php if ($revision_replacement): ?>
+                <a class="font-semibold underline" href="/admin/finance/<?= html_escape($finance_document_slug) ?>/view/<?= (int) $revision_replacement['id'] ?>"><?= html_escape(isset($labels['finance_revision_replacement']) ? $labels['finance_revision_replacement'] : 'Replaced by') ?>: <?= html_escape($revision_replacement['number']) ?></a>
+            <?php endif; ?>
+        </div>
     </section>
     <?php endif; ?>
 

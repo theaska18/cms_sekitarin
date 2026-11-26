@@ -841,7 +841,7 @@ class Approval_workflow_store
                 'current_approver_user_id'=>NULL,'create_on'=>$created,'update_on'=>$created,
                 'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
                 'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
-                'request_action'=>$request_action === 'cancel' ? 'cancel' : 'submit',
+                'request_action'=>in_array($request_action, array('cancel', 'revise'), TRUE) ? $request_action : 'submit',
             ));
             if (!$inserted || $this->db->trans_status()===FALSE) { $this->db->trans_rollback(); return FALSE; }
             $request_id=(int)$this->db->insert_id();
@@ -868,7 +868,7 @@ class Approval_workflow_store
             'create_on'=>$created,'update_on'=>$created,
             'source_type'=>$source_type !== NULL ? (string)$source_type : NULL,
             'source_id'=>$source_id !== NULL ? (int)$source_id : NULL,
-            'request_action'=>$request_action === 'cancel' ? 'cancel' : 'submit',
+            'request_action'=>in_array($request_action, array('cancel', 'revise'), TRUE) ? $request_action : 'submit',
         ));
         if (!$inserted) { $this->db->trans_rollback(); return FALSE; }
         $request_id=(int)$this->db->insert_id();
@@ -1139,7 +1139,7 @@ class Approval_workflow_store
         $type = isset($request['source_type']) ? (string)$request['source_type'] : '';
         $id = isset($request['source_id']) ? (int)$request['source_id'] : 0;
         $status = isset($request['status']) ? (string)$request['status'] : '';
-        if (isset($request['request_action']) && $request['request_action'] === 'cancel') {
+        if (isset($request['request_action']) && in_array($request['request_action'], array('cancel', 'revise'), TRUE)) {
             $CI =& get_instance();
             $CI->load->library('finance_cancellation_store');
             return $CI->finance_cancellation_store->finalize_for_request(

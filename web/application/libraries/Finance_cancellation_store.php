@@ -34,10 +34,25 @@ class Finance_cancellation_store
             && $this->db->field_exists('request_action', 'app_approval_request');
     }
 
-    public function request($tenant_id, $user_id, $source_type, $source_id, $menu_code, $reason)
+    /** Revisions need the revision migration on top of the cancellation schema. */
+    public function revision_available()
     {
+        return $this->available()
+            && $this->db->field_exists('request_kind', 'fin_cancellation')
+            && $this->db->field_exists('replacement_id', 'fin_cancellation')
+            && $this->db->field_exists('revision_of_id', 'fin_sales_invoice')
+            && $this->db->field_exists('revision_of_id', 'fin_purchase_bill');
+    }
+
+    public function request($tenant_id, $user_id, $source_type, $source_id, $menu_code, $reason, $kind = 'cancel')
+    {
+        $kind = $kind === 'revise' ? 'revise' : 'cancel';
         if (!$this->available() || (int) $tenant_id < 1 || (int) $user_id < 1
-            || !isset($this->sources[$source_type]) || (int) $source_id < 1) {
+            || !isset($this->sources[$source_type]) || (int) $source_id < 1
+            || ($kind === 'revise' && !$this->revision_available())) {
+            return array('ok' => FALSE, 'error' => 'invalid');
+        }
+        if ($kind === 'revise' && !in_array($source_type, array('fin_sales_invoice', 'fin_purchase_bill'), TRUE)) {
             return array('ok' => FALSE, 'error' => 'invalid');
         }
         $reason = trim((string) $reason);
@@ -84,6 +99,7 @@ class Finance_cancellation_store
             'source_type' => $source_type,
             'source_id' => (int) $source_id,
             'menu_code' => (string) $menu_code,
+            'request_kind' => $kind,
             'previous_status' => $status,
             'status' => 'pending',
             'reason' => $reason,
@@ -97,12 +113,12 @@ class Finance_cancellation_store
         }
         $result = $CI->approval_workflow_store->submit(
             $flow_code,
-            'Pembatalan ' . $this->label($source_type, $row),
+            ($kind === 'revise' ? 'Revisi ' : 'Pembatalan ') . $this->label($source_type, $row),
             $reason,
             $source_type,
             (int) $source_id,
             (int) $user_id,
-            'cancel'
+            $kind === 'revise' ? 'revise' : 'cancel'
         );
         if (!is_array($result) || empty($result['request_id'])) {
             $this->db->trans_rollback();
@@ -129,7 +145,7 @@ class Finance_cancellation_store
         }
         $this->db->where(array('tenant_id' => (int) $tenant_id, $spec['id'] => (int) $source_id))
             ->where('status', $status)
-            ->update($spec['table'], array('status' => 'cancel_pending'));
+            ->update($spec['table'], array('status' => $kind === 'revise' ? 'revision_pending' : 'cancel_pending'));
         if ($this->db->trans_status() === FALSE || (int) $this->db->affected_rows() !== 1) {
             $this->db->trans_rollback();
             return array('ok' => FALSE, 'error' => 'pending');
@@ -150,6 +166,7 @@ class Finance_cancellation_store
         $spec = $this->sources[$cancellation['source_type']];
         $tenant_id = (int) $cancellation['tenant_id'];
         $source_id = (int) $cancellation['source_id'];
+        $kind = isset($cancellation['request_kind']) ? (string) $cancellation['request_kind'] : 'cancel';
         $decision = (string) $decision;
         if ($decision === 'approved') {
             $this->db->trans_begin();
@@ -181,31 +198,115 @@ class Finance_cancellation_store
             if ($reversal_id === FALSE) {
                 $this->db->trans_rollback();
                 $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
-                    ->where('status', 'cancel_pending')
+                    ->where_in('status', array('cancel_pending', 'revision_pending'))
                     ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
                 $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])
                     ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => app_now()));
                 return FALSE;
             }
-            $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
-                ->update($spec['table'], array('status' => 'cancelled'));
+            $replacement_id = NULL;
+            if ($kind === 'revise') {
+                $replacement_id = $this->create_revision_document(
+                    $tenant_id,
+                    (int) $cancellation['requested_by'],
+                    (string) $cancellation['source_type'],
+                    $source_id,
+                    (string) $cancellation['reason']
+                );
+                if ($replacement_id === NULL) {
+                    $this->db->trans_rollback();
+                    $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
+                        ->where_in('status', array('cancel_pending', 'revision_pending'))
+                        ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
+                    $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])
+                        ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => app_now()));
+                    return FALSE;
+                }
+                $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
+                    ->update($spec['table'], array(
+                        'status' => 'revised',
+                        'revision_reason' => (string) $cancellation['reason'],
+                        'revised_on' => app_now(),
+                    ));
+            } else {
+                $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
+                    ->update($spec['table'], array('status' => 'cancelled'));
+            }
             $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])->update('fin_cancellation', array(
                 'status' => 'approved',
                 'decided_on' => app_now(),
                 'reversal_journal_id' => $reversal_id ? (int) $reversal_id : NULL,
+                'replacement_id' => $replacement_id ? (int) $replacement_id : NULL,
             ));
-            $this->sync_integration_inbox($tenant_id, (string) $cancellation['source_type'], $source_id);
+            if ($kind !== 'revise') {
+                $this->sync_integration_inbox($tenant_id, (string) $cancellation['source_type'], $source_id);
+            }
             $this->db->trans_commit();
             return $this->db->trans_status() !== FALSE;
         }
         $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
-            ->where('status', 'cancel_pending')
+            ->where_in('status', array('cancel_pending', 'revision_pending'))
             ->update($spec['table'], array('status' => (string) $cancellation['previous_status']));
         $this->db->where('cancellation_id', (int) $cancellation['cancellation_id'])->update('fin_cancellation', array(
             'status' => $decision === 'revise' ? 'revise' : 'rejected',
             'decided_on' => app_now(),
         ));
         return TRUE;
+    }
+
+    /** Clone a revised invoice/bill into a linked replacement draft. */
+    private function create_revision_document($tenant_id, $user_id, $source_type, $source_id, $reason)
+    {
+        if (!in_array($source_type, array('fin_sales_invoice', 'fin_purchase_bill'), TRUE)) {
+            return NULL;
+        }
+        $kind = $source_type === 'fin_sales_invoice' ? 'sales' : 'purchase';
+        $CI =& get_instance();
+        $CI->load->library('finance_document_store');
+        $doc = $CI->finance_document_store->find((int) $tenant_id, $kind, (int) $source_id);
+        if (!is_array($doc) || empty($doc['line'])) {
+            return NULL;
+        }
+        $line = $doc['line'];
+        $date_key = $kind === 'sales' ? 'invoice_date' : 'bill_date';
+        $values = array(
+            'document_date' => (string) $doc[$date_key],
+            'due_date' => !empty($doc['due_date']) ? (string) $doc['due_date'] : '',
+            'person_id' => (int) ($kind === 'sales' ? $doc['customer_id'] : $doc['supplier_id']),
+            'account_id' => (int) $line['account_id'],
+            'tax_id' => !empty($line['tax_id']) ? (int) $line['tax_id'] : NULL,
+            'department_id' => !empty($line['department_id']) ? (int) $line['department_id'] : NULL,
+            'currency_code' => (string) $doc['currency_code'],
+            'exchange_rate' => number_format((float) $doc['exchange_rate'], 2, '.', ''),
+            'amount' => number_format((float) $line['line_subtotal'], 2, '.', ''),
+            'description' => (string) $line['description'],
+            'memo' => (string) $doc['memo'],
+            'integration_number' => (string) $doc['integration_number'],
+            'integration_party_name' => (string) $doc['integration_party_name'],
+            'integration_party_code' => (string) $doc['integration_party_code'],
+        );
+        $result = $CI->finance_document_store->save_draft(
+            (int) $tenant_id,
+            (int) $user_id,
+            $kind,
+            NULL,
+            $values
+        );
+        if ($result !== 'saved') {
+            return NULL;
+        }
+        $replacement_id = (int) $CI->finance_document_store->last_saved_id;
+        if ($replacement_id < 1) {
+            return NULL;
+        }
+        $table = $source_type;
+        $id_column = $kind === 'sales' ? 'sales_invoice_id' : 'purchase_bill_id';
+        $this->db->where(array('tenant_id' => (int) $tenant_id, $id_column => $replacement_id))
+            ->update($table, array(
+                'revision_of_id' => (int) $source_id,
+                'revision_reason' => (string) $reason,
+            ));
+        return $replacement_id;
     }
 
     public function pending_for_source($tenant_id, $source_type, $source_id)

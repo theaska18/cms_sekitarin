@@ -142,6 +142,20 @@ class FinanceIntegrationContractTests(unittest.TestCase):
         self.assertIn("tax_id_required", controller)
         self.assertIn("tax_id_invalid", controller)
 
+    def test_document_lists_offer_a_view_draft_action(self):
+        view = (APP / "views/admin/finance/document_index.php").read_text(encoding="utf-8")
+        self.assertIn("var viewIcon=", view)
+        self.assertIn("base+'/view/'+id", view)
+        self.assertIn("finance_integration_view_draft", view)
+
+    def test_integration_documents_lock_the_payload_amount_when_edited(self):
+        controller = ADMIN_CONTROLLER.read_text(encoding="utf-8")
+        self.assertIn("$integration_locked = !$is_new && !empty($record['integration_number']) && empty($record['revision_of_id']);", controller)
+        self.assertIn("$values['amount'] = number_format((float) $record['amount'], 2, '.', '');", controller)
+        self.assertIn("$values['description'] = (string) $record['description'];", controller)
+        self.assertIn("'finance_document_amount_readonly' => $integration_locked", controller)
+        self.assertIn("'finance_document_description_readonly' => $integration_locked", controller)
+
     def test_integration_draft_returns_to_the_inbox_list(self):
         controller = (APP / "controllers/Admin_finance_integration.php").read_text(encoding="utf-8")
         view = (APP / "views/admin/finance/integration_index.php").read_text(encoding="utf-8")

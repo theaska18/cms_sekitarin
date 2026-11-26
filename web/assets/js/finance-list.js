@@ -148,7 +148,12 @@
     'use strict';
     if (!window.jQuery) return;
     var $ = window.jQuery;
-    var L = window.financeActionLabels || {};
+    // Resolve labels at use time: this script is parsed before the admin footer
+    // defines window.financeActionLabels.
+    function label(key, fallback) {
+        var labels = window.financeActionLabels || {};
+        return labels[key] || fallback;
+    }
 
     function configFor(tableId) {
         var path = String(window.location.pathname || '').replace(/\/+$/, '');
@@ -189,7 +194,7 @@
         toggle.setAttribute('aria-haspopup', 'menu');
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-controls', toggleId);
-        toggle.setAttribute('aria-label', L.actionMenu || 'Actions');
+        toggle.setAttribute('aria-label', label('actionMenu', 'Actions'));
         toggle.className = 'inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2';
         toggle.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-5 w-5"><circle cx="10" cy="4" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="16" r="1.6"/></svg>';
         menu = document.createElement('div');
@@ -231,7 +236,7 @@
                 del.setAttribute('data-finance-draft-delete', '1');
                 del.setAttribute('data-delete-url', '/admin/finance/delete_draft/' + cfg.slug + '/' + sourceId);
                 del.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none';
-                del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>' + (L.deleteDraft || 'Delete draft') + '';
+                del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>' + label('deleteDraft', 'Delete draft') + '';
                 menu.appendChild(del);
             }
             if (cancellable && !menu.querySelector('[data-finance-cancel-open]')) {
@@ -244,7 +249,7 @@
                 button.setAttribute('data-menu-code', cfg.menu);
                 button.setAttribute('data-cancel-label', String(row.transaction_number || row.invoice_number || row.bill_number || row.payment_number || row.transfer_number || row.reconciliation_number || row.journal_number || ('#' + sourceId)));
                 button.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-amber-700 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none';
-                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>' + (L.cancelAction || 'Cancel record') + '';
+                button.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><circle cx="10" cy="10" r="7.5"/><path stroke-linecap="round" d="M6.5 6.5l7 7m0-7-7 7"/></svg>' + label('cancelAction', 'Cancel record') + '';
                 menu.appendChild(button);
             }
         });
@@ -284,7 +289,7 @@
         dialog.querySelector('[name="return_url"]').value = window.location.pathname;
         var cancelLabel = opener.getAttribute('data-cancel-label') || '';
         var body = dialog.querySelector('[data-finance-cancel-body]');
-        if (body) body.textContent = String(L.cancelDialogBody || 'Record %s will be sent to the cancellation approval flow.').replace('%s', cancelLabel);
+        if (body) body.textContent = String(label('cancelDialogBody', 'Record %s will be sent to the cancellation approval flow.')).replace('%s', cancelLabel);
         dialog.showModal();
         var reason = dialog.querySelector('[name="reason"]');
         if (reason) setTimeout(function () { reason.focus(); }, 30);
@@ -297,12 +302,37 @@
         if (!form) return;
         form.action = deleteButton.getAttribute('data-delete-url') || '';
         form.setAttribute('data-web-confirm', '1');
-        form.setAttribute('data-web-confirm-title', L.deleteDraft || 'Delete draft');
-        form.setAttribute('data-web-confirm-message', L.deleteConfirm || 'Delete this draft? This action cannot be undone.');
-        form.setAttribute('data-web-confirm-accept', L.deleteDraft || 'Delete draft');
+        form.setAttribute('data-web-confirm-title', label('deleteDraft', 'Delete draft'));
+        form.setAttribute('data-web-confirm-message', label('deleteConfirm', 'Delete this draft? This action cannot be undone.'));
+        form.setAttribute('data-web-confirm-accept', label('deleteDraft', 'Delete draft'));
         if (typeof form.requestSubmit === 'function') form.requestSubmit();
         else form.submit();
     });
+    document.addEventListener('click', function (event) {
+        var reviseButton = event.target.closest('[data-finance-revise-open]');
+        if (!reviseButton) return;
+        event.preventDefault();
+        var dialog = document.getElementById('finance-revise-dialog');
+        if (!dialog) return;
+        document.querySelectorAll('[data-finance-menu], [data-finance-actions-menu], [data-transfer-actions-menu], [data-journal-actions-menu]').forEach(function (menu) { menu.hidden = true; });
+        dialog.querySelector('[name="source_type"]').value = reviseButton.getAttribute('data-source-type') || '';
+        dialog.querySelector('[name="source_id"]').value = reviseButton.getAttribute('data-source-id') || '';
+        dialog.querySelector('[name="menu_code"]').value = reviseButton.getAttribute('data-menu-code') || '';
+        dialog.querySelector('[name="return_url"]').value = window.location.pathname;
+        var labelText = reviseButton.getAttribute('data-revise-label') || '';
+        var body = dialog.querySelector('[data-finance-revise-body]');
+        if (body) body.textContent = String(label('reviseDialogBody', 'Document %s will be reversed and a replacement draft created.')).replace('%s', labelText);
+        dialog.showModal();
+        var reason = dialog.querySelector('[name="reason"]');
+        if (reason) setTimeout(function () { reason.focus(); }, 30);
+    });
+    document.addEventListener('click', function (event) {
+        if (event.target.closest('[data-finance-revise-close]')) {
+            var reviseDialog = document.getElementById('finance-revise-dialog');
+            if (reviseDialog && reviseDialog.open) reviseDialog.close();
+        }
+    });
+
     document.addEventListener('click', function (event) {
         if (event.target.closest('[data-finance-cancel-close]')) {
             var dialog = document.getElementById('finance-cancel-dialog');

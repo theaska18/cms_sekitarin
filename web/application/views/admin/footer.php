@@ -674,7 +674,12 @@ window.financeActionLabels = {
     cancelDialogBody: <?= json_encode(isset($labels['finance_cancel_dialog_body']) ? $labels['finance_cancel_dialog_body'] : 'Record %s will be sent to the cancellation approval flow.') ?>,
     cancelReason: <?= json_encode(isset($labels['finance_cancel_reason']) ? $labels['finance_cancel_reason'] : 'Cancellation reason') ?>,
     cancelClose: <?= json_encode(isset($labels['finance_cancel_close']) ? $labels['finance_cancel_close'] : 'Close') ?>,
-    cancelSubmit: <?= json_encode(isset($labels['finance_cancel_submit']) ? $labels['finance_cancel_submit'] : 'Submit cancellation') ?>
+    cancelSubmit: <?= json_encode(isset($labels['finance_cancel_submit']) ? $labels['finance_cancel_submit'] : 'Submit cancellation') ?>,
+    reviseAction: <?= json_encode(isset($labels['finance_revise_action']) ? $labels['finance_revise_action'] : 'Revise') ?>,
+    reviseDialogTitle: <?= json_encode(isset($labels['finance_revise_dialog_title']) ? $labels['finance_revise_dialog_title'] : 'Request revision') ?>,
+    reviseDialogBody: <?= json_encode(isset($labels['finance_revise_dialog_body']) ? $labels['finance_revise_dialog_body'] : 'Document %s will be reversed and a replacement draft created.') ?>,
+    reviseReason: <?= json_encode(isset($labels['finance_revise_reason']) ? $labels['finance_revise_reason'] : 'Revision reason') ?>,
+    reviseSubmit: <?= json_encode(isset($labels['finance_revise_submit']) ? $labels['finance_revise_submit'] : 'Request revision') ?>
 };
 </script>
 <form id="finance-draft-delete-form" method="post" hidden>
@@ -695,6 +700,24 @@ window.financeActionLabels = {
         <div class="mt-6 flex justify-end gap-3">
             <button type="button" data-finance-cancel-close class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><?= html_escape(isset($labels['finance_cancel_close']) ? $labels['finance_cancel_close'] : 'Close') ?></button>
             <button type="submit" class="min-h-10 rounded-lg bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"><?= html_escape(isset($labels['finance_cancel_submit']) ? $labels['finance_cancel_submit'] : 'Submit cancellation') ?></button>
+        </div>
+    </form>
+</dialog>
+<dialog id="finance-revise-dialog" aria-labelledby="finance-revise-title" class="w-[min(92vw,32rem)] rounded-2xl border border-slate-200 p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/50">
+    <form method="post" action="/admin/finance/revise_request" class="p-6">
+        <input type="hidden" name="<?= html_escape(isset($csrf_token_name) ? $csrf_token_name : $this->security->get_csrf_token_name()) ?>" value="<?= html_escape(isset($csrf_hash) ? $csrf_hash : $this->security->get_csrf_hash()) ?>">
+        <input type="hidden" name="source_type" value="">
+        <input type="hidden" name="source_id" value="">
+        <input type="hidden" name="menu_code" value="">
+        <input type="hidden" name="return_url" value="">
+        <h2 id="finance-revise-title" class="text-lg font-semibold"><?= html_escape(isset($labels['finance_revise_dialog_title']) ? $labels['finance_revise_dialog_title'] : 'Request revision') ?></h2>
+        <p class="mt-2 text-sm leading-6 text-slate-600" data-finance-revise-body></p>
+        <label class="mt-4 block text-sm font-semibold text-slate-700"><?= html_escape(isset($labels['finance_revise_reason']) ? $labels['finance_revise_reason'] : 'Revision reason') ?>
+            <textarea name="reason" required maxlength="1000" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"></textarea>
+        </label>
+        <div class="mt-6 flex justify-end gap-3">
+            <button type="button" data-finance-revise-close class="min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"><?= html_escape(isset($labels['finance_cancel_close']) ? $labels['finance_cancel_close'] : 'Close') ?></button>
+            <button type="submit" class="min-h-10 rounded-lg bg-indigo-700 px-4 text-sm font-semibold text-white hover:bg-indigo-800"><?= html_escape(isset($labels['finance_revise_submit']) ? $labels['finance_revise_submit'] : 'Request revision') ?></button>
         </div>
     </form>
 </dialog>
