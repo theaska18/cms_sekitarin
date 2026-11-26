@@ -266,6 +266,22 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("Hanya penyedia", orders)
         self.assertIn("Hanya owner atau manager", services)
 
+    def test_flutter_client_scaffold_is_present(self):
+        mobile = ROOT / "mobile"
+        self.assertTrue((mobile / "pubspec.yaml").is_file())
+        self.assertTrue((mobile / "lib" / "main.dart").is_file())
+        self.assertTrue((mobile / "README.md").is_file())
+        pubspec = (mobile / "pubspec.yaml").read_text()
+        self.assertIn("flutter_map", pubspec)
+        self.assertIn("web_socket_channel", pubspec)
+        main = (mobile / "lib" / "main.dart").read_text()
+        self.assertIn("AuthStore", main)
+        for screen in ("chat/chat_list_screen.dart", "map/map_screen.dart",
+                       "feed/feed_screen.dart", "profile/profile_screen.dart",
+                       "settings/settings_screen.dart"):
+            with self.subTest(screen=screen):
+                self.assertTrue((mobile / "lib" / "ui" / screen).is_file())
+
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
 

@@ -161,10 +161,15 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   makanan/jasa/ride dengan state machine, riwayat `sek_order_event`, pembayaran
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
-- Kontrak tes: `tests/test_sekitar_api_contract.py`.
+- Fase 7 dimulai: aplikasi Flutter ada di [`../mobile/`](../mobile/README.md)
+  dengan auth, chat (WebSocket + polling), peta OSM/nearby, feed/post, profil,
+  ganti/buat akun, consent, dan notifikasi in-app. `flutter analyze` tanpa error;
+  tes unit lulus. Android/iOS memakai HTTP cleartext khusus development.
+- Kontrak tes: `tests/test_sekitar_api_contract.py` dan
+  `mobile/test/` (Flutter).
 - Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi
-  platform/integrasi Finance, matching driver otomatis, dan aplikasi Flutter
-  (Fase 7).
+  platform/integrasi Finance, matching driver otomatis, push notification di
+  Flutter (konfigurasi Firebase), serta layar order/ride.
 - Provider email transaksional belum dipilih; token development ditulis ke
   `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
   dikembalikan sebagai field `dev_*` saat environment bukan production.

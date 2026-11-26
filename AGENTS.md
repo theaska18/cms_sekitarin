@@ -153,10 +153,12 @@ and an FCM HTTP v1 push queue are implemented; the `sekitar-push` worker reads
 [`docs/SEKITAR_PUSH.md`](docs/SEKITAR_PUSH.md)) and marks pushes `skipped` when
 credentials are absent. Service catalogs and food/service/ride orders with a
 shared state machine, manual cash/transfer payment, and order notifications are
-implemented (see [`docs/SEKITAR_ORDERS.md`](docs/SEKITAR_ORDERS.md)). Admin
-report moderation, payment gateway/commission/Finance integration, automatic
-driver matching, and the Flutter app remain for later increments. Email tokens
-are written to
+implemented (see [`docs/SEKITAR_ORDERS.md`](docs/SEKITAR_ORDERS.md)). The
+Flutter MVP client lives in [`mobile/`](mobile/README.md) (auth, chat, map,
+feed/post, profile, settings, notifications). Admin report moderation, payment
+gateway/commission/Finance integration, automatic driver matching, and the
+Flutter order/ride screens remain for later increments. Email tokens are
+written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
 
@@ -204,6 +206,12 @@ Run from the repository root:
   `python3 -m unittest discover -s tests -p '<test_file>.py'`.
   Common suites: `test_pages_contract.py`, `test_admin_contract.py`,
   `test_admin_auth_contract.py`.
+- Flutter client lives in `mobile/` (Flutter 3.50/Dart 3.14). From `mobile/`:
+  `flutter pub get`, `flutter analyze`, `flutter test`. Run with
+  `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8088/api/v1`
+  (Android emulator) or `127.0.0.1` for iOS simulator. WebSocket defaults to
+  host:8090; override with `--dart-define=WS_URL=...`. See
+  [`mobile/README.md`](mobile/README.md).
 - PHP lint in the app container:
   `docker exec cms_sekitarin_app php -l <path-inside-/var/www/html>`.
 
