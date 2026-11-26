@@ -154,7 +154,7 @@ class Admin_finance_integration extends Admin
             'due_date' => $due_date,
             'person_id' => '',
             'account_id' => '',
-            'tax_id' => $this->default_tax_id($kind),
+            'tax_id' => $this->default_tax_id($kind, isset($inbox['tax_percent']) ? $inbox['tax_percent'] : NULL),
             'department_id' => '',
             'currency_code' => $base_currency,
             'exchange_rate' => '1.00',
@@ -281,7 +281,14 @@ class Admin_finance_integration extends Admin
         return number_format((float) $value, 2, '.', '');
     }
 
-    private function default_tax_id($kind)
+    /**
+     * Pick the tax code for an integration draft.
+     *
+     * The inbox payload already carries a tax rate, so the matching active tax
+     * code is preferred over the tenant default. Without this, a default of
+     * 0% (or an outdated rate) made "Jadikan Draft" fail with total_mismatch.
+     */
+    private function default_tax_id($kind, $tax_percent = NULL)
     {
         $field = $kind === 'sales' ? 'default_output_tax_id' : 'default_input_tax_id';
         if (!$this->db->field_exists($field, 'fin_settings')) {
@@ -291,11 +298,34 @@ class Admin_finance_integration extends Admin
         if ($tenant_id < 1) {
             return '';
         }
-        $row = $this->db->select('t.tax_id')
+        $settings = $this->db->select('t.tax_id, t.rate_percent')
             ->from('fin_settings s')
-            ->join('fin_tax t', 't.tax_id=s.' . $field . ' AND t.tenant_id=s.tenant_id AND t.active_flag=1', 'inner')
+            ->join('fin_tax t', 't.tax_id=s.' . $field . ' AND t.tenant_id=s.tenant_id AND t.active_flag=1', 'left')
             ->where('s.tenant_id', $tenant_id)->limit(1)->get()->row_array();
-        return $row ? (string) $row['tax_id'] : '';
+        if (!$settings) {
+            return '';
+        }
+        $default_tax_id = !empty($settings['tax_id']) ? (string) $settings['tax_id'] : '';
+        if ($tax_percent === NULL) {
+            return $default_tax_id;
+        }
+        $expected_rate = round((float) $tax_percent, 6);
+        if ($default_tax_id !== '' && isset($settings['rate_percent'])
+            && abs(round((float) $settings['rate_percent'], 6) - $expected_rate) < 0.000001) {
+            return $default_tax_id;
+        }
+        $taxes = $this->db->select('tax_id, rate_percent')->from('fin_tax')
+            ->where('tenant_id', $tenant_id)->where('active_flag', 1)
+            ->order_by('tax_id', 'ASC')->get()->result_array();
+        foreach ($taxes as $tax) {
+            if (abs(round((float) $tax['rate_percent'], 6) - $expected_rate) < 0.000001) {
+                return (string) $tax['tax_id'];
+            }
+        }
+        // No tax code with that rate: keep an explicit 0% payload tax free and
+        // fall back to the tenant default for non-zero rates so the mismatch is
+        // reported instead of silently changing the amount.
+        return $expected_rate <= 0 ? '' : $default_tax_id;
     }
 
     private function values()

@@ -130,11 +130,30 @@ class FinanceIntegrationContractTests(unittest.TestCase):
 
     def test_integration_draft_uses_the_same_default_tax_as_document_forms(self):
         controller = (APP / "controllers/Admin_finance_integration.php").read_text()
-        self.assertIn("'tax_id' => $this->default_tax_id($kind)", controller)
-        self.assertIn("function default_tax_id($kind)", controller)
+        self.assertIn("$this->default_tax_id($kind, isset($inbox['tax_percent'])", controller)
+        self.assertIn("function default_tax_id($kind, $tax_percent = NULL)", controller)
         self.assertIn("default_output_tax_id", controller)
         self.assertIn("default_input_tax_id", controller)
         self.assertIn("t.active_flag=1", controller)
+
+    def test_integration_draft_prefers_the_tax_rate_from_the_payload(self):
+        controller = (APP / "controllers/Admin_finance_integration.php").read_text()
+        method = controller.split("private function default_tax_id(", 1)[1].split("private function ", 1)[0]
+        self.assertIn("from('fin_tax')", method)
+        self.assertIn("$tax_percent", method)
+        self.assertIn("$expected_rate", method)
+        self.assertIn("return $expected_rate <= 0 ? '' : $default_tax_id;", method)
+
+    def test_integration_errors_have_specific_labels_for_every_locale(self):
+        for locale in LOCALES:
+            text = (APP / f"language/{locale}/finance_lang.php").read_text(encoding="utf-8")
+            for code in (
+                "tax_id_required", "tax_id_invalid", "total_mismatch",
+                "document_save_error", "document_control_account_missing",
+                "document_settings_missing",
+            ):
+                with self.subTest(locale=locale, code=code):
+                    self.assertIn(f"finance_doc_error_{code}", text)
 
     def test_views_and_store(self):
         view = LIST_VIEW.read_text()
