@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.51` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.52` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.51`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.52`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261126000100_add_finance_revision.sql`,
@@ -125,6 +125,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   (`DEFAULT_LENGTH`, `MAX_LENGTH`, `page_size_options()`); default client dan
   clamp `preXhr` ada di `admin-datatables.js`; filter baris panel Finance dan
   pilihan per halaman Property/Tenant memakai nilai yang sama.
+- Rilis `1.0.52` menghapus rentang tanggal default 7 hari dari seluruh daftar
+  Finance (transaksi, jurnal, pembayaran, transfer, rekonsiliasi, faktur,
+  tagihan, dan integrasi). Input tanggal tampil kosong sampai pengguna memilih
+  rentang. Laporan keuangan tetap memakai periode default.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
