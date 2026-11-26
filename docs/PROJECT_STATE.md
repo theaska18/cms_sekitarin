@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.43` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.44` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.43`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.44`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -82,6 +82,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   menghapus penolakan `total_mismatch`, sehingga draft tetap tersimpan walau
   totalnya berbeda dari total data integrasi. Validasi kode pajak aktif dan
   label error spesifik dari 1.0.42 tetap berlaku.
+- Rilis `1.0.44` menghapus rentang tanggal default 7 hari pada daftar Faktur
+  Penjualan dan Tagihan Pembelian. Filter tanggal tampil kosong dan daftar
+  menampilkan semua dokumen tenant sampai pengguna memilih rentang, sehingga
+  dokumen bertanggal mundur/maju tidak lagi tersembunyi. Preset tanggal list
+  lain tidak berubah.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
