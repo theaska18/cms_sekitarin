@@ -170,8 +170,10 @@ diverifikasi juga di server.
 201 — `handle` unik, huruf kecil, `[a-z0-9._]`, 3–40 karakter. Akun tipe
 `personal` tidak boleh dibuat lewat endpoint ini. `location_mode`:
 `fixed` (default, titik dibekukan) atau `realtime` (klien mengirim
-`PUT /accounts/{id}/location` atau `/presence` berkala). Untuk tipe dengan
-`allows_presence=true`, akun otomatis `is_online=false` sampai presence dikirim.
+`PUT /accounts/{id}/location` atau `/presence` berkala). `is_active` menandai
+usaha sedang buka/aktif; nilai `false` membuat marker peta berstatus “Tutup”.
+Untuk tipe dengan `allows_presence=true`, akun otomatis `is_online=false`
+sampai presence dikirim. `is_active` independen dari `is_online`.
 
 ### Akun anggota (staff)
 
@@ -235,6 +237,7 @@ Contoh `GET /nearby`:
       "lat": -6.9142,
       "lng": 107.6101,
       "is_online": true,
+      "is_active": true,
       "source": "live",
       "is_own": false,
       "verified": false,

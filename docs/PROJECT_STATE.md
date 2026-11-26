@@ -164,7 +164,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Akses media diperbaiki: foto post dapat dilihat pengguna terautentikasi lain,
   media chat hanya untuk anggota percakapan, dan media yang masih dipakai tidak
   dapat dihapus.
-- Akun usaha punya `location_mode` (`fixed`/`realtime`). Mode realtime
+- Akun usaha punya `is_active` (buka/tutup, independen dari presence) dan
+  `location_mode` (`fixed`/`realtime`). `nearby` mengembalikan `is_active`
+  sehingga peta dapat menandai usaha yang tutup. Mode realtime
   memperbarui lokasi/presence berkala; peta menandai akun sendiri dengan
   `is_own` dan melakukan polling nearby.
 - Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,

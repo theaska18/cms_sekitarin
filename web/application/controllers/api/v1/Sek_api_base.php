@@ -131,6 +131,7 @@ class Sek_api_base extends CI_Controller
             'service_radius_m' => isset($account['service_radius_m']) ? (int) $account['service_radius_m'] : 0,
             'location_mode' => isset($account['location_mode']) ? (string) $account['location_mode'] : 'fixed',
             'is_online' => !empty($account['is_online']),
+            'is_active' => !isset($account['is_active']) || (int) $account['is_active'] === 1,
             'verified' => !empty($account['verified_at']),
             'status' => isset($account['status']) ? (string) $account['status'] : 'active',
             'created_at' => $this->utc(isset($account['created_at']) ? $account['created_at'] : NULL),

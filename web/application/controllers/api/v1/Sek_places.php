@@ -177,6 +177,7 @@ class Sek_places extends Sek_api_base
                 'lng' => (float) $row['lng'],
                 'distance_m' => (int) round((float) $row['distance_m']),
                 'is_online' => (int) $row['is_online'] === 1,
+                'is_active' => !isset($row['is_active']) || (int) $row['is_active'] === 1,
                 'source' => (string) $row['source'],
                 'verified' => !empty($row['verified_at']),
                 'last_seen_at' => $this->utc($row['last_seen_at']),

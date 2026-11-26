@@ -434,6 +434,10 @@ class Sek_accounts extends Sek_api_base
             $fields['location_mode'] = $mode;
         }
 
+        if (array_key_exists('is_active', $body)) {
+            $fields['is_active'] = $this->api_validation->bool_value($body['is_active']) ? 1 : 0;
+        }
+
         foreach (array('avatar_media_id', 'cover_media_id') as $media_field) {
             if (!array_key_exists($media_field, $body)) {
                 continue;
