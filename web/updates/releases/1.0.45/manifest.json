@@ -1,0 +1,49 @@
+{
+  "version": "1.0.45",
+  "from_version": "1.0.44",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.44",
+  "changelog": "Perbaikan: tombol Hapus Draft memakai URL route yang benar sehingga tidak lagi 404 dan menampilkan pesan \"Draft berhasil dihapus.\" di semua daftar Finance. Kolom Tindakan pada menu integrasi kini memakai ikon untuk Jadikan Draft, Lihat Draft, dan Lihat Dokumen.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "2c084e549e6e406e4ed65efb4d248ba619725fc9322bbfc2b7729b33d86f7267",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "9c7530fa4c1bdcdd3ff246bc0a9d26bc23e9e34b8eea425e166fb709bcfa3f98",
+      "size": 19952
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "22b70bd6fa18667df979f6048dadc9c60c184d9dddf69660875cc77fbf5fce59",
+      "size": 13231
+    },
+    {
+      "path": "application/views/admin/finance/journal_index.php",
+      "sha256": "89971ada04eefb092d2534a1e61433f1bb9528ba3f4017a5f51b7e73e7231933",
+      "size": 21167
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "feabc0c0bb96677da68c24adef1a8d947a81c84cf612a670b5d693b10da50742",
+      "size": 18387
+    },
+    {
+      "path": "application/views/admin/finance/transaction_index.php",
+      "sha256": "22abade07e992be8ad905b999bb2036b736993784d6f37a15616e2c5179872cc",
+      "size": 23770
+    },
+    {
+      "path": "assets/js/finance-list.js",
+      "sha256": "6f3ea8c245a733f68ef65ee7509cb472c6f68df30f204077f66060397f20d0a6",
+      "size": 16118
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

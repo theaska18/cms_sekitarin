@@ -1,11 +1,11 @@
 {
-  "version": "1.0.44",
+  "version": "1.0.45",
   "released_at": "2026-11-26",
-  "changelog": "Faktur Penjualan dan Tagihan Pembelian tidak lagi memakai rentang tanggal default 7 hari. Filter tanggal tampil kosong sampai pengguna memilih rentang, sehingga dokumen bertanggal mundur atau maju tetap terlihat di daftar.",
+  "changelog": "Perbaikan: tombol Hapus Draft memakai URL route yang benar sehingga tidak lagi 404 dan menampilkan pesan \"Draft berhasil dihapus.\" di semua daftar Finance. Kolom Tindakan pada menu integrasi kini memakai ikon untuk Jadikan Draft, Lihat Draft, dan Lihat Dokumen.",
   "min_php": "8.1",
-  "requires_version": "1.0.43",
-  "package": "cms-1.0.44.zip",
-  "sha256": "e17beafbd8ba399ce4e1a9bf1aff99e467f84600070c1e7ef5483e5a2411f2d4",
-  "size": 3949,
+  "requires_version": "1.0.44",
+  "package": "cms-1.0.45.zip",
+  "sha256": "cb87c589937439457269b8c4f862e2ff03bec346708d4fc60b861ea9e3353017",
+  "size": 30433,
   "migrations": []
 }
