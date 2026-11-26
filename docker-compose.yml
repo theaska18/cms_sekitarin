@@ -17,6 +17,8 @@ services:
       CMS_DB_NAME: ${CMS_DB_NAME:-cmsdb_sekitarin}
       CMS_DB_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
       CMS_DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
+      SEKITAR_WS_PUBLISH_URL: ${SEKITAR_WS_PUBLISH_URL:-http://sekitar-ws:8090/publish}
+      SEKITAR_WS_SECRET: ${SEKITAR_WS_SECRET:?Set SEKITAR_WS_SECRET in .env}
       BACKUP_ENABLED: ${BACKUP_ENABLED:-1}
       BACKUP_TIME: ${BACKUP_TIME:-02:00}
       BACKUP_RETENTION: ${BACKUP_RETENTION:-30}
@@ -26,6 +28,26 @@ services:
       - ./database_backup:/backup
       - app_cache:/var/www/html/application/cache
       - app_logs:/var/www/html/application/logs
+
+  sekitar-ws:
+    build:
+      context: ./ws
+    container_name: cms_sekitarin_ws
+    depends_on:
+      cms-db:
+        condition: service_healthy
+    ports:
+      - "8090:8090"
+    restart: unless-stopped
+    environment:
+      PORT: 8090
+      DB_HOST: ${CMS_DB_HOST:-cms-db}
+      DB_PORT: ${CMS_DB_PORT:-3306}
+      DB_NAME: ${CMS_DB_NAME:-cmsdb_sekitarin}
+      DB_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
+      DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
+      WS_SECRET: ${SEKITAR_WS_SECRET:?Set SEKITAR_WS_SECRET in .env}
+      TZ: UTC
 
   cms-db:
     image: mysql:8.0

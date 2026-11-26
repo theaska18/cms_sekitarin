@@ -138,13 +138,16 @@ orders, payments, and production-scale moderation.
 [`docs/SEKITAR_API_V1.md`](docs/SEKITAR_API_V1.md). Implementation follows those
 documents; update them before changing tables or routes.
 
-**Phase 1–2 status (implemented 2026-11-26):** the identity, account, and social
-migrations are applied, and `/api/v1` serves auth, profile/device/consent,
+**Phase 1–3 status (implemented 2026-11-26):** the identity, account, social, and
+chat migrations are applied, and `/api/v1` serves auth, profile/device/consent,
 account types, accounts, local media, contacts, blocks, reports, opening hours,
-and account members. Location/presence, nearby queries (Phase 4), chat, and posts
-remain for later increments. Email tokens are written to
-`web/application/logs/sekitar-mail.log` until a provider is chosen; development
-responses expose `dev_*` tokens.
+account members, conversations, messages, read receipts, typing, and group live
+location. The `sekitar-ws` WebSocket gateway runs on host port 8090 (protocol:
+[`docs/SEKITAR_REALTIME.md`](docs/SEKITAR_REALTIME.md)). Location/presence,
+nearby queries (Phase 4), push notifications, and posts remain for later
+increments. Email tokens are written to
+`application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
+volume) until a provider is chosen; development responses expose `dev_*` tokens.
 
 #### Phase 0 decisions (locked 2026-11-26)
 

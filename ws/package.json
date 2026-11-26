@@ -1,0 +1,14 @@
+{
+  "name": "sekitar-ws",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sekitar realtime WebSocket gateway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.5",
+    "ws": "^8.18.0"
+  }
+}

@@ -252,6 +252,76 @@ dua arah.
 Kategori: `spam`, `abuse`, `fraud`, `inappropriate`, `other`. Admin CMS meninjau
 lewat panel operasional.
 
+## Chat
+
+Event realtime dikirim lewat WebSocket gateway; lihat
+[`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md). REST tetap sumber kebenaran.
+
+### Percakapan
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET | `/conversations` | Daftar percakapan + pesan terakhir + unread. |
+| POST | `/conversations` | Buat direct (`account_id`/`user_id`) atau grup (`title`, `member_user_ids`). |
+| GET | `/conversations/{id}` | Detail + anggota. |
+| DELETE | `/conversations/{id}` | Keluar dari percakapan. |
+| GET | `/conversations/{id}/members` | Daftar anggota. |
+| POST | `/conversations/{id}/members` | Tambah anggota grup (owner). Body `user_id` atau `email`. |
+| DELETE | `/conversations/{id}/members/{user_id}` | Hapus anggota grup (owner). |
+| POST | `/conversations/{id}/read` | Body `{message_id}`; tandai sudah dibaca. |
+| POST | `/conversations/{id}/typing` | Body `{is_typing}`; event typing saja. |
+
+Direct chat memakai `direct_key` unik sehingga membuka chat dengan akun yang
+sama mengembalikan percakapan lama (`created: false`). Grup maksimal 100
+anggota; hanya owner yang dapat menambah/menghapus anggota lain.
+
+### Pesan
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET | `/conversations/{id}/messages` | `?limit=50&before_id=&after_id=`; urut lama → baru. |
+| POST | `/conversations/{id}/messages` | Kirim pesan. |
+| PATCH | `/messages/{id}` | Ubah pesan teks sendiri (maks 15 menit). |
+| DELETE | `/messages/{id}` | Hapus lunak (pengirim atau owner grup). |
+
+Tipe pesan: `text`, `image`, `file`, `audio`, `location`.
+
+```json
+{"type": "text", "body": "Halo", "reply_to_message_id": 12}
+```
+
+```json
+{"type": "image", "media_id": 44}
+```
+
+```json
+{"type": "location", "lat": -6.9147, "lng": 107.6098, "label": "Warung Bu Tini"}
+```
+
+Aturan:
+
+- Teks 1–4000 karakter.
+- Media harus milik pengirim, `status=ready`, dan `purpose` `chat`/`document`.
+- `sender_account_id` diambil dari `X-Account-Id` (atau akun aktif) sehingga
+  aplikasi tahu pesan dikirim sebagai akun personal atau usaha.
+- Pesan terhapus tetap tampil sebagai placeholder (`deleted_at` terisi,
+  `body`/`media`/`location` null).
+- `delivered_count` dan `read_count` dihitung dari `sek_message_receipt`.
+- Mengambil daftar pesan otomatis menandai pesan orang lain sebagai
+  `delivered`; `POST /read` menandai `read`.
+
+### Live location grup
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET | `/conversations/{id}/live-location` | Lokasi aktif yang belum kedaluwarsa. |
+| PUT | `/conversations/{id}/live-location` | Body `{lat,lng,accuracy_m?,expires_in?}`. Butuh consent `location`. |
+| DELETE | `/conversations/{id}/live-location` | Berhenti berbagi. |
+
+`expires_in` 60–3600 detik (default 300). Lokasi disimpan di
+`sek_live_location` dan hanya dikembalikan selama belum kedaluwarsa. Berbagi
+lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
+
 ## Kode error
 
 | HTTP | `code` | Arti |
@@ -310,15 +380,22 @@ Sudah berjalan (Fase 1 + dasar Fase 2):
 - `GET/POST /reports`.
 - `GET/PUT /accounts/{id}/hours`.
 - `GET/POST /accounts/{id}/members`, `PATCH/DELETE /accounts/{id}/members/{user_id}`.
+- Chat: percakapan direct/grup, pesan teks/media/lokasi, edit/hapus, read
+  receipt, typing, live location grup, dan WebSocket gateway `sekitar-ws`.
 - Rate limit login, register, refresh, resend, forgot-password, dan laporan.
 
-Belum diimplementasikan (Fase 4):
+Belum diimplementasikan:
 
 - `PUT /accounts/{id}/location`, `PUT/DELETE /accounts/{id}/presence`,
-  `GET /nearby`.
+  `GET /nearby` (Fase 4).
+- Push notification FCM/APNs untuk pesan saat aplikasi tertutup.
+- Post/feed (Fase 5).
 
 Catatan pengembangan: karena provider email belum dipilih, token verifikasi dan
-reset ditulis ke `web/application/logs/sekitar-mail.log`, dan respons
+reset ditulis ke `application/logs/sekitar-mail.log` di dalam container
+(`app_logs` Docker volume; baca dengan
+`docker exec cms_sekitarin_app cat /var/www/html/application/logs/sekitar-mail.log`),
+dan respons
 `register`/`resend`/`forgot` menyertakan `dev_verification_token` atau
 `dev_reset_token` saat `ENVIRONMENT !== 'production'`.
 

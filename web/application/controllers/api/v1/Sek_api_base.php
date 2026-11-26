@@ -8,8 +8,8 @@ class Sek_api_base extends CI_Controller
     {
         parent::__construct();
         $this->load->database();
-        $this->load->library(array('api_response', 'api_auth', 'api_validation', 'sek_mailer'));
-        $this->load->model(array('sek_user_model', 'sek_account_model', 'sek_media_model', 'sek_social_model'));
+        $this->load->library(array('api_response', 'api_auth', 'api_validation', 'sek_mailer', 'sek_realtime'));
+        $this->load->model(array('sek_user_model', 'sek_account_model', 'sek_media_model', 'sek_social_model', 'sek_chat_model'));
     }
 
     /** Decode the JSON request body. Sends 400 and returns NULL when invalid. */
@@ -144,6 +144,34 @@ class Sek_api_base extends CI_Controller
                 $payload['role'] = (string) $account['role'];
             }
         }
+        return $payload;
+    }
+
+    protected function message_payload($message, $counts = array(), $viewer_user_id = 0)
+    {
+        $deleted = !empty($message['deleted_at']);
+        $message_id = (int) $message['message_id'];
+        $receipt = isset($counts[$message_id]) ? $counts[$message_id] : array('delivered' => 0, 'read' => 0);
+        $payload = array(
+            'message_id' => $message_id,
+            'conversation_id' => (int) $message['conversation_id'],
+            'sender_user_id' => (int) $message['sender_user_id'],
+            'sender_account_id' => $message['sender_account_id'] !== NULL ? (int) $message['sender_account_id'] : NULL,
+            'type' => (string) $message['type'],
+            'body' => $deleted ? NULL : $message['body'],
+            'media_id' => !$deleted && $message['media_id'] !== NULL ? (int) $message['media_id'] : NULL,
+            'location' => (!$deleted && $message['latitude'] !== NULL && $message['longitude'] !== NULL) ? array(
+                'lat' => (float) $message['latitude'],
+                'lng' => (float) $message['longitude'],
+                'label' => $message['location_label'],
+            ) : NULL,
+            'reply_to_message_id' => $message['reply_to_message_id'] !== NULL ? (int) $message['reply_to_message_id'] : NULL,
+            'delivered_count' => (int) $receipt['delivered'],
+            'read_count' => (int) $receipt['read'],
+            'edited_at' => $this->utc($message['edited_at']),
+            'deleted_at' => $this->utc($message['deleted_at']),
+            'created_at' => $this->utc($message['created_at']),
+        );
         return $payload;
     }
 

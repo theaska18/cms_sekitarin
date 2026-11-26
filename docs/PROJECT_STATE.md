@@ -144,15 +144,18 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   lokal + backup. Order/ride-hailing ditunda.
 - Kontrak Fase 1–2 ada di [`SEKITAR_ERD.md`](SEKITAR_ERD.md) dan
   [`SEKITAR_API_V1.md`](SEKITAR_API_V1.md).
-- Fase 1–2 sudah diimplementasikan: migrasi identitas, akun, dan sosial
-  (`20261126000200`–`20261126000400`); API `/api/v1` untuk auth, profil,
+- Fase 1–3 sudah diimplementasikan: migrasi identitas, akun, sosial, dan chat
+  (`20261126000200`–`20261126000500`); API `/api/v1` untuk auth, profil,
   perangkat, consent, tipe akun, akun, media lokal, kontak, blokir, laporan, jam
-  buka, dan anggota/staff. Kontrak tes: `tests/test_sekitar_api_contract.py`.
-- Belum diimplementasikan: lokasi dasar akun, presence realtime, `GET /nearby`
-  (Fase 4), chat, dan post.
+  buka, anggota/staff, percakapan, pesan, read receipt, typing, dan live
+  location grup. Gateway WebSocket `sekitar-ws` berjalan di port 8090 dengan
+  protokol di [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md). Kontrak tes:
+  `tests/test_sekitar_api_contract.py`.
+- Belum diimplementasikan: lokasi dasar akun/presence dan `GET /nearby`
+  (Fase 4), push notification FCM/APNs, serta post/feed.
 - Provider email transaksional belum dipilih; token development ditulis ke
-  `web/application/logs/sekitar-mail.log` dan dikembalikan sebagai field
-  `dev_*` saat environment bukan production.
+  `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
+  dikembalikan sebagai field `dev_*` saat environment bukan production.
 
 ## Sistem update
 

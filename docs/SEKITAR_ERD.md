@@ -142,6 +142,40 @@ PK (`blocker_account_id`, `blocked_account_id`).
 enum('open','reviewing','resolved','rejected'), `created_at`, `reviewed_at` null,
 `reviewed_by` bigint null.
 
+### Chat
+
+**`sek_conversation`** — direct atau group.
+
+`conversation_id`, `type` enum('direct','group'), `direct_key` varchar(64)
+unique (format `minUserId:maxUserId`, hanya direct), `title`, `avatar_media_id`,
+`created_by_user_id`, `last_message_at`, `created_at`, `updated_at`.
+
+**`sek_conversation_member`**
+
+`conversation_id`, `user_id`, `role` enum('owner','member'),
+`last_read_message_id`, `joined_at`, `left_at` null, `muted_at` null;
+PK (`conversation_id`, `user_id`).
+
+**`sek_message`**
+
+`message_id`, `conversation_id`, `sender_user_id`, `sender_account_id` null,
+`type` enum('text','image','file','audio','location','system'), `body` text,
+`media_id` null, `latitude` decimal(10,7), `longitude`, `location_label`,
+`reply_to_message_id` null (self FK), `created_at`, `edited_at`, `deleted_at`.
+Index (`conversation_id`, `message_id`).
+
+**`sek_message_receipt`**
+
+`message_id`, `user_id`, `delivered_at`, `read_at`; PK
+(`message_id`, `user_id`). Baris dibuat saat pesan diambil/read oleh anggota
+lain.
+
+**`sek_live_location`** — berbagi lokasi sementara di percakapan.
+
+`conversation_id`, `user_id`, `location` POINT NOT NULL SRID 4326,
+`accuracy_m`, `expires_at`, `updated_at`; PK (`conversation_id`, `user_id`),
+`SPATIAL INDEX`. Baris kedaluwarsa tidak dikembalikan API.
+
 ## ERD
 
 ```mermaid
@@ -165,6 +199,14 @@ erDiagram
     sek_account ||--o{ sek_media : uses
 
     sek_account ||--o{ sek_block : blocks
+
+    sek_user ||--o{ sek_conversation_member : joins
+    sek_conversation ||--o{ sek_conversation_member : has
+    sek_conversation ||--o{ sek_message : contains
+    sek_user ||--o{ sek_message : sends
+    sek_message ||--o{ sek_message_receipt : tracks
+    sek_conversation ||--o{ sek_live_location : shares
+    sek_user ||--o{ sek_live_location : broadcasts
 ```
 
 ## Integrasi dengan CMS
@@ -185,6 +227,9 @@ erDiagram
    `sek_account_location`, `sek_account_presence`, seed tipe akun.
 3. `20261126000400_sekitar_social.sql` — `sek_contact`, `sek_block`,
    `sek_report`.
+4. `20261126000500_sekitar_chat.sql` — `sek_conversation`,
+   `sek_conversation_member`, `sek_message`, `sek_message_receipt`,
+   `sek_live_location`.
 
 Setiap migrasi harus aman dijalankan pada database CMS yang sudah berisi data
 (damai, tanpa menyentuh tabel lama) dan dicatat di `sys_update_migration`.

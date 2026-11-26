@@ -30,6 +30,14 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/blocks",
             "api/v1/blocks/(:num)",
             "api/v1/reports",
+            "api/v1/conversations",
+            "api/v1/conversations/(:num)",
+            "api/v1/conversations/(:num)/messages",
+            "api/v1/conversations/(:num)/read",
+            "api/v1/conversations/(:num)/typing",
+            "api/v1/conversations/(:num)/members",
+            "api/v1/conversations/(:num)/live-location",
+            "api/v1/messages/(:num)",
             "api/v1/accounts/search",
             "api/v1/accounts/(:num)/hours",
             "api/v1/accounts/(:num)/members",
@@ -128,9 +136,44 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("Hanya owner yang dapat menambah anggota", members)
         self.assertIn("Owner tidak dapat diubah atau dihapus", members)
 
+    def test_chat_migration_creates_conversations_messages_and_live_location(self):
+        sql = (MIGRATIONS / "20261126000500_sekitar_chat.sql").read_text()
+        for table in ("sek_conversation", "sek_conversation_member", "sek_message",
+                      "sek_message_receipt", "sek_live_location"):
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", sql)
+        self.assertIn("uk_sek_conversation_direct", sql)
+        self.assertIn("point NOT NULL SRID 4326", sql)
+
+    def test_chat_model_checks_membership_and_marks_read(self):
+        model = (APP / "models" / "Sek_chat_model.php").read_text()
+        conv = (API / "Sek_conversations.php").read_text()
+        messages = (API / "Sek_messages.php").read_text()
+        self.assertIn("function membership", model)
+        self.assertIn("left_at IS NULL", model)
+        self.assertIn("INSERT INTO sek_message_receipt", model)
+        self.assertIn("function mark_read", model)
+        self.assertIn("conversation_for", conv)
+        self.assertIn("conversation_membership", messages)
+        self.assertIn("Persetujuan lokasi belum diberikan", conv)
+
+    def test_realtime_gateway_authenticates_and_checks_membership(self):
+        server = (ROOT / "ws" / "server.js").read_text()
+        realtime = (APP / "libraries" / "Sek_realtime.php").read_text()
+        compose = (ROOT / "docker-compose.yml").read_text()
+        self.assertIn("createHash('sha256')", server)
+        self.assertIn("d.access_expires_at > UTC_TIMESTAMP()", server)
+        self.assertIn("sek_conversation_member", server)
+        self.assertIn("timingSafeEqual", server)
+        self.assertIn("SEKITAR_WS_PUBLISH_URL", realtime)
+        self.assertIn("X-Internal-Secret", realtime)
+        self.assertIn("sekitar-ws:", compose)
+        self.assertIn("8090:8090", compose)
+
     def test_phase_one_docs_exist(self):
         self.assertTrue((ROOT / "docs" / "SEKITAR_ERD.md").is_file())
         self.assertTrue((ROOT / "docs" / "SEKITAR_API_V1.md").is_file())
+        self.assertTrue((ROOT / "docs" / "SEKITAR_REALTIME.md").is_file())
 
 
 if __name__ == "__main__":

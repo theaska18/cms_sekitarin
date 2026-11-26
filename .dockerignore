@@ -3,5 +3,5 @@
 .env.*
 node_modules
 database_backup
-web/data/*.sql.gz
+web/data
 web/.env
