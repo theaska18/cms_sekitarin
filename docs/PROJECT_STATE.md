@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.46` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.47` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.46`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.47`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -97,6 +97,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   Penjualan, Tagihan Pembelian, Pembayaran Pelanggan/Pemasok, dan Rekonsiliasi
   Bank: Ubah, Ajukan persetujuan, Posting, dan Selesai. Hapus Draft dan
   Batalkan sudah berikon sebelumnya.
+- Rilis `1.0.47` mengembalikan pengguna ke list integrasi setelah Simpan Draft
+  (filter `status=processed` + banner "Draf tersimpan.") alih-alih membuka form
+  edit draft. Deep link filter pada list Finance kini juga diterapkan sejak
+  load pertama DataTable.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
