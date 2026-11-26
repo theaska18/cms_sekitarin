@@ -1,11 +1,11 @@
 {
-  "version": "1.0.50",
+  "version": "1.0.51",
   "released_at": "2026-11-26",
-  "changelog": "Perbaikan Unpost Finance setelah revisi: pemeriksaan pembatalan submission kini melihat dokumen terbaru pada rantai revisi, sehingga data dengan dokumen asli revised dan pengganti cancelled bisa dibatalkan (200) dan finance_flag di aplikasi persediaan dapat dikosongkan.",
+  "changelog": "Semua DataTable kini memakai 50 baris per halaman secara default dengan opsi 50/100/200 dan batas maksimal 200 baris. Default dan batas dipusatkan di Datatable_server dan admin-datatables.js, filter baris pada panel Finance diselaraskan, dan pilihan per halaman pada Property/Tenant diperbarui.",
   "min_php": "8.1",
-  "requires_version": "1.0.49",
-  "package": "cms-1.0.50.zip",
-  "sha256": "a7803d684d732b4f21295b2e098e8011ba34e38f6331e8ca5c8c585a19dc0e81",
-  "size": 3855,
+  "requires_version": "1.0.50",
+  "package": "cms-1.0.51.zip",
+  "sha256": "95f229a9bbe650a5c1d84f60ef50699db6f1e8af385dc1b90ec0a6c4b3b6a95c",
+  "size": 203492,
   "migrations": []
 }
