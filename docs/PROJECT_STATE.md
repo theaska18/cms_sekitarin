@@ -161,6 +161,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   makanan/jasa/ride dengan state machine, riwayat `sek_order_event`, pembayaran
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
+- Akses media diperbaiki: foto post dapat dilihat pengguna terautentikasi lain,
+  media chat hanya untuk anggota percakapan, dan media yang masih dipakai tidak
+  dapat dihapus.
 - Akun usaha punya `location_mode` (`fixed`/`realtime`). Mode realtime
   memperbarui lokasi/presence berkala; peta menandai akun sendiri dengan
   `is_own` dan melakukan polling nearby.

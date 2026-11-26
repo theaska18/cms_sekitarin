@@ -116,7 +116,14 @@ class Sek_media extends Sek_api_base
         }
         $owner = (int) $media['owner_user_id'] === (int) $this->api_auth->user_id();
         $public = $this->sek_media_model->used_by_active_account((int) $media['media_id']) !== NULL;
-        if (!$owner && !$public) {
+        $postVisible = (string) $media['purpose'] === 'post'
+            && $this->sek_media_model->is_post_media_visible((int) $media['media_id']);
+        $chatVisible = (string) $media['purpose'] === 'chat'
+            && $this->sek_media_model->is_chat_media_visible(
+                (int) $media['media_id'],
+                (int) $this->api_auth->user_id()
+            );
+        if (!$owner && !$public && !$postVisible && !$chatVisible) {
             $this->api_response->error('forbidden', 'Media tidak dapat diakses.', 403);
             return;
         }

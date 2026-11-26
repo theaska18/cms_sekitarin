@@ -34,11 +34,47 @@ class Sek_media_model extends CI_Model
         return $this->db->where('media_id', (int) $media_id)->delete('sek_media');
     }
 
+    public function is_post_media_visible($media_id)
+    {
+        return $this->db->select('pm.media_id')
+            ->from('sek_post_media pm')
+            ->join('sek_post p', 'p.post_id = pm.post_id', 'inner')
+            ->join('sek_account a', 'a.account_id = p.account_id', 'inner')
+            ->where('pm.media_id', (int) $media_id)
+            ->where('p.status', 'active')
+            ->where('a.status', 'active')
+            ->limit(1)
+            ->get()
+            ->row_array() !== NULL;
+    }
+
+    public function is_chat_media_visible($media_id, $user_id)
+    {
+        if ((int) $user_id <= 0) {
+            return FALSE;
+        }
+        return $this->db->select('m.message_id')
+            ->from('sek_message m')
+            ->join('sek_conversation_member cm', 'cm.conversation_id = m.conversation_id', 'inner')
+            ->where('m.media_id', (int) $media_id)
+            ->where('m.deleted_at IS NULL', NULL, FALSE)
+            ->where('cm.user_id', (int) $user_id)
+            ->where('cm.left_at IS NULL', NULL, FALSE)
+            ->limit(1)
+            ->get()
+            ->row_array() !== NULL;
+    }
+
     public function referenced_count($media_id)
     {
-        return $this->db->where('avatar_media_id', (int) $media_id)
+        $accounts = $this->db->where('avatar_media_id', (int) $media_id)
             ->or_where('cover_media_id', (int) $media_id)
             ->count_all_results('sek_account');
+        $posts = $this->db->where('media_id', (int) $media_id)
+            ->count_all_results('sek_post_media');
+        $messages = $this->db->where('media_id', (int) $media_id)
+            ->count_all_results('sek_message');
+        return $accounts + $posts + $messages;
     }
 
     public function used_by_active_account($media_id)

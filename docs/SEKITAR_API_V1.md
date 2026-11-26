@@ -190,9 +190,13 @@ diverifikasi juga di server.
 | DELETE | `/media/{media_id}` | Hapus bila belum dipakai. |
 | GET | `/media/{media_id}` | Auth; stream file. URL publik tidak permanen. |
 
-Validasi: MIME allow-list (`image/jpeg`, `image/png`, `image/webp`), gambar
-di-re-encode, nama file acak, disimpan di luar web root. Respons berisi
-`media_id`; gunakan sebagai `avatar_media_id`/`cover_media_id`.
+Validasi: MIME allow-list (`image/jpeg`, `image/png`, `image/webp`), nama file
+acak, disimpan di luar web root. Respons berisi `media_id`; gunakan sebagai
+`avatar_media_id`/`cover_media_id` atau lampiran pesan/post.
+
+Akses `GET /media/{id}`: pemilik selalu boleh; media avatar/cover akun aktif
+boleh untuk pengguna terautentikasi; media post boleh jika terpasang pada post
+aktif; media chat hanya untuk anggota percakapan yang memuat pesan tersebut.
 
 ## Lokasi dan peta
 

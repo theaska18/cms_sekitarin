@@ -144,6 +144,8 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("move_uploaded_file", media)
         self.assertIn("realpath(FCPATH . 'data/sekitar-media')", media)
         self.assertIn("strpos($path, $base . DIRECTORY_SEPARATOR) !== 0", media)
+        self.assertIn("is_post_media_visible", media)
+        self.assertIn("is_chat_media_visible", media)
         self.assertIn("MAX_IMAGE_BYTES", media)
         self.assertIn("MAX_VIDEO_BYTES", media)
         self.assertIn("video/mp4", media)
