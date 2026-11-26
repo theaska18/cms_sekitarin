@@ -94,6 +94,12 @@ class FinanceRevisionContractTests(unittest.TestCase):
         self.assertIn("'revision_pending' => 'Document revision is awaiting approval.'", api)
         self.assertIn("'revised' => 'Document was revised; cancel the replacement draft first.'", api)
 
+    def test_cancelling_a_revised_submission_checks_the_replacement(self):
+        store = (APP / "libraries" / "Finance_integration_store.php").read_text(encoding="utf-8")
+        method = store.split("public function cancel_linked_cancelled(", 1)[1].split("public function ", 1)[0]
+        self.assertIn("$latest = $this->latest_document($kind, $tenant_id, $document_id);", method)
+        self.assertIn("$document_id = (int) $latest['id'];", method)
+
     def test_revision_repoints_the_integration_inbox(self):
         store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
         self.assertIn("private function sync_revision_inbox(", store)

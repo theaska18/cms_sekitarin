@@ -291,6 +291,12 @@ class Finance_integration_store
             return FALSE;
         }
         $document_id = (int) $row[$spec['document_id']];
+        // A revised original is superseded by its replacement draft, so the
+        // cancellation check must look at the newest document in the chain.
+        $latest = $this->latest_document($kind, $tenant_id, $document_id);
+        if (is_array($latest) && (int) $latest['id'] > 0) {
+            $document_id = (int) $latest['id'];
+        }
         if ($document_id < 1
             || $this->document_status($kind, $tenant_id, $document_id) !== 'cancelled') {
             return FALSE;
