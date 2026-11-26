@@ -1,0 +1,24 @@
+{
+  "version": "1.0.52",
+  "from_version": "1.0.51",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.51",
+  "changelog": "Filter tanggal pada seluruh daftar Finance (transaksi, jurnal, pembayaran, transfer, rekonsiliasi, faktur, tagihan, integrasi) tidak lagi memakai rentang default 7 hari; input tanggal kosong sampai pengguna memilih. Laporan keuangan tetap memakai periode default karena membutuhkan rentang tanggal.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "0af05e004d1f131df22bdd1ddadcf8734fc6136961a9cb22e50c0e55699a0240",
+      "size": 449
+    },
+    {
+      "path": "application/libraries/Finance_filter_panel.php",
+      "sha256": "c674079e28211bee887470354f7094b5cdac013ffb491bbf66b83aaa73696aef",
+      "size": 15135
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {}
+}

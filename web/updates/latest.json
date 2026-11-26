@@ -1,11 +1,11 @@
 {
-  "version": "1.0.51",
+  "version": "1.0.52",
   "released_at": "2026-11-26",
-  "changelog": "Semua DataTable kini memakai 50 baris per halaman secara default dengan opsi 50/100/200 dan batas maksimal 200 baris. Default dan batas dipusatkan di Datatable_server dan admin-datatables.js, filter baris pada panel Finance diselaraskan, dan pilihan per halaman pada Property/Tenant diperbarui.",
+  "changelog": "Filter tanggal pada seluruh daftar Finance (transaksi, jurnal, pembayaran, transfer, rekonsiliasi, faktur, tagihan, integrasi) tidak lagi memakai rentang default 7 hari; input tanggal kosong sampai pengguna memilih. Laporan keuangan tetap memakai periode default karena membutuhkan rentang tanggal.",
   "min_php": "8.1",
-  "requires_version": "1.0.50",
-  "package": "cms-1.0.51.zip",
-  "sha256": "95f229a9bbe650a5c1d84f60ef50699db6f1e8af385dc1b90ec0a6c4b3b6a95c",
-  "size": 203492,
+  "requires_version": "1.0.51",
+  "package": "cms-1.0.52.zip",
+  "sha256": "66aa44592e72a01b4a1a0ca1870babca838fd1f9319d3f789790869687f0db29",
+  "size": 4085,
   "migrations": []
 }
