@@ -164,7 +164,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Akses media diperbaiki: foto post dapat dilihat pengguna terautentikasi lain,
   media chat hanya untuk anggota percakapan, dan media yang masih dipakai tidak
   dapat dihapus.
-- Akun usaha punya `is_active` (buka/tutup, independen dari presence) dan
+- Akun usaha punya `is_active` + `active_until` (aktif maksimal 24 jam,
+  harus diaktifkan ulang dari Setelan) dan
   `location_mode` (`fixed`/`realtime`). `nearby` mengembalikan `is_active`
   sehingga peta dapat menandai usaha yang tutup. Mode realtime
   memperbarui lokasi/presence berkala; peta menandai akun sendiri dengan

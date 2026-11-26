@@ -131,7 +131,8 @@ class Sek_api_base extends CI_Controller
             'service_radius_m' => isset($account['service_radius_m']) ? (int) $account['service_radius_m'] : 0,
             'location_mode' => isset($account['location_mode']) ? (string) $account['location_mode'] : 'fixed',
             'is_online' => !empty($account['is_online']),
-            'is_active' => !isset($account['is_active']) || (int) $account['is_active'] === 1,
+            'is_active' => $this->account_is_active($account),
+            'active_until' => isset($account['active_until']) ? $this->utc($account['active_until']) : NULL,
             'verified' => !empty($account['verified_at']),
             'status' => isset($account['status']) ? (string) $account['status'] : 'active',
             'created_at' => $this->utc(isset($account['created_at']) ? $account['created_at'] : NULL),
@@ -150,6 +151,17 @@ class Sek_api_base extends CI_Controller
             }
         }
         return $payload;
+    }
+
+    protected function account_is_active($account)
+    {
+        if (isset($account['is_active']) && (int) $account['is_active'] !== 1) {
+            return FALSE;
+        }
+        if (empty($account['active_until'])) {
+            return TRUE;
+        }
+        return (string) $account['active_until'] > gmdate('Y-m-d H:i:s');
     }
 
     protected function message_payload($message, $counts = array(), $viewer_user_id = 0)

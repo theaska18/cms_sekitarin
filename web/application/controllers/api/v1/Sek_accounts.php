@@ -435,7 +435,11 @@ class Sek_accounts extends Sek_api_base
         }
 
         if (array_key_exists('is_active', $body)) {
-            $fields['is_active'] = $this->api_validation->bool_value($body['is_active']) ? 1 : 0;
+            $active = $this->api_validation->bool_value($body['is_active']);
+            $fields['is_active'] = $active ? 1 : 0;
+            $fields['active_until'] = $active
+                ? gmdate('Y-m-d H:i:s', time() + 86400)
+                : NULL;
         }
 
         foreach (array('avatar_media_id', 'cover_media_id') as $media_field) {

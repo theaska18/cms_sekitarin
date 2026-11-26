@@ -138,6 +138,7 @@ class Sek_account_model extends CI_Model
             'location_mode' => isset($data['location_mode']) ? (string) $data['location_mode'] : 'fixed',
             'is_online' => 0,
             'is_active' => 1,
+            'active_until' => gmdate('Y-m-d H:i:s', time() + 86400),
             'status' => 'active',
             'created_at' => $now,
             'updated_at' => $now,
@@ -407,7 +408,7 @@ class Sek_account_model extends CI_Model
         $base = array((float) $lng, (float) $lat);
 
         $place_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
-            . 'a.is_online, a.is_active, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'a.is_online, a.is_active, a.active_until, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(l.location) AS lat, ST_Y(l.location) AS lng, '
             . sprintf($distance_sql, 'l') . ' AS distance_m, "place" AS source, NULL AS last_seen_at '
             . 'FROM sek_account a '
@@ -431,7 +432,7 @@ class Sek_account_model extends CI_Model
         $params[] = (int) $limit;
 
         $presence_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
-            . 'a.is_online, a.is_active, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'a.is_online, a.is_active, a.active_until, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(p.location) AS lat, ST_Y(p.location) AS lng, '
             . sprintf($distance_sql, 'p') . ' AS distance_m, "live" AS source, p.updated_at AS last_seen_at '
             . 'FROM sek_account a '

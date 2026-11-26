@@ -172,6 +172,9 @@ diverifikasi juga di server.
 `fixed` (default, titik dibekukan) atau `realtime` (klien mengirim
 `PUT /accounts/{id}/location` atau `/presence` berkala). `is_active` menandai
 usaha sedang buka/aktif; nilai `false` membuat marker peta berstatus “Tutup”.
+Saat diaktifkan, server mengisi `active_until = now + 24 jam`; setelah lewat,
+akun dianggap nonaktif sampai diaktifkan kembali (`PATCH` dengan
+`is_active=true` mereset 24 jam). `active_until` dikembalikan di payload akun.
 Untuk tipe dengan `allows_presence=true`, akun otomatis `is_online=false`
 sampai presence dikirim. `is_active` independen dari `is_online`.
 

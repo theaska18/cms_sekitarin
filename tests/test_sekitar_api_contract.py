@@ -224,9 +224,14 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertTrue(
             (MIGRATIONS / "20261126001000_sekitar_account_active.sql").is_file()
         )
+        self.assertTrue(
+            (MIGRATIONS / "20261126001100_sekitar_account_active_expiry.sql").is_file()
+        )
         accounts = (APP / "controllers" / "api" / "v1" / "Sek_accounts.php").read_text()
         self.assertIn("location_mode", accounts)
         self.assertIn("is_active", accounts)
+        self.assertIn("active_until", accounts)
+        self.assertIn("account_is_active", (API / "Sek_api_base.php").read_text())
 
     def test_post_migration_and_feed_scope(self):
         sql = (MIGRATIONS / "20261126000600_sekitar_posts.sql").read_text()
