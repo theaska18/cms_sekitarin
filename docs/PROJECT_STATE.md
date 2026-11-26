@@ -7,16 +7,17 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.47` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.48` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.47`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.48`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
-- Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
+- Migration terbaru: `20261126000100_add_finance_revision.sql`,
+  `20261125000100_add_notification_feed_indexes.sql`,
   `20261119001600_unique_api_secret.sql`, dan
   `20261119001500_unique_reconciliation_journal_line.sql`.
 - Rilis `1.0.31` mencakup DataTable server-side untuk jurnal dashboard
@@ -101,6 +102,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   (filter `status=processed` + banner "Draf tersimpan.") alih-alih membuka form
   edit draft. Deep link filter pada list Finance kini juga diterapkan sejak
   load pertama DataTable.
+- Rilis `1.0.48` menambahkan revisi setelah posting untuk Faktur Penjualan dan
+  Tagihan Pembelian. Aksi **Revisi** mengajukan persetujuan (flow cancel per
+  menu); saat disetujui, jurnal asli dibalik, dokumen asli berstatus `revised`,
+  dan draft pengganti bernomor baru dibuat dengan `revision_of_id` untuk
+  diedit lalu diposting ulang. Status `revision_pending`/`revised`, filter
+  status baru, link "Revisi dari/Diganti oleh", dan migration
+  `20261126000100_add_finance_revision.sql` termasuk dalam rilis ini.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
