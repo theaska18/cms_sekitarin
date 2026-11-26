@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.49` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.50` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.49`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.50`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261126000100_add_finance_revision.sql`,
@@ -115,6 +115,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   aktif. Revisi juga mengarahkan inbox ke dokumen pengganti sehingga
   pembatalannya otomatis menandai submission `cancelled` dan persediaan bisa
   unpost Finance.
+- Rilis `1.0.50` memperbaiki `cancel_linked_cancelled()` agar memeriksa
+  dokumen terbaru pada rantai revisi. Sebelumnya submission dengan dokumen
+  asli `revised` dan pengganti `cancelled` dibalas 500 "Unable to cancel
+  submission" saat Unpost Finance; sekarang dibalas 200 dan inbox ditandai
+  `cancelled`.
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
