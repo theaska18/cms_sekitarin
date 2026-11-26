@@ -7,13 +7,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 
 ## Status saat ini
 
-- Versi aplikasi terakhir yang dirilis: `1.0.41` (`web/application/config/version.php`).
+- Versi aplikasi terakhir yang dirilis: `1.0.42` (`web/application/config/version.php`).
 - Sistem update satu klik sudah tersedia di **System → Update**.
 - Migration CI3 lama di `web/application/migrations/` sudah dihapus.
 - Baseline schema ada di [`database/schema.sql`](../database/schema.sql).
 - Perubahan database rilis memakai `database/migrations/*.sql`.
 - Generator rilis ada di [`tools/build_update.py`](../tools/build_update.py).
-- Katalog update terakhir: `1.0.41`. Audit lanjutan 2026-11-19 (draft delete,
+- Katalog update terakhir: `1.0.42`. Audit lanjutan 2026-11-19 (draft delete,
   concurrency, cancel_pending, cancellation history, fiscal validation,
   integrasi, dan hardening) sudah termasuk dalam rilis 1.0.30.
 - Migration terbaru: `20261125000100_add_notification_feed_indexes.sql`,
@@ -70,6 +70,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   halaman di-scroll (`assets/js/admin-topbar.js`), dan garis bawah topbar
   dihapus agar menyatu dengan area kerja. Mode gelap memakai gradient navy ke
   indigo yang tetap terbaca.
+- Rilis `1.0.42` memperbaiki "Jadikan Draft" pada integrasi faktur penjualan dan
+  tagihan pembelian: kode pajak dipilih otomatis dari tarif `tax_percent` pada
+  data integrasi (bukan hanya default tenant), sehingga draft tidak lagi gagal
+  dengan `total_mismatch` saat default tenant 0% atau tarifnya berbeda. Pesan
+  validasi juga menyebut penyebab spesifik (`tax_id_required`, `tax_id_invalid`,
+  `total_mismatch`, `document_save_error`, `document_control_account_missing`,
+  `document_settings_missing`) di semua bahasa, bukan lagi "Periksa kolom ini."
 - Test environment `cms_test` memakai salinan `web/` di `/home/theaska/project/cms_test/app`.
 - Dump installer `web/data/cmsdb-latest.sql.gz` sudah diperbarui dan berisi
   `sys_update` serta `sys_update_migration`.
