@@ -81,7 +81,8 @@ class Finance_filter_panel
                     $legacy['end_on'] = $end;
                 }
             }
-            if (!empty($config['date_preset']) && $config['date_preset'] === 'report') {
+            $report_default = !empty($fields[0]['default']);
+            if ($report_default && !empty($config['date_preset']) && $config['date_preset'] === 'report') {
                 $start_name = 'start_on';
                 $end_name = 'end_on';
                 $start = trim((string) $this->CI->input->get($start_name, TRUE));
@@ -149,27 +150,27 @@ class Finance_filter_panel
         switch ($config['date_preset']) {
             case 'transaction':
                 return array(
-                    array('key' => 'transaction_on', 'label_key' => 'finance_transaction_date', 'default' => TRUE),
+                    array('key' => 'transaction_on', 'label_key' => 'finance_transaction_date', 'default' => FALSE),
                     array('key' => 'create_on', 'label_key' => 'finance_created_at'),
                 );
             case 'transfer':
-                return array(array('key' => 'transfer_date', 'label_key' => 'finance_transfer_date', 'default' => TRUE));
+                return array(array('key' => 'transfer_date', 'label_key' => 'finance_transfer_date', 'default' => FALSE));
             case 'document':
                 return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_report_column_invoice_date', 'default' => FALSE));
             case 'integration':
                 return array(array('key' => $primary !== '' ? $primary : 'invoice_date', 'label_key' => 'finance_integration_document_date', 'default' => FALSE));
             case 'journal':
-                return array(array('key' => 'journal_date', 'label_key' => 'finance_journal_date', 'default' => TRUE));
+                return array(array('key' => 'journal_date', 'label_key' => 'finance_journal_date', 'default' => FALSE));
             case 'payment':
-                return array(array('key' => 'payment_date', 'label_key' => 'finance_payment_date', 'default' => TRUE));
+                return array(array('key' => 'payment_date', 'label_key' => 'finance_payment_date', 'default' => FALSE));
             case 'reconciliation':
-                return array(array('key' => 'statement_date', 'label_key' => 'finance_statement_date', 'default' => TRUE));
+                return array(array('key' => 'statement_date', 'label_key' => 'finance_statement_date', 'default' => FALSE));
             case 'report':
                 return array(array('key' => 'period', 'start_name' => 'start_on', 'end_name' => 'end_on', 'label_key' => 'finance_filter_period', 'default' => TRUE));
             case 'none':
                 return array();
             default:
-                return $primary !== '' ? array(array('key' => $primary, 'label_key' => 'finance_column_date', 'default' => TRUE)) : array();
+                return $primary !== '' ? array(array('key' => $primary, 'label_key' => 'finance_column_date', 'default' => FALSE)) : array();
         }
     }
 

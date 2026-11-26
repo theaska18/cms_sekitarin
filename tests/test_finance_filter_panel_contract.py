@@ -125,6 +125,16 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         store = (STORES / "Finance_transaction_store.php").read_text()
         self.assertIn("$filters['date_ranges']", store)
 
+    def test_finance_lists_have_no_default_date_range(self):
+        library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
+        for preset in ("transaction", "transfer", "journal", "payment", "reconciliation", "document", "integration"):
+            with self.subTest(preset=preset):
+                method = library.split(f"case '{preset}':", 1)[1].split("case '", 1)[0]
+                self.assertIn("'default' => FALSE", method)
+                self.assertNotIn("'default' => TRUE", method)
+        report = library.split("case 'report':", 1)[1].split("case '", 1)[0]
+        self.assertIn("'default' => TRUE", report)
+
     def test_document_lists_have_no_default_date_range(self):
         library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
         method = library.split("case 'document':", 1)[1].split("case 'integration':", 1)[0]
