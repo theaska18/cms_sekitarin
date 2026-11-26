@@ -1,0 +1,31 @@
+{
+  "version": "1.0.43",
+  "from_version": "1.0.42",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.42",
+  "changelog": "Perbaikan integrasi: form Jadikan Draft kembali memakai pajak default tenant (default_output_tax_id/default_input_tax_id) dan tidak lagi menolak simpan saat total draft berbeda dari total data integrasi. Kode pajak tetap divalidasi aktif dan pesan error tetap spesifik.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "6a37c98727930461ebc6896c5049676a3d270111cc6ea6965c976fe0dfadba41",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "f9fb1131f20b18d1adb5ab9f88b88963a7891b0251666aa4b56beb8f48686f79",
+      "size": 15627
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.43.zip",
+    "sha256": "cd39c40c1022e4ce6e34460ee008e8684dc13fcfa915f0750243bee0ed4118f1",
+    "size": 4577
+  },
+  "from_ref": "v1.0.42",
+  "generated_at": "2026-11-26T06:49:43+00:00"
+}
