@@ -90,10 +90,114 @@ class Sek_accounts extends Sek_api_base
         $limit = (int) $this->input->get('limit', TRUE);
         $limit = $limit > 0 ? min(20, $limit) : 20;
         $data = array();
-        foreach ($this->sek_account_model->search($query, $limit) as $account) {
+        foreach ($this->sek_account_model->search($query, $limit, $this->viewer_account_id()) as $account) {
             $data[] = $this->account_payload($account);
         }
         $this->api_response->ok(array('data' => $data));
+    }
+
+    public function hours($account_id = 0)
+    {
+        if (!$this->require_method(array('GET', 'PUT'))) {
+            return;
+        }
+        $account = $this->sek_account_model->find((int) $account_id);
+        $method = strtoupper((string) $this->input->method(TRUE));
+
+        if ($method === 'GET') {
+            if (!is_array($account) || (string) $account['status'] !== 'active') {
+                $this->api_response->error('not_found', 'Akun tidak ditemukan.', 404);
+                return;
+            }
+            $data = array();
+            foreach ($this->sek_account_model->hours((int) $account_id) as $row) {
+                $data[] = $this->hours_payload($row);
+            }
+            $this->api_response->ok(array('data' => $data));
+            return;
+        }
+
+        if (!$this->require_auth()) {
+            return;
+        }
+        if (!is_array($account)) {
+            $this->api_response->error('not_found', 'Akun tidak ditemukan.', 404);
+            return;
+        }
+        $role = $this->sek_account_model->member_role((int) $account_id, $this->api_auth->user_id());
+        if (!in_array($role, array('owner', 'manager'), TRUE)) {
+            $this->api_response->error('forbidden', 'Hanya owner atau manager yang dapat mengubah jam buka.', 403);
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $rows = isset($body['hours']) && is_array($body['hours']) ? $body['hours'] : array();
+        $errors = array();
+        $seen = array();
+        $clean = array();
+        foreach ($rows as $index => $row) {
+            if (!is_array($row) || !isset($row['weekday'])) {
+                $errors['hours.' . $index] = 'Format jadwal tidak valid.';
+                continue;
+            }
+            $weekday = (int) $row['weekday'];
+            if ($weekday < 0 || $weekday > 6 || isset($seen[$weekday])) {
+                $errors['hours.' . $index . '.weekday'] = 'Hari tidak valid atau duplikat.';
+                continue;
+            }
+            $seen[$weekday] = TRUE;
+            $closed = !empty($row['is_closed']);
+            $open = isset($row['open_time']) ? (string) $row['open_time'] : '';
+            $close = isset($row['close_time']) ? (string) $row['close_time'] : '';
+            if (!$closed) {
+                if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $open)
+                    || !preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $close)) {
+                    $errors['hours.' . $index . '.open_time'] = 'Jam harus berformat HH:MM.';
+                    continue;
+                }
+                if (strlen($open) === 5) {
+                    $open .= ':00';
+                }
+                if (strlen($close) === 5) {
+                    $close .= ':00';
+                }
+                if ($open >= $close) {
+                    $errors['hours.' . $index . '.close_time'] = 'Jam tutup harus setelah jam buka.';
+                    continue;
+                }
+            } else {
+                $open = $open !== '' ? $open : '00:00:00';
+                $close = $close !== '' ? $close : '00:00:00';
+            }
+            $clean[] = array(
+                'weekday' => $weekday,
+                'open_time' => $open,
+                'close_time' => $close,
+                'is_closed' => $closed,
+            );
+        }
+        if ($errors) {
+            $this->api_response->error('validation_error', 'Jadwal buka tidak valid.', 422, $errors);
+            return;
+        }
+        $this->sek_account_model->replace_hours((int) $account_id, $clean);
+        $data = array();
+        foreach ($this->sek_account_model->hours((int) $account_id) as $row) {
+            $data[] = $this->hours_payload($row);
+        }
+        $this->api_response->ok(array('data' => $data));
+    }
+
+    private function hours_payload($row)
+    {
+        return array(
+            'weekday' => (int) $row['weekday'],
+            'open_time' => substr((string) $row['open_time'], 0, 5),
+            'close_time' => substr((string) $row['close_time'], 0, 5),
+            'is_closed' => (int) $row['is_closed'] === 1,
+        );
     }
 
     private function show_account($account_id)
@@ -106,6 +210,13 @@ class Sek_accounts extends Sek_api_base
         $viewer = $this->api_auth->authenticate(FALSE);
         $private = is_array($viewer)
             && $this->sek_account_model->member_role($account_id, (int) $viewer['user_id']) !== NULL;
+        if (is_array($viewer) && !$private) {
+            $viewer_account = $this->viewer_account_id();
+            if ($viewer_account !== NULL && $this->sek_account_model->blocked_between($viewer_account, $account_id)) {
+                $this->api_response->error('not_found', 'Akun tidak ditemukan.', 404);
+                return;
+            }
+        }
         $payload = $this->account_payload($account, $private);
         if ($private || $account['type_code'] !== 'personal') {
             $location = $this->sek_account_model->location($account_id);
@@ -119,6 +230,11 @@ class Sek_accounts extends Sek_api_base
                 );
             }
         }
+        $hours = array();
+        foreach ($this->sek_account_model->hours($account_id) as $row) {
+            $hours[] = $this->hours_payload($row);
+        }
+        $payload['hours'] = $hours;
         $this->api_response->ok(array('account' => $payload));
     }
 

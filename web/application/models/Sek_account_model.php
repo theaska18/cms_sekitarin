@@ -134,8 +134,8 @@ class Sek_account_model extends CI_Model
                 . 'VALUES (?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?)',
                 array(
                     $account_id,
-                    (float) $data['lat'],
                     (float) $data['lng'],
+                    (float) $data['lat'],
                     isset($data['address']) ? $data['address'] : NULL,
                     isset($data['source']) ? (string) $data['source'] : 'manual',
                     $now,
@@ -166,8 +166,8 @@ class Sek_account_model extends CI_Model
             . 'source = VALUES(source), updated_at = VALUES(updated_at)',
             array(
                 (int) $account_id,
-                (float) $lat,
                 (float) $lng,
+                (float) $lat,
                 $address,
                 (string) $source,
                 gmdate('Y-m-d H:i:s'),
@@ -184,18 +184,143 @@ class Sek_account_model extends CI_Model
             ->row_array();
     }
 
-    public function search($query, $limit = 20)
+    public function blocked_between($account_a, $account_b)
+    {
+        if ((int) $account_a <= 0 || (int) $account_b <= 0) {
+            return FALSE;
+        }
+        $count = $this->db->where('blocker_account_id', (int) $account_a)
+            ->where('blocked_account_id', (int) $account_b)
+            ->count_all_results('sek_block');
+        if ($count > 0) {
+            return TRUE;
+        }
+        return $this->db->where('blocker_account_id', (int) $account_b)
+            ->where('blocked_account_id', (int) $account_a)
+            ->count_all_results('sek_block') > 0;
+    }
+
+    public function blocked_account_ids($account_id)
+    {
+        if ((int) $account_id <= 0) {
+            return array();
+        }
+        $rows = $this->db->select('blocked_account_id AS account_id')
+            ->where('blocker_account_id', (int) $account_id)
+            ->get('sek_block')
+            ->result_array();
+        $rows2 = $this->db->select('blocker_account_id AS account_id')
+            ->where('blocked_account_id', (int) $account_id)
+            ->get('sek_block')
+            ->result_array();
+        $ids = array();
+        foreach (array_merge($rows, $rows2) as $row) {
+            $ids[(int) $row['account_id']] = (int) $row['account_id'];
+        }
+        return array_values($ids);
+    }
+
+    public function hours($account_id)
+    {
+        return $this->db->where('account_id', (int) $account_id)
+            ->order_by('weekday', 'ASC')
+            ->get('sek_account_hours')
+            ->result_array();
+    }
+
+    public function replace_hours($account_id, $rows)
+    {
+        $this->db->trans_start();
+        $this->db->where('account_id', (int) $account_id)->delete('sek_account_hours');
+        foreach ($rows as $row) {
+            $this->db->insert('sek_account_hours', array(
+                'account_id' => (int) $account_id,
+                'weekday' => (int) $row['weekday'],
+                'open_time' => (string) $row['open_time'],
+                'close_time' => (string) $row['close_time'],
+                'is_closed' => !empty($row['is_closed']) ? 1 : 0,
+            ));
+        }
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function members($account_id)
+    {
+        return $this->db->select('m.account_id, m.user_id, m.role, m.status, m.created_at, '
+                . 'u.email, u.display_name')
+            ->from('sek_account_member m')
+            ->join('sek_user u', 'u.user_id = m.user_id', 'inner')
+            ->where('m.account_id', (int) $account_id)
+            ->order_by('m.role = "owner"', 'DESC', FALSE)
+            ->order_by('m.created_at', 'ASC')
+            ->get()
+            ->result_array();
+    }
+
+    public function member_detail($account_id, $user_id)
+    {
+        return $this->db->select('m.account_id, m.user_id, m.role, m.status, m.created_at, '
+                . 'u.email, u.display_name')
+            ->from('sek_account_member m')
+            ->join('sek_user u', 'u.user_id = m.user_id', 'inner')
+            ->where('m.account_id', (int) $account_id)
+            ->where('m.user_id', (int) $user_id)
+            ->limit(1)
+            ->get()
+            ->row_array();
+    }
+
+    public function member_row($account_id, $user_id)
+    {
+        return $this->db->where('account_id', (int) $account_id)
+            ->where('user_id', (int) $user_id)
+            ->limit(1)
+            ->get('sek_account_member')
+            ->row_array();
+    }
+
+    public function upsert_member($account_id, $user_id, $role)
+    {
+        $now = gmdate('Y-m-d H:i:s');
+        $existing = $this->member_row($account_id, $user_id);
+        if (is_array($existing)) {
+            return $this->db->where('account_id', (int) $account_id)
+                ->where('user_id', (int) $user_id)
+                ->update('sek_account_member', array('role' => (string) $role, 'status' => 'active'));
+        }
+        return $this->db->insert('sek_account_member', array(
+            'account_id' => (int) $account_id,
+            'user_id' => (int) $user_id,
+            'role' => (string) $role,
+            'status' => 'active',
+            'created_at' => $now,
+        ));
+    }
+
+    public function remove_member($account_id, $user_id)
+    {
+        return $this->db->where('account_id', (int) $account_id)
+            ->where('user_id', (int) $user_id)
+            ->update('sek_account_member', array('status' => 'removed'));
+    }
+
+    public function search($query, $limit = 20, $viewer_account_id = NULL)
     {
         $like = $this->db->escape_like_str((string) $query);
-        return $this->db->select('a.*, t.label_id, t.label_en')
+        $blocked = $this->blocked_account_ids($viewer_account_id);
+        $this->db->select('a.*, t.label_id, t.label_en')
             ->from('sek_account a')
             ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
             ->where('a.status', 'active')
             ->group_start()
                 ->like('a.handle', $like, 'both', FALSE)
                 ->or_like('a.display_name', $like, 'both', FALSE)
-            ->group_end()
-            ->order_by('a.verified_at IS NULL', 'ASC', FALSE)
+            ->group_end();
+        if ($blocked) {
+            $this->db->where_not_in('a.account_id', $blocked);
+        }
+        return $this->db->order_by('a.verified_at IS NULL', 'ASC', FALSE)
             ->order_by('a.display_name', 'ASC')
             ->limit(max(1, min(20, (int) $limit)))
             ->get()

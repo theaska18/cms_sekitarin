@@ -174,7 +174,7 @@ granted), dan mengirim email verifikasi. Respons sama dengan login, dengan
 
 | Method | Path | Keterangan |
 | --- | --- | --- |
-| POST | `/media` | `multipart/form-data` field `file`, `purpose`. Maks 10 MB (gambar), 25 MB (dokumen). |
+| POST | `/media` | `multipart/form-data` field `file`, `purpose`. Maks 10 MB (gambar), 12 MB (dokumen). Disimpan di `web/data/sekitar-media/<user_id>/` dan hanya disajikan lewat endpoint ini. |
 | DELETE | `/media/{media_id}` | Hapus bila belum dipakai. |
 | GET | `/media/{media_id}` | Auth; stream file. URL publik tidak permanen. |
 
@@ -302,15 +302,20 @@ Sudah berjalan (Fase 1 + dasar Fase 2):
 - `GET /account-types`.
 - `GET/POST /accounts`, `GET/PATCH/DELETE /accounts/{id}`,
   `POST /accounts/{id}/activate`, `GET /accounts/search`.
-- Rate limit login, register, refresh, resend, dan forgot-password.
+- `POST /media`, `GET/DELETE /media/{id}` (upload tervalidasi, akses pemilik
+  atau media profil publik).
+- `GET/POST /contacts`, `PATCH/DELETE /contacts/{id}`.
+- `GET/POST /blocks`, `DELETE /blocks/{account_id}`; akun yang diblokir
+  disembunyikan dari profil, pencarian, dan daftar kontak.
+- `GET/POST /reports`.
+- `GET/PUT /accounts/{id}/hours`.
+- `GET/POST /accounts/{id}/members`, `PATCH/DELETE /accounts/{id}/members/{user_id}`.
+- Rate limit login, register, refresh, resend, forgot-password, dan laporan.
 
-Belum diimplementasikan (lanjutan Fase 2):
+Belum diimplementasikan (Fase 4):
 
-- `POST/DELETE /media` dan penyajian file.
 - `PUT /accounts/{id}/location`, `PUT/DELETE /accounts/{id}/presence`,
   `GET /nearby`.
-- `GET/POST/PATCH/DELETE /contacts`, blokir, dan laporan.
-- `GET/PUT /accounts/{id}/hours` dan manajemen anggota/staff.
 
 Catatan pengembangan: karena provider email belum dipilih, token verifikasi dan
 reset ditulis ke `web/application/logs/sekitar-mail.log`, dan respons

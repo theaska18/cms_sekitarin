@@ -23,7 +23,17 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/me/consents",
             "api/v1/me/devices",
             "api/v1/account-types",
+            "api/v1/media",
+            "api/v1/media/(:num)",
+            "api/v1/contacts",
+            "api/v1/contacts/(:num)",
+            "api/v1/blocks",
+            "api/v1/blocks/(:num)",
+            "api/v1/reports",
             "api/v1/accounts/search",
+            "api/v1/accounts/(:num)/hours",
+            "api/v1/accounts/(:num)/members",
+            "api/v1/accounts/(:num)/members/(:num)",
             "api/v1/accounts/(:num)/activate",
             "api/v1/accounts/(:num)",
         ]
@@ -82,6 +92,41 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("account_context_for", accounts)
         self.assertIn("Hanya owner atau manager", accounts)
         self.assertIn("member_role", accounts)
+
+    def test_social_migration_adds_contacts_blocks_and_reports(self):
+        sql = (MIGRATIONS / "20261126000400_sekitar_social.sql").read_text()
+        for table in ("sek_contact", "sek_block", "sek_report"):
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", sql)
+        self.assertIn("UNIQUE KEY `uk_sek_contact_owner_account`", sql)
+        self.assertIn("PRIMARY KEY (`blocker_account_id`, `blocked_account_id`)", sql)
+
+    def test_media_upload_is_validated_and_paths_are_confined(self):
+        media = (API / "Sek_media.php").read_text()
+        self.assertIn("is_uploaded_file", media)
+        self.assertIn("finfo_open", media)
+        self.assertIn("random_bytes(16)", media)
+        self.assertIn("move_uploaded_file", media)
+        self.assertIn("realpath(FCPATH . 'data/sekitar-media')", media)
+        self.assertIn("strpos($path, $base . DIRECTORY_SEPARATOR) !== 0", media)
+        self.assertIn("MAX_IMAGE_BYTES", media)
+
+    def test_blocking_hides_accounts_and_contacts(self):
+        model = (APP / "models" / "Sek_account_model.php").read_text()
+        accounts = (API / "Sek_accounts.php").read_text()
+        contacts = (API / "Sek_contacts.php").read_text()
+        self.assertIn("function blocked_between", model)
+        self.assertIn("function blocked_account_ids", model)
+        self.assertIn("blocked_between", accounts)
+        self.assertIn("blocked_account_ids", contacts)
+
+    def test_hours_and_members_are_scoped_to_owner_or_manager(self):
+        accounts = (API / "Sek_accounts.php").read_text()
+        members = (API / "Sek_members.php").read_text()
+        self.assertIn("replace_hours", accounts)
+        self.assertIn("Hanya owner atau manager", accounts)
+        self.assertIn("Hanya owner yang dapat menambah anggota", members)
+        self.assertIn("Owner tidak dapat diubah atau dihapus", members)
 
     def test_phase_one_docs_exist(self):
         self.assertTrue((ROOT / "docs" / "SEKITAR_ERD.md").is_file())

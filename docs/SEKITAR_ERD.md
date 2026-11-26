@@ -178,12 +178,12 @@ erDiagram
 
 ## Rencana migrasi
 
-1. `..._sekitar_identity.sql` — `sek_user`, `sek_user_token`, `sek_device`,
-   `sek_consent`.
-2. `..._sekitar_accounts.sql` — `sek_account_type`, `sek_account`,
-   `sek_account_member`, `sek_account_hours`, `sek_account_location`,
-   `sek_account_presence`, seed tipe akun.
-3. `..._sekitar_social_base.sql` — `sek_media`, `sek_contact`, `sek_block`,
+1. `20261126000200_sekitar_identity.sql` — `sek_user`, `sek_user_token`,
+   `sek_device`, `sek_consent`, `sek_rate_limit`.
+2. `20261126000300_sekitar_accounts.sql` — `sek_account_type`, `sek_media`,
+   `sek_account`, `sek_account_member`, `sek_account_hours`,
+   `sek_account_location`, `sek_account_presence`, seed tipe akun.
+3. `20261126000400_sekitar_social.sql` — `sek_contact`, `sek_block`,
    `sek_report`.
 
 Setiap migrasi harus aman dijalankan pada database CMS yang sudah berisi data

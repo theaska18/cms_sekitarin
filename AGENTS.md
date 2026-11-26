@@ -138,12 +138,13 @@ orders, payments, and production-scale moderation.
 [`docs/SEKITAR_API_V1.md`](docs/SEKITAR_API_V1.md). Implementation follows those
 documents; update them before changing tables or routes.
 
-**Phase 1 status (implemented 2026-11-26):** the identity and account migrations
-are applied, and `/api/v1` now serves auth, profile/device/consent, account-type,
-and basic account endpoints. Media, contacts, blocks, reports, location/presence,
-nearby, opening hours, and staff management remain for the next increment. Email
-tokens are written to `web/application/logs/sekitar-mail.log` until a provider is
-chosen; development responses expose `dev_*` tokens.
+**Phase 1–2 status (implemented 2026-11-26):** the identity, account, and social
+migrations are applied, and `/api/v1` serves auth, profile/device/consent,
+account types, accounts, local media, contacts, blocks, reports, opening hours,
+and account members. Location/presence, nearby queries (Phase 4), chat, and posts
+remain for later increments. Email tokens are written to
+`web/application/logs/sekitar-mail.log` until a provider is chosen; development
+responses expose `dev_*` tokens.
 
 #### Phase 0 decisions (locked 2026-11-26)
 

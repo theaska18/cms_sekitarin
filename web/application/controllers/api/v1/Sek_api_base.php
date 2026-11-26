@@ -9,7 +9,7 @@ class Sek_api_base extends CI_Controller
         parent::__construct();
         $this->load->database();
         $this->load->library(array('api_response', 'api_auth', 'api_validation', 'sek_mailer'));
-        $this->load->model(array('sek_user_model', 'sek_account_model'));
+        $this->load->model(array('sek_user_model', 'sek_account_model', 'sek_media_model', 'sek_social_model'));
     }
 
     /** Decode the JSON request body. Sends 400 and returns NULL when invalid. */
@@ -78,6 +78,18 @@ class Sek_api_base extends CI_Controller
             return NULL;
         }
         return $account;
+    }
+
+    /** Active account from X-Account-Id when valid, otherwise the device default. */
+    protected function viewer_account_id()
+    {
+        $raw = trim((string) $this->input->get_request_header('X-Account-Id', TRUE));
+        $user_id = $this->api_auth->user_id();
+        if ($raw !== '' && ctype_digit($raw) && $user_id !== NULL
+            && $this->sek_account_model->member_role((int) $raw, $user_id) !== NULL) {
+            return (int) $raw;
+        }
+        return $this->active_account_id();
     }
 
     protected function active_account_id()

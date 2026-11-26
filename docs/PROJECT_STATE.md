@@ -144,12 +144,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   lokal + backup. Order/ride-hailing ditunda.
 - Kontrak Fase 1–2 ada di [`SEKITAR_ERD.md`](SEKITAR_ERD.md) dan
   [`SEKITAR_API_V1.md`](SEKITAR_API_V1.md).
-- Fase 1 sudah diimplementasikan: migrasi `20261126000200_sekitar_identity.sql`
-  dan `20261126000300_sekitar_accounts.sql`, API `/api/v1` untuk auth, profil,
-  perangkat, consent, tipe akun, dan akun dasar (list/create/show/update/arsip/
-  activate/search). Kontrak tes: `tests/test_sekitar_api_contract.py`.
-- Belum diimplementasikan: media, kontak, blokir, laporan, lokasi/presence,
-  nearby, jam buka, dan manajemen staff.
+- Fase 1–2 sudah diimplementasikan: migrasi identitas, akun, dan sosial
+  (`20261126000200`–`20261126000400`); API `/api/v1` untuk auth, profil,
+  perangkat, consent, tipe akun, akun, media lokal, kontak, blokir, laporan, jam
+  buka, dan anggota/staff. Kontrak tes: `tests/test_sekitar_api_contract.py`.
+- Belum diimplementasikan: lokasi dasar akun, presence realtime, `GET /nearby`
+  (Fase 4), chat, dan post.
 - Provider email transaksional belum dipilih; token development ditulis ke
   `web/application/logs/sekitar-mail.log` dan dikembalikan sebagai field
   `dev_*` saat environment bukan production.
