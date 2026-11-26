@@ -209,11 +209,11 @@ Run from the repository root:
   `test_admin_auth_contract.py`.
 - Flutter client is a separate sibling repository, `../flutter_sekitarin/`
   (Flutter 3.50/Dart 3.14). From that directory: `flutter pub get`,
-  `flutter analyze`, `flutter test`. Run with
-  `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8088/api/v1`
-  (Android emulator) or `127.0.0.1` for iOS simulator. WebSocket defaults to
-  host:8090; override with `--dart-define=WS_URL=...`. See
-  [`../flutter_sekitarin/README.md`](../flutter_sekitarin/README.md).
+  `flutter analyze`, `flutter test`. `flutter run` defaults to
+  `https://sekitarin.ckamal.com/api/v1` and
+  `ws://sekitarinws.ckamal.com`; override with
+  `--dart-define=API_BASE_URL=...` / `--dart-define=WS_URL=...` for local
+  development. See [`../flutter_sekitarin/README.md`](../flutter_sekitarin/README.md).
 - PHP lint in the app container:
   `docker exec cms_sekitarin_app php -l <path-inside-/var/www/html>`.
 
