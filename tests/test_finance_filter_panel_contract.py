@@ -125,6 +125,12 @@ class FinanceFilterPanelContractTests(unittest.TestCase):
         store = (STORES / "Finance_transaction_store.php").read_text()
         self.assertIn("$filters['date_ranges']", store)
 
+    def test_document_lists_have_no_default_date_range(self):
+        library = (ROOT / "web/application/libraries/Finance_filter_panel.php").read_text()
+        method = library.split("case 'document':", 1)[1].split("case 'integration':", 1)[0]
+        self.assertIn("'default' => FALSE", method)
+        self.assertIn("'date_preset'=>'document'", (ROOT / "web/application/views/admin/finance/document_index.php").read_text())
+
     def test_stores_accept_date_status_and_flag_filters(self):
         expected = {
             "Finance_transaction_store.php": ("transaction_on", "status"),
