@@ -444,6 +444,34 @@ class Sek_account_model extends CI_Model
         return array_slice($rows, 0, (int) $limit);
     }
 
+    /** Account ids that have a base point or fresh presence inside the radius. */
+    public function nearby_account_ids($lat, $lng, $radius_m, $limit = 500)
+    {
+        $rows = $this->db->query(
+            'SELECT account_id FROM sek_account_location '
+            . 'WHERE ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) <= ? '
+            . 'UNION '
+            . 'SELECT account_id FROM sek_account_presence '
+            . 'WHERE is_online = 1 AND updated_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) '
+            . 'AND ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) <= ? '
+            . 'LIMIT ?',
+            array(
+                (float) $lng,
+                (float) $lat,
+                (int) $radius_m,
+                (float) $lng,
+                (float) $lat,
+                (int) $radius_m,
+                (int) $limit,
+            )
+        )->result_array();
+        $ids = array();
+        foreach ($rows as $row) {
+            $ids[] = (int) $row['account_id'];
+        }
+        return $ids;
+    }
+
     public function media_belongs_to($media_id, $user_id)
     {
         return $this->db->where('media_id', (int) $media_id)

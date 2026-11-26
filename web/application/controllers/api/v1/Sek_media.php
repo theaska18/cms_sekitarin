@@ -7,6 +7,7 @@ require_once __DIR__ . '/Sek_api_base.php';
 class Sek_media extends Sek_api_base
 {
     const MAX_IMAGE_BYTES = 10485760;
+    const MAX_VIDEO_BYTES = 52428800;
     const MAX_DOCUMENT_BYTES = 12582912;
 
     public function index()
@@ -43,13 +44,18 @@ class Sek_media extends Sek_api_base
         finfo_close($finfo);
 
         $image_types = array('image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp');
+        $video_types = array('video/mp4' => 'mp4', 'video/quicktime' => 'mov');
         $is_image = isset($image_types[$mime]);
+        $is_video = isset($video_types[$mime]);
         $is_document = $mime === 'application/pdf';
-        if (!$is_image && !($purpose === 'document' && $is_document)) {
-            $this->api_response->error('validation_error', 'Tipe file tidak didukung.', 422, array('file' => 'Gunakan JPEG, PNG, atau WebP.'));
+        if ($is_video && !in_array($purpose, array('post', 'chat'), TRUE)) {
+            $is_video = FALSE;
+        }
+        if (!$is_image && !$is_video && !($purpose === 'document' && $is_document)) {
+            $this->api_response->error('validation_error', 'Tipe file tidak didukung.', 422, array('file' => 'Gunakan JPEG, PNG, WebP, MP4, atau MOV.'));
             return;
         }
-        $limit = $is_image ? self::MAX_IMAGE_BYTES : self::MAX_DOCUMENT_BYTES;
+        $limit = $is_image ? self::MAX_IMAGE_BYTES : ($is_video ? self::MAX_VIDEO_BYTES : self::MAX_DOCUMENT_BYTES);
         if ($size <= 0 || $size > $limit) {
             $this->api_response->error('validation_error', 'Ukuran file terlalu besar.', 422, array('file' => 'Maksimal ' . (int) ($limit / 1048576) . ' MB.'));
             return;
@@ -72,7 +78,7 @@ class Sek_media extends Sek_api_base
             $this->api_response->error('server_error', 'Direktori media tidak dapat dibuat.', 500);
             return;
         }
-        $extension = $is_image ? $image_types[$mime] : 'pdf';
+        $extension = $is_image ? $image_types[$mime] : ($is_video ? $video_types[$mime] : 'pdf');
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
         $relative_path = $relative_dir . '/' . $filename;
         if (!@move_uploaded_file($file['tmp_name'], FCPATH . $relative_path)) {

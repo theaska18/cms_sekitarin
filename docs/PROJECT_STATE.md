@@ -144,15 +144,17 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   lokal + backup. Order/ride-hailing ditunda.
 - Kontrak Fase 1–2 ada di [`SEKITAR_ERD.md`](SEKITAR_ERD.md) dan
   [`SEKITAR_API_V1.md`](SEKITAR_API_V1.md).
-- Fase 1–4 sudah diimplementasikan: migrasi identitas, akun, sosial, dan chat
-  (`20261126000200`–`20261126000500`); API `/api/v1` untuk auth, profil,
-  perangkat, consent, tipe akun, akun, media lokal, kontak, blokir, laporan, jam
-  buka, anggota/staff, percakapan, pesan, read receipt, typing, live location
-  grup, lokasi dasar akun, presence realtime, dan `GET /nearby` berbasis spatial
-  index. Gateway WebSocket `sekitar-ws` berjalan di port 8090 dengan protokol di
-  [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md). Kontrak tes:
+- Fase 1–5 sudah diimplementasikan: migrasi identitas, akun, sosial, chat, dan
+  post (`20261126000200`–`20261126000600`); API `/api/v1` untuk auth, profil,
+  perangkat, consent, tipe akun, akun, media lokal (gambar/video/dokumen), kontak,
+  blokir, laporan, jam buka, anggota/staff, percakapan, pesan, read receipt,
+  typing, live location grup, lokasi dasar akun, presence realtime, `GET /nearby`
+  berbasis spatial index, serta post/feed (kontak + radius 500 m), like, komentar,
+  dan grid profil. Gateway WebSocket `sekitar-ws` berjalan di port 8090 dengan
+  protokol di [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md). Kontrak tes:
   `tests/test_sekitar_api_contract.py`.
-- Belum diimplementasikan: push notification FCM/APNs dan post/feed (Fase 5).
+- Belum diimplementasikan: push notification FCM/APNs dan panel admin moderasi
+  laporan post.
 - Provider email transaksional belum dipilih; token development ditulis ke
   `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
   dikembalikan sebagai field `dev_*` saat environment bukan production.

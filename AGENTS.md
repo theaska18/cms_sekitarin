@@ -138,15 +138,18 @@ orders, payments, and production-scale moderation.
 [`docs/SEKITAR_API_V1.md`](docs/SEKITAR_API_V1.md). Implementation follows those
 documents; update them before changing tables or routes.
 
-**Phase 1–4 status (implemented 2026-11-26):** the identity, account, social, and
-chat migrations are applied, and `/api/v1` serves auth, profile/device/consent,
-account types, accounts, local media, contacts, blocks, reports, opening hours,
-account members, conversations, messages, read receipts, typing, group live
-location, account base location, realtime presence, and `nearby` map queries
-(spatial index, 5-minute presence freshness, block filtering). The `sekitar-ws`
-WebSocket gateway runs on host port 8090 (protocol:
+**Phase 1–5 status (implemented 2026-11-26):** the identity, account, social,
+chat, and post migrations are applied, and `/api/v1` serves auth,
+profile/device/consent, account types, accounts, local media (images, video,
+documents), contacts, blocks, reports, opening hours, account members,
+conversations, messages, read receipts, typing, group live location, account base
+location, realtime presence, `nearby` map queries (spatial index, 5-minute
+presence freshness, block filtering), and post/feed (saved contacts plus 500 m
+radius), likes, comments, and profile grids. The `sekitar-ws` WebSocket gateway
+runs on host port 8090 (protocol:
 [`docs/SEKITAR_REALTIME.md`](docs/SEKITAR_REALTIME.md)). Push notifications and
-posts remain for later increments. Email tokens are written to
+an admin moderation panel for reports remain for later increments. Email tokens
+are written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
 

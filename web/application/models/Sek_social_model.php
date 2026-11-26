@@ -37,6 +37,19 @@ class Sek_social_model extends CI_Model
             ->row_array();
     }
 
+    public function contact_account_ids($user_id)
+    {
+        $rows = $this->db->select('account_id')
+            ->where('owner_user_id', (int) $user_id)
+            ->get('sek_contact')
+            ->result_array();
+        $ids = array();
+        foreach ($rows as $row) {
+            $ids[] = (int) $row['account_id'];
+        }
+        return $ids;
+    }
+
     public function add_contact($user_id, $account_id, $alias = NULL)
     {
         $this->db->insert('sek_contact', array(
@@ -98,11 +111,12 @@ class Sek_social_model extends CI_Model
             ->delete('sek_block');
     }
 
-    public function create_report($user_id, $account_id, $category, $description = NULL)
+    public function create_report($user_id, $account_id, $category, $description = NULL, $post_id = NULL)
     {
         $this->db->insert('sek_report', array(
             'reporter_user_id' => (int) $user_id,
             'target_account_id' => (int) $account_id,
+            'post_id' => $post_id !== NULL ? (int) $post_id : NULL,
             'category' => (string) $category,
             'description' => $description !== NULL && trim((string) $description) !== ''
                 ? trim((string) $description) : NULL,

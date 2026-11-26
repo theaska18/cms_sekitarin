@@ -174,7 +174,7 @@ granted), dan mengirim email verifikasi. Respons sama dengan login, dengan
 
 | Method | Path | Keterangan |
 | --- | --- | --- |
-| POST | `/media` | `multipart/form-data` field `file`, `purpose`. Maks 10 MB (gambar), 12 MB (dokumen). Disimpan di `web/data/sekitar-media/<user_id>/` dan hanya disajikan lewat endpoint ini. |
+| POST | `/media` | `multipart/form-data` field `file`, `purpose`. Maks 10 MB gambar, 50 MB video (MP4/MOV, purpose `post`/`chat`), 12 MB dokumen. Disimpan di `web/data/sekitar-media/<user_id>/` dan hanya disajikan lewat endpoint ini. |
 | DELETE | `/media/{media_id}` | Hapus bila belum dipakai. |
 | GET | `/media/{media_id}` | Auth; stream file. URL publik tidak permanen. |
 
@@ -334,6 +334,50 @@ Aturan:
 `sek_live_location` dan hanya dikembalikan selama belum kedaluwarsa. Berbagi
 lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
 
+## Post dan feed
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET | `/feed` | Feed kontak + radius. Param `lat`, `lng`, `radius=500`, `limit`, `before_id`. |
+| POST | `/posts` | Buat post. Butuh `X-Account-Id`. |
+| GET/DELETE | `/posts/{id}` | Detail / hapus (soft delete) post. |
+| GET | `/accounts/{id}/posts` | Grid profil akun. |
+| POST/DELETE | `/posts/{id}/like` | Like / unlike. |
+| GET/POST | `/posts/{id}/comments` | Daftar / tambah komentar. |
+| DELETE | `/comments/{id}` | Hapus komentar (penulis atau pemilik post). |
+| POST | `/posts/{id}/report` | Laporkan post. |
+
+### Membuat post
+
+```json
+{
+  "caption": "Menu hari ini",
+  "media_ids": [44, 45]
+}
+```
+
+- Maksimal 5 media; setiap media harus milik user, `purpose=post`, `status=ready`,
+  dan bertipe gambar/video.
+- Wajib ada caption atau minimal satu media. Caption maksimal 2200 karakter.
+- Post selalu dikaitkan dengan akun aktif (`X-Account-Id`).
+- Media video yang didukung: MP4/MOV maksimal 50 MB; gambar maksimal 10 MB.
+
+### Aturan feed
+
+- Tanpa `lat`/`lng`: hanya post dari akun milik sendiri dan akun yang disimpan
+  sebagai kontak.
+- Dengan `lat`/`lng`: ditambah akun yang punya lokasi dasar atau presence aktif
+  dalam `radius` (default 500 m, maksimal 5000 m).
+- Akun yang diblokir (dua arah) tidak pernah muncul.
+- Urut `post_id` menurun; `before_id` untuk pagination, `limit` maksimal 50.
+
+### Like, komentar, laporan
+
+- `like_count`, `comment_count`, dan `liked` disertakan pada setiap post.
+- Komentar 1–1000 karakter; komentar terhapus tidak ditampilkan.
+- Laporan post otomatis mengisi `target_account_id` dari pemilik post dan
+  menyimpan `post_id` di `sek_report`; kategori sama dengan laporan akun.
+
 ## Kode error
 
 | HTTP | `code` | Arti |
@@ -396,13 +440,15 @@ Sudah berjalan (Fase 1–4):
   receipt, typing, live location grup, dan WebSocket gateway `sekitar-ws`.
 - `PUT /accounts/{id}/location`, `GET/PUT/DELETE /accounts/{id}/presence`,
   `GET /nearby` (spatial index, filter tipe/online, blokir dua arah).
+- Post/feed: `GET /feed` (kontak + radius 500 m), `POST /posts`, grid profil,
+  media carousel, like, komentar, dan laporan post.
 - Rate limit login, register, refresh, resend, forgot-password, laporan, dan
   update presence.
 
 Belum diimplementasikan:
 
 - Push notification FCM/APNs untuk pesan saat aplikasi tertutup.
-- Post/feed (Fase 5).
+- Panel admin untuk meninjau laporan post (data laporan sudah tersimpan).
 
 Catatan pengembangan: karena provider email belum dipilih, token verifikasi dan
 reset ditulis ke `application/logs/sekitar-mail.log` di dalam container

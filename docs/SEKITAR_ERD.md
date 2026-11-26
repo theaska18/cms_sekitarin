@@ -176,6 +176,29 @@ lain.
 `accuracy_m`, `expires_at`, `updated_at`; PK (`conversation_id`, `user_id`),
 `SPATIAL INDEX`. Baris kedaluwarsa tidak dikembalikan API.
 
+### Post dan feed
+
+**`sek_post`**
+
+`post_id`, `user_id`, `account_id`, `caption` varchar(2200), `status`
+enum('active','hidden','deleted'), `created_at`, `updated_at`.
+Index (`account_id`, `status`, `post_id`).
+
+**`sek_post_media`** — carousel media, urut `sort_order`.
+
+`post_id`, `media_id`, `sort_order`; PK (`post_id`, `media_id`).
+
+**`sek_post_like`**
+
+`post_id`, `user_id`, `created_at`; PK (`post_id`, `user_id`).
+
+**`sek_post_comment`**
+
+`comment_id`, `post_id`, `user_id`, `body` varchar(1000), `created_at`,
+`deleted_at` null.
+
+`sek_report.post_id` (nullable FK) ditambahkan untuk laporan post.
+
 ## ERD
 
 ```mermaid
@@ -207,6 +230,12 @@ erDiagram
     sek_message ||--o{ sek_message_receipt : tracks
     sek_conversation ||--o{ sek_live_location : shares
     sek_user ||--o{ sek_live_location : broadcasts
+
+    sek_account ||--o{ sek_post : publishes
+    sek_post ||--o{ sek_post_media : contains
+    sek_post ||--o{ sek_post_like : receives
+    sek_post ||--o{ sek_post_comment : has
+    sek_user ||--o{ sek_post_comment : writes
 ```
 
 ## Integrasi dengan CMS
@@ -230,6 +259,8 @@ erDiagram
 4. `20261126000500_sekitar_chat.sql` — `sek_conversation`,
    `sek_conversation_member`, `sek_message`, `sek_message_receipt`,
    `sek_live_location`.
+5. `20261126000600_sekitar_posts.sql` — `sek_post`, `sek_post_media`,
+   `sek_post_like`, `sek_post_comment`, plus `sek_report.post_id`.
 
 Setiap migrasi harus aman dijalankan pada database CMS yang sudah berisi data
 (damai, tanpa menyentuh tabel lama) dan dicatat di `sys_update_migration`.

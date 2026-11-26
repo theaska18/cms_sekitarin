@@ -39,6 +39,14 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/conversations/(:num)/live-location",
             "api/v1/messages/(:num)",
             "api/v1/nearby",
+            "api/v1/feed",
+            "api/v1/posts",
+            "api/v1/posts/(:num)",
+            "api/v1/posts/(:num)/like",
+            "api/v1/posts/(:num)/comments",
+            "api/v1/posts/(:num)/report",
+            "api/v1/comments/(:num)",
+            "api/v1/accounts/(:num)/posts",
             "api/v1/accounts/search",
             "api/v1/accounts/(:num)/location",
             "api/v1/accounts/(:num)/presence",
@@ -121,6 +129,8 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("realpath(FCPATH . 'data/sekitar-media')", media)
         self.assertIn("strpos($path, $base . DIRECTORY_SEPARATOR) !== 0", media)
         self.assertIn("MAX_IMAGE_BYTES", media)
+        self.assertIn("MAX_VIDEO_BYTES", media)
+        self.assertIn("video/mp4", media)
 
     def test_blocking_hides_accounts_and_contacts(self):
         model = (APP / "models" / "Sek_account_model.php").read_text()
@@ -183,6 +193,25 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("blocked_account_ids", model)
         self.assertIn("presence|", places)
         self.assertIn("Persetujuan lokasi belum diberikan", places)
+
+    def test_post_migration_and_feed_scope(self):
+        sql = (MIGRATIONS / "20261126000600_sekitar_posts.sql").read_text()
+        for table in ("sek_post", "sek_post_media", "sek_post_like", "sek_post_comment"):
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", sql)
+        self.assertIn("ADD COLUMN `post_id`", sql)
+
+        model = (APP / "models" / "Sek_post_model.php").read_text()
+        controller = (API / "Sek_posts.php").read_text()
+        account_model = (APP / "models" / "Sek_account_model.php").read_text()
+        social_model = (APP / "models" / "Sek_social_model.php").read_text()
+        self.assertIn("function feed", model)
+        self.assertIn("before_id", model)
+        self.assertIn("contact_account_ids", controller)
+        self.assertIn("nearby_account_ids", controller)
+        self.assertIn("radius", controller)
+        self.assertIn("blocked_account_ids", account_model)
+        self.assertIn("function contact_account_ids", social_model)
 
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
