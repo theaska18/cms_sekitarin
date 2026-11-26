@@ -169,8 +169,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Kontrak tes backend: `tests/test_sekitar_api_contract.py`; tes Flutter ada di
   repo `flutter_sekitarin`.
 - Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi
-  platform/integrasi Finance, matching driver otomatis, push notification di
-  Flutter (konfigurasi Firebase), serta layar order/ride.
+  platform/integrasi Finance, matching driver otomatis, dan push notification di
+  Flutter (konfigurasi Firebase). Layar katalog/order/ride sudah ada di repo
+  Flutter.
 - Provider email transaksional belum dipilih; token development ditulis ke
   `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
   dikembalikan sebagai field `dev_*` saat environment bukan production.

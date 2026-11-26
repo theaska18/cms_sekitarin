@@ -156,9 +156,9 @@ shared state machine, manual cash/transfer payment, and order notifications are
 implemented (see [`docs/SEKITAR_ORDERS.md`](docs/SEKITAR_ORDERS.md)). The
 Flutter MVP client lives in the separate
 [`flutter_sekitarin`](../flutter_sekitarin/README.md) repository (auth, chat, map,
-feed/post, profile, settings, notifications). Admin report moderation, payment
-gateway/commission/Finance integration, automatic driver matching, and the
-Flutter order/ride screens remain for later increments. Email tokens are
+feed/post, profile, settings, notifications, and order/ride screens). Admin
+report moderation, payment gateway/commission/Finance integration, and
+automatic driver matching remain for later increments. Email tokens are
 written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
