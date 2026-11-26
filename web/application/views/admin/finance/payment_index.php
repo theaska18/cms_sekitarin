@@ -6,6 +6,7 @@ $can_update = $finance_payment_can_update && $finance_payment_write_available;
 $id_field = $finance_payment_kind === 'customer' ? 'customer_payment_id' : 'supplier_payment_id';
 $statuses = array(
     'draft_saved' => isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.',
+    'draft_deleted' => isset($labels['finance_status_draft_deleted']) ? $labels['finance_status_draft_deleted'] : 'Draft deleted.',
     'posted' => isset($labels['finance_status_posted']) ? $labels['finance_status_posted'] : 'Posted',
     'approval_submitted' => isset($labels['finance_status_approval_submitted']) ? $labels['finance_status_approval_submitted'] : 'Submitted for approval.',
     'approval_auto_approved' => isset($labels['finance_status_approval_auto_approved']) ? $labels['finance_status_approval_auto_approved'] : 'Approved automatically.',
@@ -32,7 +33,7 @@ $statuses = array(
     'unavailable' => 'Finance payment storage is unavailable.',
     'post_error' => 'The payment could not be posted.',
 );
-$ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved');
+$ok_statuses = array('draft_saved', 'draft_deleted', 'posted', 'approval_submitted', 'approval_auto_approved');
 $error_statuses = array('insufficient_balance', 'overpayment', 'rounding_account_missing', 'fx_account_missing', 'period_closed', 'period_ambiguous', 'already_posted', 'document_invalid', 'cash_account_invalid', 'account_invalid', 'settings_missing', 'post_error');
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">

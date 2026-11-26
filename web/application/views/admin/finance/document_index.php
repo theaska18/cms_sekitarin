@@ -8,6 +8,7 @@ $can_add = $finance_document_can_add && $finance_document_write_available;
 $can_update = $finance_document_can_update && $finance_document_write_available;
 $statuses = array(
     'draft_saved' => isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.',
+    'draft_deleted' => isset($labels['finance_status_draft_deleted']) ? $labels['finance_status_draft_deleted'] : 'Draft deleted.',
     'posted' => isset($labels['finance_doc_status_posted']) ? $labels['finance_doc_status_posted'] : 'Document posted to the general ledger.',
     'control_account_missing' => isset($labels['finance_doc_status_control_account_missing']) ? $labels['finance_doc_status_control_account_missing'] : 'Set the tenant control account in Financial Settings before posting.',
     'tax_account_missing' => isset($labels['finance_doc_status_tax_account_missing']) ? $labels['finance_doc_status_tax_account_missing'] : 'The tax code needs an active linked tax account before posting.',
@@ -54,7 +55,7 @@ if (!empty($can_add)) { $panel_config['add_action'] = array('url' => $current_pa
 ?>
 <?= $this->finance_filter_panel->render($panel_config, $labels) ?>
     <?php if ($finance_status !== ''): ?>
-        <?php $ok = $finance_status === 'draft_saved' || $finance_status === 'posted'; ?>
+        <?php $ok = in_array($finance_status, array('draft_saved', 'draft_deleted', 'posted'), TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>"><?= html_escape(isset($statuses[$finance_status]) ? $statuses[$finance_status] : (isset($labels['finance_action_failed']) ? sprintf($labels['finance_action_failed'], $finance_status) : 'Action could not be completed (' . $finance_status . ').')) ?></div>
     <?php endif; ?>
     <?php if (!$finance_document_available): ?>

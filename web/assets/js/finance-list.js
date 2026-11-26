@@ -229,7 +229,7 @@
                 del.type = 'button';
                 del.setAttribute('role', 'menuitem');
                 del.setAttribute('data-finance-draft-delete', '1');
-                del.setAttribute('data-delete-url', '/admin/finance/' + cfg.slug + '/delete_draft/' + sourceId);
+                del.setAttribute('data-delete-url', '/admin/finance/delete_draft/' + cfg.slug + '/' + sourceId);
                 del.className = 'flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-rose-700 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none';
                 del.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h12M8 6V4h4v2m-6 0 1 10h6l1-10"/></svg>' + (L.deleteDraft || 'Delete draft') + '';
                 menu.appendChild(del);

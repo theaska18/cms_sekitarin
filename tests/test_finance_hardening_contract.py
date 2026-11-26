@@ -19,6 +19,8 @@ class FinanceHardeningContractTests(unittest.TestCase):
         self.assertIn("public function delete_draft(", controller)
         self.assertIn("fin_customer_payment_allocation", controller)
         self.assertIn("admin/finance/delete_draft/(:any)/(:num)", routes)
+        self.assertIn("'/admin/finance/delete_draft/' + cfg.slug + '/' + sourceId", script)
+        self.assertNotIn("'/' + cfg.slug + '/delete_draft/'", script)
         self.assertIn("data-finance-draft-delete", script)
         self.assertIn("finance-draft-delete-form", footer)
 

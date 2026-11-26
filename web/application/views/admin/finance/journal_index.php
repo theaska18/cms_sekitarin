@@ -18,6 +18,7 @@ $state_labels = array(
 );
 $status_labels = array(
     'draft_saved' => isset($labels['finance_doc_status_draft_saved']) ? $labels['finance_doc_status_draft_saved'] : 'Draft saved.',
+    'draft_deleted' => isset($labels['finance_status_draft_deleted']) ? $labels['finance_status_draft_deleted'] : 'Draft deleted.',
     'posted' => isset($labels['finance_journal_status_posted']) ? $labels['finance_journal_status_posted'] : 'Journal posted.',
     'unbalanced' => isset($labels['finance_journal_status_unbalanced']) ? $labels['finance_journal_status_unbalanced'] : 'Debits and credits must balance in base currency before posting.',
     'period_closed' => isset($labels['finance_doc_status_period_closed']) ? $labels['finance_doc_status_period_closed'] : 'No open accounting period includes this journal date.',
@@ -37,7 +38,7 @@ $status_labels = array(
     'journal_sequence_unavailable' => isset($labels['finance_status_sequence_unavailable']) ? $labels['finance_status_sequence_unavailable'] : 'The document number sequence is unavailable.',
     'journal_not_editable' => isset($labels['finance_status_not_editable']) ? $labels['finance_status_not_editable'] : 'This record can no longer be edited.',
 );
-$ok_statuses = array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved');
+$ok_statuses = array('draft_saved', 'draft_deleted', 'posted', 'approval_submitted', 'approval_auto_approved');
 ?>
 <link rel="stylesheet" href="/assets/css/vendor/datatables.min.css?v=<?= is_file(FCPATH . 'assets/css/vendor/datatables.min.css') ? filemtime(FCPATH . 'assets/css/vendor/datatables.min.css') : '1' ?>">
 <main class="mx-auto w-full max-w-7xl px-2 py-6 sm:px-6 sm:py-8 lg:px-8">

@@ -22,6 +22,7 @@ $extra_status_messages = array(
     'not_postable' => 'Hanya transaksi berstatus disetujui yang dapat diposting.',
     'insufficient_balance' => isset($labels['finance_status_insufficient_balance']) ? $labels['finance_status_insufficient_balance'] : 'Saldo kas/bank tidak mencukupi.',
     'document_has_payments' => isset($labels['finance_status_document_has_payments']) ? $labels['finance_status_document_has_payments'] : 'Faktur/tagihan masih memiliki pembayaran. Batalkan pembayaran terlebih dahulu.',
+    'draft_deleted' => isset($labels['finance_status_draft_deleted']) ? $labels['finance_status_draft_deleted'] : 'Draft deleted.',
     'period_closed' => isset($labels['finance_doc_status_period_closed']) ? $labels['finance_doc_status_period_closed'] : 'No open accounting period includes the transaction date.',
     'period_ambiguous' => isset($labels['finance_doc_status_period_ambiguous']) ? $labels['finance_doc_status_period_ambiguous'] : 'More than one open accounting period includes the transaction date.',
 );
@@ -89,7 +90,7 @@ if ($can_add) {
 ?>
 <?= $this->finance_filter_panel->render($transaction_filter_panel_config, $labels) ?>
     <?php if ($status_message !== ''): ?>
-        <?php $ok = in_array($finance_status, array('draft_saved', 'posted', 'approval_submitted', 'approval_auto_approved'), TRUE); ?>
+        <?php $ok = in_array($finance_status, array('draft_saved', 'draft_deleted', 'posted', 'approval_submitted', 'approval_auto_approved'), TRUE); ?>
         <div role="status" class="mb-5 rounded-xl border p-4 text-sm <?= $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950' ?>">
             <?= html_escape($status_message) ?>
         </div>
