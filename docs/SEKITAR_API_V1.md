@@ -370,7 +370,7 @@ lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
 | --- | --- | --- |
 | GET | `/feed` | Feed kontak + radius. Param `lat`, `lng`, `radius=500`, `limit`, `before_id`. |
 | POST | `/posts` | Buat post. Butuh `X-Account-Id`. |
-| GET/DELETE | `/posts/{id}` | Detail / hapus (soft delete) post. |
+| GET/PATCH/DELETE | `/posts/{id}` | Detail / ubah caption+media / hapus (soft delete). |
 | GET | `/accounts/{id}/posts` | Grid profil akun. |
 | POST/DELETE | `/posts/{id}/like` | Like / unlike. |
 | GET/POST | `/posts/{id}/comments` | Daftar / tambah komentar. |
@@ -390,6 +390,8 @@ lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
   dan bertipe gambar/video.
 - Wajib ada caption atau minimal satu media. Caption maksimal 2200 karakter.
 - Post selalu dikaitkan dengan akun aktif (`X-Account-Id`).
+- `PATCH /posts/{id}` menerima `caption` dan/atau `media_ids` (maks 5 media);
+  hanya pembuat post atau owner/manager akun.
 - Media video yang didukung: MP4/MOV maksimal 50 MB; gambar maksimal 10 MB.
 
 ### Aturan feed

@@ -42,6 +42,31 @@ class Sek_post_model extends CI_Model
         return $this->db->trans_status() ? $post_id : NULL;
     }
 
+    public function update($post_id, $caption, $media_ids = NULL)
+    {
+        $now = gmdate('Y-m-d H:i:s');
+        $this->db->trans_start();
+        $this->db->where('post_id', (int) $post_id)
+            ->update('sek_post', array(
+                'caption' => $caption !== NULL && trim((string) $caption) !== ''
+                    ? trim((string) $caption) : NULL,
+                'updated_at' => $now,
+            ));
+        if (is_array($media_ids)) {
+            $this->db->where('post_id', (int) $post_id)->delete('sek_post_media');
+            $order = 0;
+            foreach (array_values($media_ids) as $media_id) {
+                $this->db->insert('sek_post_media', array(
+                    'post_id' => (int) $post_id,
+                    'media_id' => (int) $media_id,
+                    'sort_order' => $order++,
+                ));
+            }
+        }
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
     public function soft_delete($post_id)
     {
         return $this->db->where('post_id', (int) $post_id)

@@ -112,7 +112,7 @@ class Sek_posts extends Sek_api_base
 
     public function show($post_id = 0)
     {
-        if (!$this->require_method(array('GET', 'DELETE'))) {
+        if (!$this->require_method(array('GET', 'PATCH', 'DELETE'))) {
             return;
         }
         if (!$this->require_auth()) {
@@ -122,11 +122,68 @@ class Sek_posts extends Sek_api_base
         if ($post === NULL) {
             return;
         }
+        if (strtoupper((string) $this->input->method(TRUE)) === 'PATCH') {
+            $this->update_post($post);
+            return;
+        }
         if (strtoupper((string) $this->input->method(TRUE)) === 'DELETE') {
             $this->delete_post($post);
             return;
         }
         $this->api_response->ok(array('post' => $this->post_payload($post)));
+    }
+
+    private function update_post($post)
+    {
+        $role = $this->sek_account_model->member_role((int) $post['account_id'], $this->api_auth->user_id());
+        if ((int) $post['user_id'] !== (int) $this->api_auth->user_id()
+            && !in_array($role, array('owner', 'manager'), TRUE)) {
+            $this->api_response->error('forbidden', 'Tidak dapat mengubah post ini.', 403);
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $caption = array_key_exists('caption', $body)
+            ? trim((string) $body['caption'])
+            : (string) $post['caption'];
+        if (mb_strlen($caption) > 2200) {
+            $this->api_response->error('validation_error', 'Caption maksimal 2200 karakter.', 422);
+            return;
+        }
+        $media_ids = NULL;
+        if (array_key_exists('media_ids', $body) && is_array($body['media_ids'])) {
+            $media_ids = array_values(array_unique(array_map('intval', $body['media_ids'])));
+            $media_ids = array_values(array_filter($media_ids, function ($id) {
+                return $id > 0;
+            }));
+            if (count($media_ids) > 5) {
+                $this->api_response->error('validation_error', 'Maksimal 5 media per post.', 422);
+                return;
+            }
+            foreach ($media_ids as $media_id) {
+                $media = $this->sek_media_model->find($media_id);
+                if (!is_array($media)
+                    || (int) $media['owner_user_id'] !== (int) $this->api_auth->user_id()
+                    || (string) $media['status'] !== 'ready'
+                    || (string) $media['purpose'] !== 'post'
+                    || !preg_match('#^(image|video)/#', (string) $media['mime'])) {
+                    $this->api_response->error('validation_error', 'media_ids berisi media yang tidak valid.', 422);
+                    return;
+                }
+            }
+        }
+        $media_count = $media_ids !== NULL
+            ? count($media_ids)
+            : $this->db->where('post_id', (int) $post['post_id'])->count_all_results('sek_post_media');
+        if ($caption === '' && $media_count === 0) {
+            $this->api_response->error('validation_error', 'Post memerlukan caption atau media.', 422);
+            return;
+        }
+        $this->sek_post_model->update((int) $post['post_id'], $caption, $media_ids);
+        $fresh = $this->sek_post_model->find((int) $post['post_id']);
+        $this->api_response->ok(array('post' => $this->post_payload($fresh)));
     }
 
     public function profile($account_id = 0)

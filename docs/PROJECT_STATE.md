@@ -169,7 +169,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   sehingga peta dapat menandai usaha yang tutup. Mode realtime
   memperbarui lokasi/presence berkala; peta menandai akun sendiri dengan
   `is_own` dan melakukan polling nearby.
-- Feed menandai `feed_source` (`own`/`contact`/`nearby`) + `distance_m`; tanpa
+- Post dapat diedit (`PATCH /posts/{id}` caption/media) dan dihapus oleh pembuat
+  atau owner/manager akun. Feed menandai `feed_source`
+  (`own`/`contact`/`nearby`) + `distance_m`; tanpa
   consent lokasi hanya akun sendiri + kontak yang tampil. Peta hanya
   menampilkan akun `fixed` bila consent viewer belum aktif; akun
   realtime/presence muncul setelah “Bagikan lokasi” diaktifkan.
