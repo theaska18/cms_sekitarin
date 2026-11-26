@@ -1,0 +1,41 @@
+{
+  "version": "1.0.49",
+  "from_version": "1.0.48",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.48",
+  "changelog": "Integrasi penjualan/pembelian kini mengikuti rantai revisi: DELETE API menelusuri dokumen pengganti terbaru dan membalas 200 bila rantai sudah berakhir cancelled, atau 409 dengan status sebenarnya bila pengganti masih aktif. Saat revisi disetujui, inbox diarahkan ke dokumen pengganti sehingga pembatalannya otomatis menandai submission selesai.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "f8b4a266de77773adfc9e368afbffe1d0a1c6326e8917074aa8fe597794419e6",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Finance_api.php",
+      "sha256": "48958e0027ec84f91d1f07648873e143ac16f1ae66bc1b9559f58b45c5d0d6ed",
+      "size": 17733
+    },
+    {
+      "path": "application/libraries/Finance_cancellation_store.php",
+      "sha256": "8fbbe306a94fdec9fb98e27310f19cd72137d2e3da6d2f84b78ca2b61e36fe62",
+      "size": 28940
+    },
+    {
+      "path": "application/libraries/Finance_integration_store.php",
+      "sha256": "5592ea01fc53590b1e07b2d8f2531188969f9e57388a1460d863dd34e2fc1660",
+      "size": 14063
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.49.zip",
+    "sha256": "c7a97c14c42fe9800c3edcfc4eb30098fb7bbeba5e93ae95088c9cbeedb5d6b7",
+    "size": 13058
+  },
+  "from_ref": "v1.0.48",
+  "generated_at": "2026-11-26T12:55:49+00:00"
+}
