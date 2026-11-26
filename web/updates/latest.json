@@ -1,11 +1,11 @@
 {
-  "version": "1.0.46",
+  "version": "1.0.47",
   "released_at": "2026-11-26",
-  "changelog": "Kolom Tindakan pada Faktur Penjualan, Tagihan Pembelian, Pembayaran Pelanggan/Pemasok, dan Rekonsiliasi Bank kini memakai ikon untuk Ubah, Ajukan persetujuan, Posting, dan Selesai, melengkapi ikon Hapus Draft dan Batalkan.",
+  "changelog": "Setelah Simpan Draft pada menu integrasi, pengguna kembali ke list integrasi dengan filter status Processed dan banner \"Draf tersimpan.\" Deep link filter pada list Finance kini diterapkan sejak load pertama.",
   "min_php": "8.1",
-  "requires_version": "1.0.45",
-  "package": "cms-1.0.46.zip",
-  "sha256": "81beaa16fdec01cd2760ee0887727955e295ea127acbccccaeb7ab5dd6949470",
-  "size": 15077,
+  "requires_version": "1.0.46",
+  "package": "cms-1.0.47.zip",
+  "sha256": "0fe29f4ae69525e7f8152a3b1a965e27080068ea6254e03566951a4853417478",
+  "size": 11587,
   "migrations": []
 }

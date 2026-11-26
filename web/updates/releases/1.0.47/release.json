@@ -1,0 +1,41 @@
+{
+  "version": "1.0.47",
+  "from_version": "1.0.46",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.46",
+  "changelog": "Setelah Simpan Draft pada menu integrasi, pengguna kembali ke list integrasi dengan filter status Processed dan banner \"Draf tersimpan.\" Deep link filter pada list Finance kini diterapkan sejak load pertama.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "b23b67dadba8188f3dc7c3a07608542edc7cb7c5232b260190ea18d550304c49",
+      "size": 449
+    },
+    {
+      "path": "application/controllers/Admin_finance_integration.php",
+      "sha256": "602f20ba85a55e8005fdf37ceb4cec9457d1c151ccaa5dcdd8fc4ca40972736a",
+      "size": 15822
+    },
+    {
+      "path": "application/views/admin/finance/integration_index.php",
+      "sha256": "056c9ec134ad3d60f0e431436bab14be6002801fc478060932d21cc136e1b8ce",
+      "size": 13587
+    },
+    {
+      "path": "assets/js/finance-filters.js",
+      "sha256": "c117156816375a70e3fc903e5901670970c20f63a49fe484944cbb8028a28304",
+      "size": 12515
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.47.zip",
+    "sha256": "0fe29f4ae69525e7f8152a3b1a965e27080068ea6254e03566951a4853417478",
+    "size": 11587
+  },
+  "from_ref": "v1.0.46",
+  "generated_at": "2026-11-26T12:21:26+00:00"
+}
