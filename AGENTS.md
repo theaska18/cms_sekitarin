@@ -151,8 +151,12 @@ runs on host port 8090 (protocol:
 and an FCM HTTP v1 push queue are implemented; the `sekitar-push` worker reads
 `secrets/fcm-service-account.json` (see
 [`docs/SEKITAR_PUSH.md`](docs/SEKITAR_PUSH.md)) and marks pushes `skipped` when
-credentials are absent. Admin report moderation, orders/ride-hailing, and the
-Flutter app remain for later increments. Email tokens are written to
+credentials are absent. Service catalogs and food/service/ride orders with a
+shared state machine, manual cash/transfer payment, and order notifications are
+implemented (see [`docs/SEKITAR_ORDERS.md`](docs/SEKITAR_ORDERS.md)). Admin
+report moderation, payment gateway/commission/Finance integration, automatic
+driver matching, and the Flutter app remain for later increments. Email tokens
+are written to
 `application/logs/sekitar-mail.log` inside the app container (`app_logs` Docker
 volume) until a provider is chosen; development responses expose `dev_*` tokens.
 

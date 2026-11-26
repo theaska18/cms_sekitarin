@@ -407,6 +407,74 @@ Contoh item:
 }
 ```
 
+## Layanan dan order
+
+Detail state machine dan batasan: [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
+
+### Katalog layanan
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET/POST | `/accounts/{id}/services` | Daftar (publik terautentikasi) / tambah layanan. |
+| PATCH/DELETE | `/services/{id}` | Ubah / arsipkan layanan. |
+
+Body layanan: `{name, price, kind, description?, currency?, unit?, duration_minutes?}`
+dengan `kind` = `product` (makanan), `service`, atau `ride`. Hanya owner/manager
+yang dapat mengubah katalog.
+
+### Order
+
+| Method | Path | Keterangan |
+| --- | --- | --- |
+| GET/POST | `/orders` | Riwayat / buat order. |
+| GET | `/orders/{id}` | Detail + item + riwayat status. |
+| POST | `/orders/{id}/accept` | Penyedia menerima order. |
+| POST | `/orders/{id}/progress` | Mulai proses/perjalanan. |
+| POST | `/orders/{id}/deliver` | Mulai pengantaran (food). |
+| POST | `/orders/{id}/complete` | Selesaikan order. |
+| POST | `/orders/{id}/cancel` | Batalkan (pending/accepted). |
+| POST | `/orders/{id}/payment` | Penyedia menandai `paid`/`refunded`. |
+
+`GET /orders?role=provider` memerlukan `X-Account-Id` dan hanya menampilkan
+order milik akun tersebut. Default `role=customer` menampilkan order user.
+Filter `status` dan `before_id` tersedia.
+
+Contoh order makanan:
+
+```json
+{
+  "type": "food",
+  "provider_account_id": 21,
+  "items": [{"service_id": 7, "quantity": 2}],
+  "delivery": {"lat": -6.9147, "lng": 107.6098},
+  "delivery_address": "Jl. Contoh No. 1",
+  "payment_method": "cash",
+  "notes": "Pedas"
+}
+```
+
+Contoh ride:
+
+```json
+{
+  "type": "ride",
+  "provider_account_id": 33,
+  "items": [{"service_id": 9, "quantity": 1}],
+  "pickup": {"lat": -6.9147, "lng": 107.6098},
+  "dropoff": {"lat": -6.9200, "lng": 107.6100},
+  "payment_method": "cash"
+}
+```
+
+Aturan:
+
+- Tipe order harus cocok dengan `kind` layanan (`food`→`product`,
+  `service`→`service`, `ride`→`ride`).
+- Total dihitung server dari harga katalog; item menyimpan snapshot nama/harga.
+- Order ride wajib punya `pickup` dan `dropoff`.
+- Penyedia tidak bisa memesan dari akun sendiri; blokir dua arah dicek.
+- Status dan aksi divalidasi di server; riwayat tersimpan di `sek_order_event`.
+
 ## Kode error
 
 | HTTP | `code` | Arti |
@@ -472,14 +540,19 @@ Sudah berjalan (Fase 1–4):
 - Post/feed: `GET /feed` (kontak + radius 500 m), `POST /posts`, grid profil,
   media carousel, like, komentar, dan laporan post.
 - Notifikasi: feed in-app, daftar/hapus token push, dan queue FCM HTTP v1 untuk
-  `chat_message`, `post_like`, `post_comment`.
+  `chat_message`, `post_like`, `post_comment`, `order_new`, `order_status`,
+  `order_payment`.
+- Order/ride-hailing: katalog `product/service/ride`, order makanan/jasa/ride,
+  state machine, pembayaran tunai/transfer manual, dan riwayat status.
 - Rate limit login, register, refresh, resend, forgot-password, laporan, dan
   update presence.
 
 Belum diimplementasikan:
 
 - Panel admin untuk meninjau laporan post (data laporan sudah tersimpan).
-- Order/ride-hailing (Fase 6) dan aplikasi Flutter (Fase 7).
+- Payment gateway, komisi platform, dan integrasi Finance.
+- Matching driver otomatis/broadcast dan rute/ETA.
+- Aplikasi Flutter (Fase 7).
 
 Catatan pengembangan: karena provider email belum dipilih, token verifikasi dan
 reset ditulis ke `application/logs/sekitar-mail.log` di dalam container

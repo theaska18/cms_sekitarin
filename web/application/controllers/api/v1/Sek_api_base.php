@@ -9,7 +9,7 @@ class Sek_api_base extends CI_Controller
         parent::__construct();
         $this->load->database();
         $this->load->library(array('api_response', 'api_auth', 'api_validation', 'sek_mailer', 'sek_realtime', 'sek_notifier'));
-        $this->load->model(array('sek_user_model', 'sek_account_model', 'sek_media_model', 'sek_social_model', 'sek_chat_model', 'sek_post_model', 'sek_notification_model'));
+        $this->load->model(array('sek_user_model', 'sek_account_model', 'sek_media_model', 'sek_social_model', 'sek_chat_model', 'sek_post_model', 'sek_notification_model', 'sek_order_model'));
     }
 
     /** Decode the JSON request body. Sends 400 and returns NULL when invalid. */

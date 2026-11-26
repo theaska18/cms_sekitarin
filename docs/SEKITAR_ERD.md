@@ -199,6 +199,31 @@ Index (`account_id`, `status`, `post_id`).
 
 `sek_report.post_id` (nullable FK) ditambahkan untuk laporan post.
 
+### Layanan dan order
+
+**`sek_service`** — katalog per akun.
+
+`service_id`, `account_id`, `name`, `description`, `price` decimal(14,2),
+`currency`, `unit`, `kind` enum('product','service','ride'), `duration_minutes`,
+`is_active`, `created_at`, `updated_at`.
+
+**`sek_order`**
+
+`order_id`, `code` unique, `type` enum('food','service','ride'),
+`customer_user_id`, `customer_account_id`, `provider_account_id`,
+`status` enum('pending','accepted','in_progress','delivering','completed','cancelled'),
+`subtotal`, `total`, `currency`, `payment_method` enum('cash','transfer'),
+`payment_status` enum('unpaid','paid','refunded'), `notes`, alamat/titik
+delivery/pickup/dropoff, `scheduled_at`, `cancel_reason`, timestamps status.
+
+**`sek_order_item`** — snapshot item.
+
+`item_id`, `order_id`, `service_id` null, `name`, `price`, `quantity`, `subtotal`.
+
+**`sek_order_event`** — riwayat transisi.
+
+`event_id`, `order_id`, `status`, `actor_user_id`, `note`, `created_at`.
+
 ### Notifikasi
 
 **`sek_notification`** — feed in-app.
@@ -250,6 +275,12 @@ erDiagram
     sek_post ||--o{ sek_post_like : receives
     sek_post ||--o{ sek_post_comment : has
     sek_user ||--o{ sek_post_comment : writes
+
+    sek_account ||--o{ sek_service : offers
+    sek_account ||--o{ sek_order : fulfills
+    sek_user ||--o{ sek_order : places
+    sek_order ||--o{ sek_order_item : contains
+    sek_order ||--o{ sek_order_event : records
 ```
 
 ## Integrasi dengan CMS
@@ -277,6 +308,8 @@ erDiagram
    `sek_post_like`, `sek_post_comment`, plus `sek_report.post_id`.
 6. `20261126000700_sekitar_notifications.sql` — `sek_notification`,
    `sek_push_queue`.
+7. `20261126000800_sekitar_orders.sql` — `sek_service`, `sek_order`,
+   `sek_order_item`, `sek_order_event`.
 
 Setiap migrasi harus aman dijalankan pada database CMS yang sudah berisi data
 (damai, tanpa menyentuh tabel lama) dan dicatat di `sys_update_migration`.

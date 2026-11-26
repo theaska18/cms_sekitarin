@@ -157,9 +157,14 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   `sekitar-push` (FCM HTTP v1). Kredensial FCM diletakkan di
   `secrets/fcm-service-account.json`; tanpa file itu queue ditandai `skipped`.
   Detail: [`SEKITAR_PUSH.md`](SEKITAR_PUSH.md).
+- Fase 6 tersedia: katalog `sek_service` (product/service/ride), order
+  makanan/jasa/ride dengan state machine, riwayat `sek_order_event`, pembayaran
+  tunai/transfer manual, dan notifikasi order. Detail:
+  [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
 - Kontrak tes: `tests/test_sekitar_api_contract.py`.
-- Belum diimplementasikan: panel admin moderasi laporan, order/ride-hailing
-  (Fase 6), dan aplikasi Flutter (Fase 7).
+- Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi
+  platform/integrasi Finance, matching driver otomatis, dan aplikasi Flutter
+  (Fase 7).
 - Provider email transaksional belum dipilih; token development ditulis ke
   `application/logs/sekitar-mail.log` di container (`app_logs` volume) dan
   dikembalikan sebagai field `dev_*` saat environment bukan production.

@@ -47,6 +47,16 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/posts/(:num)/report",
             "api/v1/comments/(:num)",
             "api/v1/accounts/(:num)/posts",
+            "api/v1/accounts/(:num)/services",
+            "api/v1/services/(:num)",
+            "api/v1/orders",
+            "api/v1/orders/(:num)",
+            "api/v1/orders/(:num)/accept",
+            "api/v1/orders/(:num)/progress",
+            "api/v1/orders/(:num)/deliver",
+            "api/v1/orders/(:num)/complete",
+            "api/v1/orders/(:num)/cancel",
+            "api/v1/orders/(:num)/payment",
             "api/v1/me/push-token",
             "api/v1/notifications",
             "api/v1/notifications/(:num)/read",
@@ -236,6 +246,26 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("sekitar-push:", compose)
         self.assertIn("fcm-service-account.json", compose)
 
+    def test_order_migration_and_state_machine(self):
+        sql = (MIGRATIONS / "20261126000800_sekitar_orders.sql").read_text()
+        for table in ("sek_service", "sek_order", "sek_order_item", "sek_order_event"):
+            with self.subTest(table=table):
+                self.assertIn("CREATE TABLE `" + table + "`", sql)
+        for status in ("pending", "accepted", "in_progress", "delivering", "completed", "cancelled"):
+            with self.subTest(status=status):
+                self.assertIn(status, sql)
+
+        model = (APP / "models" / "Sek_order_model.php").read_text()
+        orders = (API / "Sek_orders.php").read_text()
+        services = (API / "Sek_services.php").read_text()
+        self.assertIn("function create_order", model)
+        self.assertIn("function transition", model)
+        self.assertIn("sek_order_event", model)
+        self.assertIn("expected_kind", orders)
+        self.assertIn("provider_action_order", orders)
+        self.assertIn("Hanya penyedia", orders)
+        self.assertIn("Hanya owner atau manager", services)
+
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
 
@@ -244,6 +274,7 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "docs" / "SEKITAR_API_V1.md").is_file())
         self.assertTrue((ROOT / "docs" / "SEKITAR_REALTIME.md").is_file())
         self.assertTrue((ROOT / "docs" / "SEKITAR_PUSH.md").is_file())
+        self.assertTrue((ROOT / "docs" / "SEKITAR_ORDERS.md").is_file())
 
 
 if __name__ == "__main__":
