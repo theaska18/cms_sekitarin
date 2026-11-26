@@ -327,6 +327,123 @@ class Sek_account_model extends CI_Model
             ->result_array();
     }
 
+    public function presence($account_id)
+    {
+        return $this->db->select('p.account_id, ST_X(p.location) AS lat, ST_Y(p.location) AS lng, '
+                . 'p.accuracy_m, p.heading, p.speed_mps, p.is_online, p.updated_at')
+            ->where('p.account_id', (int) $account_id)
+            ->limit(1)
+            ->get('sek_account_presence p')
+            ->row_array();
+    }
+
+    public function upsert_presence($account_id, $lat, $lng, $accuracy, $heading, $speed)
+    {
+        $now = gmdate('Y-m-d H:i:s');
+        $this->db->trans_start();
+        $this->db->query(
+            'INSERT INTO sek_account_presence (account_id, location, accuracy_m, heading, speed_mps, is_online, updated_at) '
+            . 'VALUES (?, ST_SRID(POINT(?, ?), 4326), ?, ?, ?, 1, ?) '
+            . 'ON DUPLICATE KEY UPDATE location = VALUES(location), accuracy_m = VALUES(accuracy_m), '
+            . 'heading = VALUES(heading), speed_mps = VALUES(speed_mps), is_online = 1, updated_at = VALUES(updated_at)',
+            array(
+                (int) $account_id,
+                (float) $lng,
+                (float) $lat,
+                $accuracy !== NULL ? (int) $accuracy : NULL,
+                $heading !== NULL ? (int) $heading : NULL,
+                $speed !== NULL ? (float) $speed : NULL,
+                $now,
+            )
+        );
+        $this->db->where('account_id', (int) $account_id)
+            ->update('sek_account', array('is_online' => 1, 'updated_at' => $now));
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function delete_presence($account_id)
+    {
+        $now = gmdate('Y-m-d H:i:s');
+        $this->db->trans_start();
+        $this->db->where('account_id', (int) $account_id)->delete('sek_account_presence');
+        $this->db->where('account_id', (int) $account_id)
+            ->update('sek_account', array('is_online' => 0, 'updated_at' => $now));
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Nearby business POIs plus live presence, merged and sorted by distance.
+     * Coordinates use MySQL's SRID 4326 axis order: POINT(longitude, latitude).
+     */
+    public function nearby($lat, $lng, $radius_m, $types, $online_only, $blocked_ids, $limit)
+    {
+        $distance_sql = 'ST_Distance_Sphere(%s.location, ST_SRID(POINT(?, ?), 4326))';
+        $base = array((float) $lng, (float) $lat);
+
+        $place_sql = 'SELECT a.account_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
+            . 'a.is_online, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'ST_X(l.location) AS lat, ST_Y(l.location) AS lng, '
+            . sprintf($distance_sql, 'l') . ' AS distance_m, "place" AS source, NULL AS last_seen_at '
+            . 'FROM sek_account a '
+            . 'INNER JOIN sek_account_type t ON t.type_code = a.type_code '
+            . 'INNER JOIN sek_account_location l ON l.account_id = a.account_id '
+            . 'WHERE a.status = "active" AND a.type_code <> "personal" '
+            . 'AND ' . sprintf($distance_sql, 'l') . ' <= ?';
+        $params = array_merge($base, $base, array((int) $radius_m));
+        if ($types) {
+            $place_sql .= ' AND a.type_code IN (' . implode(',', array_fill(0, count($types), '?')) . ')';
+            $params = array_merge($params, $types);
+        }
+        if ($blocked_ids) {
+            $place_sql .= ' AND a.account_id NOT IN (' . implode(',', array_fill(0, count($blocked_ids), '?')) . ')';
+            $params = array_merge($params, $blocked_ids);
+        }
+        $place_sql .= ' ORDER BY distance_m ASC LIMIT ?';
+        $params[] = (int) $limit;
+
+        $presence_sql = 'SELECT a.account_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
+            . 'a.is_online, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'ST_X(p.location) AS lat, ST_Y(p.location) AS lng, '
+            . sprintf($distance_sql, 'p') . ' AS distance_m, "live" AS source, p.updated_at AS last_seen_at '
+            . 'FROM sek_account a '
+            . 'INNER JOIN sek_account_type t ON t.type_code = a.type_code '
+            . 'INNER JOIN sek_account_presence p ON p.account_id = a.account_id '
+            . 'WHERE a.status = "active" AND t.allows_presence = 1 AND p.is_online = 1 '
+            . 'AND p.updated_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) '
+            . 'AND ' . sprintf($distance_sql, 'p') . ' <= ?';
+        $presence_params = array_merge($base, $base, array((int) $radius_m));
+        if ($types) {
+            $presence_sql .= ' AND a.type_code IN (' . implode(',', array_fill(0, count($types), '?')) . ')';
+            $presence_params = array_merge($presence_params, $types);
+        }
+        if ($blocked_ids) {
+            $presence_sql .= ' AND a.account_id NOT IN (' . implode(',', array_fill(0, count($blocked_ids), '?')) . ')';
+            $presence_params = array_merge($presence_params, $blocked_ids);
+        }
+        $presence_sql .= ' ORDER BY distance_m ASC LIMIT ?';
+        $presence_params[] = (int) $limit;
+
+        // With online=1 only fresh presence is relevant; base POIs would show
+        // stale online flags for accounts whose presence stopped updating.
+        $places = $online_only ? array() : $this->db->query($place_sql, $params)->result_array();
+        $presence = $this->db->query($presence_sql, $presence_params)->result_array();
+
+        $merged = array();
+        foreach ($places as $row) {
+            $merged[(int) $row['account_id']] = $row;
+        }
+        foreach ($presence as $row) {
+            $merged[(int) $row['account_id']] = $row;
+        }
+        $rows = array_values($merged);
+        usort($rows, function ($left, $right) {
+            return (float) $left['distance_m'] <=> (float) $right['distance_m'];
+        });
+        return array_slice($rows, 0, (int) $limit);
+    }
+
     public function media_belongs_to($media_id, $user_id)
     {
         return $this->db->where('media_id', (int) $media_id)

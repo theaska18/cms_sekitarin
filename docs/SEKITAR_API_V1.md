@@ -187,18 +187,23 @@ di-re-encode, nama file acak, disimpan di luar web root. Respons berisi
 | Method | Path | Keterangan |
 | --- | --- | --- |
 | PUT | `/accounts/{account_id}/location` | Lokasi dasar akun usaha. Body `{lat, lng, address?, source}`. |
-| PUT | `/accounts/{account_id}/presence` | Lokasi live. Body `{lat, lng, accuracy_m?, heading?, speed_mps?, is_online}`. Butuh consent `location`. |
+| GET | `/accounts/{account_id}/presence` | Presence milik akun (anggota). |
+| PUT | `/accounts/{account_id}/presence` | Lokasi live. Body `{lat, lng, accuracy_m?, heading?, speed_mps?}`. Butuh consent `location`. |
 | DELETE | `/accounts/{account_id}/presence` | Set offline dan hapus baris presence. |
-| GET | `/nearby` | `?lat&lng&radius=500&types=warung,driver_motor&online=1&limit=50`. |
+| GET | `/nearby` | `?lat&lng&radius=1000&types=warung,driver_motor&online=1&limit=50`. |
 
 Aturan:
 
-- `radius` dibatasi 100–5000 m; server memakai `ST_Distance_Sphere`.
+- `radius` 100–5000 m (default 1000); server memakai `ST_Distance_Sphere`.
+  `limit` maksimal 100.
 - Akun personal tidak pernah muncul di `/nearby`.
-- Presence hanya dikembalikan bila `is_online=1` dan consent aktif; akurasi
-  dibulatkan agar tidak membocorkan posisi presisi (mis. 2 desimal ≈ 1 km untuk
-  tampilan publik, koordinat penuh hanya untuk chat yang disetujui).
+- `online=1` hanya menampilkan akun dengan presence aktif; tanpa parameter,
+  POI usaha tetap tampil walau offline.
+- Presence dianggap aktif bila `is_online=1` dan diperbarui ≤5 menit lalu.
+  Consent `location` wajib; mencabut consent menghapus presence.
 - Update presence maksimal 1 kali per 5 detik per akun; lebih dari itu `429`.
+- Koordinat presence dikembalikan tepat kepada pengguna terautentikasi untuk
+  kebutuhan map/penjemputan; akun yang diblokir disembunyikan dua arah.
 
 Contoh `GET /nearby`:
 
@@ -208,17 +213,24 @@ Contoh `GET /nearby`:
     {
       "account_id": 88,
       "type_code": "driver_motor",
+      "type_label": "Driver Motor",
       "display_name": "Budi",
       "distance_m": 142,
       "lat": -6.9142,
       "lng": 107.6101,
       "is_online": true,
+      "source": "live",
+      "verified": false,
       "last_seen_at": "2026-11-26T10:00:03Z"
     }
   ],
-  "next_cursor": null
+  "radius_m": 1000,
+  "center": {"lat": -6.9147, "lng": 107.6098}
 }
 ```
+
+`source` bernilai `place` untuk lokasi dasar usaha dan `live` untuk presence
+realtime. Jika akun punya keduanya, hasil `live` yang dipakai.
 
 ## Kontak
 
@@ -360,7 +372,7 @@ web/application/models/Sek_media_model.php
 
 ## Status implementasi
 
-Sudah berjalan (Fase 1 + dasar Fase 2):
+Sudah berjalan (Fase 1–4):
 
 - Migrasi `20261126000200_sekitar_identity.sql` dan
   `20261126000300_sekitar_accounts.sql`.
@@ -382,12 +394,13 @@ Sudah berjalan (Fase 1 + dasar Fase 2):
 - `GET/POST /accounts/{id}/members`, `PATCH/DELETE /accounts/{id}/members/{user_id}`.
 - Chat: percakapan direct/grup, pesan teks/media/lokasi, edit/hapus, read
   receipt, typing, live location grup, dan WebSocket gateway `sekitar-ws`.
-- Rate limit login, register, refresh, resend, forgot-password, dan laporan.
+- `PUT /accounts/{id}/location`, `GET/PUT/DELETE /accounts/{id}/presence`,
+  `GET /nearby` (spatial index, filter tipe/online, blokir dua arah).
+- Rate limit login, register, refresh, resend, forgot-password, laporan, dan
+  update presence.
 
 Belum diimplementasikan:
 
-- `PUT /accounts/{id}/location`, `PUT/DELETE /accounts/{id}/presence`,
-  `GET /nearby` (Fase 4).
 - Push notification FCM/APNs untuk pesan saat aplikasi tertutup.
 - Post/feed (Fase 5).
 
@@ -399,7 +412,7 @@ dan respons
 `register`/`resend`/`forgot` menyertakan `dev_verification_token` atau
 `dev_reset_token` saat `ENVIRONMENT !== 'production'`.
 
-## Checklist keamanan Fase 1–2
+## Checklist keamanan Fase 1–4
 
 - Verifikasi email + rate limit login/forgot-password.
 - Token disimpan sebagai hash; rotasi refresh; revoke per device.
@@ -408,4 +421,6 @@ dan respons
 - Upload: allow-list MIME, batas ukuran, re-encode gambar, path acak.
 - Jangan pernah mengembalikan `password_hash`, token, atau email pengguna lain.
 - UTC untuk semua timestamp; konversi ke zona perangkat di klien.
+- Presence hanya dengan consent aktif; jarak dihitung server, bukan dari klien.
+- Query `nearby` selalu dibatasi radius, limit, dan daftar akun terblokir.
 - Audit log untuk aksi admin (verifikasi akun, tinjau laporan).

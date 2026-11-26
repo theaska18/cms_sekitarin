@@ -38,7 +38,10 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/conversations/(:num)/members",
             "api/v1/conversations/(:num)/live-location",
             "api/v1/messages/(:num)",
+            "api/v1/nearby",
             "api/v1/accounts/search",
+            "api/v1/accounts/(:num)/location",
+            "api/v1/accounts/(:num)/presence",
             "api/v1/accounts/(:num)/hours",
             "api/v1/accounts/(:num)/members",
             "api/v1/accounts/(:num)/members/(:num)",
@@ -169,6 +172,20 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("X-Internal-Secret", realtime)
         self.assertIn("sekitar-ws:", compose)
         self.assertIn("8090:8090", compose)
+
+    def test_nearby_uses_spatial_distance_and_presence_rules(self):
+        model = (APP / "models" / "Sek_account_model.php").read_text()
+        places = (API / "Sek_places.php").read_text()
+        self.assertIn("ST_Distance_Sphere", model)
+        self.assertIn("ST_SRID(POINT(?, ?), 4326)", model)
+        self.assertIn("DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE)", model)
+        self.assertIn("allows_presence = 1", model)
+        self.assertIn("blocked_account_ids", model)
+        self.assertIn("presence|", places)
+        self.assertIn("Persetujuan lokasi belum diberikan", places)
+
+    def test_database_language_file_prevents_masked_errors(self):
+        self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
 
     def test_phase_one_docs_exist(self):
         self.assertTrue((ROOT / "docs" / "SEKITAR_ERD.md").is_file())
