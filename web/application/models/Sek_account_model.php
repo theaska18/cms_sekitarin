@@ -401,13 +401,13 @@ class Sek_account_model extends CI_Model
      * Nearby business POIs plus live presence, merged and sorted by distance.
      * Coordinates use MySQL's SRID 4326 axis order: POINT(longitude, latitude).
      */
-    public function nearby($lat, $lng, $radius_m, $types, $online_only, $blocked_ids, $limit)
+    public function nearby($lat, $lng, $radius_m, $types, $online_only, $blocked_ids, $limit, $include_realtime = TRUE)
     {
         $distance_sql = 'ST_Distance_Sphere(%s.location, ST_SRID(POINT(?, ?), 4326))';
         $base = array((float) $lng, (float) $lat);
 
         $place_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
-            . 'a.is_online, a.is_active, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'a.is_online, a.is_active, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(l.location) AS lat, ST_Y(l.location) AS lng, '
             . sprintf($distance_sql, 'l') . ' AS distance_m, "place" AS source, NULL AS last_seen_at '
             . 'FROM sek_account a '
@@ -415,6 +415,9 @@ class Sek_account_model extends CI_Model
             . 'INNER JOIN sek_account_location l ON l.account_id = a.account_id '
             . 'WHERE a.status = "active" AND a.type_code <> "personal" '
             . 'AND ' . sprintf($distance_sql, 'l') . ' <= ?';
+        if (!$include_realtime) {
+            $place_sql .= ' AND a.location_mode = "fixed"';
+        }
         $params = array_merge($base, $base, array((int) $radius_m));
         if ($types) {
             $place_sql .= ' AND a.type_code IN (' . implode(',', array_fill(0, count($types), '?')) . ')';
@@ -428,7 +431,7 @@ class Sek_account_model extends CI_Model
         $params[] = (int) $limit;
 
         $presence_sql = 'SELECT a.account_id, a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, '
-            . 'a.is_online, a.is_active, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
+            . 'a.is_online, a.is_active, a.location_mode, a.verified_at, a.service_radius_m, t.label_id, t.label_en, '
             . 'ST_X(p.location) AS lat, ST_Y(p.location) AS lng, '
             . sprintf($distance_sql, 'p') . ' AS distance_m, "live" AS source, p.updated_at AS last_seen_at '
             . 'FROM sek_account a '
@@ -452,7 +455,9 @@ class Sek_account_model extends CI_Model
         // With online=1 only fresh presence is relevant; base POIs would show
         // stale online flags for accounts whose presence stopped updating.
         $places = $online_only ? array() : $this->db->query($place_sql, $params)->result_array();
-        $presence = $this->db->query($presence_sql, $presence_params)->result_array();
+        $presence = $include_realtime
+            ? $this->db->query($presence_sql, $presence_params)->result_array()
+            : array();
 
         $merged = array();
         foreach ($places as $row) {
@@ -466,6 +471,41 @@ class Sek_account_model extends CI_Model
             return (float) $left['distance_m'] <=> (float) $right['distance_m'];
         });
         return array_slice($rows, 0, (int) $limit);
+    }
+
+    /** Account id => nearest distance for accounts inside the radius. */
+    public function nearby_account_distances($lat, $lng, $radius_m, $limit = 500)
+    {
+        $rows = $this->db->query(
+            'SELECT account_id, MIN(distance_m) AS distance_m FROM ('
+            . 'SELECT account_id, ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) AS distance_m '
+            . 'FROM sek_account_location '
+            . 'WHERE ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) <= ? '
+            . 'UNION ALL '
+            . 'SELECT account_id, ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) AS distance_m '
+            . 'FROM sek_account_presence '
+            . 'WHERE is_online = 1 AND updated_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 5 MINUTE) '
+            . 'AND ST_Distance_Sphere(location, ST_SRID(POINT(?, ?), 4326)) <= ? '
+            . ') AS nearby GROUP BY account_id ORDER BY distance_m ASC LIMIT ?',
+            array(
+                (float) $lng,
+                (float) $lat,
+                (float) $lng,
+                (float) $lat,
+                (int) $radius_m,
+                (float) $lng,
+                (float) $lat,
+                (float) $lng,
+                (float) $lat,
+                (int) $radius_m,
+                (int) $limit,
+            )
+        )->result_array();
+        $distances = array();
+        foreach ($rows as $row) {
+            $distances[(int) $row['account_id']] = (float) $row['distance_m'];
+        }
+        return $distances;
     }
 
     /** Account ids that have a base point or fresh presence inside the radius. */

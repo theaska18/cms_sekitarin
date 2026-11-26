@@ -215,6 +215,10 @@ Aturan:
 - `radius` 100–5000 m (default 1000); server memakai `ST_Distance_Sphere`.
   `limit` maksimal 100.
 - Akun personal tidak pernah muncul di `/nearby`.
+- Jika viewer belum memberi consent `location`, server hanya mengembalikan akun
+  dengan `location_mode=fixed` (`source=place`); akun realtime/presence
+  (`source=live`) disembunyikan. Aktifkan “Bagikan lokasi” di Setelan untuk
+  melihat driver/layanan realtime.
 - `online=1` hanya menampilkan akun dengan presence aktif; tanpa parameter,
   POI usaha tetap tampil walau offline.
 - Presence dianggap aktif bila `is_online=1` dan diperbarui ≤5 menit lalu.
@@ -238,6 +242,7 @@ Contoh `GET /nearby`:
       "lng": 107.6101,
       "is_online": true,
       "is_active": true,
+      "location_mode": "realtime",
       "source": "live",
       "is_own": false,
       "verified": false,
@@ -245,6 +250,7 @@ Contoh `GET /nearby`:
     }
   ],
   "radius_m": 1000,
+  "live_sharing": true,
   "center": {"lat": -6.9147, "lng": 107.6098}
 }
 ```
@@ -390,8 +396,13 @@ lokasi adalah tindakan eksplisit pengguna, bukan otomatis.
 
 - Tanpa `lat`/`lng`: hanya post dari akun milik sendiri dan akun yang disimpan
   sebagai kontak.
-- Dengan `lat`/`lng`: ditambah akun yang punya lokasi dasar atau presence aktif
-  dalam `radius` (default 500 m, maksimal 5000 m).
+- Dengan `lat`/`lng` **dan consent `location` aktif**: ditambah akun yang punya
+  lokasi dasar atau presence aktif dalam `radius` (default 500 m, maksimal
+  5000 m).
+- Tanpa consent lokasi, `lat`/`lng` diabaikan server sehingga feed hanya berisi
+  akun sendiri + kontak.
+- Setiap post menyertakan `feed_source`: `own`, `contact`, atau `nearby`.
+  Untuk `nearby`, `distance_m` berisi jarak akun ke titik viewer.
 - Akun yang diblokir (dua arah) tidak pernah muncul.
 - Urut `post_id` menurun; `before_id` untuk pagination, `limit` maksimal 50.
 

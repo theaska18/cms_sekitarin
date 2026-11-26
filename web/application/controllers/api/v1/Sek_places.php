@@ -151,6 +151,7 @@ class Sek_places extends Sek_api_base
         }
 
         $blocked = $this->sek_account_model->blocked_account_ids($this->viewer_account_id());
+        $live_sharing = $this->location_consent_granted();
         $rows = $this->sek_account_model->nearby(
             (float) $lat,
             (float) $lng,
@@ -158,7 +159,8 @@ class Sek_places extends Sek_api_base
             $types,
             $online_only,
             $blocked,
-            $limit
+            $limit,
+            $live_sharing
         );
 
         $data = array();
@@ -178,6 +180,7 @@ class Sek_places extends Sek_api_base
                 'distance_m' => (int) round((float) $row['distance_m']),
                 'is_online' => (int) $row['is_online'] === 1,
                 'is_active' => !isset($row['is_active']) || (int) $row['is_active'] === 1,
+                'location_mode' => isset($row['location_mode']) ? (string) $row['location_mode'] : 'fixed',
                 'source' => (string) $row['source'],
                 'verified' => !empty($row['verified_at']),
                 'last_seen_at' => $this->utc($row['last_seen_at']),
@@ -186,6 +189,7 @@ class Sek_places extends Sek_api_base
         $this->api_response->ok(array(
             'data' => $data,
             'radius_m' => $radius,
+            'live_sharing' => $live_sharing,
             'center' => array('lat' => (float) $lat, 'lng' => (float) $lng),
         ));
     }

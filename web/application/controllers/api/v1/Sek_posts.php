@@ -31,15 +31,19 @@ class Sek_posts extends Sek_api_base
             $lat = NULL;
             $lng = NULL;
         }
+        if ($lat !== NULL && !$this->location_consent_granted()) {
+            $lat = NULL;
+            $lng = NULL;
+        }
 
-        $allowed = $this->allowed_account_ids($lat, $lng, $radius);
-        $rows = $this->sek_post_model->feed($allowed, $before, $limit);
+        $scope = $this->feed_scope($lat, $lng, $radius);
+        $rows = $this->sek_post_model->feed($scope['ids'], $before, $limit);
         $has_more = count($rows) > $limit;
         if ($has_more) {
             $rows = array_slice($rows, 0, $limit);
         }
         $this->api_response->ok(array(
-            'data' => $this->post_payloads($rows),
+            'data' => $this->post_payloads($rows, $scope['meta']),
             'has_more' => $has_more,
             'radius_m' => $lat !== NULL ? $radius : NULL,
         ));
@@ -349,26 +353,54 @@ class Sek_posts extends Sek_api_base
         return $viewer !== NULL && $this->sek_account_model->blocked_between($viewer, (int) $account_id);
     }
 
-    private function allowed_account_ids($lat, $lng, $radius)
+    private function location_consent_granted()
+    {
+        $row = $this->db->where('user_id', $this->api_auth->user_id())
+            ->where('scope', 'location')
+            ->order_by('created_at', 'DESC')
+            ->limit(1)
+            ->get('sek_consent')
+            ->row_array();
+        return is_array($row) && (int) $row['granted'] === 1;
+    }
+
+    private function feed_scope($lat, $lng, $radius)
     {
         $ids = array();
+        $meta = array();
         foreach ($this->sek_account_model->list_for_user($this->api_auth->user_id()) as $account) {
-            $ids[] = (int) $account['account_id'];
+            $account_id = (int) $account['account_id'];
+            $ids[] = $account_id;
+            $meta[$account_id] = array('feed_source' => 'own', 'distance_m' => NULL);
         }
         foreach ($this->sek_social_model->contact_account_ids($this->api_auth->user_id()) as $account_id) {
-            $ids[] = (int) $account_id;
+            $account_id = (int) $account_id;
+            $ids[] = $account_id;
+            if (!isset($meta[$account_id])) {
+                $meta[$account_id] = array('feed_source' => 'contact', 'distance_m' => NULL);
+            }
         }
         if ($lat !== NULL && $lng !== NULL) {
-            foreach ($this->sek_account_model->nearby_account_ids($lat, $lng, $radius, 500) as $account_id) {
-                $ids[] = (int) $account_id;
+            foreach ($this->sek_account_model->nearby_account_distances($lat, $lng, $radius, 500) as $account_id => $distance) {
+                $account_id = (int) $account_id;
+                $ids[] = $account_id;
+                if (!isset($meta[$account_id])) {
+                    $meta[$account_id] = array(
+                        'feed_source' => 'nearby',
+                        'distance_m' => (int) round($distance),
+                    );
+                }
             }
         }
         $blocked = $this->sek_account_model->blocked_account_ids($this->viewer_account_id());
         $ids = array_values(array_unique(array_diff($ids, $blocked)));
-        return $ids;
+        foreach ($blocked as $blocked_id) {
+            unset($meta[$blocked_id]);
+        }
+        return array('ids' => $ids, 'meta' => $meta);
     }
 
-    private function post_payloads($rows)
+    private function post_payloads($rows, $meta = array())
     {
         if (!$rows) {
             return array();
@@ -381,12 +413,12 @@ class Sek_posts extends Sek_api_base
         $media = $this->sek_post_model->media_for($ids);
         $data = array();
         foreach ($rows as $row) {
-            $data[] = $this->post_payload($row, $counts, $media);
+            $data[] = $this->post_payload($row, $counts, $media, $meta);
         }
         return $data;
     }
 
-    private function post_payload($post, $counts = NULL, $media_map = NULL)
+    private function post_payload($post, $counts = NULL, $media_map = NULL, $scope_meta = array())
     {
         $post_id = (int) $post['post_id'];
         if ($counts === NULL) {
@@ -408,8 +440,13 @@ class Sek_posts extends Sek_api_base
             }
         }
         $count = isset($counts[$post_id]) ? $counts[$post_id] : array('like_count' => 0, 'comment_count' => 0, 'liked' => FALSE);
+        $meta = isset($scope_meta[(int) $post['account_id']])
+            ? $scope_meta[(int) $post['account_id']]
+            : array('feed_source' => NULL, 'distance_m' => NULL);
         return array(
             'post_id' => $post_id,
+            'feed_source' => $meta['feed_source'],
+            'distance_m' => $meta['distance_m'],
             'caption' => $post['caption'],
             'media' => $media,
             'like_count' => (int) $count['like_count'],
