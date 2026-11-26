@@ -198,6 +198,46 @@ class Finance_integration_store
             )) === TRUE;
     }
 
+    /**
+     * Follow the revision chain forward and return the newest document.
+     * A revised invoice/bill is superseded by its replacement draft, so the
+     * API must look at the latest link before deciding whether it can cancel.
+     */
+    public function latest_document($kind, $tenant_id, $document_id)
+    {
+        $spec = $this->spec($kind);
+        if ($spec === NULL || (int) $document_id < 1) {
+            return NULL;
+        }
+        $table = $kind === 'sales' ? 'fin_sales_invoice' : 'fin_purchase_bill';
+        $id_column = $kind === 'sales' ? 'sales_invoice_id' : 'purchase_bill_id';
+        if (!$this->db->table_exists($table) || !$this->db->field_exists('revision_of_id', $table)) {
+            return NULL;
+        }
+        $current = (int) $document_id;
+        $guard = 0;
+        while ($guard < 50) {
+            $next = $this->db->select($id_column . ',status')
+                ->from($table)
+                ->where('tenant_id', (int) $tenant_id)
+                ->where('revision_of_id', $current)
+                ->order_by($id_column, 'DESC')->limit(1)->get()->row_array();
+            if (!$next) {
+                break;
+            }
+            $current = (int) $next[$id_column];
+            $guard++;
+        }
+        $row = $this->db->select($id_column . ',status')
+            ->from($table)
+            ->where('tenant_id', (int) $tenant_id)
+            ->where($id_column, $current)->limit(1)->get()->row_array();
+        if (!$row) {
+            return NULL;
+        }
+        return array('id' => (int) $row[$id_column], 'status' => (string) $row['status']);
+    }
+
     public function document_status($kind, $tenant_id, $document_id)
     {
         $spec = $this->spec($kind);

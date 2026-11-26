@@ -85,6 +85,21 @@ class FinanceRevisionContractTests(unittest.TestCase):
         self.assertIn("finance_document_revision_of", view)
         self.assertIn("finance_document_replacement", view)
 
+    def test_revision_chain_is_followed_by_the_integration_api(self):
+        store = (APP / "libraries" / "Finance_integration_store.php").read_text(encoding="utf-8")
+        api = (APP / "controllers" / "Finance_api.php").read_text(encoding="utf-8")
+        self.assertIn("public function latest_document($kind, $tenant_id, $document_id)", store)
+        self.assertIn("->where('revision_of_id', $current)", store)
+        self.assertIn("$store->latest_document($kind, $tenant_id, $draft_id)", api)
+        self.assertIn("'revision_pending' => 'Document revision is awaiting approval.'", api)
+        self.assertIn("'revised' => 'Document was revised; cancel the replacement draft first.'", api)
+
+    def test_revision_repoints_the_integration_inbox(self):
+        store = (APP / "libraries" / "Finance_cancellation_store.php").read_text(encoding="utf-8")
+        self.assertIn("private function sync_revision_inbox(", store)
+        self.assertIn("$this->sync_revision_inbox($tenant_id, (string) $cancellation['source_type'], $source_id, (int) $replacement_id);", store)
+        self.assertIn("'fin_sales_invoice' => array('table' => 'fin_sales_invoice_inbox', 'id' => 'sales_invoice_id')", store)
+
     def test_replacement_draft_unlocks_amount_for_integration_documents(self):
         controller = (APP / "controllers" / "Admin_finance.php").read_text(encoding="utf-8")
         self.assertIn(

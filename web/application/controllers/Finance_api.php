@@ -274,11 +274,23 @@ class Finance_api extends CI_Controller
         }
 
         if ($draft_id > 0) {
+            // A revised document is superseded by its replacement draft; follow
+            // the chain so a fully cancelled revision can release the submission.
+            $latest = $store->latest_document($kind, $tenant_id, $draft_id);
+            if (is_array($latest) && (int) $latest['id'] > 0) {
+                $draft_id = (int) $latest['id'];
+            }
             $draft_status = $store->document_status($kind, $tenant_id, $draft_id);
             if ($draft_status !== 'cancelled') {
+                $messages = array(
+                    'posted' => 'Document already posted.',
+                    'approved' => 'Document is approved but not posted; cancel it first.',
+                    'revision_pending' => 'Document revision is awaiting approval.',
+                    'revised' => 'Document was revised; cancel the replacement draft first.',
+                );
                 $this->json(array(
                     'status' => 'error',
-                    'message' => $draft_status === 'posted' ? 'Document already posted.' : 'Draft already created.',
+                    'message' => isset($messages[$draft_status]) ? $messages[$draft_status] : 'Draft already created.',
                     'inbox_id' => $inbox_id,
                     'draft_id' => $draft_id,
                     'draft_status' => $draft_status,

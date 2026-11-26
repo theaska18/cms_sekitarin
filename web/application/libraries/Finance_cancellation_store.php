@@ -222,6 +222,7 @@ class Finance_cancellation_store
                         ->update('fin_cancellation', array('status' => 'failed', 'decided_on' => app_now()));
                     return FALSE;
                 }
+                $this->sync_revision_inbox($tenant_id, (string) $cancellation['source_type'], $source_id, (int) $replacement_id);
                 $this->db->where(array('tenant_id' => $tenant_id, $spec['id'] => $source_id))
                     ->update($spec['table'], array(
                         'status' => 'revised',
@@ -334,6 +335,26 @@ class Finance_cancellation_store
         $fallback = $this->db->select('flow_code')->from('sys_approval_flow')
             ->where('flow_code', 'finance_cancel')->where('active_flag', 1)->limit(1)->get();
         return $fallback !== FALSE && $fallback->num_rows() ? 'finance_cancel' : '';
+    }
+
+    /** Point the integration inbox row at the newest revision replacement. */
+    private function sync_revision_inbox($tenant_id, $source_type, $source_id, $replacement_id)
+    {
+        $targets = array(
+            'fin_sales_invoice' => array('table' => 'fin_sales_invoice_inbox', 'id' => 'sales_invoice_id'),
+            'fin_purchase_bill' => array('table' => 'fin_purchase_bill_inbox', 'id' => 'purchase_bill_id'),
+        );
+        if (!isset($targets[$source_type]) || (int) $replacement_id < 1) {
+            return;
+        }
+        $target = $targets[$source_type];
+        if (!$this->db->table_exists($target['table'])) {
+            return;
+        }
+        $this->db->where(array(
+            'tenant_id' => (int) $tenant_id,
+            $target['id'] => (int) $source_id,
+        ))->update($target['table'], array($target['id'] => (int) $replacement_id));
     }
 
     /** Keep integration inbox rows in sync with a cancelled draft document. */
