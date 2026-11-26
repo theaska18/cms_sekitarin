@@ -1,11 +1,11 @@
 {
-  "version": "1.0.45",
+  "version": "1.0.46",
   "released_at": "2026-11-26",
-  "changelog": "Perbaikan: tombol Hapus Draft memakai URL route yang benar sehingga tidak lagi 404 dan menampilkan pesan \"Draft berhasil dihapus.\" di semua daftar Finance. Kolom Tindakan pada menu integrasi kini memakai ikon untuk Jadikan Draft, Lihat Draft, dan Lihat Dokumen.",
+  "changelog": "Kolom Tindakan pada Faktur Penjualan, Tagihan Pembelian, Pembayaran Pelanggan/Pemasok, dan Rekonsiliasi Bank kini memakai ikon untuk Ubah, Ajukan persetujuan, Posting, dan Selesai, melengkapi ikon Hapus Draft dan Batalkan.",
   "min_php": "8.1",
-  "requires_version": "1.0.44",
-  "package": "cms-1.0.45.zip",
-  "sha256": "cb87c589937439457269b8c4f862e2ff03bec346708d4fc60b861ea9e3353017",
-  "size": 30433,
+  "requires_version": "1.0.45",
+  "package": "cms-1.0.46.zip",
+  "sha256": "81beaa16fdec01cd2760ee0887727955e295ea127acbccccaeb7ab5dd6949470",
+  "size": 15077,
   "migrations": []
 }

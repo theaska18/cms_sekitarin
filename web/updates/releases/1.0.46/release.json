@@ -1,0 +1,41 @@
+{
+  "version": "1.0.46",
+  "from_version": "1.0.45",
+  "channel": "stable",
+  "released_at": "2026-11-26",
+  "min_php": "8.1",
+  "requires_version": "1.0.45",
+  "changelog": "Kolom Tindakan pada Faktur Penjualan, Tagihan Pembelian, Pembayaran Pelanggan/Pemasok, dan Rekonsiliasi Bank kini memakai ikon untuk Ubah, Ajukan persetujuan, Posting, dan Selesai, melengkapi ikon Hapus Draft dan Batalkan.",
+  "files": [
+    {
+      "path": "application/config/version.php",
+      "sha256": "c5f4cb737ee2f1aa64f2602757ce3f397d6853044d4dbb06efc6fe4b1b843f44",
+      "size": 449
+    },
+    {
+      "path": "application/views/admin/finance/document_index.php",
+      "sha256": "2ee15ee2cd863dd094107e858c66256bd3d4f0a75c61a0ca844d5df4386ea714",
+      "size": 20417
+    },
+    {
+      "path": "application/views/admin/finance/payment_index.php",
+      "sha256": "6722a3c5fbf573d07685449f20ef0784bf1af4edf7c306cfc33227343615021d",
+      "size": 19125
+    },
+    {
+      "path": "application/views/admin/finance/reconciliation_index.php",
+      "sha256": "3ab39fbf5c71f37b3e120deec8a53c6c34212d5f26b688cb9e8bf9a2ed8ae06a",
+      "size": 12003
+    }
+  ],
+  "delete": [],
+  "migrations": [],
+  "migration_checksums": {},
+  "package": {
+    "name": "cms-1.0.46.zip",
+    "sha256": "81beaa16fdec01cd2760ee0887727955e295ea127acbccccaeb7ab5dd6949470",
+    "size": 15077
+  },
+  "from_ref": "v1.0.45",
+  "generated_at": "2026-11-26T12:15:19+00:00"
+}
