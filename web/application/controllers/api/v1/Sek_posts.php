@@ -483,11 +483,15 @@ class Sek_posts extends Sek_api_base
             foreach ($this->sek_account_model->nearby_account_distances($lat, $lng, $radius, 500) as $account_id => $distance) {
                 $account_id = (int) $account_id;
                 $ids[] = $account_id;
+                $meters = (int) round($distance);
                 if (!isset($meta[$account_id])) {
                     $meta[$account_id] = array(
                         'feed_source' => 'nearby',
-                        'distance_m' => (int) round($distance),
+                        'distance_m' => $meters,
                     );
+                } else {
+                    // Keep own/contact labels but still expose the radius distance.
+                    $meta[$account_id]['distance_m'] = $meters;
                 }
             }
         }
