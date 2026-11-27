@@ -20,7 +20,10 @@ class Sek_conversations extends Sek_api_base
         }
 
         $data = array();
-        foreach ($this->sek_chat_model->list_conversations($this->api_auth->user_id()) as $row) {
+        foreach ($this->sek_chat_model->list_conversations(
+            $this->api_auth->user_id(),
+            $this->viewer_account_id()
+        ) as $row) {
             $data[] = $this->conversation_payload($row, $this->api_auth->user_id(), FALSE);
         }
         $this->api_response->ok(array('data' => $data));
@@ -310,11 +313,6 @@ class Sek_conversations extends Sek_api_base
                     return;
                 }
                 $target_user_id = (int) $target_account['user_id'];
-                $viewer_account = $this->viewer_account_id();
-                if ($viewer_account !== NULL && $this->sek_account_model->blocked_between($viewer_account, $target_account_id)) {
-                    $this->api_response->error('forbidden', 'Akun ini diblokir.', 403);
-                    return;
-                }
             } elseif (isset($body['user_id'])) {
                 $target_user_id = (int) $body['user_id'];
                 $target_user = $this->sek_user_model->find($target_user_id);
@@ -322,12 +320,34 @@ class Sek_conversations extends Sek_api_base
                     $this->api_response->error('not_found', 'Pengguna tidak ditemukan.', 404);
                     return;
                 }
+                $target_account_id = $this->sek_account_model->primary_account($target_user_id);
+                $target_account = $target_account_id !== NULL
+                    ? $this->sek_account_model->find($target_account_id)
+                    : NULL;
             }
-            if ($target_user_id <= 0 || $target_user_id === (int) $this->api_auth->user_id()) {
+            if ($target_user_id <= 0 || $target_user_id === (int) $this->api_auth->user_id()
+                || $target_account_id === NULL || !is_array($target_account)) {
                 $this->api_response->error('validation_error', 'Tujuan percakapan tidak valid.', 422);
                 return;
             }
-            $existing = $this->sek_chat_model->find_direct($this->api_auth->user_id(), $target_user_id);
+            $sender_account_id = $this->viewer_account_id();
+            if ($sender_account_id === NULL) {
+                $sender_account_id = $this->sek_account_model->primary_account($this->api_auth->user_id());
+            }
+            if ($sender_account_id === NULL) {
+                $this->api_response->error('validation_error', 'Akun pengirim tidak valid.', 422);
+                return;
+            }
+            if ($this->sek_account_model->blocked_between($sender_account_id, $target_account_id)) {
+                $this->api_response->error('forbidden', 'Akun ini diblokir.', 403);
+                return;
+            }
+            // Each account pair gets its own direct conversation, so a driver
+            // account and a personal account never share one thread.
+            $existing = $this->sek_chat_model->find_direct_accounts(
+                $sender_account_id,
+                $target_account_id
+            );
             if (is_array($existing)) {
                 $this->sek_chat_model->add_member((int) $existing['conversation_id'], $this->api_auth->user_id());
                 $this->api_response->ok(array(
@@ -336,7 +356,14 @@ class Sek_conversations extends Sek_api_base
                 ));
                 return;
             }
-            $conversation_id = $this->sek_chat_model->create_conversation('direct', $this->api_auth->user_id(), NULL, array($target_user_id));
+            $conversation_id = $this->sek_chat_model->create_conversation(
+                'direct',
+                $this->api_auth->user_id(),
+                NULL,
+                array($target_user_id),
+                $sender_account_id,
+                $target_account_id
+            );
             if ($conversation_id === NULL) {
                 $this->api_response->error('conflict', 'Percakapan gagal dibuat.', 409);
                 return;
@@ -460,21 +487,52 @@ class Sek_conversations extends Sek_api_base
         $members = $this->sek_chat_model->members($conversation_id);
         $member_list = array();
         $peer = NULL;
+        $my_account_id = NULL;
+        $is_direct = (string) $conversation['type'] === 'direct';
+        $account_a = isset($conversation['direct_account_a_id']) && $conversation['direct_account_a_id'] !== NULL
+            ? (int) $conversation['direct_account_a_id'] : NULL;
+        $account_b = isset($conversation['direct_account_b_id']) && $conversation['direct_account_b_id'] !== NULL
+            ? (int) $conversation['direct_account_b_id'] : NULL;
         foreach ($members as $member) {
             if ($with_members) {
                 $member_list[] = $this->member_payload($member);
             }
-            if ((string) $conversation['type'] === 'direct'
-                && (int) $member['user_id'] !== (int) $user_id && $peer === NULL) {
-                $peer = array(
-                    'user_id' => (int) $member['user_id'],
-                    'account_id' => isset($member['personal_account_id']) && $member['personal_account_id'] !== NULL
-                        ? (int) $member['personal_account_id'] : NULL,
-                    'display_name' => (string) $member['display_name'],
-                    'handle' => isset($member['personal_handle']) ? $member['personal_handle'] : NULL,
-                    'avatar_media_id' => isset($member['personal_avatar_media_id']) && $member['personal_avatar_media_id'] !== NULL
-                        ? (int) $member['personal_avatar_media_id'] : NULL,
-                );
+        }
+        if ($is_direct && $account_a !== NULL && $account_b !== NULL) {
+            foreach (array($account_a, $account_b) as $account_id) {
+                $account = $this->sek_account_model->find($account_id);
+                if (!is_array($account)) {
+                    continue;
+                }
+                if ((int) $account['user_id'] === (int) $user_id) {
+                    $my_account_id = $account_id;
+                } else {
+                    $peer = array(
+                        'user_id' => (int) $account['user_id'],
+                        'account_id' => $account_id,
+                        'display_name' => (string) $account['display_name'],
+                        'handle' => $account['handle'],
+                        'avatar_media_id' => $account['avatar_media_id'] !== NULL
+                            ? (int) $account['avatar_media_id'] : NULL,
+                        'type_code' => (string) $account['type_code'],
+                        'type_label' => (string) $account['label_id'],
+                    );
+                }
+            }
+        } elseif ($is_direct) {
+            // Legacy direct chats without an account pair.
+            foreach ($members as $member) {
+                if ((int) $member['user_id'] !== (int) $user_id && $peer === NULL) {
+                    $peer = array(
+                        'user_id' => (int) $member['user_id'],
+                        'account_id' => isset($member['personal_account_id']) && $member['personal_account_id'] !== NULL
+                            ? (int) $member['personal_account_id'] : NULL,
+                        'display_name' => (string) $member['display_name'],
+                        'handle' => isset($member['personal_handle']) ? $member['personal_handle'] : NULL,
+                        'avatar_media_id' => isset($member['personal_avatar_media_id']) && $member['personal_avatar_media_id'] !== NULL
+                            ? (int) $member['personal_avatar_media_id'] : NULL,
+                    );
+                }
             }
         }
         $last = $this->sek_chat_model->last_message($conversation_id);
@@ -488,6 +546,7 @@ class Sek_conversations extends Sek_api_base
             'type' => (string) $conversation['type'],
             'title' => $conversation['title'],
             'avatar_media_id' => $conversation['avatar_media_id'] !== NULL ? (int) $conversation['avatar_media_id'] : NULL,
+            'my_account_id' => $my_account_id,
             'peer' => $peer,
             'member_count' => count($members),
             'members' => $with_members ? $member_list : NULL,
