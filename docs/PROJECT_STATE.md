@@ -186,6 +186,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.17+33` (2026-11-27): lampiran foto/file di chat, chat
+  direct per akun (semua tipe), avatar grup real-time, peta gelap tanpa key,
+  marker skala zoom, dan jarak post sekitar.
 - Rilis Flutter `0.12.16+32` (2026-11-27): refresh token single-flight dan
   rotasi backend kondisional untuk mencegah logout acak.
 - Rilis Flutter `0.12.15+31` (2026-11-27): marker driver tanpa lingkaran,
