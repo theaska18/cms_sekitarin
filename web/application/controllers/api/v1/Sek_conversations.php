@@ -543,6 +543,7 @@ class Sek_conversations extends Sek_api_base
                         'type_code' => (string) $account['type_code'],
                         'type_label' => (string) $account['label_id'],
                         'is_active' => $this->account_is_active($account),
+                        'is_online' => !empty($account['is_online']),
                     );
                 }
             }
@@ -605,6 +606,7 @@ class Sek_conversations extends Sek_api_base
             'type_code' => (string) $account['type_code'],
             'type_label' => isset($account['label_id']) ? (string) $account['label_id'] : NULL,
             'is_active' => $this->account_is_active($account),
+            'is_online' => !empty($account['is_online']),
         );
     }
 
