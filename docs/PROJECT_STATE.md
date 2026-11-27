@@ -186,6 +186,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.31+47` (2026-11-27): perbaikan mulai panggilan
+  (push queue `notification_id` nullable), layar Jitsi tidak blank,
+  dan token Jitsi memakai `sub=jitsi.ckamal.com`.
 - Rilis Flutter `0.12.30+46` (2026-11-27): notifikasi panggilan keluar
   ditandai tersambung selama di Jitsi dan ditutup saat panggilan selesai.
 - Rilis Flutter `0.12.29+45` (2026-11-27): panggilan suara/video Jitsi 1:1

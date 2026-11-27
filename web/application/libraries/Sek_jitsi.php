@@ -8,7 +8,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  *   SEKITAR_JITSI_URL       public base URL, e.g. https://jitsi.ckamal.com
  *   SEKITAR_JITSI_APP_ID    JWT app id (iss), e.g. webcast
  *   SEKITAR_JITSI_SECRET    JWT shared secret
- *   SEKITAR_JITSI_DOMAIN    XMPP domain claim (sub), default meet.jitsi
+ *   SEKITAR_JITSI_DOMAIN    XMPP domain claim (sub), default jitsi.ckamal.com
  *   SEKITAR_JITSI_AUDIENCE  accepted audience claim, default jitsi
  */
 class Sek_jitsi
@@ -29,7 +29,7 @@ class Sek_jitsi
         $this->secret = trim((string) getenv('SEKITAR_JITSI_SECRET'));
         $this->domain = trim((string) getenv('SEKITAR_JITSI_DOMAIN'));
         if ($this->domain === '') {
-            $this->domain = 'meet.jitsi';
+            $this->domain = 'jitsi.ckamal.com';
         }
         $this->audience = trim((string) getenv('SEKITAR_JITSI_AUDIENCE'));
         if ($this->audience === '') {
