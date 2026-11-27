@@ -60,9 +60,10 @@ class Sek_me extends Sek_api_base
             'payload' => $payload,
             'created_at' => gmdate('Y-m-d H:i:s'),
         ));
+        // Keep only recent diagnostics; do not use CI's DELETE offset limit
+        // here (some database drivers interpret it as deleting the newest rows).
         $this->db->where('user_id', $user_id)
-            ->order_by('debug_id', 'DESC')
-            ->limit(1000, 40)
+            ->where('created_at < UTC_TIMESTAMP() - INTERVAL 3 DAY', NULL, FALSE)
             ->delete('sek_call_debug');
         $this->api_response->ok(array('status' => 'stored'));
     }
