@@ -183,6 +183,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.2+18` (2026-11-27): share lokasi per grup, foto grup
+  oleh semua anggota, tombol kembali + avatar grup di kanan atas, logo
+  Sekitarin, badge chat dibersihkan server-side, dan penanda chat belum dibaca.
 - Rilis Flutter `0.12.1+17` (2026-11-27): daftar chat memakai waktu relatif,
   header tanggal sticky di chat, dan jam pesan relatif hingga 60 menit.
 - Rilis Flutter `0.12.0+16` (2026-11-27): peta lokasi anggota grup

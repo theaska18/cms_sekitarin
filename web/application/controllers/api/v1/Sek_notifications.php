@@ -60,6 +60,22 @@ class Sek_notifications extends Sek_api_base
         ));
     }
 
+    public function read_chat()
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $this->sek_notification_model->mark_chat_read($this->api_auth->user_id());
+        $this->api_response->ok(array(
+            'status' => 'read_chat',
+            'unread_chat_notifications' => 0,
+            'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id(), TRUE),
+        ));
+    }
+
     public function read_all()
     {
         if (!$this->require_method('POST')) {

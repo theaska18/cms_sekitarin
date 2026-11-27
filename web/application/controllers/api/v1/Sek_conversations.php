@@ -69,16 +69,16 @@ class Sek_conversations extends Sek_api_base
             return;
         }
         $membership = $this->sek_chat_model->membership((int) $conversation_id, $this->api_auth->user_id());
-        if ((string) $membership['role'] !== 'owner') {
-            $this->api_response->error('forbidden', 'Hanya owner grup yang dapat mengubah grup.', 403);
-            return;
-        }
         $body = $this->body();
         if ($body === NULL) {
             return;
         }
         $fields = array();
         if (array_key_exists('title', $body)) {
+            if ((string) $membership['role'] !== 'owner') {
+                $this->api_response->error('forbidden', 'Hanya owner grup yang dapat mengubah nama grup.', 403);
+                return;
+            }
             $title = trim((string) $body['title']);
             if ($title === '' || mb_strlen($title) > 120) {
                 $this->api_response->error('validation_error', 'Judul grup wajib (maks 120 karakter).', 422);

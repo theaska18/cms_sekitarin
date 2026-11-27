@@ -53,6 +53,14 @@ class Sek_notification_model extends CI_Model
             ->update('sek_notification', array('read_at' => gmdate('Y-m-d H:i:s')));
     }
 
+    public function mark_chat_read($user_id)
+    {
+        return $this->db->where('user_id', (int) $user_id)
+            ->where('type', 'chat_message')
+            ->where('read_at IS NULL', NULL, FALSE)
+            ->update('sek_notification', array('read_at' => gmdate('Y-m-d H:i:s')));
+    }
+
     public function mark_all_read($user_id)
     {
         return $this->db->where('user_id', (int) $user_id)
