@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.25+41` (2026-11-27): reaction, hapus pesan, preview
+  grup, titik online, dan badge chat.
 - Rilis Flutter `0.12.24+40` (2026-11-27): build release, suara notifikasi,
   status pesan, animasi, cache, dan hapus pesan per pengguna.
 - Rilis Flutter `0.12.23+39` (2026-11-27): perbaikan bug login akibat
