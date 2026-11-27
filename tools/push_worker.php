@@ -116,7 +116,15 @@ final class FcmClient
                 'token' => (string) $deviceToken,
                 'notification' => array('title' => (string) $title, 'body' => (string) $body),
                 'data' => $stringData,
-                'android' => array('priority' => 'high'),
+                'android' => array(
+                    'priority' => 'high',
+                    'notification' => array(
+                        'channel_id' => 'sekitar_chat',
+                        'sound' => 'default',
+                        'default_vibrate_timings' => true,
+                        'notification_priority' => 'PRIORITY_HIGH',
+                    ),
+                ),
                 'apns' => array('payload' => array('aps' => array('sound' => 'default'))),
             ),
         );
