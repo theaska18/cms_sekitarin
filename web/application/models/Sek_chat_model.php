@@ -159,26 +159,16 @@ class Sek_chat_model extends CI_Model
             ->update('sek_conversation_member', array('left_at' => gmdate('Y-m-d H:i:s')));
     }
 
-    public function list_conversations($user_id, $active_account_id = NULL, $limit = 50)
+    public function list_conversations($user_id, $limit = 50)
     {
-        $this->db->select('c.*, m.role, m.last_read_message_id, m.muted_at')
+        // All conversations for the user are shown in one list; the account
+        // pair determines which identity each direct row belongs to.
+        return $this->db->select('c.*, m.role, m.last_read_message_id, m.muted_at')
             ->from('sek_conversation c')
             ->join('sek_conversation_member m', 'm.conversation_id = c.conversation_id', 'inner')
             ->where('m.user_id', (int) $user_id)
-            ->where('m.left_at IS NULL', NULL, FALSE);
-        if ($active_account_id !== NULL) {
-            $account_id = (int) $active_account_id;
-            $this->db->group_start()
-                ->where('c.type', 'group')
-                ->or_group_start()
-                    ->where('c.direct_account_a_id', $account_id)
-                    ->or_where('c.direct_account_b_id', $account_id)
-                    // Legacy direct chats without an account pair stay visible.
-                    ->or_where('c.direct_account_a_id IS NULL', NULL, FALSE)
-                ->group_end()
-            ->group_end();
-        }
-        return $this->db->order_by('COALESCE(c.last_message_at, c.created_at)', 'DESC', FALSE)
+            ->where('m.left_at IS NULL', NULL, FALSE)
+            ->order_by('COALESCE(c.last_message_at, c.created_at)', 'DESC', FALSE)
             ->limit(max(1, min(100, (int) $limit)))
             ->get()
             ->result_array();

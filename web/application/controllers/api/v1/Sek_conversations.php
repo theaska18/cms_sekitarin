@@ -21,8 +21,7 @@ class Sek_conversations extends Sek_api_base
 
         $data = array();
         foreach ($this->sek_chat_model->list_conversations(
-            $this->api_auth->user_id(),
-            $this->viewer_account_id()
+            $this->api_auth->user_id()
         ) as $row) {
             $data[] = $this->conversation_payload($row, $this->api_auth->user_id(), FALSE);
         }
@@ -488,6 +487,7 @@ class Sek_conversations extends Sek_api_base
         $member_list = array();
         $peer = NULL;
         $my_account_id = NULL;
+        $my_account = NULL;
         $is_direct = (string) $conversation['type'] === 'direct';
         $account_a = isset($conversation['direct_account_a_id']) && $conversation['direct_account_a_id'] !== NULL
             ? (int) $conversation['direct_account_a_id'] : NULL;
@@ -506,6 +506,7 @@ class Sek_conversations extends Sek_api_base
                 }
                 if ((int) $account['user_id'] === (int) $user_id) {
                     $my_account_id = $account_id;
+                    $my_account = $this->account_summary($account);
                 } else {
                     $peer = array(
                         'user_id' => (int) $account['user_id'],
@@ -547,6 +548,7 @@ class Sek_conversations extends Sek_api_base
             'title' => $conversation['title'],
             'avatar_media_id' => $conversation['avatar_media_id'] !== NULL ? (int) $conversation['avatar_media_id'] : NULL,
             'my_account_id' => $my_account_id,
+            'my_account' => $my_account,
             'peer' => $peer,
             'member_count' => count($members),
             'members' => $with_members ? $member_list : NULL,
@@ -555,6 +557,20 @@ class Sek_conversations extends Sek_api_base
             'last_message_at' => $this->utc($conversation['last_message_at']),
             'created_at' => $this->utc($conversation['created_at']),
             'updated_at' => $this->utc($conversation['updated_at']),
+        );
+    }
+
+    private function account_summary($account)
+    {
+        return array(
+            'account_id' => (int) $account['account_id'],
+            'user_id' => (int) $account['user_id'],
+            'display_name' => (string) $account['display_name'],
+            'handle' => $account['handle'],
+            'avatar_media_id' => $account['avatar_media_id'] !== NULL
+                ? (int) $account['avatar_media_id'] : NULL,
+            'type_code' => (string) $account['type_code'],
+            'type_label' => isset($account['label_id']) ? (string) $account['label_id'] : NULL,
         );
     }
 
