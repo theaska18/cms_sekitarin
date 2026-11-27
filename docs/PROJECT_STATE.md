@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.21+37` (2026-11-27): reset token FCM dari Setelan
+  untuk mengganti token invalid.
 - Rilis Flutter `0.12.20+36` (2026-11-27): diagnosa push token, versi
   aplikasi nyata, dan retry pendaftaran token.
 - Rilis Flutter `0.12.19+35` (2026-11-27): package Android baru
