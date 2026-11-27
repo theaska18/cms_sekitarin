@@ -161,8 +161,15 @@ function json_encode_data($json)
     $data = array();
     if (is_array($decoded)) {
         foreach ($decoded as $key => $value) {
+            $key = (string) $key;
+            // FCM rejects reserved data keys (e.g. message_type).
+            if (in_array($key, array('message_type', 'from', 'collapse_key'), TRUE)
+                || strpos($key, 'google') === 0
+                || strpos($key, 'gcm') === 0) {
+                continue;
+            }
             if (is_scalar($value) || $value === NULL) {
-                $data[(string) $key] = (string) $value;
+                $data[$key] = (string) $value;
             }
         }
     }
@@ -212,12 +219,20 @@ while (TRUE) {
             }
 
             $body = $send['body'];
-            $invalidToken = $send['status'] === 404 || stripos($body, 'UNREGISTERED') !== FALSE || stripos($body, 'INVALID_ARGUMENT') !== FALSE;
+            $invalidToken = $send['status'] === 404 || stripos($body, 'UNREGISTERED') !== FALSE;
             if ($invalidToken) {
                 $db->query('UPDATE sek_push_queue SET status = "skipped", attempts = attempts + 1, last_error = "invalid_token" WHERE queue_id = ' . $queueId);
                 if (!empty($row['device_id'])) {
                     $db->query('UPDATE sek_device SET push_token = NULL WHERE device_id = ' . (int) $row['device_id']);
                 }
+                continue;
+            }
+            if ($send['status'] === 400 && stripos($body, 'INVALID_ARGUMENT') !== FALSE) {
+                $errorText = $db->real_escape_string(mb_substr(trim($body), 0, 255));
+                $db->query(
+                    'UPDATE sek_push_queue SET status = "failed", attempts = attempts + 1, '
+                    . 'last_error = "' . $errorText . '" WHERE queue_id = ' . $queueId
+                );
                 continue;
             }
 

@@ -173,7 +173,7 @@ class Sek_messages extends Sek_api_base
                 'chat_message',
                 $title,
                 $preview,
-                array('conversation_id' => $conversation_id, 'message_id' => $message_id, 'message_type' => $type)
+                array('conversation_id' => $conversation_id, 'message_id' => $message_id)
             );
         }
         $this->api_response->json(array('message' => $payload_out), 201);
