@@ -34,6 +34,39 @@ class Sek_me extends Sek_api_base
         ));
     }
 
+    public function call_debug()
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $stage = isset($body['stage']) ? mb_substr(trim((string) $body['stage']), 0, 40) : 'unknown';
+        $room = isset($body['room']) ? mb_substr(trim((string) $body['room']), 0, 80) : NULL;
+        $payload = isset($body['payload']) ? (string) $body['payload'] : '';
+        if (mb_strlen($payload) > 60000) {
+            $payload = mb_substr($payload, 0, 60000);
+        }
+        $user_id = (int) $this->api_auth->user_id();
+        $this->db->insert('sek_call_debug', array(
+            'user_id' => $user_id,
+            'room' => $room,
+            'stage' => $stage,
+            'payload' => $payload,
+            'created_at' => gmdate('Y-m-d H:i:s'),
+        ));
+        $this->db->where('user_id', $user_id)
+            ->order_by('debug_id', 'DESC')
+            ->limit(1000, 40)
+            ->delete('sek_call_debug');
+        $this->api_response->ok(array('status' => 'stored'));
+    }
+
     public function devices()
     {
         if (!$this->require_method('GET')) {

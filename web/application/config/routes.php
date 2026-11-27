@@ -34,6 +34,7 @@ $route['api/v1/me/consents'] = 'api/v1/sek_me/consents';
 $route['api/v1/me/devices/(:num)'] = 'api/v1/sek_me/delete_device/$1';
 $route['api/v1/me/devices'] = 'api/v1/sek_me/devices';
 $route['api/v1/me/push-token'] = 'api/v1/sek_me/push_token';
+$route['api/v1/me/call-debug'] = 'api/v1/sek_me/call_debug';
 $route['api/v1/notifications/read-chat'] = 'api/v1/sek_notifications/read_chat';
 $route['api/v1/notifications/read-all'] = 'api/v1/sek_notifications/read_all';
 $route['api/v1/notifications/(:num)/read'] = 'api/v1/sek_notifications/read/$1';
