@@ -29,7 +29,8 @@ class Sek_me extends Sek_api_base
             'accounts' => $accounts,
             'active_account_id' => $this->active_account_id(),
             'consents' => $this->latest_consents($this->api_auth->user_id()),
-            'unread_notifications' => $this->sek_notification_model->unread_count($this->api_auth->user_id()),
+            'unread_notifications' => $this->sek_notification_model->unread_count($this->api_auth->user_id(), TRUE),
+            'unread_chat_notifications' => $this->sek_notification_model->unread_chat_count($this->api_auth->user_id()),
         ));
     }
 

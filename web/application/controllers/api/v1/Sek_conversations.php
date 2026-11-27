@@ -464,7 +464,8 @@ class Sek_conversations extends Sek_api_base
             if ($with_members) {
                 $member_list[] = $this->member_payload($member);
             }
-            if ((int) $member['user_id'] !== (int) $user_id && $peer === NULL) {
+            if ((string) $conversation['type'] === 'direct'
+                && (int) $member['user_id'] !== (int) $user_id && $peer === NULL) {
                 $peer = array(
                     'user_id' => (int) $member['user_id'],
                     'display_name' => (string) $member['display_name'],

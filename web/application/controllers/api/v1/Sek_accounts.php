@@ -80,6 +80,8 @@ class Sek_accounts extends Sek_api_base
             return;
         }
         $handle = $this->sek_account_model->normalize_handle($this->input->get('handle', TRUE));
+        $scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
+        $scope = $scope === 'business' ? 'business' : 'personal';
         if (!$this->sek_account_model->valid_handle($handle)) {
             $this->api_response->error('validation_error', 'Username 3–40 karakter: huruf kecil, angka, titik, atau garis bawah.', 422, array('handle' => 'Format tidak valid.'));
             return;
@@ -90,7 +92,8 @@ class Sek_accounts extends Sek_api_base
         }
         $this->api_response->ok(array(
             'handle' => $handle,
-            'available' => !$this->sek_account_model->handle_exists($handle),
+            'scope' => $scope,
+            'available' => !$this->sek_account_model->handle_exists($handle, $scope),
         ));
     }
 
@@ -107,19 +110,32 @@ class Sek_accounts extends Sek_api_base
             $this->api_response->error('validation_error', 'Username tidak valid.', 422);
             return;
         }
-        $account = $this->sek_account_model->find_by_handle($handle);
-        if (!is_array($account) || (string) $account['status'] !== 'active') {
-            $this->api_response->error('not_found', 'Akun dengan username tersebut tidak ditemukan.', 404);
-            return;
+        $scope = strtolower(trim((string) $this->input->get('scope', TRUE)));
+        $accounts = $this->sek_account_model->find_all_by_handle($handle);
+        if ($scope === 'personal' || $scope === 'business') {
+            $accounts = array_values(array_filter($accounts, function ($item) use ($scope) {
+                return (string) $item['handle_scope'] === $scope;
+            }));
         }
         $viewer_account = $this->viewer_account_id();
-        if ($viewer_account !== NULL && $this->sek_account_model->blocked_between($viewer_account, (int) $account['account_id'])) {
+        if ($viewer_account !== NULL) {
+            $accounts = array_values(array_filter($accounts, function ($item) use ($viewer_account) {
+                return !$this->sek_account_model->blocked_between($viewer_account, (int) $item['account_id']);
+            }));
+        }
+        if (!$accounts) {
             $this->api_response->error('not_found', 'Akun dengan username tersebut tidak ditemukan.', 404);
             return;
         }
-        $private = $this->sek_account_model->member_role((int) $account['account_id'], $this->api_auth->user_id()) !== NULL;
+        $payloads = array();
+        foreach ($accounts as $account) {
+            $private = $this->sek_account_model->member_role((int) $account['account_id'], $this->api_auth->user_id()) !== NULL;
+            $payloads[] = $this->account_payload($account, $private);
+        }
         $this->api_response->ok(array(
-            'account' => $this->account_payload($account, $private),
+            'account' => $payloads[0],
+            'accounts' => $payloads,
+            'ambiguous' => count($payloads) > 1,
         ));
     }
 
@@ -313,10 +329,11 @@ class Sek_accounts extends Sek_api_base
         }
         if ($handle === '') {
             $handle = $this->sek_account_model->suggest_handle(
-                isset($body['display_name']) ? (string) $body['display_name'] : 'usaha'
+                isset($body['display_name']) ? (string) $body['display_name'] : 'usaha',
+                'business'
             );
         }
-        if ($this->sek_account_model->handle_exists($handle)) {
+        if ($this->sek_account_model->handle_exists($handle, 'business')) {
             $errors['handle'] = 'Handle sudah dipakai.';
         }
 
@@ -409,7 +426,9 @@ class Sek_accounts extends Sek_api_base
                 $this->api_response->error('validation_error', 'Handle tidak valid.', 422, array('handle' => '3–40 karakter.'));
                 return;
             }
-            if ($handle !== (string) $account['handle'] && $this->sek_account_model->handle_exists($handle)) {
+            $scope = $this->sek_account_model->handle_scope_for_type((string) $account['type_code']);
+            if ($handle !== (string) $account['handle']
+                && $this->sek_account_model->handle_exists($handle, $scope)) {
                 $this->api_response->error('conflict', 'Handle sudah dipakai.', 409, array('handle' => 'Sudah dipakai.'));
                 return;
             }

@@ -51,6 +51,7 @@ class Sek_user_model extends CI_Model
             'user_id' => $user_id,
             'type_code' => 'personal',
             'handle' => (string) $handle,
+            'handle_scope' => 'personal',
             'display_name' => trim((string) $display_name),
             'service_radius_m' => 5000,
             'is_online' => 0,

@@ -203,9 +203,17 @@ class Sek_post_model extends CI_Model
 
     public function comments($post_id, $before_id, $limit)
     {
-        $this->db->select('c.*, u.display_name')
+        $this->db->select('c.*, u.display_name AS user_name, '
+                . 'COALESCE(a.display_name, pa.display_name, u.display_name) AS display_name, '
+                . 'COALESCE(a.avatar_media_id, pa.avatar_media_id) AS avatar_media_id, '
+                . 'COALESCE(a.handle, pa.handle) AS handle, '
+                . 'COALESCE(a.account_id, pa.account_id) AS account_id, '
+                . 'COALESCE(a.type_code, pa.type_code, \'personal\') AS type_code, '
+                . 'COALESCE(a.handle_scope, pa.handle_scope, \'personal\') AS handle_scope')
             ->from('sek_post_comment c')
             ->join('sek_user u', 'u.user_id = c.user_id', 'inner')
+            ->join('sek_account a', 'a.account_id = c.account_id', 'left')
+            ->join('sek_account pa', 'pa.user_id = c.user_id AND pa.type_code = "personal"', 'left')
             ->where('c.post_id', (int) $post_id)
             ->where('c.deleted_at IS NULL', NULL, FALSE);
         if ($before_id !== NULL && (int) $before_id > 0) {
@@ -225,11 +233,12 @@ class Sek_post_model extends CI_Model
             ->row_array();
     }
 
-    public function add_comment($post_id, $user_id, $body)
+    public function add_comment($post_id, $user_id, $body, $account_id = NULL)
     {
         $this->db->insert('sek_post_comment', array(
             'post_id' => (int) $post_id,
             'user_id' => (int) $user_id,
+            'account_id' => $account_id !== NULL ? (int) $account_id : NULL,
             'body' => (string) $body,
             'created_at' => gmdate('Y-m-d H:i:s'),
         ));

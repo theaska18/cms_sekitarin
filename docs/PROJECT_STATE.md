@@ -1,6 +1,6 @@
 # Project State
 
-Terakhir diperbarui: 2026-11-25
+Terakhir diperbarui: 2026-11-27
 
 Dokumen ini merangkum kondisi repository agar sesi baru tidak kehilangan konteks
 penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
@@ -183,6 +183,17 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.0+16` (2026-11-27): peta lokasi anggota grup
+  (consent-gated), penanda mengetik direct/grup, info grup lewat ketuk nama,
+  foto grup, edit foto/nama/username akun usaha, komentar dengan avatar + profil
+  komentator, notifikasi chat dipisah ke tab Chat, tema terang/gelap mengikuti
+  sistem, layar “tidak dapat terhubung ke server”, dan cek update APK in-app.
+- Username kini unik per scope (`personal`/`business`) lewat kolom
+  `sek_account.handle_scope`; username bisnis tidak dapat dipakai login.
+  Komentar menyimpan `account_id` agar avatar/profil komentator tampil.
+- Update APK in-app: `GET /api/v1/app/latest` + `GET /api/v1/app/download`,
+  artefak di `web/data/app/sekitar.apk` dan `web/data/app/latest.json`. Aturan
+  rilis ada di [`../AGENTS.md`](../AGENTS.md).
 - Kontrak tes backend: `tests/test_sekitar_api_contract.py`; tes Flutter ada di
   repo `flutter_sekitarin`.
 - Belum diimplementasikan: panel admin moderasi laporan, payment gateway/komisi

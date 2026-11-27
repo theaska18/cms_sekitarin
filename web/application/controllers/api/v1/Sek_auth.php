@@ -54,7 +54,7 @@ class Sek_auth extends Sek_api_base
             $this->api_response->error('conflict', 'Email sudah terdaftar.', 409, array('email' => 'Email sudah terdaftar.'));
             return;
         }
-        if ($username !== '' && $this->sek_account_model->handle_exists($username)) {
+        if ($username !== '' && $this->sek_account_model->handle_exists($username, 'personal')) {
             $this->api_response->error('conflict', 'Username sudah dipakai.', 409, array('username' => 'Username sudah dipakai.'));
             return;
         }
@@ -62,7 +62,7 @@ class Sek_auth extends Sek_api_base
         $local = strstr($email, '@', TRUE);
         $handle = $username !== ''
             ? $username
-            : $this->sek_account_model->suggest_handle($local !== FALSE ? $local : $email);
+            : $this->sek_account_model->suggest_handle($local !== FALSE ? $local : $email, 'personal');
         $created = $this->sek_user_model->create_with_personal_account(
             $email,
             Sek_user_model::hash_password((string) $body['password']),

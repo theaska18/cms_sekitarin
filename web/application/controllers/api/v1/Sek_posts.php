@@ -290,9 +290,26 @@ class Sek_posts extends Sek_api_base
             $this->api_response->error('validation_error', 'Komentar 1–1000 karakter.', 422);
             return;
         }
-        $comment_id = $this->sek_post_model->add_comment((int) $post_id, $this->api_auth->user_id(), $text);
+        $comment_id = $this->sek_post_model->add_comment(
+            (int) $post_id,
+            $this->api_auth->user_id(),
+            $text,
+            $this->viewer_account_id()
+        );
         $comment = $this->sek_post_model->comment($comment_id);
         $comment['display_name'] = (string) $this->api_auth->user()['display_name'];
+        $account = $this->db
+            ->select('account_id, handle, avatar_media_id, display_name')
+            ->where('account_id', $this->viewer_account_id())
+            ->limit(1)
+            ->get('sek_account')
+            ->row_array();
+        if (is_array($account)) {
+            $comment['account_id'] = (int) $account['account_id'];
+            $comment['handle'] = $account['handle'];
+            $comment['avatar_media_id'] = $account['avatar_media_id'];
+            $comment['display_name'] = $account['display_name'];
+        }
         if ((int) $post['user_id'] !== (int) $this->api_auth->user_id()) {
             $this->sek_notifier->notify_user(
                 (int) $post['user_id'],
@@ -528,7 +545,12 @@ class Sek_posts extends Sek_api_base
             'comment_id' => (int) $row['comment_id'],
             'post_id' => (int) $row['post_id'],
             'user_id' => (int) $row['user_id'],
+            'account_id' => isset($row['account_id']) && $row['account_id'] !== NULL ? (int) $row['account_id'] : NULL,
+            'handle' => isset($row['handle']) ? $row['handle'] : NULL,
+            'avatar_media_id' => isset($row['avatar_media_id']) && $row['avatar_media_id'] !== NULL ? (int) $row['avatar_media_id'] : NULL,
             'display_name' => isset($row['display_name']) ? (string) $row['display_name'] : NULL,
+            'type_code' => isset($row['type_code']) ? (string) $row['type_code'] : 'personal',
+            'handle_scope' => isset($row['handle_scope']) ? (string) $row['handle_scope'] : 'personal',
             'body' => (string) $row['body'],
             'created_at' => $this->utc($row['created_at']),
         );

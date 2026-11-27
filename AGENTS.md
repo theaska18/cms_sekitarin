@@ -224,6 +224,34 @@ Contract tests check source expectations, not browser/runtime behavior.
 permissions; run only in a suitable local environment. README documents a known
 admin-contract locale expectation that omits `hr` resources.
 
+## In-app update (Android APK) — mandatory for every release
+
+The Flutter client checks `GET /api/v1/app/latest` and downloads
+`GET /api/v1/app/download`. Both are public endpoints handled by
+`web/application/controllers/api/v1/Sek_app.php`; routes are in
+`web/application/config/routes.php`.
+
+- Release artifacts live in `web/data/app/` (ignored by Git, must exist on the
+  server and stay readable by `www-data`):
+  - `sekitar.apk` — the APK served by `/api/v1/app/download`.
+  - `latest.json` — update manifest read by `/api/v1/app/latest`.
+- `latest.json` keys: `version` (semantic string, must match
+  `pubspec.yaml`), `build` (integer build number), `notes` (user-facing
+  changelog), `url` (default `/api/v1/app/download`), `published_at` (UTC ISO
+  8601).
+- Build with `flutter build apk --debug --split-per-abi` inside
+  `../flutter_sekitarin/`; copy the matching ABI APK
+  (`app-arm64-v8a-debug.apk`) to `web/data/app/sekitar.apk`, then update
+  `latest.json` in the same change.
+- Bump `version:` in `../flutter_sekitarin/pubspec.yaml` before building, and
+  record the release in `../flutter_sekitarin/AGENTS.md` (date, version,
+  highlights, endpoint check).
+- Verify after deploying:
+  `curl -s https://sekitarin.ckamal.com/api/v1/app/latest` returns the new
+  version and `"available": true`, and the download URL returns the APK bytes.
+- Never commit the APK or manifest; they are deployment artifacts under
+  `web/data/`.
+
 ## Time zone rule (absolute)
 
 - **Storage time zone is fixed to UTC.** Do not configure a separate storage

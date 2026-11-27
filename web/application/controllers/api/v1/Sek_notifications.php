@@ -17,7 +17,13 @@ class Sek_notifications extends Sek_api_base
         $limit = (int) $this->input->get('limit', TRUE);
         $limit = $limit > 0 ? min(50, $limit) : 20;
         $before = (int) $this->input->get('before_id', TRUE);
-        $rows = $this->sek_notification_model->list_for_user($this->api_auth->user_id(), $before, $limit);
+        $includeChat = $this->api_validation->bool_value($this->input->get('include_chat', FALSE));
+        $rows = $this->sek_notification_model->list_for_user(
+            $this->api_auth->user_id(),
+            $before,
+            $limit,
+            $includeChat
+        );
         $has_more = count($rows) > $limit;
         if ($has_more) {
             $rows = array_slice($rows, 0, $limit);
@@ -28,7 +34,7 @@ class Sek_notifications extends Sek_api_base
         }
         $this->api_response->ok(array(
             'data' => $data,
-            'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id()),
+            'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id(), TRUE),
             'has_more' => $has_more,
         ));
     }
@@ -50,7 +56,7 @@ class Sek_notifications extends Sek_api_base
         $this->api_response->ok(array(
             'status' => 'read',
             'notification_id' => (int) $notification_id,
-            'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id()),
+            'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id(), TRUE),
         ));
     }
 

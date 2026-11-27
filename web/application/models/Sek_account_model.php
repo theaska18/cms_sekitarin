@@ -83,24 +83,49 @@ class Sek_account_model extends CI_Model
         return (bool) preg_match('/^[a-z0-9._]{3,40}$/', $this->normalize_handle($handle));
     }
 
-    public function find_by_handle($handle)
+    public function find_by_handle($handle, $scope = NULL)
     {
-        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services')
+        $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services')
             ->from('sek_account a')
             ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
-            ->where('a.handle', $this->normalize_handle($handle))
+            ->where('a.handle', $this->normalize_handle($handle));
+        if ($scope !== NULL) {
+            $this->db->where('a.handle_scope', (string) $scope);
+        }
+        return $this->db->order_by('a.type_code = "personal"', 'DESC', FALSE)
             ->limit(1)
             ->get()
             ->row_array();
     }
 
-    public function handle_exists($handle)
+    public function find_all_by_handle($handle)
     {
-        return $this->db->where('handle', strtolower(trim((string) $handle)))
-            ->count_all_results('sek_account') > 0;
+        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services')
+            ->from('sek_account a')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('a.handle', $this->normalize_handle($handle))
+            ->where('a.status', 'active')
+            ->order_by('a.type_code = "personal"', 'DESC', FALSE)
+            ->limit(10)
+            ->get()
+            ->result_array();
     }
 
-    public function suggest_handle($seed)
+    public function handle_scope_for_type($type_code)
+    {
+        return (string) $type_code === 'personal' ? 'personal' : 'business';
+    }
+
+    public function handle_exists($handle, $scope = NULL)
+    {
+        $this->db->where('handle', $this->normalize_handle($handle));
+        if ($scope !== NULL) {
+            $this->db->where('handle_scope', (string) $scope);
+        }
+        return $this->db->count_all_results('sek_account') > 0;
+    }
+
+    public function suggest_handle($seed, $scope = 'personal')
     {
         $base = strtolower((string) $seed);
         $base = preg_replace('/[^a-z0-9._]+/', '', $base);
@@ -111,7 +136,7 @@ class Sek_account_model extends CI_Model
         $base = substr($base, 0, 32);
         $candidate = $base;
         $attempt = 0;
-        while ($this->handle_exists($candidate) && $attempt < 20) {
+        while ($this->handle_exists($candidate, $scope) && $attempt < 20) {
             $attempt++;
             $candidate = substr($base, 0, 32) . substr(bin2hex(random_bytes(3)), 0, 4);
         }
@@ -130,6 +155,7 @@ class Sek_account_model extends CI_Model
             'user_id' => (int) $user_id,
             'type_code' => (string) $data['type_code'],
             'handle' => strtolower((string) $data['handle']),
+            'handle_scope' => $this->handle_scope_for_type((string) $data['type_code']),
             'display_name' => (string) $data['display_name'],
             'bio' => isset($data['bio']) ? $data['bio'] : NULL,
             'phone' => isset($data['phone']) ? $data['phone'] : NULL,

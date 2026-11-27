@@ -18,6 +18,8 @@ $route['api/update/check'] = 'update_api/check';
 $route['api/update/package/(:any)'] = 'update_api/package/$1';
 
 // Sekitar mobile API v1.
+$route['api/v1/app/latest'] = 'api/v1/sek_app/latest';
+$route['api/v1/app/download'] = 'api/v1/sek_app/download';
 $route['api/v1/auth/register'] = 'api/v1/sek_auth/register';
 $route['api/v1/auth/login'] = 'api/v1/sek_auth/login';
 $route['api/v1/auth/refresh'] = 'api/v1/sek_auth/refresh';
