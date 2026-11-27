@@ -468,7 +468,12 @@ class Sek_conversations extends Sek_api_base
                 && (int) $member['user_id'] !== (int) $user_id && $peer === NULL) {
                 $peer = array(
                     'user_id' => (int) $member['user_id'],
+                    'account_id' => isset($member['personal_account_id']) && $member['personal_account_id'] !== NULL
+                        ? (int) $member['personal_account_id'] : NULL,
                     'display_name' => (string) $member['display_name'],
+                    'handle' => isset($member['personal_handle']) ? $member['personal_handle'] : NULL,
+                    'avatar_media_id' => isset($member['personal_avatar_media_id']) && $member['personal_avatar_media_id'] !== NULL
+                        ? (int) $member['personal_avatar_media_id'] : NULL,
                 );
             }
         }
@@ -498,7 +503,12 @@ class Sek_conversations extends Sek_api_base
     {
         return array(
             'user_id' => (int) $member['user_id'],
+            'account_id' => isset($member['personal_account_id']) && $member['personal_account_id'] !== NULL
+                ? (int) $member['personal_account_id'] : NULL,
             'display_name' => (string) $member['display_name'],
+            'handle' => isset($member['personal_handle']) ? $member['personal_handle'] : NULL,
+            'avatar_media_id' => isset($member['personal_avatar_media_id']) && $member['personal_avatar_media_id'] !== NULL
+                ? (int) $member['personal_avatar_media_id'] : NULL,
             'role' => (string) $member['role'],
             'last_read_message_id' => $member['last_read_message_id'] !== NULL ? (int) $member['last_read_message_id'] : NULL,
             'joined_at' => $this->utc($member['joined_at']),

@@ -25,9 +25,11 @@ class Sek_chat_model extends CI_Model
     public function members($conversation_id, $active_only = TRUE)
     {
         $this->db->select('m.user_id, m.role, m.last_read_message_id, m.joined_at, m.left_at, m.muted_at, '
-                . 'u.email, u.display_name')
+                . 'u.email, u.display_name, pa.account_id AS personal_account_id, '
+                . 'pa.handle AS personal_handle, pa.avatar_media_id AS personal_avatar_media_id')
             ->from('sek_conversation_member m')
             ->join('sek_user u', 'u.user_id = m.user_id', 'inner')
+            ->join('sek_account pa', 'pa.user_id = m.user_id AND pa.type_code = "personal"', 'left')
             ->where('m.conversation_id', (int) $conversation_id);
         if ($active_only) {
             $this->db->where('m.left_at IS NULL', NULL, FALSE);
@@ -38,9 +40,11 @@ class Sek_chat_model extends CI_Model
     public function member_detail($conversation_id, $user_id)
     {
         return $this->db->select('m.user_id, m.role, m.last_read_message_id, m.joined_at, m.left_at, m.muted_at, '
-                . 'u.email, u.display_name')
+                . 'u.email, u.display_name, pa.account_id AS personal_account_id, '
+                . 'pa.handle AS personal_handle, pa.avatar_media_id AS personal_avatar_media_id')
             ->from('sek_conversation_member m')
             ->join('sek_user u', 'u.user_id = m.user_id', 'inner')
+            ->join('sek_account pa', 'pa.user_id = m.user_id AND pa.type_code = "personal"', 'left')
             ->where('m.conversation_id', (int) $conversation_id)
             ->where('m.user_id', (int) $user_id)
             ->limit(1)
