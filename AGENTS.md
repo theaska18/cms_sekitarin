@@ -327,3 +327,13 @@ The Flutter client checks `GET /api/v1/app/latest` and downloads
   apply canonicalization before saving when required.
 - Disabled/readonly inputs must look muted while remaining readable; do not rely
   on color alone to communicate state.
+
+## Calls (Jitsi)
+
+- Direct calls live in `sek_call` (scope `direct`) and ring via WS
+  `/publish-user` + FCM data messages; group calls (scope `group`) only expose
+  an `active_call` marker on the conversation and never ring.
+- JWT tokens are minted by `Sek_jitsi` from `SEKITAR_JITSI_*` env (server
+  `https://jitsi.ckamal.com`). Never commit the secret.
+- `tools/push_worker.php` expires unanswered calls after 45s and abandoned
+  group calls after 4h.
