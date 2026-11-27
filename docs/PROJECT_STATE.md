@@ -173,7 +173,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
 - Post dapat diedit (`PATCH /posts/{id}` caption/media) dan dihapus oleh pembuat
   atau owner/manager akun. Feed menandai `feed_source`
   (`own`/`contact`/`nearby`) + `distance_m`; posisi viewer dipakai hanya
-  untuk memfilter radius feed, bukan untuk membagikan lokasi. Peta hanya
+  untuk memfilter radius feed, bukan untuk membagikan lokasi; bila tidak ada
+  akun nearby, feed menampilkan post publik 7 hari terakhir (`feed_source`
+  `recent`). Peta hanya
   menampilkan akun `fixed` bila consent viewer belum aktif; akun
   realtime/presence muncul setelah “Bagikan lokasi” diaktifkan.
 - Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,
@@ -183,6 +185,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.8+24` (2026-11-27): akun personal mengirim lokasi saat
+  consent aktif, fallback feed publik 7 hari berlabel Terbaru, dan indikator
+  mengetik di daftar chat.
 - Rilis Flutter `0.12.7+23` (2026-11-27): feed selalu memakai posisi viewer
   dengan radius 2 km; consent tidak lagi memblokir post sekitar.
 - Rilis Flutter `0.12.6+22` (2026-11-27): peta grup terpusat di lokasi

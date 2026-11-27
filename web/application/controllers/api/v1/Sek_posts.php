@@ -35,13 +35,41 @@ class Sek_posts extends Sek_api_base
         // exposed to other users, so feed viewing does not need a share consent.
         $scope = $this->feed_scope($lat, $lng, $radius);
         $rows = $this->sek_post_model->feed($scope['ids'], $before, $limit);
+        $meta = $scope['meta'];
+        $fallback = FALSE;
+        $has_nearby = FALSE;
+        foreach ($meta as $entry) {
+            if (isset($entry['feed_source']) && $entry['feed_source'] === 'nearby') {
+                $has_nearby = TRUE;
+                break;
+            }
+        }
+        if (!$has_nearby && $before <= 0) {
+            $blocked = $this->sek_account_model->blocked_account_ids($this->viewer_account_id());
+            $exclude = array_merge($scope['ids'], $blocked);
+            $recent = $this->sek_post_model->recent_public($exclude, $limit);
+            if ($recent) {
+                $fallback = TRUE;
+                foreach ($recent as $row) {
+                    $account_id = (int) $row['account_id'];
+                    if (!isset($meta[$account_id])) {
+                        $meta[$account_id] = array('feed_source' => 'recent', 'distance_m' => NULL);
+                    }
+                }
+                $rows = array_merge($rows, $recent);
+                usort($rows, function ($left, $right) {
+                    return (int) $right['post_id'] <=> (int) $left['post_id'];
+                });
+            }
+        }
         $has_more = count($rows) > $limit;
         if ($has_more) {
             $rows = array_slice($rows, 0, $limit);
         }
         $this->api_response->ok(array(
-            'data' => $this->post_payloads($rows, $scope['meta']),
+            'data' => $this->post_payloads($rows, $meta),
             'has_more' => $has_more,
+            'fallback' => $fallback,
             'radius_m' => $lat !== NULL ? $radius : NULL,
         ));
     }

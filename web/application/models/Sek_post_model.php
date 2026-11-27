@@ -98,6 +98,26 @@ class Sek_post_model extends CI_Model
             ->result_array();
     }
 
+    public function recent_public($exclude_account_ids, $limit, $days = 7)
+    {
+        $this->db->select('p.*, a.type_code, a.handle, a.display_name, a.avatar_media_id, '
+                . 'a.status AS account_status, t.label_id')
+            ->from('sek_post p')
+            ->join('sek_account a', 'a.account_id = p.account_id', 'inner')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('p.status', 'active')
+            ->where('a.status', 'active')
+            ->where('p.created_at >=', gmdate('Y-m-d H:i:s', time() - max(1, (int) $days) * 86400));
+        $exclude = array_values(array_filter(array_map('intval', (array) $exclude_account_ids)));
+        if ($exclude) {
+            $this->db->where_not_in('p.account_id', $exclude);
+        }
+        return $this->db->order_by('p.post_id', 'DESC')
+            ->limit(max(1, min(50, (int) $limit)))
+            ->get()
+            ->result_array();
+    }
+
     public function profile_posts($account_id, $before_id, $limit)
     {
         $this->db->select('p.*, a.type_code, a.handle, a.display_name, a.avatar_media_id, '
