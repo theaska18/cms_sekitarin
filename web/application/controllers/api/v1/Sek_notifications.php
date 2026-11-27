@@ -68,10 +68,17 @@ class Sek_notifications extends Sek_api_base
         if (!$this->require_auth()) {
             return;
         }
-        $this->sek_notification_model->mark_chat_read($this->api_auth->user_id());
+        $body = $this->body();
+        $conversation_id = $body !== NULL && isset($body['conversation_id'])
+            ? (int) $body['conversation_id']
+            : (int) $this->input->get('conversation_id', TRUE);
+        $this->sek_notification_model->mark_chat_read(
+            $this->api_auth->user_id(),
+            $conversation_id > 0 ? $conversation_id : NULL
+        );
         $this->api_response->ok(array(
             'status' => 'read_chat',
-            'unread_chat_notifications' => 0,
+            'unread_chat_notifications' => $this->sek_notification_model->unread_chat_count($this->api_auth->user_id()),
             'unread_count' => $this->sek_notification_model->unread_count($this->api_auth->user_id(), TRUE),
         ));
     }

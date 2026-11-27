@@ -130,7 +130,7 @@ class Sek_api_base extends CI_Controller
             'address' => isset($account['address']) && $account['address'] !== NULL ? (string) $account['address'] : NULL,
             'service_radius_m' => isset($account['service_radius_m']) ? (int) $account['service_radius_m'] : 0,
             'location_mode' => isset($account['location_mode']) ? (string) $account['location_mode'] : 'fixed',
-            'is_online' => !empty($account['is_online']),
+            'is_online' => $this->account_is_online($account),
             'is_active' => $this->account_is_active($account),
             'active_until' => isset($account['active_until']) ? $this->utc($account['active_until']) : NULL,
             'verified' => !empty($account['verified_at']),
@@ -151,6 +151,19 @@ class Sek_api_base extends CI_Controller
             }
         }
         return $payload;
+    }
+
+    protected function account_is_online($account)
+    {
+        $now = time();
+        $presence = !empty($account['presence_updated_at'])
+            ? strtotime((string) $account['presence_updated_at']) : 0;
+        if (!empty($account['is_online']) && $presence >= $now - 120) {
+            return TRUE;
+        }
+        $location = !empty($account['location_updated_at'])
+            ? strtotime((string) $account['location_updated_at']) : 0;
+        return $location >= $now - 120;
     }
 
     protected function account_is_active($account)
