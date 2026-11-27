@@ -46,6 +46,8 @@ services:
       DB_USER: ${CMS_DB_USER:-cmsuser_sekitarin}
       DB_PASSWORD: ${CMS_DB_PASSWORD:?Set CMS_DB_PASSWORD in .env}
       SEKITAR_FCM_SERVICE_ACCOUNT: /run/secrets/fcm-service-account.json
+      SEKITAR_WS_PUBLISH_URL: ${SEKITAR_WS_PUBLISH_URL:-http://sekitar-ws:8090/publish}
+      SEKITAR_WS_SECRET: ${SEKITAR_WS_SECRET:?Set SEKITAR_WS_SECRET in .env}
       PUSH_POLL_SECONDS: 5
     volumes:
       - ./tools:/tools:ro

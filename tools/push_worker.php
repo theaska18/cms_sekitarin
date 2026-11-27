@@ -184,6 +184,37 @@ function json_encode_data($json)
     return $data;
 }
 
+function publish_ws($config, $conversation_id, $event, $payload, $exclude_user_id = NULL)
+{
+    $url = getenv('SEKITAR_WS_PUBLISH_URL') ?: '';
+    $secret = getenv('SEKITAR_WS_SECRET') ?: '';
+    if ($url === '' || $secret === '') {
+        return;
+    }
+    $body = array(
+        'conversation_id' => (int) $conversation_id,
+        'event' => (string) $event,
+        'payload' => $payload,
+    );
+    if ($exclude_user_id !== NULL) {
+        $body['exclude_user_id'] = (int) $exclude_user_id;
+    }
+    $handle = curl_init($url);
+    curl_setopt_array($handle, array(
+        CURLOPT_POST => TRUE,
+        CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json',
+            'X-Internal-Secret: ' . $secret,
+        ),
+        CURLOPT_RETURNTRANSFER => TRUE,
+        CURLOPT_CONNECTTIMEOUT_MS => 500,
+        CURLOPT_TIMEOUT_MS => 1500,
+    ));
+    curl_exec($handle);
+    curl_close($handle);
+}
+
 $client = new FcmClient($config['credentials']);
 $lastNotice = 0;
 
@@ -223,6 +254,24 @@ while (TRUE) {
             $queueId = (int) $row['queue_id'];
             if ($send['ok']) {
                 $db->query('UPDATE sek_push_queue SET status = "sent", attempts = attempts + 1, sent_at = UTC_TIMESTAMP(), last_error = NULL WHERE queue_id = ' . $queueId);
+                $data = $row['data_json'] !== NULL && $row['data_json'] !== ''
+                    ? json_decode((string) $row['data_json'], TRUE)
+                    : NULL;
+                if (is_array($data) && !empty($data['message_id']) && !empty($data['conversation_id'])) {
+                    $message_id = (int) $data['message_id'];
+                    $conversation_id = (int) $data['conversation_id'];
+                    $user_id = (int) $row['user_id'];
+                    $db->query(
+                        'INSERT INTO sek_message_receipt (message_id, user_id, delivered_at) '
+                        . 'SELECT message_id, ' . $user_id . ', UTC_TIMESTAMP() FROM sek_message '
+                        . 'WHERE message_id = ' . $message_id . ' AND sender_user_id <> ' . $user_id . ' '
+                        . 'ON DUPLICATE KEY UPDATE delivered_at = COALESCE(delivered_at, VALUES(delivered_at))'
+                    );
+                    publish_ws($config, $conversation_id, 'messages.delivered', array(
+                        'message_ids' => array($message_id),
+                        'user_id' => $user_id,
+                    ), $user_id);
+                }
                 continue;
             }
 
