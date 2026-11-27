@@ -45,14 +45,24 @@ class Sek_media extends Sek_api_base
 
         $image_types = array('image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp');
         $video_types = array('video/mp4' => 'mp4', 'video/quicktime' => 'mov');
+        $document_types = array(
+            'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'application/vnd.ms-excel' => 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'text/plain' => 'txt',
+            'application/zip' => 'zip',
+        );
         $is_image = isset($image_types[$mime]);
         $is_video = isset($video_types[$mime]);
-        $is_document = $mime === 'application/pdf';
+        $is_document = isset($document_types[$mime]);
         if ($is_video && !in_array($purpose, array('post', 'chat'), TRUE)) {
             $is_video = FALSE;
         }
-        if (!$is_image && !$is_video && !($purpose === 'document' && $is_document)) {
-            $this->api_response->error('validation_error', 'Tipe file tidak didukung.', 422, array('file' => 'Gunakan JPEG, PNG, WebP, MP4, atau MOV.'));
+        if (!$is_image && !$is_video
+            && !($is_document && in_array($purpose, array('document', 'chat'), TRUE))) {
+            $this->api_response->error('validation_error', 'Tipe file tidak didukung.', 422, array('file' => 'Gunakan gambar, video, PDF, Word, Excel, TXT, atau ZIP.'));
             return;
         }
         $limit = $is_image ? self::MAX_IMAGE_BYTES : ($is_video ? self::MAX_VIDEO_BYTES : self::MAX_DOCUMENT_BYTES);
@@ -78,7 +88,9 @@ class Sek_media extends Sek_api_base
             $this->api_response->error('server_error', 'Direktori media tidak dapat dibuat.', 500);
             return;
         }
-        $extension = $is_image ? $image_types[$mime] : ($is_video ? $video_types[$mime] : 'pdf');
+        $extension = $is_image
+            ? $image_types[$mime]
+            : ($is_video ? $video_types[$mime] : $document_types[$mime]);
         $filename = bin2hex(random_bytes(16)) . '.' . $extension;
         $relative_path = $relative_dir . '/' . $filename;
         if (!@move_uploaded_file($file['tmp_name'], FCPATH . $relative_path)) {
