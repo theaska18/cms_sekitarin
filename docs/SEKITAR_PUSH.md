@@ -48,13 +48,24 @@ queue; di produksi file kredensial wajib tersedia.
 Token yang dilaporkan `UNREGISTERED`/`INVALID_ARGUMENT` dihapus dari
 `sek_device.push_token` agar tidak dipakai lagi.
 
-## Yang perlu disiapkan di sisi Flutter
+## Klien Flutter
 
-- Ambil FCM token (`firebase_messaging`), kirim ke `/me/push-token`.
-- Tangani pesan foreground/background, lalu buka percakapan/post dari `data`
-  (`conversation_id`, `message_id`, `post_id`, `comment_id`).
-- Hapus token saat user logout.
-- iOS memerlukan APNs key/certificate yang diunggah ke Firebase.
+Sudah diimplementasikan:
+
+- `firebase_core` + `firebase_messaging`, inisialisasi dari `--dart-define`
+  (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_MESSAGING_SENDER_ID`,
+  `FIREBASE_PROJECT_ID`, opsional `FIREBASE_STORAGE_BUCKET`).
+- Izin notifikasi diminta saat aplikasi mulai; FCM token dikirim ke
+  `POST /me/push-token` setelah login/bootstrap dan saat token berubah.
+- `DELETE /me/push-token` dipanggil saat logout.
+- Pesan foreground memicu refresh badge/daftar chat; pesan background tampil
+  sebagai notifikasi sistem.
+- Tap notifikasi dengan `data.conversation_id` membuka percakapan terkait.
+- Android memakai izin `POST_NOTIFICATIONS`; tanpa kredensial Firebase, push
+  dinonaktifkan dan aplikasi tetap berjalan.
+
+iOS masih memerlukan capability **Push Notifications** dan APNs key di
+Firebase.
 
 ## Batasan saat ini
 

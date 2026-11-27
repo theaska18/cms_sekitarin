@@ -104,11 +104,18 @@ final class FcmClient
 
     public function send($deviceToken, $title, $body, $data)
     {
+        // FCM data values must all be strings.
+        $stringData = array();
+        foreach ((array) $data as $key => $value) {
+            $stringData[(string) $key] = is_scalar($value)
+                ? (string) $value
+                : json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
         $payload = array(
             'message' => array(
                 'token' => (string) $deviceToken,
                 'notification' => array('title' => (string) $title, 'body' => (string) $body),
-                'data' => $data,
+                'data' => $stringData,
                 'android' => array('priority' => 'high'),
                 'apns' => array('payload' => array('aps' => array('sound' => 'default'))),
             ),

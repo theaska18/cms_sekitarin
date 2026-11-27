@@ -161,10 +161,17 @@ class Sek_messages extends Sek_api_base
             $preview = $type === 'text'
                 ? mb_substr((string) $payload['body'], 0, 160)
                 : ($type === 'image' ? 'Mengirim gambar' : ($type === 'audio' ? 'Mengirim audio' : ($type === 'location' ? 'Membagikan lokasi' : 'Mengirim file')));
+            $title = (string) $this->api_auth->user()['display_name'];
+            if ($sender_account_id !== NULL) {
+                $sender_account = $this->sek_account_model->find($sender_account_id);
+                if (is_array($sender_account) && trim((string) $sender_account['display_name']) !== '') {
+                    $title = (string) $sender_account['display_name'];
+                }
+            }
             $this->sek_notifier->notify_users(
                 $recipients,
                 'chat_message',
-                (string) $this->api_auth->user()['display_name'],
+                $title,
                 $preview,
                 array('conversation_id' => $conversation_id, 'message_id' => $message_id, 'message_type' => $type)
             );
