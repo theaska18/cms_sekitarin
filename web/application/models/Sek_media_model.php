@@ -77,6 +77,16 @@ class Sek_media_model extends CI_Model
         return $accounts + $posts + $messages;
     }
 
+    public function is_conversation_avatar_visible($media_id, $user_id)
+    {
+        return $this->db->from('sek_conversation c')
+            ->join('sek_conversation_member m', 'm.conversation_id = c.conversation_id', 'inner')
+            ->where('c.avatar_media_id', (int) $media_id)
+            ->where('m.user_id', (int) $user_id)
+            ->where('m.left_at IS NULL', NULL, FALSE)
+            ->count_all_results() > 0;
+    }
+
     public function used_by_active_account($media_id)
     {
         return $this->db->select('account_id')

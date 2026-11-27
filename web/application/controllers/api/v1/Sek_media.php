@@ -123,7 +123,12 @@ class Sek_media extends Sek_api_base
                 (int) $media['media_id'],
                 (int) $this->api_auth->user_id()
             );
-        if (!$owner && !$public && !$postVisible && !$chatVisible) {
+        $groupAvatarVisible = (string) $media['purpose'] === 'avatar'
+            && $this->sek_media_model->is_conversation_avatar_visible(
+                (int) $media['media_id'],
+                (int) $this->api_auth->user_id()
+            );
+        if (!$owner && !$public && !$postVisible && !$chatVisible && !$groupAvatarVisible) {
             $this->api_response->error('forbidden', 'Media tidak dapat diakses.', 403);
             return;
         }

@@ -162,6 +162,7 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   tunai/transfer manual, dan notifikasi order. Detail:
   [`SEKITAR_ORDERS.md`](SEKITAR_ORDERS.md).
 - Akses media diperbaiki: foto post dapat dilihat pengguna terautentikasi lain,
+  avatar grup dapat dilihat semua anggota percakapan,
   media chat hanya untuk anggota percakapan, dan media yang masih dipakai tidak
   dapat dihapus.
 - Akun usaha punya `is_active` + `active_until` (aktif maksimal 24 jam,
@@ -185,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.11+27` (2026-11-27): foto grup terlihat oleh semua
+  anggota (akses media avatar grup) dan peta mengikuti tema gelap/terang.
 - Rilis Flutter `0.12.10+26` (2026-11-27): progres update inline di Setelan,
   cache APK untuk pasang ulang, navigasi 4 tab, profil via header, dan tab
   log telepon placeholder.
