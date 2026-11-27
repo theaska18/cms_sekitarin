@@ -50,6 +50,7 @@ $route['api/v1/conversations/(:num)/messages'] = 'api/v1/sek_messages/index/$1';
 $route['api/v1/conversations/(:num)/read'] = 'api/v1/sek_conversations/read/$1';
 $route['api/v1/conversations/(:num)/typing'] = 'api/v1/sek_conversations/typing/$1';
 $route['api/v1/conversations/(:num)/clear'] = 'api/v1/sek_conversations/clear/$1';
+$route['api/v1/conversations/(:num)/pin'] = 'api/v1/sek_conversations/pin/$1';
 $route['api/v1/conversations/(:num)/members/(:num)'] = 'api/v1/sek_conversations/remove_member/$1/$2';
 $route['api/v1/conversations/(:num)/members'] = 'api/v1/sek_conversations/members/$1';
 $route['api/v1/conversations/(:num)/live-location'] = 'api/v1/sek_conversations/live_location/$1';

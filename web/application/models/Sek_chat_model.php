@@ -163,15 +163,25 @@ class Sek_chat_model extends CI_Model
     {
         // All conversations for the user are shown in one list; the account
         // pair determines which identity each direct row belongs to.
-        return $this->db->select('c.*, m.role, m.last_read_message_id, m.muted_at')
+        return $this->db->select('c.*, m.role, m.last_read_message_id, m.muted_at, m.pinned_at')
             ->from('sek_conversation c')
             ->join('sek_conversation_member m', 'm.conversation_id = c.conversation_id', 'inner')
             ->where('m.user_id', (int) $user_id)
             ->where('m.left_at IS NULL', NULL, FALSE)
+            ->order_by('(m.pinned_at IS NOT NULL)', 'DESC', FALSE)
             ->order_by('COALESCE(c.last_message_at, c.created_at)', 'DESC', FALSE)
             ->limit(max(1, min(100, (int) $limit)))
             ->get()
             ->result_array();
+    }
+
+    public function set_pinned($conversation_id, $user_id, $pinned)
+    {
+        return $this->db->where('conversation_id', (int) $conversation_id)
+            ->where('user_id', (int) $user_id)
+            ->update('sek_conversation_member', array(
+                'pinned_at' => $pinned ? gmdate('Y-m-d H:i:s') : NULL,
+            ));
     }
 
     public function last_message($conversation_id, $after_message_id = 0, $viewer_user_id = 0)
