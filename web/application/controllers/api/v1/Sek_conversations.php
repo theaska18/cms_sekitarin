@@ -626,6 +626,20 @@ class Sek_conversations extends Sek_api_base
             }
         }
         $membership = $this->sek_chat_model->membership($conversation_id, $user_id);
+        $active_call = NULL;
+        if (!$is_direct) {
+            $call = $this->sek_call_model->active_group_call($conversation_id);
+            if (is_array($call)) {
+                $active_call = array(
+                    'call_id' => (int) $call['call_id'],
+                    'kind' => (string) $call['kind'],
+                    'status' => (string) $call['status'],
+                    'started_at' => $this->utc($call['created_at']),
+                    'participant_count' => $this->sek_call_model->active_participant_count((int) $call['call_id']),
+                    'joined' => $this->sek_call_model->is_participant((int) $call['call_id'], (int) $user_id),
+                );
+            }
+        }
         $cleared_before = $membership !== NULL && $membership['cleared_before_message_id'] !== NULL
             ? (int) $membership['cleared_before_message_id'] : 0;
         $last = $this->sek_chat_model->last_message($conversation_id, $cleared_before, $user_id);
@@ -650,6 +664,7 @@ class Sek_conversations extends Sek_api_base
             'members' => $with_members ? $member_list : NULL,
             'last_message' => is_array($last) ? $this->message_payload($last, array(), $user_id) : NULL,
             'unread_count' => $unread,
+            'active_call' => $active_call,
             'pinned' => $membership !== NULL && $membership['pinned_at'] !== NULL,
             'muted' => $membership !== NULL && $membership['muted_at'] !== NULL,
             'last_message_at' => $this->utc($conversation['last_message_at']),

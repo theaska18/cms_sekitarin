@@ -111,23 +111,52 @@ final class FcmClient
                 ? (string) $value
                 : json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
-        $payload = array(
-            'message' => array(
-                'token' => (string) $deviceToken,
-                'notification' => array('title' => (string) $title, 'body' => (string) $body),
-                'data' => $stringData,
-                'android' => array(
-                    'priority' => 'high',
-                    'notification' => array(
-                        'channel_id' => 'sekitar_chat',
-                        'sound' => 'default',
-                        'default_vibrate_timings' => true,
-                        'notification_priority' => 'PRIORITY_HIGH',
+        $isCall = isset($stringData['call_event']);
+        if ($isCall) {
+            // Calls must be data-only so the app can render a native call UI
+            // (CallKit / full-screen incoming call) instead of a normal tray
+            // notification.
+            $stringData['title'] = (string) $title;
+            $stringData['body'] = (string) $body;
+            $payload = array(
+                'message' => array(
+                    'token' => (string) $deviceToken,
+                    'data' => $stringData,
+                    'android' => array(
+                        'priority' => 'high',
+                        'ttl' => $stringData['call_event'] === 'incoming' ? '50s' : '120s',
+                    ),
+                    'apns' => array(
+                        'headers' => array(
+                            'apns-priority' => '10',
+                            'apns-push-type' => 'background',
+                        ),
+                        'payload' => array('aps' => array('content-available' => 1)),
                     ),
                 ),
-                'apns' => array('payload' => array('aps' => array('sound' => 'default'))),
-            ),
-        );
+            );
+        } else {
+            $channel = isset($stringData['channel']) && $stringData['channel'] !== ''
+                ? $stringData['channel']
+                : 'sekitar_chat';
+            $payload = array(
+                'message' => array(
+                    'token' => (string) $deviceToken,
+                    'notification' => array('title' => (string) $title, 'body' => (string) $body),
+                    'data' => $stringData,
+                    'android' => array(
+                        'priority' => 'high',
+                        'notification' => array(
+                            'channel_id' => $channel,
+                            'sound' => 'default',
+                            'default_vibrate_timings' => true,
+                            'notification_priority' => 'PRIORITY_HIGH',
+                        ),
+                    ),
+                    'apns' => array('payload' => array('aps' => array('sound' => 'default'))),
+                ),
+            );
+        }
         $handle = curl_init('https://fcm.googleapis.com/v1/projects/' . rawurlencode($this->projectId()) . '/messages:send');
         curl_setopt_array($handle, array(
             CURLOPT_POST => TRUE,
@@ -215,6 +244,122 @@ function publish_ws($config, $conversation_id, $event, $payload, $exclude_user_i
     curl_close($handle);
 }
 
+function publish_ws_user($config, $user_id, $event, $payload)
+{
+    $url = getenv('SEKITAR_WS_PUBLISH_URL') ?: '';
+    $secret = getenv('SEKITAR_WS_SECRET') ?: '';
+    if ($url === '' || $secret === '') {
+        return;
+    }
+    if (substr($url, -8) === '/publish') {
+        $url = substr($url, 0, -8) . '/publish-user';
+    }
+    $body = array(
+        'user_id' => (int) $user_id,
+        'event' => (string) $event,
+        'payload' => $payload,
+    );
+    $handle = curl_init($url);
+    curl_setopt_array($handle, array(
+        CURLOPT_POST => TRUE,
+        CURLOPT_POSTFIELDS => json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER => array(
+            'Content-Type: application/json',
+            'X-Internal-Secret: ' . $secret,
+        ),
+        CURLOPT_RETURNTRANSFER => TRUE,
+        CURLOPT_CONNECTTIMEOUT_MS => 500,
+        CURLOPT_TIMEOUT_MS => 1500,
+    ));
+    curl_exec($handle);
+    curl_close($handle);
+}
+
+/** Expire unanswered direct calls and abandoned group calls. */
+function expire_calls($db, $config)
+{
+    $result = $db->query(
+        'SELECT c.call_id, c.caller_user_id, c.callee_user_id, c.conversation_id, '
+        . 'COALESCE(a.display_name, u.display_name) AS caller_name '
+        . 'FROM sek_call c '
+        . 'LEFT JOIN sek_account a ON a.account_id = c.caller_account_id '
+        . 'LEFT JOIN sek_user u ON u.user_id = c.caller_user_id '
+        . 'WHERE c.scope = "direct" AND c.status = "ringing" '
+        . 'AND c.created_at < UTC_TIMESTAMP() - INTERVAL 45 SECOND LIMIT 50'
+    );
+    $rows = $result ? $result->fetch_all(MYSQLI_ASSOC) : array();
+    foreach ($rows as $row) {
+        $callId = (int) $row['call_id'];
+        $updated = $db->query(
+            'UPDATE sek_call SET status = "missed", ended_at = UTC_TIMESTAMP() '
+            . 'WHERE call_id = ' . $callId . ' AND status = "ringing"'
+        );
+        if (!$updated || $db->affected_rows < 1) {
+            continue;
+        }
+        $payload = array(
+            'call_id' => $callId,
+            'status' => 'missed',
+            'conversation_id' => $row['conversation_id'] !== NULL ? (int) $row['conversation_id'] : 0,
+        );
+        publish_ws_user($config, (int) $row['caller_user_id'], 'call.ended', $payload);
+        publish_ws_user($config, (int) $row['callee_user_id'], 'call.ended', $payload);
+        publish_ws_user($config, (int) $row['callee_user_id'], 'call.canceled', $payload);
+
+        $user_id = (int) $row['callee_user_id'];
+        $title = 'Panggilan tak terjawab';
+        $name = (string) ($row['caller_name'] ?: 'Seseorang');
+        $dataJson = $db->real_escape_string(json_encode(array(
+            'call_id' => $callId,
+            'conversation_id' => $row['conversation_id'] !== NULL ? (int) $row['conversation_id'] : 0,
+        )));
+        $titleSql = $db->real_escape_string($title);
+        $nameSql = $db->real_escape_string($name);
+        $db->query(
+            'INSERT INTO sek_notification (user_id, type, title, body, data_json, created_at) VALUES ('
+            . $user_id . ', "call_missed", "' . $titleSql . '", "' . $nameSql . '", "' . $dataJson . '", UTC_TIMESTAMP())'
+        );
+        $notificationId = (int) $db->insert_id;
+        $devices = $db->query(
+            'SELECT device_id, push_token FROM sek_device WHERE user_id = ' . $user_id
+            . ' AND revoked_at IS NULL AND push_token IS NOT NULL AND push_token <> ""'
+        );
+        $deviceRows = $devices ? $devices->fetch_all(MYSQLI_ASSOC) : array();
+        foreach ($deviceRows as $device) {
+            $tokenSql = $db->real_escape_string((string) $device['push_token']);
+            $db->query(
+                'INSERT INTO sek_push_queue (notification_id, user_id, device_id, push_token, title, body, data_json, status, next_attempt_at, created_at) VALUES ('
+                . $notificationId . ', ' . $user_id . ', ' . (int) $device['device_id'] . ', "' . $tokenSql
+                . '", "' . $titleSql . '", "' . $nameSql . '", "' . $dataJson
+                . '", "pending", UTC_TIMESTAMP(), UTC_TIMESTAMP())'
+            );
+        }
+        log_line('call ' . $callId . ' marked missed');
+    }
+
+    $groupResult = $db->query(
+        'SELECT call_id, conversation_id FROM sek_call WHERE scope = "group" AND status = "active" '
+        . 'AND created_at < UTC_TIMESTAMP() - INTERVAL 4 HOUR LIMIT 20'
+    );
+    $groupRows = $groupResult ? $groupResult->fetch_all(MYSQLI_ASSOC) : array();
+    foreach ($groupRows as $row) {
+        $callId = (int) $row['call_id'];
+        $db->query(
+            'UPDATE sek_call SET status = "ended", ended_at = UTC_TIMESTAMP() '
+            . 'WHERE call_id = ' . $callId . ' AND status = "active"'
+        );
+        if ($db->affected_rows < 1) {
+            continue;
+        }
+        $conversationId = (int) $row['conversation_id'];
+        publish_ws($config, $conversationId, 'call.ended', array(
+            'conversation_id' => $conversationId,
+            'active_call' => NULL,
+        ));
+        log_line('group call ' . $callId . ' expired');
+    }
+}
+
 $client = new FcmClient($config['credentials']);
 $lastNotice = 0;
 
@@ -223,6 +368,7 @@ log_line('push worker started (fcm=' . ($client->configured() ? 'configured' : '
 while (TRUE) {
     try {
         $db = db_connect($config);
+        expire_calls($db, $config);
         $result = $db->query(
             'SELECT queue_id, notification_id, user_id, device_id, push_token, title, body, data_json, attempts '
             . 'FROM sek_push_queue WHERE status = "pending" AND next_attempt_at <= UTC_TIMESTAMP() '

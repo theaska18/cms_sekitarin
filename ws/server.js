@@ -69,6 +69,51 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && req.url === '/publish-user') {
+    if (!safeEqual(req.headers['x-internal-secret'] || '', SECRET)) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'forbidden' }));
+      return;
+    }
+    let raw = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => {
+      raw += chunk;
+      if (raw.length > 1048576) {
+        req.destroy();
+      }
+    });
+    req.on('end', () => {
+      let body;
+      try {
+        body = JSON.parse(raw || '{}');
+      } catch (error) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid_json' }));
+        return;
+      }
+      const userId = Number(body.user_id || 0);
+      if (!userId || !body.event) {
+        res.writeHead(422, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'user_id_and_event_required' }));
+        return;
+      }
+      const event = {
+        event: String(body.event),
+        payload: body.payload || null,
+        sent_at: new Date().toISOString(),
+      };
+      for (const client of wss.clients) {
+        if (client.authenticated && client.userId === userId) {
+          send(client, event);
+        }
+      }
+      res.writeHead(202, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'published' }));
+    });
+    return;
+  }
+
   if (req.method === 'POST' && req.url === '/publish') {
     if (!safeEqual(req.headers['x-internal-secret'] || '', SECRET)) {
       res.writeHead(403, { 'Content-Type': 'application/json' });

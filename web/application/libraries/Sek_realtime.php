@@ -16,19 +16,39 @@ class Sek_realtime
 
     public function publish($conversation_id, $event, $payload, $exclude_user_id = NULL)
     {
+        return $this->post('/publish', array(
+            'conversation_id' => (int) $conversation_id,
+            'event' => (string) $event,
+            'payload' => $payload,
+        ), $exclude_user_id);
+    }
+
+    /** Deliver an event to every live connection of one user (calls, etc.). */
+    public function publish_user($user_id, $event, $payload, $exclude_user_id = NULL)
+    {
+        return $this->post('/publish-user', array(
+            'user_id' => (int) $user_id,
+            'event' => (string) $event,
+            'payload' => $payload,
+        ), $exclude_user_id);
+    }
+
+    private function post($path, $body, $exclude_user_id = NULL)
+    {
         $url = trim((string) getenv('SEKITAR_WS_PUBLISH_URL'));
         $secret = trim((string) getenv('SEKITAR_WS_SECRET'));
         if ($url === '' || $secret === '' || !function_exists('curl_init')) {
             return FALSE;
         }
-
-        $body = array(
-            'conversation_id' => (int) $conversation_id,
-            'event' => (string) $event,
-            'payload' => $payload,
-        );
         if ($exclude_user_id !== NULL) {
             $body['exclude_user_id'] = (int) $exclude_user_id;
+        }
+        if (substr($url, -8) === '/publish') {
+            $url = substr($url, 0, -8) . $path;
+        } elseif (substr($url, -1) !== '/') {
+            $url .= $path;
+        } else {
+            $url .= ltrim($path, '/');
         }
 
         $handle = curl_init($url);

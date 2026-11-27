@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.29+45` (2026-11-27): panggilan suara/video Jitsi 1:1
+  (ring + CallKit), panggilan grup tanpa dering dengan banner gabung, log
+  telepon. Backend: tabel `sek_call`/`sek_call_participant`, endpoint
+  `/calls`, JWT Jitsi, event WS per pengguna, dan push panggilan.
 - Rilis Flutter `0.12.28+44` (2026-11-27): menu chat lengkap, mute grup,
   logout keluar aplikasi, dan toggle password.
 - Rilis Flutter `0.12.27+43` (2026-11-27): pin chat, status bisnis butuh
