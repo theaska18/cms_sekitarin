@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.14+30` (2026-11-27): profil akun milik sendiri membuka
+  halaman Profil (berpindah akun bila perlu).
 - Rilis Flutter `0.12.13+29` (2026-11-27): ikon lokasi sendiri di peta,
   tombol panggilan (belum aktif), dan profil akun dengan grid post dari
   feed/komentar.
