@@ -199,8 +199,13 @@ class Api_auth
             'last_seen_at' => $now,
         );
         $this->CI->db->where('device_id', (int) $row['device_id'])
+            ->where('refresh_token_hash', $this->hash_token($refresh_token))
             ->where('revoked_at IS NULL', NULL, FALSE)
             ->update('sek_device', $data);
+        if ($this->CI->db->affected_rows() !== 1) {
+            // Another request rotated this token first.
+            return NULL;
+        }
 
         return array(
             'device_id' => (int) $row['device_id'],

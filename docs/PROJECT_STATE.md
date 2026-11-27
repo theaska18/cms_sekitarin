@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.16+32` (2026-11-27): refresh token single-flight dan
+  rotasi backend kondisional untuk mencegah logout acak.
 - Rilis Flutter `0.12.15+31` (2026-11-27): marker driver tanpa lingkaran,
   avatar akun aktif + badge tipe di header, dan jarak untuk post own/kontak.
 - Rilis Flutter `0.12.14+30` (2026-11-27): profil akun milik sendiri membuka
