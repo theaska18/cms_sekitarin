@@ -112,6 +112,31 @@ class Sek_conversations extends Sek_api_base
         ));
     }
 
+    public function clear($conversation_id = 0)
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $conversation = $this->conversation_for((int) $conversation_id);
+        if ($conversation === NULL) {
+            return;
+        }
+        $last_id = $this->sek_chat_model->max_message_id((int) $conversation_id);
+        $this->sek_chat_model->clear_history(
+            (int) $conversation_id,
+            $this->api_auth->user_id(),
+            $last_id
+        );
+        $this->api_response->ok(array(
+            'status' => 'cleared',
+            'conversation_id' => (int) $conversation_id,
+            'cleared_before_message_id' => $last_id,
+        ));
+    }
+
     public function members($conversation_id = 0)
     {
         if (!$this->require_method(array('GET', 'POST'))) {
@@ -536,10 +561,17 @@ class Sek_conversations extends Sek_api_base
                 }
             }
         }
-        $last = $this->sek_chat_model->last_message($conversation_id);
         $membership = $this->sek_chat_model->membership($conversation_id, $user_id);
+        $cleared_before = $membership !== NULL && $membership['cleared_before_message_id'] !== NULL
+            ? (int) $membership['cleared_before_message_id'] : 0;
+        $last = $this->sek_chat_model->last_message($conversation_id, $cleared_before);
         $unread = $membership !== NULL
-            ? $this->sek_chat_model->unread_count($conversation_id, $user_id, (int) $membership['last_read_message_id'])
+            ? $this->sek_chat_model->unread_count(
+                $conversation_id,
+                $user_id,
+                (int) $membership['last_read_message_id'],
+                $cleared_before
+            )
             : 0;
 
         return array(

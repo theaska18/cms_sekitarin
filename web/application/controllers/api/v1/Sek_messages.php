@@ -57,7 +57,16 @@ class Sek_messages extends Sek_api_base
         $before = $before !== NULL && $before !== '' ? (int) $before : NULL;
         $after = $after !== NULL && $after !== '' ? (int) $after : NULL;
 
-        $rows = $this->sek_chat_model->messages($conversation_id, $limit + 1, $before, $after);
+        $membership = $this->sek_chat_model->membership($conversation_id, $this->api_auth->user_id());
+        $cleared_before = is_array($membership) && $membership['cleared_before_message_id'] !== NULL
+            ? (int) $membership['cleared_before_message_id'] : 0;
+        $rows = $this->sek_chat_model->messages(
+            $conversation_id,
+            $limit + 1,
+            $before,
+            $after,
+            $cleared_before
+        );
         $has_more = count($rows) > $limit;
         if ($has_more) {
             $rows = $after !== NULL ? array_slice($rows, 0, $limit) : array_slice($rows, 1);

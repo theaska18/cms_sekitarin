@@ -174,21 +174,44 @@ class Sek_chat_model extends CI_Model
             ->result_array();
     }
 
-    public function last_message($conversation_id)
+    public function last_message($conversation_id, $after_message_id = 0)
     {
-        return $this->db->select('*')
-            ->where('conversation_id', (int) $conversation_id)
-            ->order_by('message_id', 'DESC')
+        $this->db->select('*')
+            ->where('conversation_id', (int) $conversation_id);
+        if ((int) $after_message_id > 0) {
+            $this->db->where('message_id >', (int) $after_message_id);
+        }
+        return $this->db->order_by('message_id', 'DESC')
             ->limit(1)
             ->get('sek_message')
             ->row_array();
     }
 
-    public function unread_count($conversation_id, $user_id, $last_read_message_id)
+    public function max_message_id($conversation_id)
     {
+        $row = $this->db->select_max('message_id')
+            ->where('conversation_id', (int) $conversation_id)
+            ->get('sek_message')
+            ->row_array();
+        return is_array($row) && $row['message_id'] !== NULL ? (int) $row['message_id'] : 0;
+    }
+
+    public function clear_history($conversation_id, $user_id, $message_id)
+    {
+        return $this->db->where('conversation_id', (int) $conversation_id)
+            ->where('user_id', (int) $user_id)
+            ->update('sek_conversation_member', array(
+                'cleared_before_message_id' => (int) $message_id,
+                'last_read_message_id' => (int) $message_id,
+            ));
+    }
+
+    public function unread_count($conversation_id, $user_id, $last_read_message_id, $cleared_before_message_id = 0)
+    {
+        $after = max((int) $last_read_message_id, (int) $cleared_before_message_id);
         return (int) $this->db->where('conversation_id', (int) $conversation_id)
             ->where('sender_user_id !=', (int) $user_id)
-            ->where('message_id >', (int) $last_read_message_id)
+            ->where('message_id >', $after)
             ->where('deleted_at IS NULL', NULL, FALSE)
             ->count_all_results('sek_message');
     }
@@ -200,20 +223,21 @@ class Sek_chat_model extends CI_Model
             ->count_all_results('sek_message');
     }
 
-    public function messages($conversation_id, $limit = 50, $before_id = NULL, $after_id = NULL)
+    public function messages($conversation_id, $limit = 50, $before_id = NULL, $after_id = NULL, $cleared_before_id = 0)
     {
         $limit = max(1, min(100, (int) $limit));
         if ($after_id !== NULL && (int) $after_id > 0) {
-            $rows = $this->db->where('conversation_id', (int) $conversation_id)
-                ->where('message_id >', (int) $after_id)
+            $this->db->where('conversation_id', (int) $conversation_id)
+                ->where('message_id >', max((int) $after_id, (int) $cleared_before_id))
                 ->order_by('message_id', 'ASC')
-                ->limit($limit)
-                ->get('sek_message')
-                ->result_array();
-            return $rows;
+                ->limit($limit);
+            return $this->db->get('sek_message')->result_array();
         }
 
         $this->db->where('conversation_id', (int) $conversation_id);
+        if ((int) $cleared_before_id > 0) {
+            $this->db->where('message_id >', (int) $cleared_before_id);
+        }
         if ($before_id !== NULL && (int) $before_id > 0) {
             $this->db->where('message_id <', (int) $before_id);
         }
