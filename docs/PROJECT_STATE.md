@@ -186,6 +186,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.13+29` (2026-11-27): ikon lokasi sendiri di peta,
+  tombol panggilan (belum aktif), dan profil akun dengan grid post dari
+  feed/komentar.
 - Rilis Flutter `0.12.12+28` (2026-11-27): peta kembali ke tile OSM terang
   sementara (CARTO dark butuh API key).
 - Rilis Flutter `0.12.11+27` (2026-11-27): foto grup terlihat oleh semua
