@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.35+51` (2026-11-27): keluar dari Jitsi mengakhiri
+  panggilan untuk kedua pihak dan menutup layar lawan.
 - Rilis Flutter `0.12.34+50` (2026-11-27): token Jitsi dikirim lewat query
   dan hash agar WebView tidak kena "Authentication required".
 - Rilis Flutter `0.12.33+49` (2026-11-27): panggilan Jitsi lewat WebView
