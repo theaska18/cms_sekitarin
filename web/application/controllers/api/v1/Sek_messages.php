@@ -65,7 +65,8 @@ class Sek_messages extends Sek_api_base
             $limit + 1,
             $before,
             $after,
-            $cleared_before
+            $cleared_before,
+            $this->api_auth->user_id()
         );
         $has_more = count($rows) > $limit;
         if ($has_more) {
@@ -224,6 +225,20 @@ class Sek_messages extends Sek_api_base
 
     private function delete_message($message)
     {
+        $for_everyone = $this->api_validation->bool_value(
+            $this->input->get('for_everyone', TRUE)
+        );
+        if (!$for_everyone) {
+            $this->sek_chat_model->hide_message(
+                (int) $message['message_id'],
+                $this->api_auth->user_id()
+            );
+            $this->api_response->ok(array(
+                'status' => 'hidden',
+                'message_id' => (int) $message['message_id'],
+            ));
+            return;
+        }
         $is_sender = (int) $message['sender_user_id'] === (int) $this->api_auth->user_id();
         $membership = $this->sek_chat_model->membership((int) $message['conversation_id'], $this->api_auth->user_id());
         $is_owner = is_array($membership) && (string) $membership['role'] === 'owner';
@@ -236,6 +251,8 @@ class Sek_messages extends Sek_api_base
             'message_id' => (int) $message['message_id'],
             'conversation_id' => (int) $message['conversation_id'],
             'deleted_at' => $this->utc(gmdate('Y-m-d H:i:s')),
+            'body' => NULL,
+            'media_id' => NULL,
         );
         $this->sek_realtime->publish((int) $message['conversation_id'], 'message.deleted', $payload);
         $this->api_response->ok(array('status' => 'deleted', 'message' => $payload));

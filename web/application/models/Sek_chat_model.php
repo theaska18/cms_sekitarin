@@ -174,16 +174,24 @@ class Sek_chat_model extends CI_Model
             ->result_array();
     }
 
-    public function last_message($conversation_id, $after_message_id = 0)
+    public function last_message($conversation_id, $after_message_id = 0, $viewer_user_id = 0)
     {
-        $this->db->select('*')
-            ->where('conversation_id', (int) $conversation_id);
+        $this->db->select('m.*')
+            ->from('sek_message m')
+            ->where('m.conversation_id', (int) $conversation_id);
         if ((int) $after_message_id > 0) {
-            $this->db->where('message_id >', (int) $after_message_id);
+            $this->db->where('m.message_id >', (int) $after_message_id);
         }
-        return $this->db->order_by('message_id', 'DESC')
+        if ((int) $viewer_user_id > 0) {
+            $this->db->where(
+                'NOT EXISTS (SELECT 1 FROM sek_message_hidden h WHERE h.message_id = m.message_id AND h.user_id = ' . (int) $viewer_user_id . ')',
+                NULL,
+                FALSE
+            );
+        }
+        return $this->db->order_by('m.message_id', 'DESC')
             ->limit(1)
-            ->get('sek_message')
+            ->get()
             ->row_array();
     }
 
@@ -223,29 +231,43 @@ class Sek_chat_model extends CI_Model
             ->count_all_results('sek_message');
     }
 
-    public function messages($conversation_id, $limit = 50, $before_id = NULL, $after_id = NULL, $cleared_before_id = 0)
+    public function messages($conversation_id, $limit = 50, $before_id = NULL, $after_id = NULL, $cleared_before_id = 0, $viewer_user_id = 0)
     {
         $limit = max(1, min(100, (int) $limit));
-        if ($after_id !== NULL && (int) $after_id > 0) {
-            $this->db->where('conversation_id', (int) $conversation_id)
-                ->where('message_id >', max((int) $after_id, (int) $cleared_before_id))
-                ->order_by('message_id', 'ASC')
-                ->limit($limit);
-            return $this->db->get('sek_message')->result_array();
+        $hidden = (int) $viewer_user_id > 0
+            ? 'NOT EXISTS (SELECT 1 FROM sek_message_hidden h WHERE h.message_id = m.message_id AND h.user_id = ' . (int) $viewer_user_id . ')'
+            : NULL;
+        $this->db->select('m.*')->from('sek_message m')
+            ->where('m.conversation_id', (int) $conversation_id);
+        if ($hidden !== NULL) {
+            $this->db->where($hidden, NULL, FALSE);
         }
-
-        $this->db->where('conversation_id', (int) $conversation_id);
+        if ($after_id !== NULL && (int) $after_id > 0) {
+            $this->db->where('m.message_id >', max((int) $after_id, (int) $cleared_before_id))
+                ->order_by('m.message_id', 'ASC')
+                ->limit($limit);
+            return $this->db->get()->result_array();
+        }
         if ((int) $cleared_before_id > 0) {
-            $this->db->where('message_id >', (int) $cleared_before_id);
+            $this->db->where('m.message_id >', (int) $cleared_before_id);
         }
         if ($before_id !== NULL && (int) $before_id > 0) {
-            $this->db->where('message_id <', (int) $before_id);
+            $this->db->where('m.message_id <', (int) $before_id);
         }
-        $rows = $this->db->order_by('message_id', 'DESC')
+        $rows = $this->db->order_by('m.message_id', 'DESC')
             ->limit($limit)
-            ->get('sek_message')
+            ->get()
             ->result_array();
         return array_reverse($rows);
+    }
+
+    public function hide_message($message_id, $user_id)
+    {
+        return $this->db->query(
+            'INSERT INTO sek_message_hidden (message_id, user_id, hidden_at) VALUES (?, ?, ?) '
+            . 'ON DUPLICATE KEY UPDATE hidden_at = VALUES(hidden_at)',
+            array((int) $message_id, (int) $user_id, gmdate('Y-m-d H:i:s'))
+        );
     }
 
     public function receipt_counts($message_ids)

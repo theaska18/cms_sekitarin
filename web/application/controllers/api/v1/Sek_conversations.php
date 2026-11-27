@@ -564,7 +564,7 @@ class Sek_conversations extends Sek_api_base
         $membership = $this->sek_chat_model->membership($conversation_id, $user_id);
         $cleared_before = $membership !== NULL && $membership['cleared_before_message_id'] !== NULL
             ? (int) $membership['cleared_before_message_id'] : 0;
-        $last = $this->sek_chat_model->last_message($conversation_id, $cleared_before);
+        $last = $this->sek_chat_model->last_message($conversation_id, $cleared_before, $user_id);
         $unread = $membership !== NULL
             ? $this->sek_chat_model->unread_count(
                 $conversation_id,
