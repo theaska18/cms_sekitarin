@@ -7,7 +7,7 @@ class Sek_social_model extends CI_Model
     public function list_contacts($user_id)
     {
         return $this->db->select('c.contact_id, c.account_id, c.alias, c.created_at, '
-                . 'a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, a.is_online, '
+                . 'a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, a.is_online, '
                 . 'a.verified_at, t.label_id, '
                 . '(SELECT MAX(l.updated_at) FROM sek_account_location l WHERE l.account_id = a.account_id) AS location_updated_at, '
                 . '(SELECT p.updated_at FROM sek_account_presence p WHERE p.account_id = a.account_id) AS presence_updated_at')

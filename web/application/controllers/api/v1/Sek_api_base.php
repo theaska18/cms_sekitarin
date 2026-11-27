@@ -153,6 +153,18 @@ class Sek_api_base extends CI_Controller
         return $payload;
     }
 
+    protected function account_business_available($account)
+    {
+        if ((string) ($account['type_code'] ?? 'personal') === 'personal') {
+            return $this->account_is_active($account);
+        }
+        if (!$this->account_is_active($account)) {
+            return FALSE;
+        }
+        $personal = $this->sek_account_model->personal_for_user((int) $account['user_id']);
+        return is_array($personal) && $this->account_is_online($personal);
+    }
+
     protected function account_is_online($account)
     {
         $now = time();

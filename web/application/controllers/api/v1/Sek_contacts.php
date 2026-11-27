@@ -132,6 +132,7 @@ class Sek_contacts extends Sek_api_base
                 'bio' => $row['bio'],
                 'avatar_media_id' => $row['avatar_media_id'] !== NULL ? (int) $row['avatar_media_id'] : NULL,
                 'is_online' => $this->account_is_online($row),
+                'is_active' => $this->account_business_available($row),
                 'verified' => !empty($row['verified_at']),
                 'type_label' => (string) $row['label_id'],
             ),

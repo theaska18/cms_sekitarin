@@ -33,6 +33,21 @@ class Sek_account_model extends CI_Model
             ->row_array();
     }
 
+    public function personal_for_user($user_id)
+    {
+        return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services, '
+                . '(SELECT MAX(l.updated_at) FROM sek_account_location l WHERE l.account_id = a.account_id) AS location_updated_at, '
+                . '(SELECT p.updated_at FROM sek_account_presence p WHERE p.account_id = a.account_id) AS presence_updated_at')
+            ->from('sek_account a')
+            ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
+            ->where('a.user_id', (int) $user_id)
+            ->where('a.type_code', 'personal')
+            ->where('a.status', 'active')
+            ->limit(1)
+            ->get()
+            ->row_array();
+    }
+
     public function list_for_user($user_id)
     {
         return $this->db->select('a.*, t.label_id, t.label_en, t.allows_presence, t.allows_services, m.role, '

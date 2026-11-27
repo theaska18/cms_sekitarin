@@ -163,6 +163,12 @@ class Sek_places extends Sek_api_base
             $live_sharing
         );
 
+        $rows = array_values(array_filter($rows, function ($row) {
+            if ((string) $row['type_code'] === 'personal') {
+                return TRUE;
+            }
+            return $this->account_business_available($row);
+        }));
         $data = array();
         $viewer_user_id = $this->api_auth->user_id();
         foreach ($rows as $row) {
@@ -179,7 +185,7 @@ class Sek_places extends Sek_api_base
                 'lng' => (float) $row['lng'],
                 'distance_m' => (int) round((float) $row['distance_m']),
                 'is_online' => (int) $row['is_online'] === 1,
-                'is_active' => $this->account_is_active($row),
+                'is_active' => $this->account_business_available($row),
                 'active_until' => isset($row['active_until']) ? $this->utc($row['active_until']) : NULL,
                 'location_mode' => isset($row['location_mode']) ? (string) $row['location_mode'] : 'fixed',
                 'source' => (string) $row['source'],

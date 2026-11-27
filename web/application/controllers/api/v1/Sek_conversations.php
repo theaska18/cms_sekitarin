@@ -542,7 +542,7 @@ class Sek_conversations extends Sek_api_base
                             ? (int) $account['avatar_media_id'] : NULL,
                         'type_code' => (string) $account['type_code'],
                         'type_label' => (string) $account['label_id'],
-                        'is_active' => $this->account_is_active($account),
+                        'is_active' => $this->account_business_available($account),
                         'is_online' => $this->account_is_online($account),
                     );
                 }
@@ -605,7 +605,7 @@ class Sek_conversations extends Sek_api_base
                 ? (int) $account['avatar_media_id'] : NULL,
             'type_code' => (string) $account['type_code'],
             'type_label' => isset($account['label_id']) ? (string) $account['label_id'] : NULL,
-            'is_active' => $this->account_is_active($account),
+            'is_active' => $this->account_business_available($account),
             'is_online' => $this->account_is_online($account),
         );
     }
