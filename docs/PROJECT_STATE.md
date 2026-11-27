@@ -183,6 +183,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.3+19` (2026-11-27): dialog progres unduhan update APK
+  dan logo aplikasi biru di header/login.
 - Rilis Flutter `0.12.2+18` (2026-11-27): share lokasi per grup, foto grup
   oleh semua anggota, tombol kembali + avatar grup di kanan atas, logo
   Sekitarin, badge chat dibersihkan server-side, dan penanda chat belum dibaca.
