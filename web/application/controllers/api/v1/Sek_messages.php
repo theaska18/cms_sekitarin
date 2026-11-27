@@ -227,9 +227,13 @@ class Sek_messages extends Sek_api_base
 
         $recipients = array();
         foreach ($this->sek_chat_model->members($conversation_id) as $member) {
-            if ((int) $member['user_id'] !== (int) $this->api_auth->user_id()) {
-                $recipients[] = (int) $member['user_id'];
+            if ((int) $member['user_id'] === (int) $this->api_auth->user_id()) {
+                continue;
             }
+            if (!empty($member['muted_at'])) {
+                continue;
+            }
+            $recipients[] = (int) $member['user_id'];
         }
         if ($recipients) {
             $preview = $type === 'text'

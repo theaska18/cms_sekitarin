@@ -143,6 +143,37 @@ class Sek_conversations extends Sek_api_base
         ));
     }
 
+    public function mute($conversation_id = 0)
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $conversation = $this->conversation_for((int) $conversation_id);
+        if ($conversation === NULL) {
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $muted = $this->api_validation->bool_value(
+            array_key_exists('muted', $body) ? $body['muted'] : TRUE
+        );
+        $this->sek_chat_model->set_muted(
+            (int) $conversation_id,
+            $this->api_auth->user_id(),
+            $muted
+        );
+        $this->api_response->ok(array(
+            'status' => $muted ? 'muted' : 'unmuted',
+            'conversation_id' => (int) $conversation_id,
+            'muted' => $muted,
+        ));
+    }
+
     public function clear($conversation_id = 0)
     {
         if (!$this->require_method('POST')) {
@@ -620,6 +651,7 @@ class Sek_conversations extends Sek_api_base
             'last_message' => is_array($last) ? $this->message_payload($last, array(), $user_id) : NULL,
             'unread_count' => $unread,
             'pinned' => $membership !== NULL && $membership['pinned_at'] !== NULL,
+            'muted' => $membership !== NULL && $membership['muted_at'] !== NULL,
             'last_message_at' => $this->utc($conversation['last_message_at']),
             'created_at' => $this->utc($conversation['created_at']),
             'updated_at' => $this->utc($conversation['updated_at']),

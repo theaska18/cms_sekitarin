@@ -184,6 +184,15 @@ class Sek_chat_model extends CI_Model
             ));
     }
 
+    public function set_muted($conversation_id, $user_id, $muted)
+    {
+        return $this->db->where('conversation_id', (int) $conversation_id)
+            ->where('user_id', (int) $user_id)
+            ->update('sek_conversation_member', array(
+                'muted_at' => $muted ? gmdate('Y-m-d H:i:s') : NULL,
+            ));
+    }
+
     public function last_message($conversation_id, $after_message_id = 0, $viewer_user_id = 0)
     {
         $this->db->select('m.*, COALESCE(sa.display_name, su.display_name) AS sender_name')
