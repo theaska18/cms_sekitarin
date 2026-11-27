@@ -183,6 +183,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.6+22` (2026-11-27): peta grup terpusat di lokasi
+  pengguna, tombol recenter, share 1 jam, dan wordmark header dihapus.
 - Rilis Flutter `0.12.5+21` (2026-11-27): foto percakapan sebelum nama di
   header chat dan badge ikon grup pada avatar grup.
 - Rilis Flutter `0.12.4+20` (2026-11-27): avatar pembuat post/lawan chat,
