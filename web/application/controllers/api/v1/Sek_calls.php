@@ -35,6 +35,7 @@ class Sek_calls extends Sek_api_base
         $limit = $limit > 0 ? min(100, $limit) : 50;
         $before = (int) $this->input->get('before_id', TRUE);
         $this->sek_call_model->expire_stale();
+        $this->sek_call_model->expire_abandoned();
         $rows = $this->sek_call_model->list_for_user(
             $this->api_auth->user_id(),
             $before,
@@ -64,6 +65,8 @@ class Sek_calls extends Sek_api_base
             $this->api_response->error('not_found', 'Panggilan tidak ditemukan.', 404);
             return;
         }
+        $this->sek_call_model->expire_abandoned();
+        $call = $this->sek_call_model->find((int) $call_id);
         if ((string) $call['status'] === 'ringing'
             && strtotime((string) $call['created_at']) + Sek_call_model::RING_TIMEOUT < time()) {
             $this->sek_call_model->update((int) $call_id, array(
@@ -79,6 +82,28 @@ class Sek_calls extends Sek_api_base
             $payload['jitsi'] = $this->jitsi_payload($call, $this->api_auth->user_id());
         }
         $this->api_response->ok($payload);
+    }
+
+    public function heartbeat($call_id = 0)
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $call = $this->sek_call_model->for_user((int) $call_id, $this->api_auth->user_id());
+        if (!is_array($call)) {
+            $this->api_response->error('not_found', 'Panggilan tidak ditemukan.', 404);
+            return;
+        }
+        if (in_array((string) $call['status'], array('ringing', 'answered'), TRUE)) {
+            $this->sek_call_model->touch((int) $call_id);
+        }
+        $this->api_response->ok(array(
+            'call_id' => (int) $call_id,
+            'status' => (string) $call['status'],
+        ));
     }
 
     public function answer($call_id = 0)
@@ -113,6 +138,7 @@ class Sek_calls extends Sek_api_base
         $this->sek_call_model->update((int) $call_id, array(
             'status' => 'answered',
             'answered_at' => gmdate('Y-m-d H:i:s'),
+            'last_activity_at' => gmdate('Y-m-d H:i:s'),
         ));
         $call = $this->sek_call_model->find((int) $call_id);
         $payload = $this->call_payload($call, (int) $call['caller_user_id']);
@@ -468,6 +494,8 @@ class Sek_calls extends Sek_api_base
             );
             return;
         }
+        $this->sek_call_model->expire_stale();
+        $this->sek_call_model->expire_abandoned();
         if ($this->sek_call_model->active_for_user((int) $callee['user_id'])) {
             $this->api_response->error('busy', 'Penerima sedang dalam panggilan lain.', 409);
             return;

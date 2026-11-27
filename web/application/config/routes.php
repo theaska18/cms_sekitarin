@@ -61,6 +61,7 @@ $route['api/v1/conversations'] = 'api/v1/sek_conversations/index';
 $route['api/v1/messages/(:num)/reaction'] = 'api/v1/sek_messages/reaction/$1';
 $route['api/v1/messages/(:num)'] = 'api/v1/sek_messages/show/$1';
 $route['api/v1/calls/(:num)/answer'] = 'api/v1/sek_calls/answer/$1';
+$route['api/v1/calls/(:num)/heartbeat'] = 'api/v1/sek_calls/heartbeat/$1';
 $route['api/v1/calls/(:num)/decline'] = 'api/v1/sek_calls/decline/$1';
 $route['api/v1/calls/(:num)/end'] = 'api/v1/sek_calls/end/$1';
 $route['api/v1/calls/(:num)/join'] = 'api/v1/sek_calls/join/$1';

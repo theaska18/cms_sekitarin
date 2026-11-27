@@ -275,6 +275,31 @@ function publish_ws_user($config, $user_id, $event, $payload)
     curl_close($handle);
 }
 
+/** Ask devices to clear a stale call UI. */
+function queue_call_cancel_push($db, $user_id, $call_id, $conversation_id)
+{
+    $data = json_encode(array(
+        'call_event' => 'cancel',
+        'call_id' => (int) $call_id,
+        'conversation_id' => (int) $conversation_id,
+    ));
+    $dataSql = $db->real_escape_string($data);
+    $devices = $db->query(
+        'SELECT device_id, push_token FROM sek_device WHERE user_id = ' . (int) $user_id
+        . ' AND revoked_at IS NULL AND push_token IS NOT NULL AND push_token <> ""'
+    );
+    $rows = $devices ? $devices->fetch_all(MYSQLI_ASSOC) : array();
+    foreach ($rows as $device) {
+        $tokenSql = $db->real_escape_string((string) $device['push_token']);
+        $db->query(
+            'INSERT INTO sek_push_queue (notification_id, user_id, device_id, push_token, title, body, data_json, status, next_attempt_at, created_at) VALUES (NULL, '
+            . (int) $user_id . ', ' . (int) $device['device_id'] . ', "' . $tokenSql
+            . '", "Panggilan berakhir", "", "' . $dataSql
+            . '", "pending", UTC_TIMESTAMP(), UTC_TIMESTAMP())'
+        );
+    }
+}
+
 /** Expire unanswered direct calls and abandoned group calls. */
 function expire_calls($db, $config)
 {
@@ -335,6 +360,37 @@ function expire_calls($db, $config)
             );
         }
         log_line('call ' . $callId . ' marked missed');
+    }
+
+    $answeredResult = $db->query(
+        'SELECT call_id, caller_user_id, callee_user_id, conversation_id FROM sek_call '
+        . 'WHERE scope = "direct" AND status = "answered" '
+        . 'AND COALESCE(last_activity_at, answered_at, created_at) < UTC_TIMESTAMP() - INTERVAL 180 SECOND LIMIT 50'
+    );
+    $answeredRows = $answeredResult ? $answeredResult->fetch_all(MYSQLI_ASSOC) : array();
+    foreach ($answeredRows as $row) {
+        $callId = (int) $row['call_id'];
+        $db->query(
+            'UPDATE sek_call SET status = "ended", ended_at = UTC_TIMESTAMP(), '
+            . 'duration_seconds = GREATEST(0, TIMESTAMPDIFF(SECOND, answered_at, UTC_TIMESTAMP())) '
+            . 'WHERE call_id = ' . $callId . ' AND status = "answered"'
+        );
+        if ($db->affected_rows < 1) {
+            continue;
+        }
+        $conversationId = $row['conversation_id'] !== NULL ? (int) $row['conversation_id'] : 0;
+        $payload = array(
+            'call_id' => $callId,
+            'status' => 'ended',
+            'conversation_id' => $conversationId,
+        );
+        $callerId = (int) $row['caller_user_id'];
+        $calleeId = (int) $row['callee_user_id'];
+        publish_ws_user($config, $callerId, 'call.ended', $payload);
+        publish_ws_user($config, $calleeId, 'call.ended', $payload);
+        queue_call_cancel_push($db, $callerId, $callId, $conversationId);
+        queue_call_cancel_push($db, $calleeId, $callId, $conversationId);
+        log_line('call ' . $callId . ' ended (no heartbeat)');
     }
 
     $groupResult = $db->query(

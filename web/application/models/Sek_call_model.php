@@ -76,6 +76,45 @@ class Sek_call_model extends CI_Model
             ->update('sek_call', $fields);
     }
 
+    public function touch($call_id)
+    {
+        return $this->db->where('call_id', (int) $call_id)
+            ->update('sek_call', array('last_activity_at' => gmdate('Y-m-d H:i:s')));
+    }
+
+    /**
+     * Close answered calls whose client stopped sending heartbeats (app crash,
+     * force stop, or a Jitsi screen that never reported hanging up).
+     */
+    public function expire_abandoned($seconds = 180)
+    {
+        $seconds = max(45, (int) $seconds);
+        $rows = $this->db->where('scope', 'direct')
+            ->where('status', 'answered')
+            ->where(
+                'COALESCE(last_activity_at, answered_at, created_at) < UTC_TIMESTAMP() - INTERVAL '
+                . $seconds . ' SECOND',
+                NULL,
+                FALSE
+            )
+            ->get('sek_call')
+            ->result_array();
+        if (!$rows) {
+            return array();
+        }
+        $now = gmdate('Y-m-d H:i:s');
+        foreach ($rows as $row) {
+            $answered = $row['answered_at'] !== NULL ? strtotime((string) $row['answered_at']) : NULL;
+            $this->db->where('call_id', (int) $row['call_id'])
+                ->update('sek_call', array(
+                    'status' => 'ended',
+                    'ended_at' => $now,
+                    'duration_seconds' => $answered !== NULL ? max(0, time() - $answered) : 0,
+                ));
+        }
+        return $rows;
+    }
+
     /** Mark unanswered direct calls as missed. Returns the affected rows. */
     public function expire_stale($seconds = self::RING_TIMEOUT)
     {
@@ -95,6 +134,12 @@ class Sek_call_model extends CI_Model
                 'ended_at' => gmdate('Y-m-d H:i:s'),
             ));
         return $rows;
+    }
+
+    /** Mark calls answered but silent for too long as ended. */
+    public function expire_dead_calls($seconds = 180)
+    {
+        return $this->expire_abandoned($seconds);
     }
 
     /** Close group calls whose last participant left hours ago. */
