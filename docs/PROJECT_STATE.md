@@ -185,6 +185,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.10+26` (2026-11-27): progres update inline di Setelan,
+  cache APK untuk pasang ulang, navigasi 4 tab, profil via header, dan tab
+  log telepon placeholder.
 - Rilis Flutter `0.12.9+25` (2026-11-27): info jarak pada post sekitar di
   feed dan detail post.
 - Rilis Flutter `0.12.8+24` (2026-11-27): akun personal mengirim lokasi saat
