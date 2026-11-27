@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.28+44` (2026-11-27): menu chat lengkap, mute grup,
+  logout keluar aplikasi, dan toggle password.
 - Rilis Flutter `0.12.27+43` (2026-11-27): pin chat, status bisnis butuh
   owner online, filter peta, dan pause polling background.
 - Rilis Flutter `0.12.26+42` (2026-11-27): read per percakapan, refresh saat
