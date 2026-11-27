@@ -176,8 +176,10 @@ class Sek_chat_model extends CI_Model
 
     public function last_message($conversation_id, $after_message_id = 0, $viewer_user_id = 0)
     {
-        $this->db->select('m.*')
+        $this->db->select('m.*, COALESCE(sa.display_name, su.display_name) AS sender_name')
             ->from('sek_message m')
+            ->join('sek_user su', 'su.user_id = m.sender_user_id', 'left')
+            ->join('sek_account sa', 'sa.account_id = m.sender_account_id', 'left')
             ->where('m.conversation_id', (int) $conversation_id);
         if ((int) $after_message_id > 0) {
             $this->db->where('m.message_id >', (int) $after_message_id);
@@ -237,7 +239,10 @@ class Sek_chat_model extends CI_Model
         $hidden = (int) $viewer_user_id > 0
             ? 'NOT EXISTS (SELECT 1 FROM sek_message_hidden h WHERE h.message_id = m.message_id AND h.user_id = ' . (int) $viewer_user_id . ')'
             : NULL;
-        $this->db->select('m.*')->from('sek_message m')
+        $this->db->select('m.*, COALESCE(sa.display_name, su.display_name) AS sender_name')
+            ->from('sek_message m')
+            ->join('sek_user su', 'su.user_id = m.sender_user_id', 'left')
+            ->join('sek_account sa', 'sa.account_id = m.sender_account_id', 'left')
             ->where('m.conversation_id', (int) $conversation_id);
         if ($hidden !== NULL) {
             $this->db->where($hidden, NULL, FALSE);
@@ -259,6 +264,46 @@ class Sek_chat_model extends CI_Model
             ->get()
             ->result_array();
         return array_reverse($rows);
+    }
+
+    public function set_reaction($message_id, $user_id, $reaction)
+    {
+        if ((string) $reaction === '') {
+            return $this->db->where('message_id', (int) $message_id)
+                ->where('user_id', (int) $user_id)
+                ->delete('sek_message_reaction');
+        }
+        return $this->db->query(
+            'INSERT INTO sek_message_reaction (message_id, user_id, reaction, created_at) VALUES (?, ?, ?, ?) '
+            . 'ON DUPLICATE KEY UPDATE reaction = VALUES(reaction), created_at = VALUES(created_at)',
+            array((int) $message_id, (int) $user_id, (string) $reaction, gmdate('Y-m-d H:i:s'))
+        );
+    }
+
+    public function reaction_summary($message_ids, $viewer_user_id = 0)
+    {
+        $ids = array_values(array_filter(array_map('intval', (array) $message_ids)));
+        if (!$ids) {
+            return array();
+        }
+        $rows = $this->db->select('message_id, reaction, user_id')
+            ->where_in('message_id', $ids)
+            ->get('sek_message_reaction')
+            ->result_array();
+        $summary = array();
+        foreach ($rows as $row) {
+            $message_id = (int) $row['message_id'];
+            if (!isset($summary[$message_id])) {
+                $summary[$message_id] = array('reactions' => array(), 'my_reaction' => NULL);
+            }
+            $reaction = (string) $row['reaction'];
+            $summary[$message_id]['reactions'][$reaction] =
+                ($summary[$message_id]['reactions'][$reaction] ?? 0) + 1;
+            if ((int) $row['user_id'] === (int) $viewer_user_id) {
+                $summary[$message_id]['my_reaction'] = $reaction;
+            }
+        }
+        return $summary;
     }
 
     public function hide_message($message_id, $user_id)
@@ -333,9 +378,13 @@ class Sek_chat_model extends CI_Model
 
     public function message($message_id)
     {
-        return $this->db->where('message_id', (int) $message_id)
+        return $this->db->select('m.*, COALESCE(sa.display_name, su.display_name) AS sender_name')
+            ->from('sek_message m')
+            ->join('sek_user su', 'su.user_id = m.sender_user_id', 'left')
+            ->join('sek_account sa', 'sa.account_id = m.sender_account_id', 'left')
+            ->where('m.message_id', (int) $message_id)
             ->limit(1)
-            ->get('sek_message')
+            ->get()
             ->row_array();
     }
 

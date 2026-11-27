@@ -48,6 +48,59 @@ class Sek_messages extends Sek_api_base
         $this->edit_message($message);
     }
 
+    public function reaction($message_id = 0)
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $message = $this->sek_chat_model->message((int) $message_id);
+        if (!is_array($message)) {
+            $this->api_response->error('not_found', 'Pesan tidak ditemukan.', 404);
+            return;
+        }
+        if ($this->conversation_membership((int) $message['conversation_id']) === NULL) {
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $reaction = isset($body['reaction']) ? trim((string) $body['reaction']) : '';
+        $allowed = array('❤️', '👍', '😂', '😮', '😢', '🙏');
+        if ($reaction !== '' && !in_array($reaction, $allowed, TRUE)) {
+            $this->api_response->error('validation_error', 'Reaction tidak valid.', 422);
+            return;
+        }
+        $this->sek_chat_model->set_reaction(
+            (int) $message_id,
+            $this->api_auth->user_id(),
+            $reaction
+        );
+        $summary = $this->sek_chat_model->reaction_summary(
+            array((int) $message_id),
+            $this->api_auth->user_id()
+        );
+        $reactions = isset($summary[(int) $message_id])
+            ? $summary[(int) $message_id]['reactions'] : array();
+        $payload = array(
+            'message_id' => (int) $message_id,
+            'conversation_id' => (int) $message['conversation_id'],
+            'user_id' => (int) $this->api_auth->user_id(),
+            'reaction' => $reaction !== '' ? $reaction : NULL,
+            'reactions' => $reactions,
+        );
+        $this->sek_realtime->publish((int) $message['conversation_id'], 'message.reaction', $payload);
+        $this->api_response->ok(array(
+            'status' => $reaction !== '' ? 'reacted' : 'removed',
+            'message_id' => (int) $message_id,
+            'reactions' => $reactions,
+            'my_reaction' => $reaction !== '' ? $reaction : NULL,
+        ));
+    }
+
     private function list_messages($conversation_id)
     {
         $limit = (int) $this->input->get('limit', TRUE);
@@ -84,9 +137,16 @@ class Sek_messages extends Sek_api_base
             ), $this->api_auth->user_id());
         }
         $counts = $this->sek_chat_model->receipt_counts($ids);
+        $reactions = $this->sek_chat_model->reaction_summary($ids, $this->api_auth->user_id());
         $data = array();
         foreach ($rows as $row) {
-            $data[] = $this->message_payload($row, $counts, $this->api_auth->user_id());
+            $message_id = (int) $row['message_id'];
+            $data[] = $this->message_payload(
+                $row,
+                $counts,
+                $this->api_auth->user_id(),
+                isset($reactions[$message_id]) ? $reactions[$message_id] : array()
+            );
         }
         $this->api_response->ok(array('data' => $data, 'has_more' => $has_more));
     }

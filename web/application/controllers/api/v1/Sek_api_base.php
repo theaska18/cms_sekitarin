@@ -164,7 +164,7 @@ class Sek_api_base extends CI_Controller
         return (string) $account['active_until'] > gmdate('Y-m-d H:i:s');
     }
 
-    protected function message_payload($message, $counts = array(), $viewer_user_id = 0)
+    protected function message_payload($message, $counts = array(), $viewer_user_id = 0, $reaction_summary = array())
     {
         $deleted = !empty($message['deleted_at']);
         $message_id = (int) $message['message_id'];
@@ -174,6 +174,7 @@ class Sek_api_base extends CI_Controller
             'conversation_id' => (int) $message['conversation_id'],
             'sender_user_id' => (int) $message['sender_user_id'],
             'sender_account_id' => $message['sender_account_id'] !== NULL ? (int) $message['sender_account_id'] : NULL,
+            'sender_name' => isset($message['sender_name']) ? $message['sender_name'] : NULL,
             'type' => (string) $message['type'],
             'body' => $deleted ? NULL : $message['body'],
             'media_id' => !$deleted && $message['media_id'] !== NULL ? (int) $message['media_id'] : NULL,
@@ -185,6 +186,8 @@ class Sek_api_base extends CI_Controller
             'reply_to_message_id' => $message['reply_to_message_id'] !== NULL ? (int) $message['reply_to_message_id'] : NULL,
             'delivered_count' => (int) $receipt['delivered'],
             'read_count' => (int) $receipt['read'],
+            'reactions' => isset($reaction_summary['reactions']) ? $reaction_summary['reactions'] : array(),
+            'my_reaction' => isset($reaction_summary['my_reaction']) ? $reaction_summary['my_reaction'] : NULL,
             'edited_at' => $this->utc($message['edited_at']),
             'deleted_at' => $this->utc($message['deleted_at']),
             'created_at' => $this->utc($message['created_at']),

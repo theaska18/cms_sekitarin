@@ -55,6 +55,7 @@ $route['api/v1/conversations/(:num)/members'] = 'api/v1/sek_conversations/member
 $route['api/v1/conversations/(:num)/live-location'] = 'api/v1/sek_conversations/live_location/$1';
 $route['api/v1/conversations/(:num)'] = 'api/v1/sek_conversations/show/$1';
 $route['api/v1/conversations'] = 'api/v1/sek_conversations/index';
+$route['api/v1/messages/(:num)/reaction'] = 'api/v1/sek_messages/reaction/$1';
 $route['api/v1/messages/(:num)'] = 'api/v1/sek_messages/show/$1';
 $route['api/v1/accounts/handle-available'] = 'api/v1/sek_accounts/handle_available';
 $route['api/v1/accounts/lookup'] = 'api/v1/sek_accounts/lookup';
