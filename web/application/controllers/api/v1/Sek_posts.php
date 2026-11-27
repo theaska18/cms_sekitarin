@@ -17,7 +17,7 @@ class Sek_posts extends Sek_api_base
         $lat = $this->input->get('lat', TRUE);
         $lng = $this->input->get('lng', TRUE);
         $radius = (int) $this->input->get('radius', TRUE);
-        $radius = $radius > 0 ? max(100, min(5000, $radius)) : 500;
+        $radius = $radius > 0 ? max(100, min(5000, $radius)) : 2000;
         $limit = (int) $this->input->get('limit', TRUE);
         $limit = $limit > 0 ? min(50, $limit) : 20;
         $before = (int) $this->input->get('before_id', TRUE);
@@ -31,11 +31,8 @@ class Sek_posts extends Sek_api_base
             $lat = NULL;
             $lng = NULL;
         }
-        if ($lat !== NULL && !$this->location_consent_granted()) {
-            $lat = NULL;
-            $lng = NULL;
-        }
-
+        // The viewer position is only used to filter nearby posts; it is never
+        // exposed to other users, so feed viewing does not need a share consent.
         $scope = $this->feed_scope($lat, $lng, $radius);
         $rows = $this->sek_post_model->feed($scope['ids'], $before, $limit);
         $has_more = count($rows) > $limit;

@@ -38,7 +38,7 @@ processes; the Flutter app is a separate client.
    repair, therapists, etc. Tapping a map tag starts a conversation with that
    account.
 3. **Post** — feed limited to content from saved contacts and from accounts within
-   roughly 500 m of the user's location.
+   roughly 2 km of the user's location.
 4. **Profile** — Instagram-like profile; posts created here appear in the Post
    feed.
 5. **Settings** — account selection/management, GPS consent and permissions, and
@@ -52,7 +52,7 @@ processes; the Flutter app is a separate client.
   visibility; never expose live location without consent. Keep a consent history.
 - Design APIs for chat (direct/group), messages, presence, orders/services, posts,
   feeds, contacts, places/business listings, and geospatial queries.
-- Nearby queries (map and the 500 m Post feed) need spatial indexes and bounded
+- Nearby queries (map and the 2 km Post feed) need spatial indexes and bounded
   search (radius, limit); do not scan full tables.
 - Reuse CMSNivo tenant/permission patterns and Finance document flows where a
   business account needs orders, invoices, or payments.
@@ -100,7 +100,7 @@ location update frequency limits and retention. Output: map shows warung, tire
 repair, and drivers, and supports interaction.
 
 **Phase 5 — Post and feed (2–3 weeks).** Photo/video upload, caption, likes, and
-comments; feed limited to saved contacts plus accounts within roughly 500 m; an
+comments; feed limited to saved contacts plus accounts within roughly 2 km; an
 Instagram-like profile grid; content moderation and reporting. Output: Post and
 Profile menus work.
 
@@ -144,7 +144,7 @@ profile/device/consent, account types, accounts, local media (images, video,
 documents), contacts, blocks, reports, opening hours, account members,
 conversations, messages, read receipts, typing, group live location, account base
 location, realtime presence, `nearby` map queries (spatial index, 5-minute
-presence freshness, block filtering), and post/feed (saved contacts plus 500 m
+presence freshness, block filtering), and post/feed (saved contacts plus 2 km
 radius), likes, comments, and profile grids. The `sekitar-ws` WebSocket gateway
 runs on host port 8090 (protocol:
 [`docs/SEKITAR_REALTIME.md`](docs/SEKITAR_REALTIME.md)). In-app notifications

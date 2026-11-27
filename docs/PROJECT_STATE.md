@@ -149,7 +149,7 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   perangkat, consent, tipe akun, akun, media lokal (gambar/video/dokumen), kontak,
   blokir, laporan, jam buka, anggota/staff, percakapan, pesan, read receipt,
   typing, live location grup, lokasi dasar akun, presence realtime, `GET /nearby`
-  berbasis spatial index, serta post/feed (kontak + radius 500 m), like, komentar,
+  berbasis spatial index, serta post/feed (kontak + radius 2 km), like, komentar,
   dan grid profil. Gateway WebSocket `sekitar-ws` berjalan di port 8090 dengan
   protokol di [`SEKITAR_REALTIME.md`](SEKITAR_REALTIME.md).
 - Notifikasi in-app dan push pipeline tersedia: `sek_notification`,
@@ -172,8 +172,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   `is_own` dan melakukan polling nearby.
 - Post dapat diedit (`PATCH /posts/{id}` caption/media) dan dihapus oleh pembuat
   atau owner/manager akun. Feed menandai `feed_source`
-  (`own`/`contact`/`nearby`) + `distance_m`; tanpa
-  consent lokasi hanya akun sendiri + kontak yang tampil. Peta hanya
+  (`own`/`contact`/`nearby`) + `distance_m`; posisi viewer dipakai hanya
+  untuk memfilter radius feed, bukan untuk membagikan lokasi. Peta hanya
   menampilkan akun `fixed` bila consent viewer belum aktif; akun
   realtime/presence muncul setelah “Bagikan lokasi” diaktifkan.
 - Fase 7 dimulai: aplikasi Flutter dipisah ke repo sendiri,
@@ -183,6 +183,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.7+23` (2026-11-27): feed selalu memakai posisi viewer
+  dengan radius 2 km; consent tidak lagi memblokir post sekitar.
 - Rilis Flutter `0.12.6+22` (2026-11-27): peta grup terpusat di lokasi
   pengguna, tombol recenter, share 1 jam, dan wordmark header dihapus.
 - Rilis Flutter `0.12.5+21` (2026-11-27): foto percakapan sebelum nama di
