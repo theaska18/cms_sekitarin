@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.53+69` (2026-11-27): pakai data channel Colibri
+  standar dan minta source video bridge/participant secara eksplisit.
 - Rilis Flutter `0.12.52+68` (2026-11-27): Jingle video recvonly
   dipertahankan; race CallKit accept/end dan notifikasi ganda diperbaiki.
 - Rilis Flutter `0.12.51+67` (2026-11-27): Jingle session-accept
