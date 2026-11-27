@@ -77,6 +77,10 @@ class Sek_messages extends Sek_api_base
         }
         if ($ids) {
             $this->sek_chat_model->mark_delivered($conversation_id, $this->api_auth->user_id(), $ids);
+            $this->sek_realtime->publish($conversation_id, 'messages.delivered', array(
+                'message_ids' => $ids,
+                'user_id' => (int) $this->api_auth->user_id(),
+            ), $this->api_auth->user_id());
         }
         $counts = $this->sek_chat_model->receipt_counts($ids);
         $data = array();
