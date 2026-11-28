@@ -186,6 +186,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.70+86` (2026-11-28): waktu menempel di kanan pesan
+  terakhir dengan pemisah `·`, ikon pin/bisukan sebelum nama, menu titik tiga
+  kembali di tengah vertikal.
 - Rilis Flutter `0.12.69+85` (2026-11-28): payload percakapan menyertakan
   receipt pesan terakhir sehingga centang di daftar chat sama dengan di dalam
   chat (satu/dua/dua biru); filter di daftar kontak dihapus (tinggal pencarian);
