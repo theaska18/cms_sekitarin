@@ -643,6 +643,12 @@ class Sek_conversations extends Sek_api_base
         $cleared_before = $membership !== NULL && $membership['cleared_before_message_id'] !== NULL
             ? (int) $membership['cleared_before_message_id'] : 0;
         $last = $this->sek_chat_model->last_message($conversation_id, $cleared_before, $user_id);
+        // Include the delivery/read receipts of the preview message, otherwise
+        // the chat list always showed a single check while the room (which
+        // loads receipts) showed two/blue.
+        $last_counts = is_array($last)
+            ? $this->sek_chat_model->receipt_counts(array((int) $last['message_id']))
+            : array();
         $unread = $membership !== NULL
             ? $this->sek_chat_model->unread_count(
                 $conversation_id,
@@ -662,7 +668,7 @@ class Sek_conversations extends Sek_api_base
             'peer' => $peer,
             'member_count' => count($members),
             'members' => $with_members ? $member_list : NULL,
-            'last_message' => is_array($last) ? $this->message_payload($last, array(), $user_id) : NULL,
+            'last_message' => is_array($last) ? $this->message_payload($last, $last_counts, $user_id) : NULL,
             'unread_count' => $unread,
             'active_call' => $active_call,
             'pinned' => $membership !== NULL && $membership['pinned_at'] !== NULL,
