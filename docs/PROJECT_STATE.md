@@ -186,6 +186,13 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.64+80` (2026-11-28): Chat tablet landscape (>=980 dp)
+  menjadi dua kolom — daftar percakapan kiri, isi chat kanan, baris terpilih
+  ditandai, dan pane kosong sebelum memilih; notifikasi membuka thread di pane
+  kanan. Post menjadi grid kolom/baris di tablet.
+- Rilis Flutter `0.12.63+79` (2026-11-28): baris Cek update memakai Row khusus
+  agar tombol Pasang tidak mendorong teks ke bawah; hasil tambah kontak
+  menampilkan nama, status Online/Offline, dan tombol Tambah ke kontak.
 - Rilis Flutter `0.12.62+78` (2026-11-28): chat baru bisa mencari username
   siapa pun (bukan hanya kontak) langsung saat mengetik, dengan indikator
   Online/Offline dan tombol panggilan suara/video; panggilan ke non-kontak
