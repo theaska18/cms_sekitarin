@@ -186,6 +186,9 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.60+76` (2026-11-28): layout tablet/landscape — layar
+  >=700 dp memakai NavigationRail di kiri (logo + label), HP tetap bottom bar;
+  daftar chat, feed, log panggilan, dan bubble chat dibatasi lebarnya.
 - Rilis Flutter `0.12.59+75` (2026-11-28): logo aplikasi baru (pin peta chat
   mengilap) untuk header/login, ikon launcher Android + adaptive icon, dan semua
   ukuran AppIcon iOS.
