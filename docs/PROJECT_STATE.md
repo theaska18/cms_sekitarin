@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.56+72` (2026-11-28): `ReceiverVideoConstraints`
+  menyasar source peserta (`<endpoint>-v0`) seperti `sendSourceVideoTypeMessage`
+  ISP-2194, dan dikirim ulang saat media tersambung, peserta masuk, track video
+  diterima, dan setelah negosiasi source map (retry 2,5 dtk/4,5 dtk).
 - Rilis Flutter `0.12.55+71` (2026-11-28): perbaikan video menyeluruh — mid data
   ikut BUNDLE (sebelumnya m=application ditambahkan setelah remote SDP dibuat,
   sehingga libwebrtc membuat transport DTLS terpisah yang tidak pernah selesai
