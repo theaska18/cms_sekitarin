@@ -186,6 +186,17 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.59+75` (2026-11-28): logo aplikasi baru (pin peta chat
+  mengilap) untuk header/login, ikon launcher Android + adaptive icon, dan semua
+  ukuran AppIcon iOS.
+- Rilis Flutter `0.12.58+74` (2026-11-28): sesi bertahan ala WhatsApp — refresh
+  token 10 tahun dan tidak dirotasi saat refresh (hanya access token 1 jam yang
+  diperbarui), klien memakai token hasil refresh untuk retry 401 dalam 15 detik,
+  dan refresh token ditulis lebih dulu ke secure storage. Memperbaiki logout
+  berulang setelah login yang dipicu request media lama berheader token lama.
+- Rilis Flutter `0.12.57+73` (2026-11-28): `ReceiverVideoConstraints` dikirim
+  pada setiap event track remote (audio dan video), bukan hanya sekali per
+  track video.
 - Rilis Flutter `0.12.56+72` (2026-11-28): `ReceiverVideoConstraints`
   menyasar source peserta (`<endpoint>-v0`) seperti `sendSourceVideoTypeMessage`
   ISP-2194, dan dikirim ulang saat media tersambung, peserta masuk, track video
