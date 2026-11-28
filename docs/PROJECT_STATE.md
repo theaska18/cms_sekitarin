@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.74+90` (2026-11-28): reaction tanpa border/background
+  luar; tambah anggota grup lewat daftar kontak + pencarian username (bisa
+  non-kontak); sheet Teruskan khusus (chat terakhir, kontak, cari username,
+  tanpa Buat grup) dengan ikon gaya WhatsApp.
 - Rilis Flutter `0.12.73+89` (2026-11-28): ikon pin biru, bisukan merah,
   badge sejajar menu titik tiga; fitur Teruskan (teks/lokasi/media, media
   diunduh & diunggah ulang) di menu long-press; endpoint
