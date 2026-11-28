@@ -311,6 +311,14 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("avatar_media_id", conversations)
         self.assertIn("username", conversations)
 
+    def test_post_comment_resolves_viewer_before_query_chain(self):
+        posts = (API / "Sek_posts.php").read_text()
+        # member_role() must not run inside the where() chain: it leaks its
+        # select list and broke commenting with "Unknown column 'handle'".
+        self.assertIn("$viewer_account_id = $this->viewer_account_id();", posts)
+        self.assertNotIn(
+            "->where('account_id', $this->viewer_account_id())", posts)
+
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
 

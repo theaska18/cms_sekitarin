@@ -186,6 +186,12 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.67+83` (2026-11-28): pencarian nama/username di daftar
+  kontak; hasil tambah kontak tampil nama + tombol Tambah di kanan (perbaikan
+  minimumSize tombol di dalam Row yang membuat teks tertutup); menu titik tiga
+  daftar chat sejajar nama. Perbaikan server: komentar post gagal karena
+  `viewer_account_id()` dipanggil di dalam query chain (Unknown column handle);
+  kini komentar tersimpan dan pemilik post menerima notifikasi `post_comment`.
 - Rilis Flutter `0.12.66+82` (2026-11-28): aksi per kontak (pesan, telepon,
   video, menu hapus kontak) dan filter kontak Semua/Personal/Bisnis/Online;
   daftar chat punya kolom cari nama/isi pesan dan filter Semua/Personal/Grup/

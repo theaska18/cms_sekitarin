@@ -323,9 +323,13 @@ class Sek_posts extends Sek_api_base
         );
         $comment = $this->sek_post_model->comment($comment_id);
         $comment['display_name'] = (string) $this->api_auth->user()['display_name'];
+        // Resolve the viewer account before starting the query: calling it
+        // inside where() runs member_role() on the same query builder and
+        // leaks its select list (unknown column handle).
+        $viewer_account_id = $this->viewer_account_id();
         $account = $this->db
             ->select('account_id, handle, avatar_media_id, display_name')
-            ->where('account_id', $this->viewer_account_id())
+            ->where('account_id', $viewer_account_id)
             ->limit(1)
             ->get('sek_account')
             ->row_array();
