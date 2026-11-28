@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.79+95` (2026-11-28): Setelan menampilkan versi/build
+  terpasang untuk verifikasi update; tidak ada perubahan logika updater.
 - Rilis Flutter `0.12.78+94` (2026-11-28): deteksi update memakai nama versi
   (bukan versionCode yang bergeser +2000 untuk APK arm64 split); manifest build
   2094 agar klien lama tetap melihat update. Termasuk tile Google Maps.
