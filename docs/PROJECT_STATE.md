@@ -186,9 +186,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
-- Perbaikan server `0.12.69` (belum dirilis APK): payload percakapan kini
-  menyertakan receipt pesan terakhir (`receipt_counts`), sehingga centang di
-  daftar chat sama dengan di dalam chat (satu/dua/dua biru).
+- Rilis Flutter `0.12.69+85` (2026-11-28): payload percakapan menyertakan
+  receipt pesan terakhir sehingga centang di daftar chat sama dengan di dalam
+  chat (satu/dua/dua biru); filter di daftar kontak dihapus (tinggal pencarian);
+  chip filter chat lebih ringkas dan membulat; baris chat memakai layout custom
+  (menu titik tiga sejajar nama di kanan, waktu di ujung kanan preview).
 - Rilis Flutter `0.12.68+84` (2026-11-28): preview daftar chat menampilkan
   centang status pesan keluar (satu/dua/dua biru) sebelum teks; event
   message.created/delivered/read memperbarui preview di tempat, sehingga
