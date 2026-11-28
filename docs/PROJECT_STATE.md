@@ -186,6 +186,14 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.62+78` (2026-11-28): chat baru bisa mencari username
+  siapa pun (bukan hanya kontak) langsung saat mengetik, dengan indikator
+  Online/Offline dan tombol panggilan suara/video; panggilan ke non-kontak
+  membuat percakapan langsung lebih dulu.
+- Rilis Flutter `0.12.61+77` (2026-11-28): menu kiri tablet tanpa logo (logo
+  sudah di header); perbaikan pencarian/tambah kontak (keyboard ditutup,
+  daftar scroll ke hasil, teks satu baris) dan tinggi sheet chat baru
+  mengikuti area terlihat.
 - Rilis Flutter `0.12.60+76` (2026-11-28): layout tablet/landscape — layar
   >=700 dp memakai NavigationRail di kiri (logo + label), HP tetap bottom bar;
   daftar chat, feed, log panggilan, dan bubble chat dibatasi lebarnya.
