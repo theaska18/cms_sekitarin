@@ -186,6 +186,14 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.55+71` (2026-11-28): perbaikan video menyeluruh — mid data
+  ikut BUNDLE (sebelumnya m=application ditambahkan setelah remote SDP dibuat,
+  sehingga libwebrtc membuat transport DTLS terpisah yang tidak pernah selesai
+  di JVB dan data channel/SCTP tidak terbuka); video track tanpa MediaStream
+  tetap dirender; kamera tersedia sejak awal panggilan suara agar tombol kamera
+  tidak perlu renegosiasi; event CallKit ACTION_CALL_ENDED saat menutup layar
+  masuk diabaikan sampai media panggilan siap (sebelumnya memutus panggilan
+  yang baru dijawab setelah ~1 detik).
 - Rilis Flutter `0.12.54+70` (2026-11-27): kembali ke data channel Colibri
   auxiliary `custom` dari ISP-2194 karena channel browser JVB tidak
   menghasilkan VideoSourcesMap di klien native; minta bridge source dan
