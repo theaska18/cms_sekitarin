@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.75+91` (2026-11-28): pemilih anggota grup, chat baru,
+  dan tambah kontak hanya akun personal; teks biasa menyaring kontak, cari
+  username wajib `@` dan harus identik (`@aska` ≠ `askam`); reaction tanpa
+  border/background.
 - Rilis Flutter `0.12.74+90` (2026-11-28): reaction tanpa border/background
   luar; tambah anggota grup lewat daftar kontak + pencarian username (bisa
   non-kontak); sheet Teruskan khusus (chat terakhir, kontak, cari username,
