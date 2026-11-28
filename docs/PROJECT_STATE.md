@@ -186,6 +186,8 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.82+98` (2026-11-28): interval cek update otomatis
+  dikurangi dari 6 jam ke 15 menit (foreground) dan 1 jam (WorkManager).
 - Rilis Flutter `0.12.81+97` (2026-11-28): tile Google memakai
   `apistyle=s.t:2|p.v:off` untuk menyembunyikan badge/ikon POI bawaan Google;
   jalan dan nama jalan tetap tampil.
