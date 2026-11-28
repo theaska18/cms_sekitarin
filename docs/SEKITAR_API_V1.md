@@ -36,9 +36,12 @@ Skema database: [`SEKITAR_ERD.md`](SEKITAR_ERD.md). Visi produk dan roadmap:
 
 - Email + password, verifikasi email wajib sebelum akun dianggap aktif penuh.
 - Password di-hash dengan Argon2id (fallback bcrypt cost ≥ 12).
-- Access token opaque, berlaku 1 jam; refresh token berlaku 60 hari dan
-  dirotasi setiap refresh. Keduanya disimpan sebagai hash SHA-256 di
-  `sek_device`; token lama langsung tidak berlaku setelah rotasi.
+- Access token opaque, berlaku 1 jam dan diperbarui setiap refresh. Refresh
+  token berlaku 10 tahun dan **tidak dirotasi** saat refresh (expiry-nya
+  digeser), sehingga sesi bertahan seperti aplikasi pesan dan request yang
+  memakai token lama tidak bisa mengakhiri sesi. Keduanya disimpan sebagai
+  hash SHA-256 di `sek_device`; sesi hanya berakhir lewat logout/revoke atau
+  akun dinonaktifkan.
 - Login membuat/memperbarui satu baris `sek_device` per `device_uuid`.
 - Logout mencabut sesi perangkat tersebut saja.
 - Respons login tidak membedakan email tidak terdaftar vs password salah.

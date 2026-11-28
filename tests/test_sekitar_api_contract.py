@@ -114,7 +114,7 @@ class SekitarApiContractTests(unittest.TestCase):
         self.assertIn("hash('sha256'", auth)
         self.assertIn("random_bytes(32)", auth)
         self.assertIn("const ACCESS_TTL = 3600;", auth)
-        self.assertIn("const REFRESH_TTL = 5184000;", auth)
+        self.assertIn("const REFRESH_TTL = 315360000;", auth)
         self.assertIn("revoke_all_for_user", auth)
         self.assertIn("PASSWORD_ARGON2ID", model)
         self.assertIn("password_verify(", (API / "Sek_auth.php").read_text())
@@ -313,6 +313,14 @@ class SekitarApiContractTests(unittest.TestCase):
 
     def test_database_language_file_prevents_masked_errors(self):
         self.assertTrue((APP / "language" / "indonesian" / "db_lang.php").is_file())
+
+    def test_refresh_tokens_are_long_lived_and_stable(self):
+        auth = (APP / "libraries" / "Api_auth.php").read_text()
+        # Messenger-style session: refreshing must not rotate the refresh
+        # token, otherwise a stale/lost retry logs the user out.
+        self.assertIn("const REFRESH_TTL = 315360000;", auth)
+        self.assertIn("'refresh_token' => (string) $refresh_token", auth)
+        self.assertIn("'refresh_token' => (string) $refresh_token", auth)
 
     def test_phase_one_docs_exist(self):
         self.assertTrue((ROOT / "docs" / "SEKITAR_ERD.md").is_file())

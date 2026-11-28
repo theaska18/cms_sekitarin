@@ -3,13 +3,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Per-device token authentication for the Sekitar mobile API.
- * Access tokens live for one hour; refresh tokens live for 60 days and are
- * rotated on every refresh. Only SHA-256 hashes are stored.
+ * Access tokens live for one hour; refresh tokens are long-lived (10 years)
+ * and stay valid across refreshes, like a messenger app session. Refreshing
+ * only rotates the short-lived access token so a stale or duplicated refresh
+ * request can never end the session. Sessions end on logout/revoke or when
+ * the user account is disabled. Only SHA-256 hashes are stored.
  */
 class Api_auth
 {
     const ACCESS_TTL = 3600;
-    const REFRESH_TTL = 5184000;
+    const REFRESH_TTL = 315360000;
 
     private $CI;
     private $user = NULL;
@@ -166,7 +169,10 @@ class Api_auth
     }
 
     /**
-     * Rotate both tokens for a refresh token. Returns NULL when invalid.
+     * Exchange a refresh token for a new access token. The refresh token is
+     * intentionally kept stable (only its expiry slides forward) so retries,
+     * app restarts, and multiple in-flight requests can never invalidate the
+     * session by presenting an already-rotated token.
      */
     public function rotate($refresh_token, $device_uuid)
     {
@@ -190,28 +196,21 @@ class Api_auth
         }
 
         $access = $this->random_token();
-        $refresh = $this->random_token();
         $data = array(
             'access_token_hash' => $this->hash_token($access),
             'access_expires_at' => gmdate('Y-m-d H:i:s', time() + self::ACCESS_TTL),
-            'refresh_token_hash' => $this->hash_token($refresh),
             'refresh_expires_at' => gmdate('Y-m-d H:i:s', time() + self::REFRESH_TTL),
             'last_seen_at' => $now,
         );
         $this->CI->db->where('device_id', (int) $row['device_id'])
-            ->where('refresh_token_hash', $this->hash_token($refresh_token))
             ->where('revoked_at IS NULL', NULL, FALSE)
             ->update('sek_device', $data);
-        if ($this->CI->db->affected_rows() !== 1) {
-            // Another request rotated this token first.
-            return NULL;
-        }
 
         return array(
             'device_id' => (int) $row['device_id'],
             'access_token' => $access,
             'access_expires_at' => $data['access_expires_at'],
-            'refresh_token' => $refresh,
+            'refresh_token' => (string) $refresh_token,
             'refresh_expires_at' => $data['refresh_expires_at'],
             'active_account_id' => $row['active_account_id'] !== NULL ? (int) $row['active_account_id'] : NULL,
         );
