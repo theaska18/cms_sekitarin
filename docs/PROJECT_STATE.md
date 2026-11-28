@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.76+92` (2026-11-28): update otomatis background via
+  WorkManager (Wi-Fi, tetap jalan saat aplikasi ditutup), verifikasi SHA-256/
+  ukuran, badge update di header saat APK siap, izin install-unknown-apps
+  sekali, dan `latest.json` kini memuat `size` + `sha256`.
 - Rilis Flutter `0.12.75+91` (2026-11-28): pemilih anggota grup, chat baru,
   dan tambah kontak hanya akun personal; teks biasa menyaring kontak, cari
   username wajib `@` dan harus identik (`@aska` ≠ `askam`); reaction tanpa
