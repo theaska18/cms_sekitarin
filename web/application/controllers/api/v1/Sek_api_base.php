@@ -175,7 +175,14 @@ class Sek_api_base extends CI_Controller
         }
         $location = !empty($account['location_updated_at'])
             ? strtotime((string) $account['location_updated_at']) : 0;
-        return $location >= $now - 120;
+        if ($location >= $now - 120) {
+            return TRUE;
+        }
+        // Fall back to the user's last authenticated API activity so presence
+        // still reads online when location sharing is off.
+        $device = !empty($account['device_seen_at'])
+            ? strtotime((string) $account['device_seen_at']) : 0;
+        return $device >= $now - 120;
     }
 
     protected function account_is_active($account)

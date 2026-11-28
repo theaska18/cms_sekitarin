@@ -10,7 +10,8 @@ class Sek_social_model extends CI_Model
                 . 'a.user_id, a.type_code, a.handle, a.display_name, a.bio, a.avatar_media_id, a.is_online, '
                 . 'a.verified_at, t.label_id, '
                 . '(SELECT MAX(l.updated_at) FROM sek_account_location l WHERE l.account_id = a.account_id) AS location_updated_at, '
-                . '(SELECT p.updated_at FROM sek_account_presence p WHERE p.account_id = a.account_id) AS presence_updated_at')
+                . '(SELECT p.updated_at FROM sek_account_presence p WHERE p.account_id = a.account_id) AS presence_updated_at, '
+                . '(SELECT MAX(d.last_seen_at) FROM sek_device d WHERE d.user_id = a.user_id AND d.revoked_at IS NULL) AS device_seen_at')
             ->from('sek_contact c')
             ->join('sek_account a', 'a.account_id = c.account_id', 'inner')
             ->join('sek_account_type t', 't.type_code = a.type_code', 'inner')
