@@ -278,6 +278,41 @@ class Sek_conversations extends Sek_api_base
         $this->api_response->ok(array('status' => 'read', 'message_id' => $message_id, 'unread_count' => 0));
     }
 
+    public function delivered($conversation_id = 0)
+    {
+        if (!$this->require_method('POST')) {
+            return;
+        }
+        if (!$this->require_auth()) {
+            return;
+        }
+        $conversation = $this->conversation_for((int) $conversation_id);
+        if ($conversation === NULL) {
+            return;
+        }
+        $body = $this->body();
+        if ($body === NULL) {
+            return;
+        }
+        $ids = isset($body['message_ids']) && is_array($body['message_ids'])
+            ? array_values(array_filter(array_map('intval', $body['message_ids'])))
+            : array();
+        if (!$ids) {
+            $this->api_response->error('validation_error', 'message_ids wajib.', 422);
+            return;
+        }
+        $this->sek_chat_model->mark_delivered(
+            (int) $conversation_id,
+            $this->api_auth->user_id(),
+            $ids
+        );
+        $this->sek_realtime->publish((int) $conversation_id, 'messages.delivered', array(
+            'message_ids' => $ids,
+            'user_id' => (int) $this->api_auth->user_id(),
+        ), $this->api_auth->user_id());
+        $this->api_response->ok(array('status' => 'delivered'));
+    }
+
     public function typing($conversation_id = 0)
     {
         if (!$this->require_method('POST')) {

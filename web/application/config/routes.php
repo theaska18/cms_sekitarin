@@ -49,6 +49,7 @@ $route['api/v1/blocks/(:num)'] = 'api/v1/sek_blocks/show/$1';
 $route['api/v1/reports'] = 'api/v1/sek_reports/index';
 $route['api/v1/conversations/(:num)/messages'] = 'api/v1/sek_messages/index/$1';
 $route['api/v1/conversations/(:num)/read'] = 'api/v1/sek_conversations/read/$1';
+$route['api/v1/conversations/(:num)/delivered'] = 'api/v1/sek_conversations/delivered/$1';
 $route['api/v1/conversations/(:num)/typing'] = 'api/v1/sek_conversations/typing/$1';
 $route['api/v1/conversations/(:num)/clear'] = 'api/v1/sek_conversations/clear/$1';
 $route['api/v1/conversations/(:num)/call'] = 'api/v1/sek_calls/group/$1';

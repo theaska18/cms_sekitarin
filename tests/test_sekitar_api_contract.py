@@ -34,6 +34,7 @@ class SekitarApiContractTests(unittest.TestCase):
             "api/v1/conversations/(:num)",
             "api/v1/conversations/(:num)/messages",
             "api/v1/conversations/(:num)/read",
+            "api/v1/conversations/(:num)/delivered",
             "api/v1/conversations/(:num)/typing",
             "api/v1/conversations/(:num)/members",
             "api/v1/conversations/(:num)/live-location",
