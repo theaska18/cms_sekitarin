@@ -186,6 +186,11 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.71+87` (2026-11-28): cache pesan di disk (200/chat,
+  dibersihkan saat logout) dimuat sebelum frame pertama sehingga chat langsung
+  tampil tanpa spinner; posisi awal memakai jumpTo (tanpa animasi gulir);
+  auto-scroll hanya saat dekat dasar atau pesan sendiri; pesan lama dimuat
+  dengan before_id saat scroll ke atas tanpa menggeser posisi.
 - Rilis Flutter `0.12.70+86` (2026-11-28): waktu menempel di kanan pesan
   terakhir dengan pemisah `·`, ikon pin/bisukan sebelum nama, menu titik tiga
   kembali di tengah vertikal.
