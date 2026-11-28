@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.68+84` (2026-11-28): preview daftar chat menampilkan
+  centang status pesan keluar (satu/dua/dua biru) sebelum teks; event
+  message.created/delivered/read memperbarui preview di tempat, sehingga
+  daftar tidak reload/berkedip saat mengirim pesan.
 - Rilis Flutter `0.12.67+83` (2026-11-28): pencarian nama/username di daftar
   kontak; hasil tambah kontak tampil nama + tombol Tambah di kanan (perbaikan
   minimumSize tombol di dalam Row yang membuat teks tertutup); menu titik tiga
