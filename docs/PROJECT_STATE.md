@@ -186,6 +186,10 @@ penting. Aturan kerja utama tetap ada di [`AGENTS.md`](../AGENTS.md).
   feed/post, edit profil/ganti password, ganti/buat akun, consent, dan
   notifikasi in-app. `flutter analyze` tanpa error; tes unit lulus. Android/iOS
   memakai HTTP cleartext khusus development.
+- Rilis Flutter `0.12.80+96` (2026-11-28): badge update muncul tanpa
+  menutup aplikasi — status queued disimpan, dipantau tiap 3 dtk, dan unduhan
+  foreground (dengan progres) dimulai setelah ±15 dtk di Wi-Fi bila WorkManager
+  tertunda; status disegarkan saat resume.
 - Rilis Flutter `0.12.79+95` (2026-11-28): Setelan menampilkan versi/build
   terpasang untuk verifikasi update; tidak ada perubahan logika updater.
 - Rilis Flutter `0.12.78+94` (2026-11-28): deteksi update memakai nama versi
